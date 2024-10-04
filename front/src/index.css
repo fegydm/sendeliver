@@ -1,13 +1,57 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: Arial, sans-serif;
+  background-color: #f0f8ff; /* Svetlo modrá */
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.container {
+  display: flex;
+  height: 100vh; /* Celá výška okna */
+}
+
+.client-section, .carrier-section {
+  flex: 1; /* Obidve sekcie zaberajú rovnakú šírku */
+  padding: 20px;
+  box-sizing: border-box; /* Započítaj padding do šírky */
+}
+
+.client-section {
+  background-color: #add8e6; /* Svetlo modrá pre klientov */
+}
+
+.carrier-section {
+  background-color: #b0c4de; /* Svetlo modrá pre dopravcov */
+}
+
+h1 {
+  color: #2c3e50; /* Tmavomodrá */
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin: 10px 0 5px; /* Margin pre lepší vzhľad */
+}
+
+input {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px; /* Zaoblené rohy */
+}
+
+button {
+  padding: 10px;
+  background-color: #4CAF50; /* Zelená farba pre tlačidlo */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049; /* Tmavšia zelená pri hover */
 }
