@@ -1,1 +1,19 @@
+/project-root
+  /back
+    /src
+      /routes       (definície API rout)
+      /controllers  (logika pre spracovanie požiadaviek)
+      /models       (databázové modely, napríklad pre MongoDB alebo SQL)
+    - app.js        (vstupný bod Express aplikácie)
+    - server.js     (spúšťací súbor pre server)
+    - package.json  (závislosti pre backend)
+  
+  /front
+    /src
+      /components   (React komponenty)
+      /routes       (React router logika)
+      /utils        (pomocné funkcie, napríklad pre API volania)
+    - App.js        (hlavná komponenta aplikácie)
+    - index.js      (vstupný bod pre frontend)
+    - package.json  (závislosti pre frontend)
 
