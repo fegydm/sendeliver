@@ -7,9 +7,16 @@ function App() {
   return (
     <Router>
       <Switch>
+        {/* Hlavná stránka */}
         <Route exact path="/" component={HomePage} />
+        
+        {/* Podstránky pre sender a hauler */}
         <Route path="/sender" component={SenderPage} />
         <Route path="/hauler" component={HaulerPage} />
+
+        {/* Prípadná podpora pre subdomény */}
+        <Route path="*.sender.sendeliver.com" component={SenderPage} />
+        <Route path="*.hauler.sendeliver.com" component={HaulerPage} />
       </Switch>
     </Router>
   );
