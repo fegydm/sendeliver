@@ -9,13 +9,16 @@ function App() {
   return (
     <Router>
       <Switch>
-        {/* Zobrazovanie podľa domény */}
         {domain.includes('sender') ? (
-          <Route exact path="/" component={SenderPage} />
+          <Route exact path="/" component={SenderPage} /> 
         ) : domain.includes('hauler') ? (
           <Route exact path="/" component={HaulerPage} />
         ) : (
-          <Route exact path="/" component={HomePage} />
+          <>
+            <Route exact path="/" component={HomePage} />
+            <Route path="/sender" component={SenderPage} />
+            <Route path="/hauler" component={HaulerPage} />
+          </>
         )}
       </Switch>
     </Router>
@@ -23,4 +26,3 @@ function App() {
 }
 
 export default App;
-
