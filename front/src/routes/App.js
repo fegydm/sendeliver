@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import HomePage from './components/HomePage';
-import SenderPage from './components/SenderPage';
-import HaulerPage from './components/HaulerPage';
+import HomePage from '../components/HomePage';
+import SenderPage from '../components/SenderPage';
+import HaulerPage from '../components/HaulerPage';
 
 function App() {
   const domain = window.location.hostname;
