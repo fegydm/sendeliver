@@ -5,6 +5,7 @@ import HaulerPage from '../components/HaulerPage';
 
 function App() {
   const domain = window.location.hostname;
+  console.log("Current Domain: ", domain);
 
   return (
     <Router>
