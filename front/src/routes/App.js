@@ -9,17 +9,18 @@ function App() {
   return (
     <Router>
       <Routes>
-        {domain.includes('sender') ? (
-          <Route exact path="/" element={<SenderPage />} />
-        ) : domain.includes('hauler') ? (
-          <Route exact path="/" element={<HaulerPage />} />
-        ) : (
-          <>
-            <Route exact path="/" element={<HomePage />} />
-            <Route path="/sender" element={<SenderPage />} />
-            <Route path="/hauler" element={<HaulerPage />} />
-          </>
-        )}
+        {domain === 'sender.sendeliver.com' ? (
+  <Route exact path="/" element={<SenderPage />} />
+) : domain === 'hauler.sendeliver.com' ? (
+  <Route exact path="/" element={<HaulerPage />} />
+) : (
+  <>
+    <Route exact path="/" element={<HomePage />} />
+    <Route path="/sender" element={<SenderPage />} />
+    <Route path="/hauler" element={<HaulerPage />} />
+  </>
+)}
+
       </Routes>
     </Router>
   );
