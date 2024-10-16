@@ -1,26 +1,16 @@
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import HomePage from '../components/HomePage';
-import SenderPage from '../components/SenderPage';
-import HaulerPage from '../components/HaulerPage';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import HomePage from './components/HomePage';
+import SenderPage from './components/SenderPage';
+import HaulerPage from './components/HaulerPage';
 
 function App() {
-  const domain = window.location.hostname;
-
   return (
     <Router>
-      <Switch>
-        {domain.includes('sender') ? (
-          <Route exact path="/" component={SenderPage} /> 
-        ) : domain.includes('hauler') ? (
-          <Route exact path="/" component={HaulerPage} />
-        ) : (
-          <>
-            <Route exact path="/" component={HomePage} />
-            <Route path="/sender" component={SenderPage} />
-            <Route path="/hauler" component={HaulerPage} />
-          </>
-        )}
-      </Switch>
+      <Routes>
+        <Route exact path="/" element={<HomePage />} />
+        <Route path="/sender" element={<SenderPage />} />
+        <Route path="/hauler" element={<HaulerPage />} />
+      </Routes>
     </Router>
   );
 }
