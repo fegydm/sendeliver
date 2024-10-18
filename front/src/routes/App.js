@@ -10,17 +10,13 @@ function App() {
   return (
     <Router>
       <Routes>
-        {domain === 'carriers.sendeliver.com' || domain === 'hauler.sendeliver.com' ? (
-   <Route exact path="/" element={<HaulerPage />} />
- ) : domain === 'clients.sendeliver.com' || domain === 'sender.sendeliver.com' ? (
-   <Route exact path="/" element={<SenderPage />} />
- ) : (
-   <>
-     <Route exact path="/" element={<HomePage />} />
-     <Route path="/sender" element={<SenderPage />} />
-     <Route path="/hauler" element={<HaulerPage />} />
-   </>
- )}
+       {domain === 'carriers.sendeliver.com' || domain === 'hauler.sendeliver.com' ? (
+  <Route exact path="/" element={<HaulerPage />} />
+) : domain === 'clients.sendeliver.com' || domain === 'sender.sendeliver.com' ? (
+  <Route exact path="/" element={<SenderPage />} />
+) : (
+  <Route exact path="/" element={<HomePage />} />
+)}
       </Routes>
     </Router>
   );
