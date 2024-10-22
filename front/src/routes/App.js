@@ -9,7 +9,9 @@ function App() {
   console.log("Current Domain: ", domain); // Vypíše doménu pre diagnostické účely
 
   return (
-    <Router>
+    <Router>git add .
+    git commit -m "Zmeny v App.js"
+    git push
       <Routes>
         {/* Ak je doména carriers.sendeliver.com alebo hauler.sendeliver.com, zobrazí sa HaulerPage */}
         {domain === 'carriers.sendeliver.com' || domain === 'hauler.sendeliver.com' ? (
