@@ -5,7 +5,7 @@ import HaulerPage from '../components/HaulerPage';
 import NotFound from '../components/NotFound'; // Importuj komponent pre 404 stránku
 
 function App() {
-  const domain = window.location.hostname; // Získa aktuálnu doménu z URL
+  const domain = "hauler.sendeliver.com"; // Získa aktuálnu doménu z URL
   console.log("Current Domain: ", domain); // Vypíše doménu pre diagnostické účely
 
   return (
