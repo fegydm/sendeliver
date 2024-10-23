@@ -1,58 +1,68 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Player } from '@lottiefiles/react-lottie-player'; // Lottie React Player
+// src/components/NotFound.js
+import React, { useEffect, useState } from 'react';
 
-// Importuj tvoju JSON animáciu
-import animationData from '../animations/notfound.json'; 
 const NotFound = () => {
+  const [LottiePlayer, setLottiePlayer] = useState(null);
+  const [isJsEnabled, setIsJsEnabled] = useState(false);
+
+  useEffect(() => {
+    setIsJsEnabled(true);
+    // Dynamický import Lottie
+    import('@lottiefiles/react-lottie-player')
+      .then(module => setLottiePlayer(module.Player))
+      .catch(err => console.log('Lottie load failed:', err));
+  }, []);
+
   return (
-    <div style={styles.container}>
-      {/* Lottie animácia */}
-      <Player
-        autoplay
-        loop
-        src={animationData}
-        style={{ height: '300px', width: '300px' }}
-      />
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
+      {/* Pre crawlery a non-JS používateľov */}
+      <noscript>
+        <div className="text-center">
+          <p className="text-lg mb-6">
+            Use the homepage {' '}
+            <a href="https://www.sendeliver.com" className="text-blue-600 underline">
+              www.sendeliver.com
+            </a>
+          </p>
+          <a href="https://www.sendeliver.com">
+            <button className="bg-[#74cc04] text-white font-bold py-3 px-8 rounded-lg">
+              Home
+            </button>
+          </a>
+        </div>
+      </noscript>
 
-      {/* Nadpis */}
-      <h1 style={styles.heading}>Táto stránka sa na serveri nenachádza</h1>
-      <p>
-        Použite rozcestník <Link to="/" style={styles.link}>www.sendeliver.com</Link>
-      </p>
-
-      {/* Tlačidlo */}
-      <Link to="/">
-        <button style={styles.button}>Home</button>
-      </Link>
+      {/* Pre používateľov s JS */}
+      {isJsEnabled && (
+        <>
+          {LottiePlayer && (
+            <LottiePlayer
+              autoplay
+              loop
+              src="/animations/notfound.json"
+              className="h-64 w-64 mb-8"
+            />
+          )}
+          <p className="text-lg mb-6">
+            Use the homepage {' '}
+            <a 
+              href="https://www.sendeliver.com" 
+              className="text-blue-600 hover:text-blue-800 underline"
+            >
+              www.sendeliver.com
+            </a>
+          </p>
+          <a href="https://www.sendeliver.com">
+            <button 
+              className="bg-[#74cc04] hover:bg-[#8edb20] text-white font-bold py-3 px-8 rounded-lg transform transition-all duration-200 active:scale-95 active:translate-y-1"
+            >
+              Home
+            </button>
+          </a>
+        </>
+      )}
     </div>
   );
-};
-
-// Štýly pre komponent
-const styles = {
-  container: {
-    textAlign: 'center',
-    marginTop: '50px',
-  },
-  heading: {
-    fontSize: '24px',
-    marginBottom: '20px',
-  },
-  link: {
-    color: '#007bff',
-    textDecoration: 'none',
-    fontWeight: 'bold',
-  },
-  button: {
-    marginTop: '20px',
-    padding: '10px 20px',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  },
 };
 
 export default NotFound;
