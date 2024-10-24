@@ -8,4 +8,9 @@ app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
+// WebSocket test endpoint
+app.get('/ws', (req, res) => {
+  res.send('WebSocket endpoint ready');
+});
+
 export default app;
