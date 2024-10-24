@@ -16,22 +16,34 @@ Modern delivery platform connecting customers with reliable carriers in real-tim
 - Tailwind CSS
 
 ## Project Structure
+
 ```
 sendeliver/
-├── .vscode/           # VS Code settings and configurations
-├── back/             # Backend Express application
-│   ├── server.js    # Main server file with WebSocket setup
-│   ├── node_modules/ # Backend dependencies
-│   └── package.json # Backend dependencies declaration
-└── front/           # React frontend application
-    ├── public/      # Static files and assets
-    │   ├── animations/  # Lottie animation files
-    │   └── index.html  # Main HTML template
-    ├── src/        # React source code
-    │   ├── components/ # React components
-    │   └── ...    # Other source files
-    ├── node_modules/ # Frontend dependencies
-    └── package.json # Frontend dependencies declaration
+├── .vscode/                    # VS Code settings and configurations
+├── back/                       # Backend application
+│   ├── config/                 # Configuration files
+│   │   ├── redis.js           # Redis connection and setup
+│   │   └── websocket.js       # WebSocket server setup
+│   ├── services/              # Business logic services
+│   │   ├── cacheService.js    # Redis caching logic
+│   │   └── wsService.js       # WebSocket handling
+│   ├── utils/                 # Utility functions
+│   │   └── errorHandler.js    # Error handling utils
+│   ├── node_modules/          # Backend dependencies
+│   ├── package.json           # Backend dependencies and scripts
+│   └── server.js              # Main server entry point
+│
+└── front/                      # Frontend application
+    ├── public/                 # Static files
+    │   ├── animations/         # Lottie animation files
+    │   └── index.html         # Main HTML template
+    ├── src/                   # React source code
+    │   ├── components/        # React components
+    │   ├── services/          # Frontend services
+    │   │   └── websocket.js   # WebSocket client service
+    │   └── App.js            # Main React component
+    ├── node_modules/          # Frontend dependencies
+    └── package.json           # Frontend dependencies and scripts
 ```
 
 ## Getting Started
@@ -113,11 +125,6 @@ npm run build
 - Use ESLint configuration provided
 - Follow Prettier formatting
 - Write JSDoc comments for functions
-
-### Testing
-- Write unit tests for new features
-- Test WebSocket connections
-- Verify database queries
 
 ## Deployment
 
