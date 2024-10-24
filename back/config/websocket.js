@@ -7,15 +7,27 @@ export const setupWebSocket = (server) => {
   
   const wss = new WebSocketServer({ 
     server,
-    path: "/ws",
-    clientTracking: true
+    clientTracking: true,
+    handleProtocols: () => 'echo-protocol'  // pridané
   });
   
-  wss.on('connection', (ws) => {
-    console.log('Client trying to connect');
+  // Debugging events
+  wss.on('headers', (headers) => {
+    console.log('WebSocket Headers:', headers);
+  });
+
+  wss.on('error', (error) => {
+    console.error('WebSocket Server Error:', error);
+  });
+  
+  wss.on('connection', (ws, req) => {
+    console.log('Client trying to connect from:', req.socket.remoteAddress);
+    console.log('Headers:', req.headers);
+    
     ws.isAlive = true;
 
     ws.on('pong', () => {
+      console.log('Received pong');
       ws.isAlive = true;
     });
 
@@ -24,18 +36,21 @@ export const setupWebSocket = (server) => {
       handleMessage(ws, data);
     });
 
-    ws.on('close', () => {
-      console.log('Client disconnected');
+    ws.on('close', (code, reason) => {
+      console.log('Client disconnected with code:', code, 'reason:', reason);
       ws.isAlive = false;
     });
 
     ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
+      console.error('Client WebSocket error:', error);
     });
 
-    // Send test message
-    ws.send(JSON.stringify({ type: 'connection', status: 'connected' }));
-    console.log('Sent connection confirmation');
+    try {
+      ws.send(JSON.stringify({ type: 'connection', status: 'connected' }));
+      console.log('Sent connection confirmation');
+    } catch (error) {
+      console.error('Error sending confirmation:', error);
+    }
   });
 
   return wss;
