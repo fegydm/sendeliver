@@ -1,4 +1,4 @@
-# SendEliver Delivery Platform
+# SenDeliver Delivery Platform
 
 Modern delivery platform connecting customers with reliable carriers in real-time.
 
