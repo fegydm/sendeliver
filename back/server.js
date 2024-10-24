@@ -1,25 +1,83 @@
 // ./back/server.js
 import app from './app.js';
 import http from 'http';
-import { WebSocketServer } from 'ws';  // zmenené - importujeme priamo tu
+import { WebSocketServer } from 'ws';
 
 const server = http.createServer(app);
-
-// Vytvoríme WebSocket server priamo tu
 const wss = new WebSocketServer({ server });
 
-// Logovanie pokusov o spojenie
+// Sledovanie pripojených klientov
+const clients = new Map(); // ukladáme {clientId: ws}
+
 wss.on('connection', (ws) => {
-    console.log('WebSocket client connected!');
-    ws.send('Hello from server!');
+    console.log('New client connected');
+
+    ws.on('message', (rawData) => {
+        try {
+            const message = JSON.parse(rawData);
+            console.log('Received message:', message);
+
+            switch(message.type) {
+                case 'delivery_request':
+                    // Broadcast všetkým dopravcom
+                    broadcastToHaulers(message);
+                    break;
+                    
+                case 'delivery_offer':
+                    // Poslať ponuku konkrétnemu klientovi
+                    sendToClient(message.requestId, message);
+                    break;
+
+                case 'client_init':
+                    // Klient sa identifikuje
+                    clients.set(message.clientId, {
+                        ws,
+                        type: 'sender'
+                    });
+                    break;
+
+                case 'hauler_init':
+                    // Dopravca sa identifikuje
+                    clients.set(message.haulerId, {
+                        ws,
+                        type: 'hauler'
+                    });
+                    break;
+            }
+        } catch (error) {
+            console.error('Error processing message:', error);
+        }
+    });
+
+    ws.on('close', () => {
+        // Cleanup pri odpojení
+        for (const [id, client] of clients.entries()) {
+            if (client.ws === ws) {
+                clients.delete(id);
+                break;
+            }
+        }
+        console.log('Client disconnected');
+    });
 });
 
-// Logovanie http upgrade requestov
-server.on('upgrade', (request, socket, head) => {
-    console.log('Upgrade request received!');
-});
+// Helper funkcie
+function broadcastToHaulers(message) {
+    clients.forEach((client) => {
+        if (client.type === 'hauler') {
+            client.ws.send(JSON.stringify(message));
+        }
+    });
+}
+
+function sendToClient(clientId, message) {
+    const client = clients.get(clientId);
+    if (client) {
+        client.ws.send(JSON.stringify(message));
+    }
+}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log('Server is running on port:', PORT);
+    console.log('Server running on port:', PORT);
 });
