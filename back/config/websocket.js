@@ -3,10 +3,16 @@ import { WebSocketServer } from 'ws';
 import { handleMessage } from '../services/wsService.js';
 
 export const setupWebSocket = (server) => {
-  const wss = new WebSocketServer({ server });
+  console.log('Setting up WebSocket server...');
+  
+  const wss = new WebSocketServer({ 
+    server,
+    path: "/ws",
+    clientTracking: true
+  });
   
   wss.on('connection', (ws) => {
-    console.log('New client connected');
+    console.log('Client trying to connect');
     ws.isAlive = true;
 
     ws.on('pong', () => {
@@ -14,15 +20,8 @@ export const setupWebSocket = (server) => {
     });
 
     ws.on('message', (data) => {
-      try {
-        handleMessage(ws, data);
-      } catch (error) {
-        console.error('Message handling error:', error);
-        ws.send(JSON.stringify({ 
-          type: 'error', 
-          message: 'Failed to process message'
-        }));
-      }
+      console.log('Received message:', data.toString());
+      handleMessage(ws, data);
     });
 
     ws.on('close', () => {
@@ -30,21 +29,14 @@ export const setupWebSocket = (server) => {
       ws.isAlive = false;
     });
 
-    // Send initial connection confirmation
-    ws.send(JSON.stringify({ 
-      type: 'connection', 
-      status: 'connected' 
-    }));
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+
+    // Send test message
+    ws.send(JSON.stringify({ type: 'connection', status: 'connected' }));
+    console.log('Sent connection confirmation');
   });
 
-  // Keepalive check
-  setInterval(() => {
-    wss.clients.forEach((ws) => {
-      if (!ws.isAlive) return ws.terminate();
-      ws.isAlive = false;
-      ws.ping();
-    });
-  }, 30000);
-
-  return wss; // Vraciam wss pre prípadné použitie v iných častiach aplikácie
+  return wss;
 };
