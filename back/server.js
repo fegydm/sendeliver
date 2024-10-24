@@ -1,32 +1,25 @@
 // ./back/server.js
 import app from './app.js';
 import http from 'http';
-import { setupWebSocket } from './config/websocket.js';
+import { WebSocketServer } from 'ws';  // zmenené - importujeme priamo tu
 
 const server = http.createServer(app);
 
-server.on('upgrade', (request, socket, head) => {
-  console.log('Upgrade request received:', {
-    path: request.url,
-    headers: request.headers
-  });
+// Vytvoríme WebSocket server priamo tu
+const wss = new WebSocketServer({ server });
+
+// Logovanie pokusov o spojenie
+wss.on('connection', (ws) => {
+    console.log('WebSocket client connected!');
+    ws.send('Hello from server!');
 });
 
-// Initialize WebSocket
-try {
-  const wss = setupWebSocket(server);
-  console.log('WebSocket server initialized with config:', {
-    path: '/ws',
-    server: 'running'
-  });
-} catch (error) {
-  console.error('Failed to initialize WebSocket:', error);
-}
+// Logovanie http upgrade requestov
+server.on('upgrade', (request, socket, head) => {
+    console.log('Upgrade request received!');
+});
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server listening on:`, {
-    port: PORT,
-    websocketPath: '/ws'
-  });
+    console.log('Server is running on port:', PORT);
 });
