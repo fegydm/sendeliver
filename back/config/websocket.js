@@ -6,6 +6,7 @@ export const setupWebSocket = (server) => {
   const wss = new WebSocketServer({ server });
   
   wss.on('connection', (ws) => {
+    console.log('New client connected');
     ws.isAlive = true;
 
     ws.on('pong', () => {
@@ -13,12 +14,27 @@ export const setupWebSocket = (server) => {
     });
 
     ws.on('message', (data) => {
-      handleMessage(ws, data);
+      try {
+        handleMessage(ws, data);
+      } catch (error) {
+        console.error('Message handling error:', error);
+        ws.send(JSON.stringify({ 
+          type: 'error', 
+          message: 'Failed to process message'
+        }));
+      }
     });
 
     ws.on('close', () => {
-      // Cleanup logic
+      console.log('Client disconnected');
+      ws.isAlive = false;
     });
+
+    // Send initial connection confirmation
+    ws.send(JSON.stringify({ 
+      type: 'connection', 
+      status: 'connected' 
+    }));
   });
 
   // Keepalive check
@@ -29,4 +45,6 @@ export const setupWebSocket = (server) => {
       ws.ping();
     });
   }, 30000);
+
+  return wss; // Vraciam wss pre prípadné použitie v iných častiach aplikácie
 };
