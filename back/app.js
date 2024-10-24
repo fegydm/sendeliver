@@ -3,21 +3,26 @@ import express from 'express';
 
 const app = express();
 
-// Enable WebSocket upgrade
+// HSTS header pre prevenciu www pri dvojkliku
 app.use((req, res, next) => {
-  res.setHeader('Upgrade', 'websocket');
-  res.setHeader('Connection', 'Upgrade');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
 });
 
+// Basic test endpoint
 app.get('/', (req, res) => {
   res.send('Server is running');
 });
 
+// WebSocket test endpoint
 app.get('/ws', (req, res) => {
   res.send('WebSocket endpoint ready');
+});
+
+// Log všetkých požiadaviek
+app.use((req, res, next) => {
+  console.log('Incoming request:', req.method, req.url);
+  next();
 });
 
 export default app;
