@@ -18,13 +18,20 @@ Modern delivery platform connecting customers with reliable carriers in real-tim
 ## Project Structure
 ```
 sendeliver/
-├── back/               # Backend Express application
-│   ├── server.js      # Main server file with WebSocket setup
-│   └── package.json
-├── front/             # React frontend application
-│   ├── public/
-│   ├── src/
-│   └── package.json
+├── .vscode/           # VS Code settings and configurations
+├── back/             # Backend Express application
+│   ├── server.js    # Main server file with WebSocket setup
+│   ├── node_modules/ # Backend dependencies
+│   └── package.json # Backend dependencies declaration
+└── front/           # React frontend application
+    ├── public/      # Static files and assets
+    │   ├── animations/  # Lottie animation files
+    │   └── index.html  # Main HTML template
+    ├── src/        # React source code
+    │   ├── components/ # React components
+    │   └── ...    # Other source files
+    ├── node_modules/ # Frontend dependencies
+    └── package.json # Frontend dependencies declaration
 ```
 
 ## Getting Started
