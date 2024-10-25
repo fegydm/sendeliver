@@ -6,23 +6,17 @@ function HaulerPage() {
   const [availableRequests, setAvailableRequests] = useState([]);
 
   useEffect(() => {
-    // Počúvaj na nové delivery requesty
     WebSocketService.onMessage('delivery_request', (data) => {
       setAvailableRequests(prev => [...prev, data]);
     });
   }, []);
 
-  const sendOffer = (requestId, offerData) => {
-    WebSocketService.sendDeliveryOffer(requestId, {
-      price: offerData.price,
-      estimatedTime: offerData.estimatedTime,
-      // ... ďalšie údaje
-    });
-  };
-
   return (
     <div>
-      {/* UI komponenty */}
+      <h1>Hauler Dashboard</h1>
+      {/* komponenty pridáme neskôr */}
     </div>
   );
 }
+
+export default HaulerPage;  // pridaný export default

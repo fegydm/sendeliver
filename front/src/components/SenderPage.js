@@ -4,27 +4,19 @@ import WebSocketService from '../services/websocket';
 
 function SenderPage() {
   const [requests, setRequests] = useState([]);
-  const [offers, setOffers] = useState([]);
 
   useEffect(() => {
-    // Počúvaj na ponuky od dopravcov
     WebSocketService.onMessage('delivery_offer', (data) => {
-      setOffers(prev => [...prev, data]);
+      setRequests(prev => [...prev, data]);
     });
   }, []);
 
-  const createDeliveryRequest = (requestData) => {
-    WebSocketService.sendDeliveryRequest({
-      pickup: requestData.pickup,
-      delivery: requestData.delivery,
-      cargo: requestData.cargo,
-      // ... ďalšie údaje
-    });
-  };
-
   return (
     <div>
-      {/* UI komponenty */}
+      <h1>Sender Dashboard</h1>
+      {/* komponenty pridáme neskôr */}
     </div>
   );
 }
+
+export default SenderPage;  // pridaný export default
