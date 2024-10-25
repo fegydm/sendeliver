@@ -19,7 +19,7 @@ const NotFound = () => {
       <noscript>
         <div className="text-center">
           <p className="text-lg mb-6">
-            Use the homepage {' '}
+            Use the homepage{' '}
             <a href="https://www.sendeliver.com" className="text-blue-600 underline">
               www.sendeliver.com
             </a>
@@ -44,7 +44,7 @@ const NotFound = () => {
             />
           )}
           <p className="text-lg mb-6">
-            Use the homepage {' '}
+            Use the homepage{' '}
             
               href="https://www.sendeliver.com"
               className="text-blue-600 hover:text-blue-800 underline"
