@@ -2,10 +2,10 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useEffect } from 'react';
 import WebSocketService from './services/websocket';
-import HomePage from './components/HomePage';
-import SenderPage from './components/SenderPage';
-import HaulerPage from './components/HaulerPage';
-import NotFound from './components/NotFound';
+import HomePage from './pages/HomePage';  // zmenená cesta
+import SenderPage from './pages/SenderPage';  // zmenená cesta
+import HaulerPage from './pages/HaulerPage';  // zmenená cesta
+import NotFound from './pages/NotFound';
 
 function App() {
   const domain = window.location.hostname;
