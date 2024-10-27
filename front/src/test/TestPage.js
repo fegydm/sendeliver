@@ -1,6 +1,6 @@
 // /front/src/pages/TestPage.js
 import React from 'react';
-import Navigation from '../components/Navigation';  // uisti sa že N je veľké ak tak máš pomenovaný súbor
+import Navigation from '../components/navigation.component';  // uisti sa že N je veľké ak tak máš pomenovaný súbor
 
 const TestPage = () => {
   const [userState, setUserState] = React.useState('COOKIES_DISABLED');

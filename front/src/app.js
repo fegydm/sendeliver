@@ -1,12 +1,12 @@
 // ./front/src/App.js
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useEffect } from 'react';
-import WebSocketService from './services/websocket';
-import HomePage from './pages/HomePage';
+import WebSocketService from './services/websocket.service';
+import HomePage from './pages/home.page';
 import SenderPage from './pages/SenderPage';
 import HaulerPage from './pages/HaulerPage';
 import NotFound from './pages/NotFound';
-import TestPage from './pages/TestPage';  // Nový import
+import TestPage from './test/TestPage';
 
 function App() {
   const domain = window.location.hostname;
@@ -22,19 +22,19 @@ function App() {
     });
   }, []);
 
-  // Pre lokálny vývoj považujeme localhost za hlavnú doménu
-  const isLocalhost = domain === 'localhost' || domain === '127.0.0.1';
-  const isMainDomain = domain === 'www.sendeliver.com' || domain === 'sendeliver.com' || isLocalhost;
+  // Uprav podmienky pre github.dev
+  const isDevEnvironment = domain.includes('github.dev') || domain === 'localhost' || domain === '127.0.0.1';
+  const isMainDomain = domain === 'www.sendeliver.com' || domain === 'sendeliver.com' || isDevEnvironment;
 
   return (
     <Router>
       <Routes>
-        {/* Testovacia stránka - dostupná len na localhoste */}
-        {isLocalhost && (
+        {/* Test route dostupná v dev prostredí */}
+        {isDevEnvironment && (
           <Route path="/test" element={<TestPage />} />
         )}
 
-        {/* Existujúce routy podľa domény */}
+        {/* Ostatné routy */}
         {domain === 'carriers.sendeliver.com' || domain === 'hauler.sendeliver.com' ? (
           <Route exact path="/" element={<HaulerPage />} />
         ) : 
@@ -42,7 +42,11 @@ function App() {
           <Route exact path="/" element={<SenderPage />} />
         ) : 
         isMainDomain ? (
-          <Route exact path="/" element={<HomePage />} />
+          <>
+            <Route exact path="/" element={<HomePage />} />
+            {/* V dev prostredí pridáme aj test route na root úrovni */}
+            {isDevEnvironment && <Route path="/test" element={<TestPage />} />}
+          </>
         ) : (
           <Route path="*" element={<NotFound />} />
         )}

@@ -1,6 +1,6 @@
 // ./front/src/pages/HomePage.js
 import React from 'react';
-import Navigation from '../components/Navigation';
+import Navigation from '../components/navigation.component';
 import Banner from '../components/Banner';
 import SearchForm from '../components/SearchForm';
 import AiSearch from '../components/AiSearch';  // pridané
