@@ -6,7 +6,7 @@ import './PinForm.css'; // Importujeme CSS súbor
 const PinForm = ({ onCorrectPin }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
-  const correctPin = '2024'; // Nastav svoj PIN
+  const correctPin = '1212'; // Nastav svoj PIN
   const inputRef = useRef(null);
 
   useEffect(() => {
