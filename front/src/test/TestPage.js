@@ -1,10 +1,24 @@
-// /front/src/pages/TestPage.js
-import React from 'react';
-import Navigation from '../components/navigation.component';  // uisti sa že N je veľké ak tak máš pomenovaný súbor
+// src/test/TestPage.js
+import React, { useState, useEffect } from 'react';
+import Navigation from '../components/navigation.component.js';  // Upravená cesta
 
 const TestPage = () => {
-  const [userState, setUserState] = React.useState('COOKIES_DISABLED');
-  
+  const [userState, setUserState] = useState('COOKIES_DISABLED');
+  const [backendStatus, setBackendStatus] = useState('');
+
+  useEffect(() => {
+    const testBackend = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/test');
+        const data = await response.json();
+        setBackendStatus(data.message);
+      } catch (error) {
+        setBackendStatus('Error connecting to backend');
+      }
+    };
+    testBackend();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Test Controls */}
@@ -21,6 +35,13 @@ const TestPage = () => {
         </select>
       </div>
 
+      {/* Backend Status */}
+      <div className="mb-4 p-4 bg-blue-100 rounded">
+        <p className="font-bold">Backend Status:</p>
+        <p>{backendStatus}</p>
+      </div>
+
+      {/* Navigation Component */}
       <Navigation 
         userState={userState}
         username={userState === 'LOGGED_IN' ? "Test User" : ""}

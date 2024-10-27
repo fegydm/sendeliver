@@ -1,0 +1,16 @@
+{
+    "name": "sendeliver",
+    "version": "1.0.0",
+    "scripts": {
+      "install:all": "cd front && npm install && cd ../back && npm install",
+      "front:start": "cd front && npm start",
+      "front:build": "cd front && npm run build",
+      "back:start": "cd back && npm start",
+      "back:dev": "cd back && npm run dev",
+      "start": "npm run front:build && cd back && npm start",
+      "dev": "concurrently \"npm run front:start\" \"npm run back:dev\""
+    },
+    "devDependencies": {
+      "concurrently": "^8.2.0"
+    }
+  }

@@ -1,6 +1,7 @@
 {
-  "name": "back",
+  "name": "sendeliver-backend",
   "version": "1.0.0",
+  "description": "SenDeliver logistics platform backend service",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -12,6 +13,9 @@
     "ws": "^8.13.0",
     "redis": "^4.6.7",
     "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
     "nodemon": "^3.0.1"
   }
 }
