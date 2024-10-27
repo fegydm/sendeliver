@@ -1,5 +1,4 @@
 // ./front/src/pages/secret.page1.js
-
 import React, { useState, useRef } from 'react';
 import PinForm from '../components/pin-form.component';
 
@@ -27,8 +26,8 @@ const SecretPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 py-12 px-4 relative">
-      <div className={`max-w-5xl mx-auto ${!isPinVerified ? 'blur-lg' : ''} transition-all duration-500`}>
-        {/* Video Container */}
+      <div className="max-w-5xl mx-auto">
+        {/* Video Container - 70% výšky */}
         <div className="relative pt-[56.25%] bg-black rounded-lg overflow-hidden">
           <video
             ref={videoRef}
@@ -41,7 +40,6 @@ const SecretPage = () => {
         {/* Ovládacie prvky */}
         {isPinVerified && (
           <div className="mt-6 space-y-4">
-            {/* Zvuk */}
             <div className="bg-gray-800 p-4 rounded-lg text-white">
               <p className="text-lg mb-2">Chcete spustiť video so zvukom?</p>
               <label className="flex items-center space-x-2">
@@ -59,19 +57,19 @@ const SecretPage = () => {
             <div className="flex justify-center space-x-4">
               <button
                 onClick={handlePlay}
-                className="btn btn-green"
+                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 Play
               </button>
               <button
                 onClick={handlePause}
-                className="btn btn-yellow"
+                className="px-8 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
               >
                 Pause
               </button>
               <button
                 onClick={handleStop}
-                className="btn btn-red"
+                className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 Stop
               </button>
@@ -79,10 +77,10 @@ const SecretPage = () => {
           </div>
         )}
       </div>
-      
-      {/* PIN formulár - vždy nad ostatným obsahom */}
+
+      {/* PIN Form - Zobrazený nad obsahom */}
       {!isPinVerified && (
-        <div className="absolute inset-0 flex items-center justify-center z-50">
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <PinForm onCorrectPin={() => setIsPinVerified(true)} />
         </div>
       )}

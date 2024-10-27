@@ -1,20 +1,26 @@
 // ./front/src/components/pin-form.component.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import './PinForm.css'; // Importujeme CSS súbor
 
 const PinForm = ({ onCorrectPin }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
-  const correctPin = '2024'; // Tu nastav svoj PIN
+  const correctPin = '2024'; // Nastav svoj PIN
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   const handlePinChange = (e) => {
     const value = e.target.value;
-    // Povoľ len čísla a max 4 znaky
     if (value.length <= 4 && /^\d*$/.test(value)) {
       setPin(value);
       setError(false);
       
-      // Automatická kontrola pri zadaní 4 čísel
       if (value.length === 4) {
         if (value === correctPin) {
           onCorrectPin();
@@ -43,33 +49,36 @@ const PinForm = ({ onCorrectPin }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-90 backdrop-blur-lg z-50">
+    <div className="pin-form-container" onClick={() => inputRef.current.focus()}>
       <form 
         onSubmit={handleSubmit} 
-        className={`bg-white p-8 rounded-lg shadow-xl transition-all duration-300 ${error ? 'shake' : ''}`}
+        className={`pin-form ${error ? 'error' : ''}`}
       >
-        <h2 className="text-2xl font-bold mb-4 text-center">Zadajte PIN</h2>
-        <div className="flex gap-2 mb-6">
+        <h2 className="pin-form-title">Zadajte PIN</h2>
+        <div className="pin-inputs">
           {[...Array(4)].map((_, i) => (
             <div 
               key={i} 
-              className={`w-12 h-12 border-2 ${
-                error ? 'border-red-500' : 'border-gray-300'
-              } rounded-lg flex items-center justify-center text-2xl font-bold`}
+              className={`pin-input ${error ? 'pin-input-error' : ''} ${pin.length === i ? 'pin-input-active' : ''}`}
             >
-              {pin[i] ? '•' : ''}
+              {pin[i] ? pin[i] : ''}
             </div>
           ))}
         </div>
         <input
-          type="password"
+          ref={inputRef}
+          type="tel" 
           value={pin}
           onChange={handlePinChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" // Zvýraznené aktívne pole
+          className="hidden-input"
+          maxLength="4"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck="false"
           autoFocus
         />
         {error && (
-          <p className="text-red-500 text-center mb-4">Nesprávny PIN</p>
+          <p className="error-message">Nesprávny PIN</p>
         )}
       </form>
     </div>

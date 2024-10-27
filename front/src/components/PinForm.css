@@ -1,0 +1,66 @@
+/* ./front/src/components/PinForm.css */
+
+.pin-form-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.7); /* Polopriehľadné tmavé pozadie */
+  z-index: 50;
+}
+
+.pin-form {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.pin-form-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.pin-inputs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+}
+
+.pin-input {
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid #ccc;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  transition: border-color 0.3s;
+}
+
+.pin-input-active {
+  border-color: blue; /* Zvýraznenie aktuálnej pozície pre "kurzor" */
+}
+
+.pin-input-error {
+  border-color: red;
+}
+
+.hidden-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  margin-top: 0.5rem;
+}

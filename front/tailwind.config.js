@@ -8,7 +8,6 @@ module.exports = {
       colors: {
         // Hlavná paleta pre dopravcov (ľavá strana)
         hauler: {
-          // Magenta odtiene
           primary: {
             50: '#fdf2f8',
             100: '#fce7f3',
@@ -21,7 +20,6 @@ module.exports = {
             800: '#9d174d',
             900: '#831843',
           },
-          // Sivé odtiene
           gray: {
             50: '#f8fafc',
             100: '#f1f5f9',
@@ -38,7 +36,6 @@ module.exports = {
 
         // Hlavná paleta pre klientov (pravá strana)
         client: {
-          // Jablková zelená
           primary: {
             50: '#f3faf7',
             100: '#def7ec',
@@ -51,7 +48,6 @@ module.exports = {
             800: '#03543f',
             900: '#014737',
           },
-          // Sivé odtiene (rovnaké ako pre dopravcov)
           gray: {
             50: '#f8fafc',
             100: '#f1f5f9',
@@ -66,30 +62,25 @@ module.exports = {
           }
         }
       },
-      // Rozšírenie pre tieňovanie
       boxShadow: {
         'soft': '0 2px 15px rgba(0, 0, 0, 0.05)',
         'medium': '0 4px 20px rgba(0, 0, 0, 0.1)',
         'hard': '0 8px 30px rgba(0, 0, 0, 0.15)',
       },
-      // Rozšírenie pre border radius
       borderRadius: {
         'xl': '1rem',
         '2xl': '1.5rem',
         '3xl': '2rem',
       },
-      // Rozšírenie pre fontsize
       fontSize: {
         'xxs': '0.625rem',
         'mega': '4.5rem',
       },
-      // Rozšírenie pre spacing
       spacing: {
         '72': '18rem',
         '84': '21rem',
         '96': '24rem',
       },
-      // Rozšírenie pre animácie
       animation: {
         shake: 'shake 0.5s ease-in-out',
       },
@@ -100,6 +91,14 @@ module.exports = {
           '50%': { transform: 'translateX(5px)' },
           '75%': { transform: 'translateX(-5px)' },
         },
+      },
+      // Pridanie backdrop efektov
+      backdropBlur: {
+        'none': '0',
+        'sm': '4px',
+        'md': '8px',
+        'lg': '12px',
+        'xl': '16px',
       },
     },
   },
