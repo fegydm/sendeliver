@@ -1,7 +1,14 @@
 // ./back/server.js
+import express from 'express';
+import cors from 'cors';
 import app from './app.js';
 import http from 'http';
 import { WebSocketServer } from 'ws';
+
+// Použitie CORS
+app.use(cors({
+    origin: '*', // Na vývojové účely povoľujeme všetky domény. Na produkciu zváž konkrétne domény.
+}));
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
@@ -17,12 +24,12 @@ wss.on('connection', (ws) => {
             const message = JSON.parse(rawData);
             console.log('Received message:', message);
 
-            switch(message.type) {
+            switch (message.type) {
                 case 'delivery_request':
                     // Broadcast všetkým dopravcom
                     broadcastToHaulers(message);
                     break;
-                    
+
                 case 'delivery_offer':
                     // Poslať ponuku konkrétnemu klientovi
                     sendToClient(message.requestId, message);
@@ -43,6 +50,9 @@ wss.on('connection', (ws) => {
                         type: 'hauler'
                     });
                     break;
+
+                default:
+                    console.log('Unknown message type:', message.type);
             }
         } catch (error) {
             console.error('Error processing message:', error);

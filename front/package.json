@@ -17,7 +17,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "build": "npm run build:css && GENERATE_SOURCEMAP=false react-scripts build",
+    "build:css": "npx tailwindcss -i ./src/index.css -o ./src/output.css --minify",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
