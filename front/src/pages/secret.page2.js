@@ -1,6 +1,6 @@
 // ./front/src/pages/secret.page2.js
 import React, { useState, useEffect, useRef } from 'react';
-import PinForm from '../components/pin-form.component';
+import PinForm from '../components/pin-formluke.component';
 
 const SecretPage2 = () => {
   const [isPinVerified, setIsPinVerified] = useState(false);
