@@ -1,22 +1,45 @@
 // ./front/src/pages/HomePage.js
-import React from 'react';
+import React, { useState } from 'react';
 import Navigation from '../components/navigation.component';
 import Banner from '../components/Banner';
 import SearchForm from '../components/SearchForm';
-import AiSearch from '../components/AiSearch';  // pridané
+import AiSearch from '../components/AiSearch';
 
 const HomePage = () => {
+  const [activeSection, setActiveSection] = useState(null);
+
+  const handleFocus = (section) => {
+    setActiveSection(section);
+  };
+
   return (
     <div className="min-h-screen">
       <Navigation authStatus="anonymous" />
       <Banner />
-      
+
       <div className="flex">
-        <div className="w-1/2 space-y-4">
+        {/* Sender Section */}
+        <div
+          className={`w-1/2 space-y-4 p-6 transition-all duration-300 ${
+            activeSection === 'carrier'
+              ? 'bg-gray-100 text-gray-400 border-gray-200'
+              : 'bg-[#FF00FF]/20 text-black border-[#FF00FF]/50'
+          }`}
+          onFocus={() => handleFocus('sender')}
+        >
           <SearchForm type="client" />
           <AiSearch type="client" />
         </div>
-        <div className="w-1/2 space-y-4">
+
+        {/* Hauler Section */}
+        <div
+          className={`w-1/2 space-y-4 p-6 transition-all duration-300 ${
+            activeSection === 'sender'
+              ? 'bg-gray-100 text-gray-400 border-gray-200'
+              : 'bg-[#74cc04]/20 text-black border-[#74cc04]/50'
+          }`}
+          onFocus={() => handleFocus('carrier')}
+        >
           <SearchForm type="carrier" />
           <AiSearch type="carrier" />
         </div>

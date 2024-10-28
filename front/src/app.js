@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useEffect } from 'react';
 import WebSocketService from './services/websocket.service';
 import HomePage from './pages/home.page';
-import SenderPage from './pages/SenderPage';
-import HaulerPage from './pages/HaulerPage';
-import NotFound from './pages/NotFound';
-import TestPage from './test/TestPage';
+import SenderPage from './pages/sender.page';
+import HaulerPage from './pages/hauler.page';
+import NotFound from './pages/notfound.page';
+import TestPage from './test/test.page';
 import SecretPage from './pages/secret.page1';
 import SecretPageLuke from './pages/secret.page2';
 
