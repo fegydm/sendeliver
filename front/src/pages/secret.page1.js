@@ -20,7 +20,10 @@ const SecretPage = () => {
        setIsPinVerified(false);
      }, 60000); // 1 minute inactivity
 
-     return () => clearTimeout(timer);
+     return () => {
+       clearTimeout(timer);
+       document.head.removeChild(link); // Cleanup the preloaded video link
+     };
    }
  }, [isPinVerified]);
 

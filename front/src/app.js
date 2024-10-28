@@ -8,6 +8,7 @@ import HaulerPage from './pages/HaulerPage';
 import NotFound from './pages/NotFound';
 import TestPage from './test/TestPage';
 import SecretPage from './pages/secret.page1';
+import SecretPageLuke from './pages/secret.page2';
 
 function App() {
   const domain = window.location.hostname;
@@ -27,9 +28,13 @@ function App() {
   const isDevEnvironment = domain.includes('github.dev') || domain === 'localhost' || domain === '127.0.0.1';
   const isMainDomain = domain === 'www.sendeliver.com' || domain === 'sendeliver.com' || isDevEnvironment;
   
-  // Nová podmienka pre tajnú stránku
+  // Nová podmienka pre tajné stránky
   if (domain === 'jozo.sendeliver.com' || (isDevEnvironment && domain.includes('jozo'))) {
     return <SecretPage />;
+  }
+
+  if (domain === 'luke.sendeliver.com' || (isDevEnvironment && domain.includes('luke'))) {
+    return <SecretPageLuke />;
   }
 
   return (
@@ -54,6 +59,7 @@ function App() {
             {isDevEnvironment && <Route path="/test" element={<TestPage />} />}
             {/* Tajná stránka dostupná aj cez cestu v dev móde */}
             {isDevEnvironment && <Route path="/jozo" element={<SecretPage />} />}
+            {isDevEnvironment && <Route path="/luke" element={<SecretPageLuke />} />}
           </>
         ) : (
           <Route path="*" element={<NotFound />} />
