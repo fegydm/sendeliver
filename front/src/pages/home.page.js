@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Navigation from '../components/navigation.component';
 import Banner from '../components/banner.component';
-import SearchForm from '../components/SearchForm';
+import SearchForm from '../components/search-form.component';
 import AiSearch from '../components/ai-search.component';
 
 const HomePage = () => {
