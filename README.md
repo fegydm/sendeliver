@@ -1,67 +1,135 @@
-markdownCopy# SenDeliver Platform
------------------------------------------------------------------------------
+# SenDeliver Platform
 
-Modern logistics platform connecting clients with carriers in real-time.
+Modern logistics platform connecting clients with carriers through real-time matching and AI-powered search.
 
-## 1. Quick Start
------------------------------------------------------------------------------
+## Project Structure
 
-Inštalácia:
-```bash
-git clone https://github.com/yourusername/sendeliver.git
-cd sendeliver
-Backend setup:
-bashCopycd back
-npm install
-npm start
-Frontend setup:
-bashCopycd front
-npm install
-npm start
-2. Project Structure
-
-Štruktúra projektu:
-plaintextCopysendeliver/
-├── back/                      # Backend application
-│   ├── config/               # Configuration files
-│   │   ├── redis.js         # Redis connection setup
-│   │   └── websocket.js     # WebSocket server config
-│   ├── services/            # Business logic services
-│   │   ├── cacheService.js  # Redis caching logic
-│   │   └── wsService.js     # WebSocket handling
-│   ├── package.json         # Backend dependencies
-│   ├── app.js              # Express application setup
-│   └── server.js           # Main server entry point
+```plaintext
+.
+├── front/
+│   ├── src/
+│   │   ├── components/            # Reusable UI components
+│   │   ├── hooks/                 # React custom hooks
+│   │   ├── layouts/               # Page layouts
+│   │   ├── pages/                 # Application pages
+│   │   ├── services/              # API and WebSocket services
+│   │   ├── tests/                 # Test pages and components
+│   │   ├── app.front.js           # Main frontend application
+│   │   ├── index.js               # React entry point
+│   │   ├── index.css              # Global Tailwind styles
+│   │   └── app.front.css          # Main component styles
+│   ├── public/
+│   │   ├── animations/            # Lottie animations
+│   │   └── video/                 # Public videos
+│   └── package.json               # Frontend config
 │
-└── front/                    # Frontend application
-    ├── public/              # Static files
-    │   ├── animations/      # Lottie animation files
-    │   └── index.html      # Main HTML template
-    └── src/                # React source code
-        ├── components/     # React components
-        ├── pages/         # Page components
-        ├── services/      # Frontend services
-        └── App.js        # Main React component
-3. Tech Stack
+├── back/
+│   ├── src/
+│   │   ├── models/                # Database models
+│   │   └── controllers/           # Request handlers
+│   ├── services/                  # Backend services
+│   ├── config/                    # App configuration
+│   ├── server.js                  # Main server file
+│   └── package.json               # Backend config
+│
+└── package.json                   # Root project config
+Quick Start
 
-Frontend:
+Installation:
 
-React
-React Router
+bashCopygit clone https://github.com/yourusername/sendeliver.git
+cd sendeliver
+npm run install:all
+
+Development:
+
+bashCopynpm run dev
+
+Production:
+
+bashCopynpm start
+Domain Structure
+
+Main Domain: sendeliver.com
+Public Demos:
+
+carriers.sendeliver.com
+clients.sendeliver.com
+
+
+Private Domains: [company].sendeliver.com
+
+Access Levels
+🔴 Anonymous
+
+Basic search functionality
+Demo version
+Limited features
+
+🟡 Cookie Users
+
+Search history
+Persistent demo data
+Full features access
+
+🟢 Registered
+
+Custom subdomain
+Complete functionality
+User management
+Statistics
+
+Core Features
+Real-time Matching
+
+WebSocket communication
+Live vehicle tracking
+Instant cargo updates
+
+AI Integration
+
+Natural language search
+Route optimization
+Intelligent matching
+
+User Management
+plaintextCopyOrganization Structure:
+├── Main Administrator
+├── Dispatchers
+└── Regular Users/Drivers
+Tech Stack
+Frontend
+
+React 18
+TailwindCSS
 WebSocket client
-Tailwind CSS
 Lottie animations
 
-Backend:
+Backend
 
 Node.js & Express
 WebSocket server (ws)
 Redis cache
-PostgreSQL (dbsd)
-PostGIS extension
+PostgreSQL with PostGIS
 
-4. Environment Variables
+Development
+Scripts
+bashCopy# Root
+npm run dev          # Development mode
+npm start           # Production mode
+npm run clean       # Clean builds
 
+# Frontend
+cd front
+npm run dev         # React development
+npm start           # Serve production
+npm run build       # Build for production
+
+# Backend
+cd back
+npm run dev         # Nodemon development
+npm start           # Production server
+Environment Variables
 Backend (.env):
 envCopyDATABASE_URL=postgresql://...
 REDIS_URL=redis://...
@@ -69,86 +137,21 @@ JWT_SECRET=your-secret
 Frontend (.env):
 envCopyREACT_APP_API_URL=https://api.sendeliver.com
 REACT_APP_WS_URL=wss://api.sendeliver.com
-5. Domain Structure
+Deployment
+Render configuration:
 
-Main Domain:
+Web Service (Backend)
 
-sendeliver.com
-www.sendeliver.com
+Build: npm install
+Start: npm start
 
-Public Subdomains (Demo):
-plaintextCopycarriers.sendeliver.com
-clients.sendeliver.com
-Private Domains:
-plaintextCopy[company].sendeliver.com
-6. Access Levels
 
-User Types:
-plaintextCopy🔴 Anonymous without Cookies
-   - Basic search
-   - Demo access
-   - Limited features
+Static Site (Frontend)
 
-🟡 Anonymous with Cookies
-   - Search history
-   - Persistent demo
-   - Full tables
+Build: npm run build
+Publish directory: build
 
-🟢 Registered Users
-   - Custom domain
-   - Full access
-   - Management tools
-7. Core Features
 
-Real-time Features:
-
-Live tracking
-Instant matching
-Status updates
-
-AI Integration:
-
-Natural language search
-Route optimization
-Smart matching
-
-User Management:
-plaintextCopyOrganization Hierarchy:
-├── Main Administrator
-├── Dispatchers
-└── Regular Users/Drivers
-8. Development Guidelines
-
-Git Workflow:
-bashCopygit checkout -b feature/new-feature
-git commit -m "feat: add new feature"
-git push origin feature/new-feature
-Code Style:
-
-ESLint config
-Prettier format
-JSDoc comments
-
-9. Deployment
-
-Render Setup:
-Backend (Web Service):
-bashCopynpm install
-npm start
-Frontend (Static Site):
-bashCopynpm run build
-10. Support
-
-Contact:
-
-GitHub Issues for bugs
-Direct contact for business
 
 License
-
 Proprietary software. All rights reserved.
-Copy
-Takýto formát je lepší? Jasne oddelené sekcie a zvýraznené kódové bloky? CopyRetryClaude does not have the ability to run the code it generates yet. Claude does not have internet access. Links provided may not be accurate or up to date.Jano, ale co mam zobrat do clipboardu a preniest na github?EditCelý obsah medzi trojitými backtickmi. Konkrétne od:
-markdownCopy# SenDeliver Platform
-po:
-CopyProprietary software. All rights reserved.

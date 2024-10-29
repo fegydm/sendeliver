@@ -1,16 +1,15 @@
 {
   "name": "sendeliver-root",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "install:all": "cd front && npm install && cd ../back && npm install",
     "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
-    "start": "npm run build && concurrently \"cd back && npm start\"",
-    "build": "cd front && npm run build"
+    "start": "cd front && npm run build && cd ../back && npm start",
+    "build": "cd front && npm run build",
+    "clean": "rm -rf front/build back/dist node_modules"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
-  },
-  "dependencies": {
-    "webpack-dev-server": "^5.1.0"
   }
 }
