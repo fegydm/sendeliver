@@ -4,7 +4,6 @@ node_modules/
 /back/node_modules/
 
 # Production builds
-build/
 /back/build/
 dist/
 
