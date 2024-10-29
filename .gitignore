@@ -5,7 +5,6 @@ node_modules/
 
 # Production builds
 build/
-/front/build/
 /back/build/
 dist/
 
