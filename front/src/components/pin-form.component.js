@@ -1,7 +1,7 @@
 // ./front/src/components/pin-form.component.js
 
 import React, { useState, useEffect, useRef } from 'react';
-import './PinForm.css'; // Importujeme CSS súbor
+import './pin-form.component.css'; // Importujeme CSS súbor
 
 const PinForm = ({ onCorrectPin }) => {
   const [pin, setPin] = useState('');

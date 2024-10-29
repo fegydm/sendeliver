@@ -1,9 +1,9 @@
 // ./front/src/pages/HomePage.js
 import React, { useState } from 'react';
 import Navigation from '../components/navigation.component';
-import Banner from '../components/Banner';
+import Banner from '../components/banner.component';
 import SearchForm from '../components/SearchForm';
-import AiSearch from '../components/AiSearch';
+import AiSearch from '../components/ai-search.component';
 
 const HomePage = () => {
   const [activeSection, setActiveSection] = useState(null);

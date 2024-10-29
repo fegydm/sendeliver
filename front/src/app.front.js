@@ -1,4 +1,4 @@
-// ./front/src/app.js
+// ./front/src/front/app.js
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { useEffect } from 'react';
 import WebSocketService from './services/websocket.service';
@@ -6,9 +6,9 @@ import HomePage from './pages/home.page';
 import SenderPage from './pages/sender.page';
 import HaulerPage from './pages/hauler.page';
 import NotFound from './pages/notfound.page';
-import TestPage from './test/test.page';
-import SecretPage from './pages/secret.page1';
-import SecretPageLuke from './pages/secret.page2';
+import TestPage from './tests/test.page';
+import SecretPageJozo from './pages/secret1.page';
+import SecretPageLuke from './pages/secret2.page';
 
 function App() {
   const domain = window.location.hostname;
@@ -30,7 +30,7 @@ function App() {
   
   // Nová podmienka pre tajné stránky
   if (domain === 'jozo.sendeliver.com' || (isDevEnvironment && domain.includes('jozo'))) {
-    return <SecretPage />;
+    return <SecretPageJozo />;
   }
 
   if (domain === 'luke.sendeliver.com' || (isDevEnvironment && domain.includes('luke'))) {
@@ -58,7 +58,7 @@ function App() {
             {/* V dev prostredí pridáme aj test route na root úrovni */}
             {isDevEnvironment && <Route path="/test" element={<TestPage />} />}
             {/* Tajná stránka dostupná aj cez cestu v dev móde */}
-            {isDevEnvironment && <Route path="/jozo" element={<SecretPage />} />}
+            {isDevEnvironment && <Route path="/jozo" element={<SecretPageJozo />} />}
             {isDevEnvironment && <Route path="/luke" element={<SecretPageLuke />} />}
           </>
         ) : (
