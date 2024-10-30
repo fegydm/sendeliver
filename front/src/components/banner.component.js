@@ -1,4 +1,4 @@
-// ./front/src/components/Banner.js
+// ./front/src/components/banner.component.js
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Player } from '@lottiefiles/react-lottie-player';

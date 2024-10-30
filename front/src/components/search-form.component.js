@@ -1,4 +1,4 @@
-// ./front/src/components/SearchForm.js
+// ./front/src/components/search-form.component.js
 import React, { useState } from 'react';
 
 const SearchForm = ({ type }) => {

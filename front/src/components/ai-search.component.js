@@ -1,4 +1,4 @@
-// ./front/src/components/AiSearch.js
+// ./front/src/components/ai-search.component.js
 import React, { useState } from 'react';
 
 const AiSearch = ({ type }) => {

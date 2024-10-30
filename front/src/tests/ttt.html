@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animácia Slnka</title>
+  <style>
+    /* Základné štýly slnka */
+    .sun {
+      cursor: pointer;
+      transition: fill 0.3s;
+    }
+    
+    /* Štýly a animácie pre lúče */
+    .sun-ray {
+      transform-origin: 50% 50%;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .sun:hover .sun-ray {
+      opacity: 1;
+      animation: spin 1.5s linear infinite;
+    }
+
+    /* Animácia tváre slnka */
+    .sun-face {
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .sun:hover .sun-face {
+      opacity: 1;
+    }
+
+    /* Kľúčové snímky pre rotáciu lúčov */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #F3F4F6;">
+
+  <!-- Slnko s animáciou -->
+  <svg class="sun" width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Kruh slnka -->
+    <circle cx="50" cy="50" r="20" fill="#FFD700" />
+
+    <!-- Lúče slnka -->
+    <g fill="#FFD700">
+      <line x1="50" y1="5" x2="50" y2="15" class="sun-ray" stroke-width="3" />
+      <line x1="50" y1="85" x2="50" y2="95" class="sun-ray" stroke-width="3" />
+      <line x1="5" y1="50" x2="15" y2="50" class="sun-ray" stroke-width="3" />
+      <line x1="85" y1="50" x2="95" y2="50" class="sun-ray" stroke-width="3" />
+      <line x1="20" y1="20" x2="30" y2="30" class="sun-ray" stroke-width="3" />
+      <line x1="70" y1="70" x2="80" y2="80" class="sun-ray" stroke-width="3" />
+      <line x1="20" y1="80" x2="30" y2="70" class="sun-ray" stroke-width="3" />
+      <line x1="70" y1="30" x2="80" y2="20" class="sun-ray" stroke-width="3" />
+    </g>
+
+    <!-- Tvár slnka, ktorá sa objaví pri hoveri -->
+    <g class="sun-face" fill="black">
+      <!-- Oči -->
+      <circle cx="43" cy="45" r="2" />
+      <circle cx="57" cy="45" r="2" />
+      <!-- Úsmev -->
+      <path d="M40 55 Q50 65, 60 55" stroke="black" stroke-width="2" fill="none" />
+    </g>
+  </svg>
+
+</body>
+</html>

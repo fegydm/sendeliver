@@ -1,49 +1,63 @@
-// ./front/src/pages/HomePage.js
-import React, { useState } from 'react';
+// ./front/src/pages/home.page.js
+import React, { useState, useEffect } from 'react';
 import Navigation from '../components/navigation.component';
 import Banner from '../components/banner.component';
 import SearchForm from '../components/search-form.component';
 import AiSearch from '../components/ai-search.component';
+import QuickActions from '../components/quick-actions.component';
+import ContentSection from '../components/content-section.component';
+import FloatingButton from '../components/floating-button.component';
 
-const HomePage = () => {
+const HomePage = ({ isDarkMode, onToggleDarkMode }) => {
   const [activeSection, setActiveSection] = useState(null);
+  const [userState, setUserState] = useState('COOKIES_DISABLED');
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [showQuickStats, setShowQuickStats] = useState(false);
 
   const handleFocus = (section) => {
+    if (activeSection === section) return;
+    setIsAnimating(true);
     setActiveSection(section);
+    setShowQuickStats(true);
+    setTimeout(() => setIsAnimating(false), 300);
   };
 
   return (
-    <div className="min-h-screen">
-      <Navigation authStatus="anonymous" />
+    <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-white'}`}>
+      <Navigation 
+        userState={userState}
+        isDarkMode={isDarkMode} 
+        onToggleDarkMode={onToggleDarkMode}
+      />
       <Banner />
 
-      <div className="flex">
-        {/* Sender Section */}
-        <div
-          className={`w-1/2 space-y-4 p-6 transition-all duration-300 ${
-            activeSection === 'carrier'
-              ? 'bg-gray-100 text-gray-400 border-gray-200'
-              : 'bg-[#FF00FF]/20 text-black border-[#FF00FF]/50'
-          }`}
-          onFocus={() => handleFocus('sender')}
-        >
-          <SearchForm type="client" />
-          <AiSearch type="client" />
-        </div>
+      <main className="container mx-auto px-4 py-8">
+        <QuickActions />
 
-        {/* Hauler Section */}
-        <div
-          className={`w-1/2 space-y-4 p-6 transition-all duration-300 ${
-            activeSection === 'sender'
-              ? 'bg-gray-100 text-gray-400 border-gray-200'
-              : 'bg-[#74cc04]/20 text-black border-[#74cc04]/50'
-          }`}
-          onFocus={() => handleFocus('carrier')}
-        >
-          <SearchForm type="carrier" />
-          <AiSearch type="carrier" />
+        <div className="flex flex-col md:flex-row gap-4 items-stretch min-h-[600px]">
+          <ContentSection
+            type="sender"
+            isActive={activeSection === 'sender'}
+            showStats={showQuickStats}
+            onFocus={handleFocus}
+          >
+            <SearchForm type="client" isActive={activeSection === 'sender'} />
+            <AiSearch type="client" isActive={activeSection === 'sender'} />
+          </ContentSection>
+
+          <ContentSection
+            type="carrier"
+            isActive={activeSection === 'carrier'}
+            showStats={showQuickStats}
+            onFocus={handleFocus}
+          >
+            <SearchForm type="carrier" isActive={activeSection === 'carrier'} />
+            <AiSearch type="carrier" isActive={activeSection === 'carrier'} />
+          </ContentSection>
         </div>
-      </div>
+      </main>
+
+      <FloatingButton />
     </div>
   );
 };

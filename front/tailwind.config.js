@@ -3,6 +3,7 @@ module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
+  darkMode: 'class',  // Povolenie tmavého režimu pomocou triedy 'dark'
   theme: {
     extend: {
       colors: {
@@ -92,7 +93,6 @@ module.exports = {
           '75%': { transform: 'translateX(-5px)' },
         },
       },
-      // Pridanie backdrop efektov
       backdropBlur: {
         'none': '0',
         'sm': '4px',
