@@ -1,4 +1,3 @@
-// ./front/src/components/navigation.component.js
 import React, { useState } from 'react';
 import { Menu, Home, Sun, Moon } from 'lucide-react';
 
@@ -11,13 +10,11 @@ const UserState = {
 const languages = {
   en: {
     name: 'English',
-    flag: '🇬🇧',
-    grayFlag: '/images/flags/gb-gray.svg',  // Potrebujeme vytvoriť SVG vlajky
+    flagPath: '/flags/4x3/optimized/gb.svg'
   },
   sk: {
     name: 'Slovenčina',
-    flag: '🇸🇰',
-    grayFlag: '/images/flags/sk-gray.svg',
+    flagPath: '/flags/4x3/optimized/sk.svg'
   }
 };
 
@@ -90,43 +87,56 @@ const Navigation = ({
             <div className="relative">
               <button 
                 onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                className="p-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                className="p-2 rounded-lg transition-colors flex items-center space-x-2 hover:bg-gray-700 group"
               >
-                <img 
-                  src={languages[currentLang].grayFlag}
-                  alt={languages[currentLang].name}
-                  className="w-6 h-6 grayscale hover:grayscale-0 transition-all"
-                />
-                {isLangMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 py-2 w-48 bg-gray-800 rounded-lg shadow-xl">
-                    {Object.entries(languages).map(([code, lang]) => (
-                      <button
-                        key={code}
-                        onClick={() => {
-                          setCurrentLang(code);
-                          setIsLangMenuOpen(false);
-                        }}
-                        className="flex items-center space-x-2 w-full px-4 py-2 hover:bg-gray-700 transition-colors"
-                      >
-                        <span className="text-xl">{lang.flag}</span>
-                        <span>{lang.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <div className="w-6 h-6">
+                  <img 
+                    src={languages[currentLang].flagPath}
+                    alt={languages[currentLang].name}
+                    className="w-full h-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-200"
+                  />
+                </div>
               </button>
+              {isLangMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 py-2 w-48 bg-gray-800 rounded-lg shadow-xl z-50">
+                  {Object.entries(languages).map(([code, lang]) => (
+                    <button
+                      key={code}
+                      onClick={() => {
+                        setCurrentLang(code);
+                        setIsLangMenuOpen(false);
+                      }}
+                      className="flex items-center space-x-3 w-full px-4 py-2 hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="w-6 h-6">
+                        <img 
+                          src={lang.flagPath}
+                          alt={lang.name}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <span>{lang.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Dark Mode Toggle */}
             <button 
               onClick={onToggleDarkMode}
-              className="p-2 rounded-lg hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-700 transition-colors group"
               aria-label="Toggle dark mode"
             >
               {isDarkMode ? (
-                <Sun className="w-6 h-6 hover:text-yellow-400 transition-colors" />
+                <Sun className="w-6 h-6 text-gray-400 group-hover:text-yellow-400 transition-all duration-200 hidden group-hover:inline" />
               ) : (
-                <Moon className="w-6 h-6 hover:text-yellow-400 transition-colors" />
+                <Moon className="w-6 h-6 text-gray-400 group-hover:text-yellow-400 transition-all duration-200 hidden group-hover:inline" />
+              )}
+              {isDarkMode ? (
+                <Moon className="w-6 h-6 text-gray-400 group-hover:text-yellow-400 transition-all duration-200 inline group-hover:hidden" />
+              ) : (
+                <Sun className="w-6 h-6 text-gray-400 group-hover:text-yellow-400 transition-all duration-200 inline group-hover:hidden" />
               )}
             </button>
           </div>

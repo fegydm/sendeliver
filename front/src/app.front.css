@@ -1,3 +1,4 @@
+/* src/app.front.css */
 .App {
   text-align: center;
 }
@@ -22,6 +23,52 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+}
+
+/* Štýly pre vlajky */
+.flag-icon {
+  width: 24px;
+  height: 18px;
+  object-fit: contain;
+  transition: all 0.2s ease-in-out;
+}
+
+.flag-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.flag-gray {
+  filter: grayscale(100%) brightness(0.9);
+}
+
+.flag-hover:hover {
+  filter: grayscale(0);
+  transform: scale(1.05);
+}
+
+/* Dropdown štýly pre vlajky */
+.flag-dropdown {
+  position: relative;
+}
+
+.flag-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.flag-dropdown-item:hover .flag-icon {
+  filter: grayscale(0);
+  transform: scale(1.05);
 }
 
 .App-link {

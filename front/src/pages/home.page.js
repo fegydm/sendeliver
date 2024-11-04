@@ -4,7 +4,6 @@ import Navigation from '../components/navigation.component';
 import Banner from '../components/banner.component';
 import SearchForm from '../components/search-form.component';
 import AiSearch from '../components/ai-search.component';
-import QuickActions from '../components/quick-actions.component';
 import ContentSection from '../components/content-section.component';
 import FloatingButton from '../components/floating-button.component';
 
@@ -32,8 +31,6 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }) => {
       <Banner />
 
       <main className="container mx-auto px-4 py-8">
-        <QuickActions />
-
         <div className="flex flex-col md:flex-row gap-4 items-stretch min-h-[600px]">
           <ContentSection
             type="sender"
