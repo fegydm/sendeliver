@@ -39,7 +39,6 @@ function App() {
   const isSenderDomain = domain === 'clients.sendeliver.com' || domain === 'sender.sendeliver.com';
   const isHaulerDomain = domain === 'carriers.sendeliver.com' || domain === 'hauler.sendeliver.com';
 
-  // Zvláštna logika pre tajné stránky
   if (domain === 'jozo.sendeliver.com' || (isDevEnvironment && domain.includes('jozo'))) {
     return (
       <div className={isDarkMode ? 'dark' : ''}>
@@ -60,19 +59,21 @@ function App() {
     <Router>
       <div className={isDarkMode ? 'dark' : ''}>
         <Routes>
-          {/* Testovacia stránka dostupná v prostredí vývoja */}
           {isDevEnvironment && <Route path="/test" element={<TestPage />} />}
           
-          {/* Podstránky pre subdomény "sender" a "hauler" */}
           {isSenderDomain && <Route path="/" element={<SenderPage />} />}
           {isHaulerDomain && <Route path="/" element={<HaulerPage />} />}
           
-          {/* Hlavná doména */}
           {isMainDomain ? (
             <>
               <Route path="/" element={<HomePage isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />} />
               <Route path="/sender" element={<SenderPage />} />
               <Route path="/hauler" element={<HaulerPage />} />
+
+              {/* Presmerovania pre alternatívne URL */}
+              <Route path="/clients" element={<Navigate to="/sender" replace />} />
+              <Route path="/carriers" element={<Navigate to="/hauler" replace />} />
+
               {isDevEnvironment && <Route path="/jozo" element={<SecretPageJozo />} />}
               {isDevEnvironment && <Route path="/luke" element={<SecretPageLuke />} />}
             </>
@@ -80,7 +81,6 @@ function App() {
             <Route path="*" element={<NotFound />} />
           )}
           
-          {/* Presmerovanie pre /sender a /hauler subdomény */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

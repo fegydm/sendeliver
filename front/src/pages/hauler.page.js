@@ -1,8 +1,8 @@
 // ./front/src/pages/hauler.page.js
 import React from 'react';
-import Navigation from '../components/navigation.component';
-import BannerH from '../components/banner-h.component';
-import UnderConstruction from '../components/under-construction.component';
+import Navigation from '../components/navigation.component.js';
+import BannerH from '../components/banner-h.component.js';
+import UnderConstruction from '../components/under-construction.component.js';
 
 const HaulerHomePage = () => {
   return (

@@ -1,8 +1,8 @@
 // ./front/src/pages/sender.page.js
 import React from 'react';
-import Navigation from '../components/navigation.component';
-import BannerS from '../components/banner-s.component';
-import UnderConstruction from '../components/under-construction.component';
+import Navigation from '../components/navigation.component.js';
+import BannerS from '../components/banner-s.component.js';
+import UnderConstruction from '../components/under-construction.component.js';
 
 const SenderHomePage = () => {
   return (
