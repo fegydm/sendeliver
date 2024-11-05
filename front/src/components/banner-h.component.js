@@ -1,0 +1,30 @@
+// ./front/src/components/banner-h.component.js
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+const BannerH = () => {
+  return (
+    <div className="bg-client-primary-500 text-white p-6">
+      <h1 className="text-4xl font-bold text-center mb-4">carriers.sendeliver.com</h1>
+      <div className="flex justify-center space-x-8">
+        <Link to="/dashboard" className="hover:underline">
+          Dashboard
+        </Link>
+        <Link to="/fleet" className="hover:underline">
+          Fleet
+        </Link>
+        <Link to="/people" className="hover:underline">
+          People
+        </Link>
+        <Link to="/logbook" className="hover:underline">
+          Logbook
+        </Link>
+        <Link to="/exchange" className="hover:underline">
+          Exchange
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+export default BannerH;

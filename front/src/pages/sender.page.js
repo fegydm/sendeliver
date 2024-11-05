@@ -1,13 +1,17 @@
-// ./front/src/pages/SenderPage.js
+// ./front/src/pages/sender.page.js
 import React from 'react';
+import Navigation from '../components/navigation.component';
+import BannerS from '../components/banner-s.component';
+import UnderConstruction from '../components/under-construction.component';
 
-const SenderPage = () => {
+const SenderHomePage = () => {
   return (
-    <div className="min-h-screen bg-[#FF00FF]/10">
-      <h1>Sender Dashboard</h1>
-      {/* TODO: Implement sender dashboard */}
+    <div className="min-h-screen bg-gray-100">
+      <Navigation />
+      <BannerS />
+      <UnderConstruction />
     </div>
   );
 };
 
-export default SenderPage;
+export default SenderHomePage;

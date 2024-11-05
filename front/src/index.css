@@ -1,8 +1,14 @@
 /* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   background-color: #f0f8ff; /* Svetlo modrá */
+  min-width: 320px; /* Minimálna šírka stránky */
+  overflow-x: auto; /* Povoliť horizontálne posúvanie pod 320px */
 }
 
 .container {
@@ -10,7 +16,8 @@ body {
   height: 100vh; /* Celá výška okna */
 }
 
-.client-section, .carrier-section {
+.client-section,
+.carrier-section {
   flex: 1; /* Obidve sekcie zaberajú rovnakú šírku */
   padding: 20px;
   box-sizing: border-box; /* Započítaj padding do šírky */
@@ -56,6 +63,3 @@ button {
 button:hover {
   background-color: #45a049; /* Tmavšia zelená pri hover */
 }
-@tailwind base;
-@tailwind components;
-@tailwind utilities;

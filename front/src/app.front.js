@@ -1,5 +1,5 @@
 // ./front/src/app.front.js
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import WebSocketService from './services/websocket.service';
 import HomePage from './pages/home.page';
@@ -11,76 +11,81 @@ import SecretPageJozo from './pages/secret1.page';
 import SecretPageLuke from './pages/secret2.page';
 
 function App() {
- const domain = window.location.hostname;
- const [isDarkMode, setIsDarkMode] = useState(false);
- console.log("Current Domain: ", domain);
+  const domain = window.location.hostname;
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  console.log("Current Domain: ", domain);
 
- useEffect(() => {
-   WebSocketService.onMessage('connection', () => {
-     console.log('WebSocket Connected');
-   });
+  useEffect(() => {
+    WebSocketService.onMessage('connection', () => {
+      console.log('WebSocket Connected');
+    });
 
-   WebSocketService.onMessage('error', (error) => {
-     console.error('WebSocket Error:', error);
-   });
+    WebSocketService.onMessage('error', (error) => {
+      console.error('WebSocket Error:', error);
+    });
 
-   const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-   setIsDarkMode(prefersDarkMode);
-   if (prefersDarkMode) document.documentElement.classList.add('dark');
- }, []);
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(prefersDarkMode);
+    if (prefersDarkMode) document.documentElement.classList.add('dark');
+  }, []);
 
- const toggleDarkMode = () => {
-   setIsDarkMode(prev => !prev);
-   document.documentElement.classList.toggle('dark');
- };
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => !prev);
+    document.documentElement.classList.toggle('dark');
+  };
 
- const isDevEnvironment = domain.includes('github.dev') || domain === 'localhost' || domain === '127.0.0.1';
- const isMainDomain = domain === 'www.sendeliver.com' || domain === 'sendeliver.com' || isDevEnvironment;
- 
- if (domain === 'jozo.sendeliver.com' || (isDevEnvironment && domain.includes('jozo'))) {
-   return (
-     <div className={isDarkMode ? 'dark' : ''}>
-       <SecretPageJozo />
-     </div>
-   );
- }
+  const isDevEnvironment = domain.includes('github.dev') || domain === 'localhost' || domain === '127.0.0.1';
+  const isMainDomain = domain === 'www.sendeliver.com' || domain === 'sendeliver.com' || isDevEnvironment;
+  const isSenderDomain = domain === 'clients.sendeliver.com' || domain === 'sender.sendeliver.com';
+  const isHaulerDomain = domain === 'carriers.sendeliver.com' || domain === 'hauler.sendeliver.com';
 
- if (domain === 'luke.sendeliver.com' || (isDevEnvironment && domain.includes('luke'))) {
-   return (
-     <div className={isDarkMode ? 'dark' : ''}>
-       <SecretPageLuke />
-     </div>
-   );
- }
+  // Zvláštna logika pre tajné stránky
+  if (domain === 'jozo.sendeliver.com' || (isDevEnvironment && domain.includes('jozo'))) {
+    return (
+      <div className={isDarkMode ? 'dark' : ''}>
+        <SecretPageJozo />
+      </div>
+    );
+  }
 
- return (
-   <Router>
-     <div className={isDarkMode ? 'dark' : ''}>
-       <Routes>
-         {isDevEnvironment && (
-           <Route path="/test" element={<TestPage />} />
-         )}
+  if (domain === 'luke.sendeliver.com' || (isDevEnvironment && domain.includes('luke'))) {
+    return (
+      <div className={isDarkMode ? 'dark' : ''}>
+        <SecretPageLuke />
+      </div>
+    );
+  }
 
-         {domain === 'carriers.sendeliver.com' || domain === 'hauler.sendeliver.com' ? (
-           <Route exact path="/" element={<HaulerPage />} />
-         ) : 
-         domain === 'clients.sendeliver.com' || domain === 'sender.sendeliver.com' ? (
-           <Route exact path="/" element={<SenderPage />} />
-         ) : 
-         isMainDomain ? (
-           <>
-             <Route exact path="/" element={<HomePage isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />} />
-             {isDevEnvironment && <Route path="/test" element={<TestPage />} />}
-             {isDevEnvironment && <Route path="/jozo" element={<SecretPageJozo />} />}
-             {isDevEnvironment && <Route path="/luke" element={<SecretPageLuke />} />}
-           </>
-         ) : (
-           <Route path="*" element={<NotFound />} />
-         )}
-       </Routes>
-     </div>
-   </Router>
- );
+  return (
+    <Router>
+      <div className={isDarkMode ? 'dark' : ''}>
+        <Routes>
+          {/* Testovacia stránka dostupná v prostredí vývoja */}
+          {isDevEnvironment && <Route path="/test" element={<TestPage />} />}
+          
+          {/* Podstránky pre subdomény "sender" a "hauler" */}
+          {isSenderDomain && <Route path="/" element={<SenderPage />} />}
+          {isHaulerDomain && <Route path="/" element={<HaulerPage />} />}
+          
+          {/* Hlavná doména */}
+          {isMainDomain ? (
+            <>
+              <Route path="/" element={<HomePage isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />} />
+              <Route path="/sender" element={<SenderPage />} />
+              <Route path="/hauler" element={<HaulerPage />} />
+              {isDevEnvironment && <Route path="/jozo" element={<SecretPageJozo />} />}
+              {isDevEnvironment && <Route path="/luke" element={<SecretPageLuke />} />}
+            </>
+          ) : (
+            <Route path="*" element={<NotFound />} />
+          )}
+          
+          {/* Presmerovanie pre /sender a /hauler subdomény */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </Router>
+  );
 }
 
 export default App;
