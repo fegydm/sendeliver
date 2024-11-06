@@ -7,8 +7,8 @@ export const BASE_LANGUAGES = {
     name: 'English',
     nativeName: 'English',
     countryCode: 'GB',
-    priority: 1
-  }
+    priority: 1,
+  },
 };
 
 export const SUPPORTED_LANGUAGES = {
@@ -19,7 +19,7 @@ export const SUPPORTED_LANGUAGES = {
 };
 
 // ./front/src/services/language.service.js
-import { DEFAULT_LANGUAGE, BASE_LANGUAGES, SUPPORTED_LANGUAGES } from '../config/languages.config';
+import { DEFAULT_LANGUAGE, BASE_LANGUAGES, SUPPORTED_LANGUAGES } from './languages.config';
 
 class LanguageService {
   constructor() {
@@ -33,7 +33,7 @@ class LanguageService {
   async initialize() {
     // Načítaj predchádzajúci secondary language
     this.secondaryLanguage = localStorage.getItem('secondaryLanguage');
-    
+
     // Načítaj cache z localStorage
     const cachedTranslations = localStorage.getItem('translationCache');
     if (cachedTranslations) {
@@ -47,11 +47,11 @@ class LanguageService {
   // Rýchle prepnutie medzi primárnym a sekundárnym jazykom
   toggleLanguage() {
     if (!this.secondaryLanguage) return;
-    
+
     const temp = this.currentLanguage;
     this.currentLanguage = this.secondaryLanguage;
     this.secondaryLanguage = temp;
-    
+
     document.documentElement.lang = this.currentLanguage;
     this.notifyLanguageChange();
   }
@@ -59,7 +59,7 @@ class LanguageService {
   // Pomalšie nastavenie nového sekundárneho jazyka
   async setSecondaryLanguage(langCode) {
     if (langCode === this.currentLanguage) return;
-    
+
     this.secondaryLanguage = langCode;
     localStorage.setItem('secondaryLanguage', langCode);
 
@@ -74,9 +74,10 @@ class LanguageService {
     try {
       const response = await fetch(`/api/translations/${langCode}`);
       const translations = await response.json();
-      
+
       this.translationCache.set(langCode, translations);
-      localStorage.setItem('translationCache', 
+      localStorage.setItem(
+        'translationCache',
         JSON.stringify(Array.from(this.translationCache.entries()))
       );
     } catch (error) {
@@ -112,7 +113,7 @@ export const languageService = new LanguageService();
 // ./front/src/components/language-switcher.component.js
 import React, { useState, useEffect, useRef } from 'react';
 import { languageService } from '../services/language.service';
-import { BASE_LANGUAGES, SUPPORTED_LANGUAGES } from '../config/languages.config';
+import { BASE_LANGUAGES, SUPPORTED_LANGUAGES } from './languages.config';
 
 const LanguageSwitcher = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -128,7 +129,7 @@ const LanguageSwitcher = () => {
   };
 
   // Výber nového sekundárneho jazyka
-  const handleLanguageSelect = async (langCode) => {
+  const handleLanguageSelect = async langCode => {
     await languageService.setSecondaryLanguage(langCode);
     setSecondaryLang(langCode);
     setIsOpen(false);
@@ -137,18 +138,18 @@ const LanguageSwitcher = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Quick Toggle Button */}
-      <button 
+      <button
         onClick={handleQuickToggle}
         className="relative p-2 rounded-lg hover:bg-gray-700 transition-colors"
       >
-        <img 
+        <img
           src={`/images/flags/${currentLang}.svg`}
           alt={SUPPORTED_LANGUAGES[currentLang]?.name}
           className="w-6 h-6 grayscale hover:grayscale-0 transition-all"
         />
         {secondaryLang && (
           <div className="absolute -bottom-1 -right-1">
-            <img 
+            <img
               src={`/images/flags/${secondaryLang}.svg`}
               alt={SUPPORTED_LANGUAGES[secondaryLang]?.name}
               className="w-4 h-4 grayscale hover:grayscale-0 transition-all"
@@ -158,13 +159,17 @@ const LanguageSwitcher = () => {
       </button>
 
       {/* Language Selector Dropdown */}
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-lg hover:bg-gray-700 transition-colors ml-2"
       >
         <span className="sr-only">Open language menu</span>
         <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          <path
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
         </svg>
       </button>
 
@@ -175,11 +180,7 @@ const LanguageSwitcher = () => {
             onClick={() => handleLanguageSelect('en')}
             className="flex items-center space-x-3 w-full px-4 py-2 hover:bg-gray-700 transition-colors"
           >
-            <img 
-              src="/images/flags/en.svg"
-              alt="English"
-              className="w-6 h-6"
-            />
+            <img src="/images/flags/en.svg" alt="English" className="w-6 h-6" />
             <span className="flex-1">English</span>
             <span className="text-sm text-gray-400">EN</span>
           </button>
@@ -196,11 +197,7 @@ const LanguageSwitcher = () => {
                 onClick={() => handleLanguageSelect(code)}
                 className="flex items-center space-x-3 w-full px-4 py-2 hover:bg-gray-700 transition-colors"
               >
-                <img 
-                  src={`/images/flags/${code}.svg`}
-                  alt={lang.name}
-                  className="w-6 h-6"
-                />
+                <img src={`/images/flags/${code}.svg`} alt={lang.name} className="w-6 h-6" />
                 <span className="flex-1">{lang.nativeName}</span>
                 <span className="text-sm text-gray-400">{code.toUpperCase()}</span>
               </button>
