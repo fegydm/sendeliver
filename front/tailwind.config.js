@@ -1,13 +1,17 @@
-// tailwind.config.js
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
+    "./front/src/**/*.{js,jsx,ts,tsx}",  // všetky React komponenty
+    "./front/public/index.html",         // hlavný HTML súbor
   ],
-  darkMode: 'class',  // Povolenie tmavého režimu pomocou triedy 'dark'
+  darkMode: 'class',
   theme: {
     extend: {
+      screens: {
+        'sm': '320px',
+        'md': '620px',
+        'lg': '820px',
+      },
       colors: {
-        // Hlavná paleta pre dopravcov (ľavá strana)
         hauler: {
           primary: {
             50: '#fdf2f8',
@@ -15,7 +19,7 @@ module.exports = {
             200: '#fbcfe8',
             300: '#f9a8d4',
             400: '#f472b6',
-            500: '#ec4899',  // základná magenta
+            500: '#ec4899',
             600: '#db2777',
             700: '#be185d',
             800: '#9d174d',
@@ -34,8 +38,6 @@ module.exports = {
             900: '#0f172a',
           }
         },
-
-        // Hlavná paleta pre klientov (pravá strana)
         client: {
           primary: {
             50: '#f3faf7',
@@ -43,7 +45,7 @@ module.exports = {
             200: '#bcf0da',
             300: '#84e1bc',
             400: '#31c48d',
-            500: '#0e9f6e',  // základná zelená
+            500: '#0e9f6e',
             600: '#057a55',
             700: '#046c4e',
             800: '#03543f',
@@ -103,6 +105,6 @@ module.exports = {
     },
   },
   plugins: [
-    require('@tailwindcss/forms'),  // Pre lepšie štýlovanie formulárov
+    require('@tailwindcss/forms'),
   ],
 }

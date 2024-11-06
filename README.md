@@ -6,152 +6,196 @@ Modern logistics platform connecting clients with carriers through real-time mat
 
 ```plaintext
 .
-├── front/
-│   ├── src/
-│   │   ├── components/            # Reusable UI components
-│   │   ├── hooks/                 # React custom hooks
-│   │   ├── layouts/               # Page layouts
-│   │   ├── pages/                 # Application pages
-│   │   ├── services/              # API and WebSocket services
-│   │   ├── tests/                 # Test pages and components
-│   │   ├── app.front.js           # Main frontend application
-│   │   ├── index.js               # React entry point
-│   │   ├── index.css              # Global Tailwind styles
-│   │   └── app.front.css          # Main component styles
-│   ├── public/
+├── front/                          # Frontend React application
+│   ├── config/                     # Configuration files
+│   │   ├── vite.config.ts         # Vite configuration
+│   │   └── vitest.config.ts       # Vitest configuration
+│   ├── public/                    # Static files
+│   │   ├── favicon.ico
+│   │   ├── flags/                 # Country flags
 │   │   ├── animations/            # Lottie animations
 │   │   └── video/                 # Public videos
-│   └── package.json               # Frontend config
-│
-├── back/
 │   ├── src/
-│   │   ├── models/                # Database models
-│   │   └── controllers/           # Request handlers
-│   ├── services/                  # Backend services
-│   ├── config/                    # App configuration
-│   ├── server.js                  # Main server file
-│   └── package.json               # Backend config
+│   │   ├── assets/               # Static assets
+│   │   │   ├── icons/
+│   │   │   ├── images/
+│   │   │   └── styles/
+│   │   ├── components/           # React components
+│   │   │   ├── ui/              # Basic UI components
+│   │   │   ├── forms/           # Form components
+│   │   │   ├── layout/          # Layout components
+│   │   │   └── shared/          # Shared components
+│   │   ├── hooks/               # Custom React hooks
+│   │   ├── lib/                 # Utility functions and helpers
+│   │   ├── providers/           # React context providers
+│   │   ├── services/            # API services
+│   │   │   ├── api/
+│   │   │   └── websocket/
+│   │   ├── stores/              # State management
+│   │   ├── types/               # TypeScript types
+│   │   ├── utils/               # Utility functions
+│   │   ├── views/               # Main application pages
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── test/                    # Test utilities and setup
+│   └── scripts/                 # Build and deployment scripts
 │
-└── package.json                   # Root project config
-Quick Start
+├── back/                        # Backend Node.js application
+│   ├── config/                  # Configuration files
+│   │   ├── babel.config.json
+│   │   ├── jest.config.js
+│   │   ├── database.js         # Database configuration
+│   │   ├── env.js              # Environment configuration
+│   │   ├── logger.js           # Logger configuration
+│   │   └── redis.js            # Redis configuration
+│   ├── routes/                 # API routes
+│   ├── services/               # Business logic services
+│   └── src/                    # Source code
+│
+└── package.json                # Root project config
+```
 
-Installation:
+## Quick Start
 
-bashCopygit clone https://github.com/yourusername/sendeliver.git
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 14+
+- Redis 6+
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/sendeliver.git
 cd sendeliver
+
+# Install dependencies
 npm run install:all
 
-Development:
+# Set up environment variables
+cp .env.example .env
+```
 
-bashCopynpm run dev
+### Development
 
-Production:
+```bash
+# Start development servers
+npm run dev
+```
 
-bashCopynpm start
-Domain Structure
+### Production
 
-Main Domain: sendeliver.com
-Public Demos:
+```bash
+# Build for production
+npm run build
 
-carriers.sendeliver.com
-clients.sendeliver.com
+# Start production server
+npm start
+```
 
+## Domain Structure
 
-Private Domains: [company].sendeliver.com
+### Main Domain
+- sendeliver.com
 
-Access Levels
-🔴 Anonymous
+### Public Demos
+- carriers.sendeliver.com
+- clients.sendeliver.com
 
-Basic search functionality
-Demo version
-Limited features
+### Private Domains
+- [company].sendeliver.com
 
-🟡 Cookie Users
+## Access Levels
 
-Search history
-Persistent demo data
-Full features access
+🔴 **Anonymous**
+- Basic search functionality
+- Demo version
+- Limited features
 
-🟢 Registered
+🟡 **Cookie Users**
+- Search history
+- Persistent demo data
+- Full features access
 
-Custom subdomain
-Complete functionality
-User management
-Statistics
+🟢 **Registered**
+- Custom subdomain
+- Complete functionality
+- User management
+- Statistics
 
-Core Features
-Real-time Matching
+## Core Features
 
-WebSocket communication
-Live vehicle tracking
-Instant cargo updates
+### Real-time Matching
+- WebSocket communication
+- Live vehicle tracking
+- Instant cargo updates
 
-AI Integration
+### AI Integration
+- Natural language search
+- Route optimization
+- Intelligent matching
 
-Natural language search
-Route optimization
-Intelligent matching
-
-User Management
-plaintextCopyOrganization Structure:
+### User Management
+```plaintext
+Organization Structure:
 ├── Main Administrator
 ├── Dispatchers
 └── Regular Users/Drivers
-Tech Stack
-Frontend
+```
 
-React 18
-TailwindCSS
-WebSocket client
-Lottie animations
+## Tech Stack
 
-Backend
+### Frontend
+- React 18 with TypeScript
+- Vite for development and building
+- TailwindCSS for styling
+- WebSocket client
+- Lottie animations
+- Vitest for testing
 
-Node.js & Express
-WebSocket server (ws)
-Redis cache
-PostgreSQL with PostGIS
+### Backend
+- Node.js & Express
+- WebSocket server (ws)
+- Redis cache
+- PostgreSQL with PostGIS
+- Jest for testing
 
-Development
-Scripts
-bashCopy# Root
+## Development Scripts
+
+### Root Level
+```bash
 npm run dev          # Development mode
 npm start           # Production mode
 npm run clean       # Clean builds
+```
 
-# Frontend
+### Frontend
+```bash
 cd front
-npm run dev         # React development
-npm start           # Serve production
+npm run dev         # Vite development
 npm run build       # Build for production
+npm run test        # Run tests
+```
 
-# Backend
+### Backend
+```bash
 cd back
-npm run dev         # Nodemon development
-npm start           # Production server
-Environment Variables
-Backend (.env):
-envCopyDATABASE_URL=postgresql://...
-REDIS_URL=redis://...
-JWT_SECRET=your-secret
-Frontend (.env):
-envCopyREACT_APP_API_URL=https://api.sendeliver.com
-REACT_APP_WS_URL=wss://api.sendeliver.com
-Deployment
-Render configuration:
+npm run dev         # Development with nodemon
+npm start          # Production server
+npm run test       # Run tests
+```
 
-Web Service (Backend)
+## Environment Variables
 
-Build: npm install
-Start: npm start
+See `.env.example` files in root, frontend, and backend directories for all available options.
 
+## Deployment
 
-Static Site (Frontend)
+Deployment configurations available for:
+- Render
+- Docker
+- PM2
 
-Build: npm run build
-Publish directory: build
+## License
 
-
-
-License
 Proprietary software. All rights reserved.

@@ -3,13 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install:all": "cd front && npm install && cd ../back && npm install",
+    "install:all": "npm install && cd front && npm install && cd ../back && npm install",
     "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
     "start": "cd back && npm start",
-    "build": "cd front && npm install @tailwindcss/forms && npm run build",
-    "clean": "rm -rf front/build back/dist node_modules"
+    "build": "cd front && npm run build",
+    "clean": "rm -rf front/build back/dist node_modules */node_modules",
+    "postinstall": "npx tailwindcss init -p"
+  },
+  "dependencies": {
+    "tailwindcss": "^3.3.5",
+    "@tailwindcss/forms": "^0.5.7"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31"
   }
 }
