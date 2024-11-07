@@ -8,7 +8,7 @@
     "install:back": "cd back && npm install",
     "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
     "start": "cd back && npm start",
-    "build": "npm run build:front && npm run build:back",
+    "build": "npm run install && npm run build:front && npm run build:back",
     "build:front": "cd front && npm run build",
     "build:back": "cd back && npm run build"
   },
