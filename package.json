@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install:all": "cd front && npm install && cd ../back && npm install",
+    "install": "npm run install:front && npm run install:back",
+    "install:front": "cd front && npm install",
+    "install:back": "cd back && npm install",
     "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
-    "start": "npm run build && cd back && npm start",
-    "build": "cd front && npm run build"
+    "start": "cd back && npm start",
+    "build": "npm run build:front && npm run build:back",
+    "build:front": "cd front && npm run build",
+    "build:back": "cd back && npm run build"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
