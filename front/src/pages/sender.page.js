@@ -1,10 +1,10 @@
-// ./front/src/pages/sender.page.js
+// ./front/src/pages/sender.page.tsx
 import React from 'react';
-import Navigation from '../components/navigation.component.js';
-import BannerS from '../components/banner-s.component.js';
-import UnderConstruction from '../components/under-construction.component.js';
+import Navigation from '../components/navigation.component';
+import BannerS from '../components/banner-s.component';
+import UnderConstruction from '../components/under-construction.component';
 
-const SenderHomePage = () => {
+const SenderHomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <Navigation />
