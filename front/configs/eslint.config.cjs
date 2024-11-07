@@ -1,4 +1,4 @@
-// /front/config/eslint.config.cjs
+// /front/configs/eslint.config.cjs
 module.exports = [
   {
     ignores: ['**/node_modules/**', 'dist/**', 'build/**']

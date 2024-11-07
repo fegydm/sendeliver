@@ -1,4 +1,4 @@
-// ./front/postcss.config.cjs
+// ./front/configs/postcss.config.cjs
 
 module.exports = {
   plugins: {

@@ -1,16 +1,25 @@
-// ./front/src/components/NotFound.js
-import React from 'react';
-import { Player } from '@lottiefiles/react-lottie-player';
+import React, { useEffect, useRef } from 'react';
+import lottie from 'lottie-web/build/player/lottie_light';
+
 
 const NotFound = () => {
+  const container = useRef(null);
+
+  useEffect(() => {
+    if (container.current) {
+      lottie.loadAnimation({
+        container: container.current,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: '/animations/notfound.json', // Používame cestu k JSON animácii
+      });
+    }
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white p-4">
-      <Player
-        autoplay
-        loop
-        src="/animations/notfound.json"
-        className="h-64 w-64 mb-8"
-      />
+      <div ref={container} className="h-64 w-64 mb-8" />
       <p className="text-lg mb-6">
         Use the homepage{' '}
         <a href="https://www.sendeliver.com" className="text-blue-600 hover:text-blue-800 underline">

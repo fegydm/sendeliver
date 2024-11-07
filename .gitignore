@@ -88,6 +88,12 @@ package-lock.json
 !*/yarn.lock
 !*/package-lock.json
 
+# Build analysis
+stats.html
+stats.json
+bundle-analysis.html
+bundle-stats.json
+
 # Static assets
 **/public/static
 **/dist/static
@@ -97,7 +103,5 @@ package-lock.json
 .netlify
 *.pem
 .env.*.local
-stats.html
-stats.json
 sitemap.xml
 robots.txt

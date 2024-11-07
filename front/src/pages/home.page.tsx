@@ -1,5 +1,4 @@
-// ./front/src/pages/home.page.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Navigation from '../components/navigation.component';
 import Banner from '../components/banner.component';
 import SearchForm from '../components/search-form.component';
@@ -7,24 +6,24 @@ import AiSearch from '../components/ai-search.component';
 import ContentSection from '../components/content-section.component';
 import FloatingButton from '../components/floating-button.component';
 
-const HomePage = ({ isDarkMode, onToggleDarkMode }) => {
-  const [activeSection, setActiveSection] = useState(null);
-  const [userState, setUserState] = useState('COOKIES_DISABLED');
-  const [isAnimating, setIsAnimating] = useState(false);
+interface HomePageProps {
+  isDarkMode: boolean;
+  onToggleDarkMode: () => void;
+}
+
+const HomePage: React.FC<HomePageProps> = ({ isDarkMode, onToggleDarkMode }) => {
+  const [activeSection, setActiveSection] = useState<'sender' | 'carrier' | null>(null);
   const [showQuickStats, setShowQuickStats] = useState(false);
 
-  const handleFocus = (section) => {
+  const handleFocus = (section: 'sender' | 'carrier'): void => {
     if (activeSection === section) return;
-    setIsAnimating(true);
     setActiveSection(section);
     setShowQuickStats(true);
-    setTimeout(() => setIsAnimating(false), 300);
   };
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark bg-gray-900' : 'bg-white'}`}>
       <Navigation 
-        userState={userState}
         isDarkMode={isDarkMode} 
         onToggleDarkMode={onToggleDarkMode}
       />
@@ -36,20 +35,20 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }) => {
             type="sender"
             isActive={activeSection === 'sender'}
             showStats={showQuickStats}
-            onFocus={handleFocus}
+            onFocus={(type) => handleFocus(type as 'sender' | 'carrier')}
           >
-            <SearchForm type="client" isActive={activeSection === 'sender'} />
-            <AiSearch type="client" isActive={activeSection === 'sender'} />
+            <SearchForm type="client" />
+            <AiSearch type="client" />
           </ContentSection>
 
           <ContentSection
             type="carrier"
             isActive={activeSection === 'carrier'}
             showStats={showQuickStats}
-            onFocus={handleFocus}
+            onFocus={(type) => handleFocus(type as 'sender' | 'carrier')}
           >
-            <SearchForm type="carrier" isActive={activeSection === 'carrier'} />
-            <AiSearch type="carrier" isActive={activeSection === 'carrier'} />
+            <SearchForm type="carrier" />
+            <AiSearch type="carrier" />
           </ContentSection>
         </div>
       </main>

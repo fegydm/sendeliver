@@ -1,5 +1,3 @@
-// front/configs/vite.config.ts
-
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
@@ -22,6 +20,16 @@ export default defineConfig(({ command }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: true,
+    chunkSizeWarningLimit: 1000, // Zvýšenie limitu veľkosti chunku na 1000 kB
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            return 'vendor'; // Rozdelenie veľkých balíkov do samostatného vendor chunku
+          }
+        }
+      }
+    }
   },
   resolve: {
     alias: {

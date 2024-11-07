@@ -1,9 +1,16 @@
-// ./front/src/components/content-section.component.js
-import React, { useState } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { Package2, Truck } from 'lucide-react';
 import QuickStats from './quick-stats.component';
 
-const ContentSection = ({ 
+interface ContentSectionProps {
+  type: 'sender' | 'carrier';
+  isActive: boolean;
+  showStats: boolean;
+  onFocus: (type: string) => void;
+  children: ReactNode;
+}
+
+const ContentSection: React.FC<ContentSectionProps> = ({ 
   type, 
   isActive, 
   showStats, 

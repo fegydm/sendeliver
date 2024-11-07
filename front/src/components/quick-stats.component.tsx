@@ -1,7 +1,17 @@
-// ./front/src/components/quick-stats.component.js
 import React from 'react';
 
-const stats = {
+interface StatItem {
+  label: string;
+  value: string;
+}
+
+interface Stats {
+  [key: string]: {
+    items: StatItem[];
+  };
+}
+
+const stats: Stats = {
   sender: {
     items: [
       { label: 'Aktívnych prepráv', value: '1234' },
@@ -18,7 +28,11 @@ const stats = {
   }
 };
 
-const QuickStats = ({ type }) => {
+interface QuickStatsProps {
+  type: 'sender' | 'carrier';
+}
+
+const QuickStats: React.FC<QuickStatsProps> = ({ type }) => {
   return (
     <div className="grid grid-cols-3 gap-2 mb-6 animate-fadeIn">
       {stats[type].items.map((stat, index) => (

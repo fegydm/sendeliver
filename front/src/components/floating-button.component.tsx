@@ -1,8 +1,7 @@
-// ./front/src/components/floating-button.component.js
 import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 
-const FloatingButton = () => {
+const FloatingButton: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {

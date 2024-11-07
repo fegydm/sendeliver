@@ -1,5 +1,5 @@
-// ./front/src/components/icon-sun.component.js
-import React from 'react';
+// ./front/src/components/icon-sun.component.tsx
+
 import { Sun, Moon } from 'lucide-react';
 
 // Lucide verzia

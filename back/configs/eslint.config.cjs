@@ -1,4 +1,4 @@
-// /back/config/eslint.config.cjs
+// /back/configs/eslint.config.cjs
 module.exports = [
   {
     ignores: ['**/node_modules/**', 'dist/**', 'build/**']
