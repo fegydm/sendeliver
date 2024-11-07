@@ -1,6 +1,8 @@
+// ./front/src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './index.css';  // Pridaný import CSS
 
 // Pridáme manifest len v produkcii
 if (import.meta.env.PROD) {

@@ -15,6 +15,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "allowJs": true,
+    "checkJs": false, // Voliteľné: ak nechceš typovú kontrolu v JS súboroch
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
@@ -28,15 +29,15 @@
     ]
   },
   "include": [
-    "./src/**/*", 
-    "./src/types/**/*",
-    "./types/**/*"
+    "src/**/*", 
+    "src/types/**/*",
+    "types/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "./configs/**/*.ts",
-    "./configs/eslint.config.cjs"
+    "configs/**/*.ts",
+    "configs/**/*.cjs"
   ],
   "references": [
     { "path": "./tsconfig.node.json" }

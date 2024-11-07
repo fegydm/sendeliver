@@ -4,17 +4,25 @@ import formsPlugin from '@tailwindcss/forms';
 
 const config: Config = {
   content: [
-    "./front/src/**/*.{js,jsx,ts,tsx}",  // všetky React komponenty
-    "./front/public/index.html",         // hlavný HTML súbor
+    "./src/**/*.{js,jsx,ts,tsx}",  // všetky React komponenty
+    "./public/index.html",         // hlavný HTML súbor
   ],
   darkMode: 'class',
   theme: {
     extend: {
+      // Základné nastavenia
+      fontFamily: {
+        sans: ['Arial', 'sans-serif'],
+      },
+      minWidth: {
+        'screen': '320px',
+      },
       screens: {
         'sm': '320px',
         'md': '620px',
         'lg': '820px',
       },
+      // Farby
       colors: {
         hauler: {
           primary: {
@@ -69,25 +77,30 @@ const config: Config = {
           }
         }
       },
+      // Tieňovanie
       boxShadow: {
         'soft': '0 2px 15px rgba(0, 0, 0, 0.05)',
         'medium': '0 4px 20px rgba(0, 0, 0, 0.1)',
         'hard': '0 8px 30px rgba(0, 0, 0, 0.15)',
       },
+      // Zaoblenie
       borderRadius: {
         'xl': '1rem',
         '2xl': '1.5rem',
         '3xl': '2rem',
       },
+      // Typografia
       fontSize: {
         'xxs': '0.625rem',
         'mega': '4.5rem',
       },
+      // Rozstupy
       spacing: {
         '72': '18rem',
         '84': '21rem',
         '96': '24rem',
       },
+      // Animácie
       animation: {
         shake: 'shake 0.5s ease-in-out',
       },
@@ -99,6 +112,7 @@ const config: Config = {
           '75%': { transform: 'translateX(-5px)' },
         },
       },
+      // Rozmazanie
       backdropBlur: {
         'none': '0',
         'sm': '4px',
@@ -110,6 +124,16 @@ const config: Config = {
   },
   plugins: [
     formsPlugin,
+    // Základné štýly pre body
+    function({ addBase }) {
+      addBase({
+        'body': { 
+          margin: '0',
+          minWidth: '320px',
+          overflowX: 'auto',
+        },
+      })
+    }
   ],
 };
 

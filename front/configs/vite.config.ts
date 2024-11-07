@@ -17,6 +17,9 @@ export default defineConfig(({ command }) => ({
   ],
   root: frontDir,
   publicDir: 'public',
+  css: {
+    postcss: path.resolve(__dirname, './postcss.config.ts')
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

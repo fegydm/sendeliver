@@ -1,10 +1,6 @@
+/* ./front/src/index.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  min-width: 320px;
-  overflow-x: auto;
-}
