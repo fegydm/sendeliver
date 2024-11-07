@@ -5,7 +5,7 @@
   "scripts": {
     "install:all": "cd front && npm install && cd ../back && npm install",
     "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
-    "start": "cd back && npm start",
+    "start": "concurrently \"cd front && npm run preview\" \"cd back && npm run start\"",
     "build": "cd front && npm run build && cd ../back && npm run build",
     "clean": "rm -rf front/dist back/dist node_modules */node_modules",
     "lint": "npm run lint:front && npm run lint:back",
