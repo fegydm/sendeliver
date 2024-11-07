@@ -1,4 +1,8 @@
-module.exports = {
+// ./front/configs/tailwind.config.ts
+import { Config } from 'tailwindcss';
+import formsPlugin from '@tailwindcss/forms';
+
+const config: Config = {
   content: [
     "./front/src/**/*.{js,jsx,ts,tsx}",  // všetky React komponenty
     "./front/public/index.html",         // hlavný HTML súbor
@@ -105,6 +109,8 @@ module.exports = {
     },
   },
   plugins: [
-    require('@tailwindcss/forms'),
+    formsPlugin,
   ],
-}
+};
+
+export default config;

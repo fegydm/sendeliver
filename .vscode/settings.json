@@ -1,25 +1,28 @@
 // .vscode/settings.json
 {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit"
-    },
-    "javascript.updateImportsOnFileMove.enabled": "always",
-    "typescript.updateImportsOnFileMove.enabled": "always",
-    "[javascript]": {
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+},
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "[javascript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
-    },
-    "[typescript]": {
+  },
+  "[typescript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
-    },
-    "files.exclude": {
+  },
+  "files.exclude": {
       "**/.git": true,
       "**/node_modules": true,
-      "**/build": true
-    },
-    "search.exclude": {
+      "**/build": true,
+      "**/dist": true
+  },
+  "search.exclude": {
       "**/node_modules": true,
-      "**/build": true
-    }
-  }
+      "**/build": true,
+      "**/dist": true
+  },
+  "typescript.preferences.importModuleSpecifier": "relative"
+}

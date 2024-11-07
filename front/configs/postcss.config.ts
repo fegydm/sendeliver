@@ -1,6 +1,6 @@
-// ./front/configs/postcss.config.cjs
+// ./front/configs/postcss.config.ts
 
-module.exports = {
+export default {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},

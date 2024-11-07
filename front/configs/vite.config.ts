@@ -1,11 +1,12 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
-import svgr from 'vite-plugin-svgr'
-import tsconfigPaths from 'vite-tsconfig-paths'
-import { visualizer } from 'rollup-plugin-visualizer'
+// ./front/configs/vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import svgr from 'vite-plugin-svgr';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { visualizer } from 'rollup-plugin-visualizer';
 
-const frontDir = path.resolve(__dirname, '..')
+const frontDir = path.resolve(__dirname, '..');
 
 export default defineConfig(({ command }) => ({
   plugins: [
@@ -20,28 +21,27 @@ export default defineConfig(({ command }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: true,
-    chunkSizeWarningLimit: 1000, // Zvýšenie limitu veľkosti chunku na 1000 kB
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            return 'vendor'; // Rozdelenie veľkých balíkov do samostatného vendor chunku
-          }
-        }
-      }
-    }
   },
   resolve: {
     alias: {
-      '@': path.resolve(frontDir, './src')
+      '@': path.resolve(frontDir, './src'),
+      '@configs': path.resolve(frontDir, './configs'),
     }
+  },
+  optimizeDeps: {
+    include: ['lottie-web/build/player/lottie_light.min']
   },
   server: {
     port: 3000,
-    open: true
+    open: true,
+    watch: {
+      usePolling: true
+    },
+    hmr: {
+      overlay: true
+    }
   },
-  // Pridáme template premenné
   define: {
     VITE_PROD_ONLY: command === 'build'
   }
-}))
+}));

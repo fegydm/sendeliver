@@ -1,49 +1,63 @@
-// /front/configs/eslint.config.cjs
-module.exports = [
-  {
-    ignores: ['**/node_modules/**', 'dist/**', 'build/**']
+// /front/configs/eslint.cjs
+
+module.exports = {
+  root: true,
+  env: {
+    browser: true,
+    es2021: true,
   },
-  {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    plugins: {
-      '@typescript-eslint': require('@typescript-eslint/eslint-plugin'),
-      'react': require('eslint-plugin-react'),
-      'react-hooks': require('eslint-plugin-react-hooks'),
-      'jsx-a11y': require('eslint-plugin-jsx-a11y'),
-      'import': require('eslint-plugin-import')
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+  ],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true,
     },
-    languageOptions: {
-      parser: require('@babel/eslint-parser'),
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true
-        },
-        requireConfigFile: false,
-        babelOptions: {
-          presets: ['@babel/preset-react']
-        }
-      }
+    project: './tsconfig.json',
+  },
+  plugins: ['react', '@typescript-eslint', 'react-hooks', 'jsx-a11y', 'import'],
+  rules: {
+    'react/react-in-jsx-scope': 'off',
+    'react/prop-types': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    'quotes': ['error', 'single'],
+    'semi': ['error', 'always'],
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'no-unused-vars': 'warn',
+  },
+  settings: {
+    react: {
+      version: 'detect',
     },
-    settings: {
-      react: {
-        version: 'detect'
+    'import/resolver': {
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
-      'import/resolver': {
-        node: {
-          extensions: ['.js', '.jsx', '.ts', '.tsx']
-        }
-      }
     },
-    rules: {
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      'quotes': ['error', 'single'],
-      'semi': ['error', 'always'],
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
-      'no-unused-vars': 'warn'
-    }
-  }
-];
+  },
+  ignorePatterns: ['**/node_modules/**', 'dist/**', 'build/**'],
+  overrides: [
+    {
+      files: ['**/*.{js,jsx,ts,tsx}'],
+      rules: {
+        'spellcheck/spell-checker': [
+          'warn',
+          {
+            skipWords: ['Parens', 'sendeliver', 'jozo', 'hauler', 'nezabudaj', 'xy'],
+            skipIfMatch: [
+              '^.*[A-Z]{2,}.*$',  // ignore
+              '.*\\d.*'           // ignore 
+            ],
+            minLength: 3,
+          },
+        ],
+      },
+    },
+  ],
+};
