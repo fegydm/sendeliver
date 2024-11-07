@@ -1,4 +1,4 @@
-// front/src/app.tsx
+// front/src/App.tsx
 import React from 'react';
 
 const App: React.FC = () => {

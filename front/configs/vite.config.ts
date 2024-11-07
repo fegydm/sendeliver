@@ -1,59 +1,39 @@
-// front/config/vite.config.ts
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import svgr from 'vite-plugin-svgr';
-import { resolve } from 'path';
+// front/configs/vite.config.ts
 
-// https://vitejs.dev/config/
-export default defineConfig({
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+import svgr from 'vite-plugin-svgr'
+import tsconfigPaths from 'vite-tsconfig-paths'
+import { visualizer } from 'rollup-plugin-visualizer'
+
+const frontDir = path.resolve(__dirname, '..')
+
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
+    svgr(),
     tsconfigPaths(),
-    svgr()
+    visualizer()
   ],
+  root: frontDir,
+  publicDir: 'public',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: true,
+  },
   resolve: {
     alias: {
-      '@': resolve(__dirname, '../src'),
-      '@components': resolve(__dirname, '../src/components'),
-      '@hooks': resolve(__dirname, '../src/hooks'),
-      '@lib': resolve(__dirname, '../src/lib'),
-      '@services': resolve(__dirname, '../src/services'),
-      '@stores': resolve(__dirname, '../src/stores'),
-      '@utils': resolve(__dirname, '../src/utils'),
-      '@views': resolve(__dirname, '../src/views'),
-      '@assets': resolve(__dirname, '../src/assets'),
-      '@providers': resolve(__dirname, '../src/providers'),
-      '@types': resolve(__dirname, '../src/types')
+      '@': path.resolve(frontDir, './src')
     }
   },
   server: {
-    port: 5173,
-    proxy: {
-      '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:5000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      },
-      '/ws': {
-        target: process.env.VITE_WS_URL || 'ws://localhost:5000',
-        ws: true
-      }
-    }
+    port: 3000,
+    open: true
   },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: [
-            'react',
-            'react-dom',
-            'react-router-dom'
-          ]
-        }
-      }
-    }
+  // Pridáme template premenné
+  define: {
+    VITE_PROD_ONLY: command === 'build'
   }
-});
+}))
