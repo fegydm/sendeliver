@@ -6,7 +6,7 @@
   "proxy": "http://localhost:5000",
   "scripts": {
     "dev": "vite --config configs/vite.config.ts",
-    "build": "tsc && vite build --config configs/vite.config.ts",
+    "build": "tsc && npx vite build --config configs/vite.config.ts",
     "preview": "vite preview --config configs/vite.config.ts",
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --config ./configs/eslint.config.ts",
     "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix --config ./configs/eslint.config.ts",
