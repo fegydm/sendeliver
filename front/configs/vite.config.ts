@@ -13,22 +13,23 @@ export default defineConfig(({ command }) => ({
     react(),
     svgr(),
     tsconfigPaths(),
-    visualizer()
-  ],
+    command === 'build' && visualizer(), // Použitie pluginu len pri build príkaze
+  ].filter(Boolean), // Odstránenie `undefined` hodnôt
   root: frontDir,
-  publicDir: 'public',
+  publicDir: path.resolve(frontDir, 'public'), // Absolútna cesta pre `publicDir`
   css: {
-    postcss: path.resolve(__dirname, './postcss.config.ts')
+    postcss: path.resolve(__dirname, './postcss.config.cjs'), // Uisti sa, že prípona je správna
   },
   build: {
-    outDir: 'dist',
+    outDir: path.resolve(frontDir, 'dist'), // Absolútna cesta pre `outDir`
     assetsDir: 'assets',
-    sourcemap: true,
+    sourcemap: false, // Vypnutie sourcemaps pre rýchlejší produkčný build
+    chunkSizeWarningLimit: 1000, // Zvýšenie limitu pre varovanie o veľkosti chunku
   },
   resolve: {
     alias: {
-      '@': path.resolve(frontDir, './src'),
-      '@configs': path.resolve(frontDir, './configs'),
+      '@': path.resolve(frontDir, 'src'),
+      '@configs': path.resolve(frontDir, 'configs'),
     }
   },
   optimizeDeps: {

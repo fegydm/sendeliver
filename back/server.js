@@ -1,9 +1,14 @@
-// ./back/server.js
 import express from 'express';
 import cors from 'cors';
-import app from './app.back.js';
 import http from 'http';
 import { WebSocketServer } from 'ws';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import app from './app.back.js';
+
+// Definovanie __filename a __dirname pre ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Použitie CORS
 app.use(cors({
@@ -13,81 +18,15 @@ app.use(cors({
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-// Sledovanie pripojených klientov
-const clients = new Map(); // ukladáme {clientId: ws}
+// (WebSocket a ďalšia logika)
 
-wss.on('connection', (ws) => {
-    console.log('New client connected');
+app.use(express.static(path.join(__dirname, '../front/dist')));
 
-    ws.on('message', (rawData) => {
-        try {
-            const message = JSON.parse(rawData);
-            console.log('Received message:', message);
-
-            switch (message.type) {
-                case 'delivery_request':
-                    // Broadcast všetkým dopravcom
-                    broadcastToHaulers(message);
-                    break;
-
-                case 'delivery_offer':
-                    // Poslať ponuku konkrétnemu klientovi
-                    sendToClient(message.requestId, message);
-                    break;
-
-                case 'client_init':
-                    // Klient sa identifikuje
-                    clients.set(message.clientId, {
-                        ws,
-                        type: 'sender'
-                    });
-                    break;
-
-                case 'hauler_init':
-                    // Dopravca sa identifikuje
-                    clients.set(message.haulerId, {
-                        ws,
-                        type: 'hauler'
-                    });
-                    break;
-
-                default:
-                    console.log('Unknown message type:', message.type);
-            }
-        } catch (error) {
-            console.error('Error processing message:', error);
-        }
-    });
-
-    ws.on('close', () => {
-        // Cleanup pri odpojení
-        for (const [id, client] of clients.entries()) {
-            if (client.ws === ws) {
-                clients.delete(id);
-                break;
-            }
-        }
-        console.log('Client disconnected');
-    });
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../front/dist/index.html'));
 });
-
-// Helper funkcie
-function broadcastToHaulers(message) {
-    clients.forEach((client) => {
-        if (client.type === 'hauler') {
-            client.ws.send(JSON.stringify(message));
-        }
-    });
-}
-
-function sendToClient(clientId, message) {
-    const client = clients.get(clientId);
-    if (client) {
-        client.ws.send(JSON.stringify(message));
-    }
-}
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-    console.log('Server running on port:', PORT);
+    console.log('Server running on http://localhost:', PORT);
 });
