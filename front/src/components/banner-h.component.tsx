@@ -1,8 +1,8 @@
-// ./front/src/components/banner-h.component.js
+// ./front/src/components/banner-h.component.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const BannerH = () => {
+const BannerH: React.FC = () => {
   return (
     <div className="bg-client-primary-500 text-white p-6">
       <h1 className="text-4xl font-bold text-center mb-4">carriers.sendeliver.com</h1>

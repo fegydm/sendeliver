@@ -1,13 +1,16 @@
-// ./front/src/components/pin-form-luke.component.js
-
+// ./front/src/components/pin-form.component.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import './pin-form.component.css'; // Importujeme CSS súbor
 
-const PinForm = ({ onCorrectPin }) => {
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState(false);
-  const correctPin = '1810'; // Nastav svoj PIN
-  const inputRef = useRef(null);
+interface PinFormProps {
+  onCorrectPin: () => void;
+}
+
+const PinForm: React.FC<PinFormProps> = ({ onCorrectPin }) => {
+  const [pin, setPin] = useState<string>('');
+  const [error, setError] = useState<boolean>(false);
+  const correctPin = '1212'; // Nastav svoj PIN
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -15,7 +18,7 @@ const PinForm = ({ onCorrectPin }) => {
     }
   }, []);
 
-  const handlePinChange = (e) => {
+  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value.length <= 4 && /^\d*$/.test(value)) {
       setPin(value);
@@ -35,7 +38,7 @@ const PinForm = ({ onCorrectPin }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (pin === correctPin) {
       onCorrectPin();
@@ -49,7 +52,7 @@ const PinForm = ({ onCorrectPin }) => {
   };
 
   return (
-    <div className="pin-form-container" onClick={() => inputRef.current.focus()}>
+    <div className="pin-form-container" onClick={() => inputRef.current?.focus()}>
       <form 
         onSubmit={handleSubmit} 
         className={`pin-form ${error ? 'error' : ''}`}
@@ -71,7 +74,7 @@ const PinForm = ({ onCorrectPin }) => {
           value={pin}
           onChange={handlePinChange}
           className="hidden-input"
-          maxLength="4"
+          maxLength={4}
           autoComplete="off"
           autoCorrect="off"
           spellCheck="false"
