@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.7); /* Polopriehľadné tmavé pozadie */
+  background-color: rgba(0, 0, 0, 0.7);
   z-index: 50;
 }
 
@@ -16,6 +16,7 @@
   border-radius: 0.5rem;
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease-in-out;
+  color: black; /* Explicitne nastavenie farby textu */
 }
 
 .pin-form-title {
@@ -23,6 +24,7 @@
   font-weight: bold;
   text-align: center;
   margin-bottom: 1rem;
+  color: black; /* Explicitne nastavenie farby textu pre nadpis */
 }
 
 .pin-inputs {
@@ -43,10 +45,11 @@
   font-size: 1.5rem;
   font-weight: bold;
   transition: border-color 0.3s;
+  color: black; /* Explicitne nastavenie farby textu pre čísla */
 }
 
 .pin-input-active {
-  border-color: blue; /* Zvýraznenie aktuálnej pozície pre "kurzor" */
+  border-color: blue;
 }
 
 .pin-input-error {

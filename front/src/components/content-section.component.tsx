@@ -1,4 +1,5 @@
-import React, { useState, ReactNode } from 'react';
+// ./front/src/components/content-section.component.tsx
+import React, { ReactNode } from 'react';
 import { Package2, Truck } from 'lucide-react';
 import QuickStats from './quick-stats.component';
 
@@ -6,7 +7,6 @@ interface ContentSectionProps {
   type: 'sender' | 'carrier';
   isActive: boolean;
   showStats: boolean;
-  onFocus: (type: string) => void;
   children: ReactNode;
 }
 
@@ -14,16 +14,13 @@ const ContentSection: React.FC<ContentSectionProps> = ({
   type, 
   isActive, 
   showStats, 
-  onFocus, 
   children 
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
   const getSectionClasses = () => {
-    const baseClasses = "relative w-full md:w-1/2 space-y-4 p-6 transition-all duration-300 cursor-pointer";
+    const baseClasses = "relative w-full space-y-4 p-6 transition-all duration-300";
     
     if (isActive) {
-      return `${baseClasses} scale-105 shadow-xl rounded-lg ${
+      return `${baseClasses} rounded-lg ${
         type === 'sender' 
           ? 'bg-primaryClient/30 dark:bg-primaryClient/50' 
           : 'bg-primaryCarrier/30 dark:bg-primaryCarrier/50'
@@ -31,11 +28,7 @@ const ContentSection: React.FC<ContentSectionProps> = ({
     }
     
     return `${baseClasses} ${
-      isHovered ? 'scale-102 shadow-lg' : ''
-    } ${
-      isActive === false
-        ? 'bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-500 scale-95'
-        : type === 'sender'
+      type === 'sender'
         ? 'bg-primaryClient/20 text-black dark:bg-primaryClient/40 dark:text-white'
         : 'bg-primaryCarrier/20 text-black dark:bg-primaryCarrier/40 dark:text-white'
     }`;
@@ -44,16 +37,11 @@ const ContentSection: React.FC<ContentSectionProps> = ({
   const Icon = type === 'sender' ? Package2 : Truck;
   const title = type === 'sender' ? 'Odosielateľ' : 'Prepravca';
   const description = type === 'sender' 
-    ? 'Hľadáš spoľahlivú prepravu pre tvoj náklad?'
-    : 'Hľadáš náklad pre tvoje vozidlá?';
+    ? 'Zadajte detaily vašej zásielky alebo použite AI asistenta pre rýchle spracovanie'
+    : 'Nájdite vhodné zásielky pre vaše vozidlá alebo ponúknite voľnú kapacitu';
 
   return (
-    <section
-      className={getSectionClasses()}
-      onClick={() => onFocus(type)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <section className={getSectionClasses()}>
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2 flex items-center">
           <Icon className="w-6 h-6 mr-2" />

@@ -1,7 +1,7 @@
 // ./front/src/pages/hauler.page.tsx
 import React, { useEffect, useState } from 'react';
 import Navigation from '../components/navigation.component';
-import BannerH from '../components/banner-h.component';
+import BannerH from '../components/banners/banner-h.component';
 import UnderConstruction from '../components/under-construction.component';
 
 const HaulerPage: React.FC = () => {

@@ -38,8 +38,10 @@
     "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "openai": "^4.71.1",
     "pg": "^8.11.3",
     "prisma": "^5.7.0",
+    "redis": "^4.6.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "winston": "^3.11.0",
@@ -52,6 +54,7 @@
     "@babel/core": "^7.23.6",
     "@babel/node": "^7.22.19",
     "@babel/preset-env": "^7.23.6",
+    "@types/express": "^4.17.17",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.10.4",
     "eslint": "^8.57.1",
@@ -61,8 +64,8 @@
     "jest": "^29.7.0",
     "nodemon": "^3.0.1",
     "prettier": "^3.1.1",
-    "supertest": "^6.3.3",
-    "rimraf": "^4.0.0"
+    "rimraf": "^4.0.0",
+    "supertest": "^6.3.3"
   },
   "jest": {
     "config": "./config/jest.config.js"

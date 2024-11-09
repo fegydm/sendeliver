@@ -1,7 +1,7 @@
 // ./front/src/pages/sender.page.tsx
 import React, { useEffect, useState } from 'react';
 import Navigation from '../components/navigation.component';
-import BannerS from '../components/banner-s.component';
+import BannerS from '../components/banners/banner-s.component';
 import UnderConstruction from '../components/under-construction.component';
 
 const SenderPage: React.FC = () => {

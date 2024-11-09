@@ -1,65 +1,136 @@
-// front/src/components/search-form.component.tsx
-
+// ./front/src/components/search-form.component.tsx
 import React, { useState } from 'react';
 
 interface SearchFormProps {
   type: 'client' | 'carrier';
 }
 
+interface FormData {
+  from: string;
+  fromTime: string;
+  to: string;
+  toTime: string;
+  date: string;
+  weight: string;
+  pallets: string;
+}
+
 const SearchForm: React.FC<SearchFormProps> = ({ type }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     from: '',
+    fromTime: '',
     to: '',
+    toTime: '',
     date: '',
-    weight: ''
+    weight: '',
+    pallets: ''
   });
 
   const bgColor = type === 'client' ? 'bg-[#FF00FF]/10' : 'bg-[#74cc04]/10';
+  const borderColor = type === 'client' ? 'border-[#FF00FF]/20' : 'border-[#74cc04]/20';
+
+  const handleChange = (field: keyof FormData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Form data:', formData);
+    // Tu pôjde logika odoslania dát
+  };
 
   return (
-    <div className={`p-6 ${bgColor}`}>
-      <form className="space-y-4">
-        <input
-          type="text"
-          placeholder="From *"
-          required
-          className="w-full p-2 border rounded"
-          value={formData.from}
-          onChange={(e) => setFormData({ ...formData, from: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="To"
-          className="w-full p-2 border rounded"
-          value={formData.to}
-          onChange={(e) => setFormData({ ...formData, to: e.target.value })}
-        />
-        <input
-          type="date"
-          className="w-full p-2 border rounded"
-          value={formData.date}
-          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Weight (kg)"
-          className="w-full p-2 border rounded"
-          value={formData.weight}
-          onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-        />
+    <div className={`p-6 ${bgColor} border-t-2 ${borderColor}`}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Nakladka */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Miesto nakládky</label>
+            <input
+              type="text"
+              placeholder="Odkiaľ? *"
+              required
+              className="w-full p-2 border rounded-md bg-white/90 dark:bg-gray-700 dark:border-gray-600"
+              value={formData.from}
+              onChange={handleChange('from')}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Čas nakládky</label>
+            <input
+              type="datetime-local"
+              className="w-full p-2 border rounded-md bg-white/90 dark:bg-gray-700 dark:border-gray-600"
+              value={formData.fromTime}
+              onChange={handleChange('fromTime')}
+            />
+          </div>
 
-        <div className="space-y-2">
+          {/* Vykladka */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Miesto vykládky</label>
+            <input
+              type="text"
+              placeholder="Kam?"
+              className="w-full p-2 border rounded-md bg-white/90 dark:bg-gray-700 dark:border-gray-600"
+              value={formData.to}
+              onChange={handleChange('to')}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Čas vykládky</label>
+            <input
+              type="datetime-local"
+              className="w-full p-2 border rounded-md bg-white/90 dark:bg-gray-700 dark:border-gray-600"
+              value={formData.toTime}
+              onChange={handleChange('toTime')}
+            />
+          </div>
+
+          {/* Hmotnost a palety */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Hmotnosť (kg)</label>
+            <input
+              type="number"
+              placeholder="0"
+              className="w-full p-2 border rounded-md bg-white/90 dark:bg-gray-700 dark:border-gray-600"
+              value={formData.weight}
+              onChange={handleChange('weight')}
+              min="0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Počet paliet</label>
+            <input
+              type="number"
+              placeholder="0"
+              className="w-full p-2 border rounded-md bg-white/90 dark:bg-gray-700 dark:border-gray-600"
+              value={formData.pallets}
+              onChange={handleChange('pallets')}
+              min="0"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             type="button"
-            className="w-full p-2 bg-gray-200 hover:bg-gray-300 rounded"
+            className="p-2 bg-gray-200 hover:bg-gray-300 rounded-md dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
           >
-            Search Favourite List
+            Hľadať v obľúbených
           </button>
           <button
-            type="button"
-            className="w-full p-2 bg-gray-200 hover:bg-gray-300 rounded"
+            type="submit"
+            className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
           >
-            Search Exchange
+            Hľadať na burze
           </button>
         </div>
       </form>

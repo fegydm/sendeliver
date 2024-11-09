@@ -1,5 +1,7 @@
+// ./back/configs/index.ts
 import dotenv from 'dotenv';
 import path from 'path';
+import * as redis from './redis';
 
 // Načítaj .env súbor
 dotenv.config({ path: path.join(process.cwd(), '.env') });
@@ -34,16 +36,32 @@ export const env = {
   // WebSocket
   WS_PATH: process.env.WS_PATH || '/ws',
   WS_HEARTBEAT: parseInt(process.env.WS_HEARTBEAT_INTERVAL || '30000', 10),
+
+  // OpenAI Configuration
+  openai: {
+    API_KEY: process.env.OPENAI_API_KEY,
+    MODEL: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
+    TEMPERATURE: parseFloat(process.env.OPENAI_TEMPERATURE || '0.7'),
+    MAX_TOKENS: parseInt(process.env.OPENAI_MAX_TOKENS || '500', 10),
+    SYSTEM_PROMPT: process.env.OPENAI_SYSTEM_PROMPT || `You are a logistics AI assistant. Your task is to:
+      1. Extract shipping details from user messages
+      2. Identify: pickup location, delivery location, weight, number of pallets, and times
+      3. Return data in a structured format
+      4. Respond in the same language as the user's message
+      Keep responses focused on transportation logistics.`
+  }
 };
 
 // Validácia required env premenných
-const requiredEnvVars = ['JWT_SECRET', 'DATABASE_URL'];
+const requiredEnvVars = [
+  'JWT_SECRET', 
+  'DATABASE_URL',
+  'OPENAI_API_KEY'
+];
 const missingEnvVars = requiredEnvVars.filter(v => !process.env[v]);
 
 if (missingEnvVars.length > 0) {
   throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
 }
 
-export { default as logger } from './logger.js';
-export { default as redis } from './redis.js';
-export { default as database } from './database.js';
+export { redis };
