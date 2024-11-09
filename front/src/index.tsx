@@ -1,7 +1,7 @@
 // /front/src/index.tsx
 import React from 'react'; // necessary
 import ReactDOM from 'react-dom';
-import App from './app.front';
+import App from './App';
 import './index.css';
 
 ReactDOM.render(

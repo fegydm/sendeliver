@@ -1,10 +1,9 @@
-// ./front/src/pages/secret.page2.js
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PinForm from '../components/pin-form-luke.component';
 
-const SecretPage2 = () => {
-  const [isPinVerified, setIsPinVerified] = useState(false);
-  const videoRef = useRef(null);
+const SecretPage2: React.FC = () => {
+  const [isPinVerified, setIsPinVerified] = useState<boolean>(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (isPinVerified) {
@@ -12,7 +11,7 @@ const SecretPage2 = () => {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'video';
-      link.href = 'https://storage.googleapis.com/sendel/video/v2.mp4'; // URL na nové video
+      link.href = 'https://storage.googleapis.com/sendel/video/v2.mp4';
       document.head.appendChild(link);
 
       // Set timeout to revert to PIN form after inactivity
@@ -22,7 +21,7 @@ const SecretPage2 = () => {
 
       return () => {
         clearTimeout(timer);
-        document.head.removeChild(link); // Cleanup the preloaded video link
+        document.head.removeChild(link);
       };
     }
   }, [isPinVerified]);
@@ -45,7 +44,6 @@ const SecretPage2 = () => {
   return (
     <div className="min-h-screen bg-gray-900 py-12 px-4 relative">
       <div className="max-w-5xl mx-auto">
-        {/* Video Container */}
         {isPinVerified && (
           <>
             <div className="relative pt-[56.25%] bg-black rounded-lg overflow-hidden">
@@ -53,7 +51,7 @@ const SecretPage2 = () => {
                 ref={videoRef}
                 className="absolute inset-0 w-full h-full"
                 playsInline
-                src="https://storage.googleapis.com/sendel/video/v2.mp4" // URL na nové video
+                src="https://storage.googleapis.com/sendel/video/v2.mp4"
               >
                 Your browser does not support the video tag.
               </video>
@@ -81,7 +79,6 @@ const SecretPage2 = () => {
           </>
         )}
 
-        {/* PIN Form */}
         {!isPinVerified && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <PinForm onCorrectPin={() => setIsPinVerified(true)} />

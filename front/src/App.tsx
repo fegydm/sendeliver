@@ -1,5 +1,5 @@
 // ./front/src/App.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import WebSocketService from './services/websocket.service';
 import HomePage from './pages/home.page';
@@ -10,9 +10,12 @@ import TestPage from './tests/test.page';
 import SecretPageJozo from './pages/secret1.page';
 import SecretPageLuke from './pages/secret2.page';
 
-const App: React.FC = () => {
+type UserState = 'COOKIES_DISABLED' | 'COOKIES_ENABLED' | 'LOGGED_IN';
+
+const App = () => {
   const domain = window.location.hostname;
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [userState] = useState<UserState>('COOKIES_DISABLED');
   console.log("Current Domain: ", domain);
 
   useEffect(() => {
@@ -20,7 +23,7 @@ const App: React.FC = () => {
       console.log('WebSocket Connected');
     });
 
-    WebSocketService.onMessage('error', (error) => {
+    WebSocketService.onMessage('error', (error: unknown) => {
       console.error('WebSocket Error:', error);
     });
 
@@ -59,7 +62,18 @@ const App: React.FC = () => {
     <Router>
       <div className={isDarkMode ? 'dark' : ''}>
         <Routes>
-          {isDevEnvironment && <Route path="/test" element={<TestPage />} />}
+          {isDevEnvironment && (
+            <Route 
+              path="/test" 
+              element={
+                <TestPage 
+                  isDarkMode={isDarkMode} 
+                  onToggleDarkMode={toggleDarkMode}
+                  userState={userState}
+                />
+              } 
+            />
+          )}
 
           {isSenderDomain && <Route path="/" element={<SenderPage />} />}
           {isHaulerDomain && <Route path="/" element={<HaulerPage />} />}
@@ -70,7 +84,6 @@ const App: React.FC = () => {
               <Route path="/sender" element={<SenderPage />} />
               <Route path="/hauler" element={<HaulerPage />} />
 
-              {/* Presmerovania pre alternatívne URL */}
               <Route path="/clients" element={<Navigate to="/sender" replace />} />
               <Route path="/carriers" element={<Navigate to="/hauler" replace />} />
 

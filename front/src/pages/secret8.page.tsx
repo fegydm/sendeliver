@@ -1,5 +1,5 @@
 // ./front/src/pages/secret.page8.js
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 const SecretPage8 = () => {
   useEffect(() => {

@@ -1,9 +1,15 @@
-// src/test/TestPage.js
-import React, { useState, useEffect } from 'react';
-import Navigation from '../components/navigation.component.js';  // Upravená cesta
+// ./front/src/tests/test.page.tsx
+import { useState, useEffect } from 'react';
+import Navigation from '../components/navigation.component';
 
-const TestPage = () => {
-  const [userState, setUserState] = useState('COOKIES_DISABLED');
+interface TestPageProps {
+  isDarkMode: boolean;
+  onToggleDarkMode: () => void;
+  userState: string;
+}
+
+const TestPage = ({ isDarkMode, onToggleDarkMode, userState: initialUserState }: TestPageProps) => {
+  const [currentUserState, setCurrentUserState] = useState(initialUserState);
   const [backendStatus, setBackendStatus] = useState('');
 
   useEffect(() => {
@@ -21,12 +27,11 @@ const TestPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Test Controls */}
       <div className="mb-4 bg-yellow-100 p-4">
         <p className="font-bold mb-2">Test Controls:</p>
         <select 
-          value={userState} 
-          onChange={(e) => setUserState(e.target.value)}
+          value={currentUserState} 
+          onChange={(e) => setCurrentUserState(e.target.value)}
           className="border p-2 rounded"
         >
           <option value="COOKIES_DISABLED">Bez Cookies</option>
@@ -35,17 +40,14 @@ const TestPage = () => {
         </select>
       </div>
 
-      {/* Backend Status */}
       <div className="mb-4 p-4 bg-blue-100 rounded">
         <p className="font-bold">Backend Status:</p>
         <p>{backendStatus}</p>
       </div>
 
-      {/* Navigation Component */}
       <Navigation 
-        userState={userState}
-        username={userState === 'LOGGED_IN' ? "Test User" : ""}
-        userAvatar={userState === 'LOGGED_IN' ? "/api/placeholder/100/100" : ""}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={onToggleDarkMode}
       />
     </div>
   );
