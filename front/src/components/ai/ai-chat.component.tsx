@@ -1,27 +1,27 @@
 // ./front/src/components/ai/ai-chat.component.tsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 
 interface AIChatProps {
   onClose: () => void;
-  onDataExtracted: (data: any) => void;
 }
 
 interface Message {
-  role: 'user' | 'ai';
+  role: "user" | "ai";
   content: string;
 }
 
-const AIChat: React.FC<AIChatProps> = ({ onClose, onDataExtracted }) => {
+const AIChat = ({ onClose }: AIChatProps) => {
   const [messages, setMessages] = useState<Message[]>([
-    { 
-      role: 'ai', 
-      content: 'Vitajte! Som váš AI asistent pre prepravu. Ako vám môžem pomôcť?' 
-    }
+    {
+      role: "ai",
+      content:
+        "Vitajte! Som váš AI asistent pre prepravu. Ako vám môžem pomôcť?",
+    },
   ]);
+  const [inputText, setInputText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll na koniec správ
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -30,51 +30,26 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, onDataExtracted }) => {
     scrollToBottom();
   }, [messages]);
 
-  // Simulácia spracovania AI odpovede
-  const processAIResponse = async (userInput: string) => {
-    // Tu by išla reálna implementácia AI
-    const mockData = {
-      pickup: 'Dortmund',
-      delivery: 'Paríž',
-      weight: '280',
-      pallets: 3
-    };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim() || isProcessing) return;
 
-    // Simulácia odpovede AI
-    const aiResponse = `Rozumiem vašej požiadavke. Analyzoval som váš text a našiel som tieto informácie:
-    - Miesto nakládky: ${mockData.pickup}
-    - Miesto vykládky: ${mockData.delivery}
-    - Hmotnosť: ${mockData.weight} kg
-    - Počet paliet: ${mockData.pallets}
-    
-    Chcete tieto údaje použiť vo formulári?`;
-
-    setMessages(prev => [...prev, { role: 'ai', content: aiResponse }]);
-    onDataExtracted(mockData);
-  };
-
-  const handleUserInput = async (text: string) => {
-    if (!text.trim() || isProcessing) return;
-
-    // Pridanie user správy
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
+    setMessages((prev) => [...prev, { role: "user", content: inputText }]);
+    setInputText("");
     setIsProcessing(true);
 
-    try {
-      await processAIResponse(text);
-    } catch (error) {
-      setMessages(prev => [...prev, { 
-        role: 'ai', 
-        content: 'Prepáčte, vyskytla sa chyba pri spracovaní vašej požiadavky.' 
-      }]);
-    } finally {
+    // Simulovaná odpoveď
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", content: "Simulovaná odpoveď AI." },
+      ]);
       setIsProcessing(false);
-    }
+    }, 1000);
   };
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <div className="flex justify-between items-center mb-4 pb-4 border-b dark:border-gray-700">
         <h2 className="text-xl font-bold">AI Asistent pre prepravu</h2>
         <button
@@ -85,15 +60,14 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, onDataExtracted }) => {
         </button>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto mb-4 space-y-4">
         {messages.map((msg, index) => (
           <div
             key={index}
             className={`p-3 rounded-lg max-w-[80%] ${
-              msg.role === 'user'
-                ? 'ml-auto bg-blue-500 text-white'
-                : 'bg-gray-100 dark:bg-gray-700'
+              msg.role === "user"
+                ? "ml-auto bg-blue-500 text-white"
+                : "bg-gray-100 dark:bg-gray-700"
             }`}
           >
             <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -102,12 +76,31 @@ const AIChat: React.FC<AIChatProps> = ({ onClose, onDataExtracted }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Processing indicator */}
       {isProcessing && (
         <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
           AI spracováva vašu požiadavku...
         </div>
       )}
+
+      <form onSubmit={handleSubmit} className="mt-auto">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="Napíšte správu..."
+            className="flex-1 p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
+            disabled={isProcessing}
+          />
+          <button
+            type="submit"
+            disabled={isProcessing || !inputText.trim()}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+          >
+            Odoslať
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

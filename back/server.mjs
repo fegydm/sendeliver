@@ -1,4 +1,4 @@
-// ./back/server.js
+// ./back/server.mjs
 import express from 'express';
 import cors from 'cors';
 import http from 'http';

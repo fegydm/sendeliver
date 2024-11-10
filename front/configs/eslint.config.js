@@ -1,7 +1,8 @@
-// /front/configs/eslint.cjs
+// ./front/configs/eslint.config.js
+import { Linter } from 'eslint';
 
-module.exports = {
-  root: true,
+/** @type {Linter.Config} */
+const config = {
   env: {
     browser: true,
     es2021: true,
@@ -26,8 +27,8 @@ module.exports = {
     'react/react-in-jsx-scope': 'off',
     'react/prop-types': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
-    'quotes': ['error', 'single'],
-    'semi': ['error', 'always'],
+    quotes: ['error', 'single'],
+    semi: ['error', 'always'],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-unused-vars': 'warn',
   },
@@ -51,8 +52,8 @@ module.exports = {
           {
             skipWords: ['Parens', 'sendeliver', 'jozo', 'hauler', 'nezabudaj', 'xy'],
             skipIfMatch: [
-              '^.*[A-Z]{2,}.*$',  // ignore
-              '.*\\d.*'           // ignore 
+              '^.*[A-Z]{2,}.*$', // ignore
+              '.*\\d.*', // ignore
             ],
             minLength: 3,
           },
@@ -61,3 +62,5 @@ module.exports = {
     },
   ],
 };
+
+export default config;
