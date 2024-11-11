@@ -1,0 +1,107 @@
+# Dependencies
+node_modules
+**/node_modules
+.pnp
+.pnp.js
+
+# Production builds
+/front/build
+/front/dist
+/back/build
+/back/dist
+dist
+build
+
+# Environment files
+.env*
+!.env.example
+*/**/.env*
+!*/**/.env.example
+
+# Cache and temporary files
+.cache
+.temp
+*.tmp
+.eslintcache
+.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# IDE and editor files
+.idea
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+*.swn
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# Testing
+coverage
+**/coverage
+.nyc_output
+junit.xml
+**/junit.xml
+
+# Development environment
+.devcontainer
+.docker
+docker-compose.override.yml
+
+# Debug
+.debug
+*.debug
+debug.log
+
+# Compiled output
+*.tsbuildinfo
+*.js.map
+*.css.map
+
+# Package files
+*.tgz
+yarn.lock
+package-lock.json
+!*/yarn.lock
+!*/package-lock.json
+
+# Build analysis
+stats.html
+stats.json
+bundle-analysis.html
+bundle-stats.json
+
+# Static assets
+**/public/static
+**/dist/static
+
+# Misc
+.vercel
+.netlify
+*.pem
+.env.*.local
+sitemap.xml
+robots.txt

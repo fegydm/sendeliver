@@ -1,0 +1,1 @@
+// zlucili sme do app.tsx

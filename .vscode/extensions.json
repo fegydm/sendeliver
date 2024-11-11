@@ -1,0 +1,13 @@
+// .vscode/extensions.json
+{
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "formulahendry.auto-rename-tag",
+      "christian-kohler.path-intellisense",
+      "ms-vsliveshare.vsliveshare",
+      "gruntfuggly.todo-tree",
+      "streetsidesoftware.code-spell-checker"
+    ]
+  }
