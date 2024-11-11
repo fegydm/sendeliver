@@ -1,42 +1,21 @@
-// ./front/src/components/ai-search.component.tsx
+// ./front/src/components/ai/ai-search.component.tsx
 import React, { useState } from 'react';
 
 interface AiSearchProps {
   type: 'client' | 'carrier';
-  onAIRequest?: (prompt: string) => void;
-  onDataExtracted?: (data: any) => void;
+  onAIRequest: (prompt: string) => void;
 }
 
-interface TransportData {
-  pickup?: string;
-  pickupTime?: string;
-  delivery?: string;
-  deliveryTime?: string;
-  weight?: string;
-  pallets?: number;
-}
-
-const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest, onDataExtracted }) => {
+const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
   const [prompt, setPrompt] = useState('');
   const bgColor = type === 'client' ? 'bg-[#FF00FF]/10' : 'bg-[#74cc04]/10';
   const borderColor = type === 'client' ? 'border-[#FF00FF]/20' : 'border-[#74cc04]/20';
   const buttonBgColor = type === 'client' ? 'bg-[#FF00FF] hover:bg-[#FF00FF]/80' : 'bg-[#74cc04] hover:bg-[#74cc04]/80';
 
   const handleAIRequest = () => {
-    if (!prompt.trim() || !onAIRequest) return;
-    
+    if (!prompt.trim()) return;
     onAIRequest(prompt);
-
-    // Môžeme pridať základnú extrakciu dát z textu
-    // Toto je len príklad, v realite by ste použili AI pre extrakciu
-    const mockData: TransportData = {
-      pickup: 'Dortmund',
-      delivery: 'Paríž',
-      weight: '280',
-      pallets: 3
-    };
-
-    onDataExtracted?.(mockData);
+    setPrompt('');
   };
 
   return (

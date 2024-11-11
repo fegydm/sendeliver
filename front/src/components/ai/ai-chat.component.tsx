@@ -3,6 +3,9 @@ import { useState, useEffect, useRef } from "react";
 
 interface AIChatProps {
   onClose: () => void;
+  onMessage: (message: string) => void;
+  initialPrompt?: string;
+  type: 'sender' | 'carrier';
 }
 
 interface Message {
@@ -10,12 +13,13 @@ interface Message {
   content: string;
 }
 
-const AIChat = ({ onClose }: AIChatProps) => {
+const AIChat: React.FC<AIChatProps> = ({ onClose, onMessage, initialPrompt, type }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      content:
-        "Vitajte! Som váš AI asistent pre prepravu. Ako vám môžem pomôcť?",
+      content: type === 'sender'
+        ? "Vitajte! Som váš AI asistent pre prepravu. Popíšte mi prosím vašu zásielku (napr. miesto nakládky a vykládky, termíny, hmotnosť, počet paliet, typ tovaru, špeciálne požiadavky...)."
+        : "Vitajte! Som váš AI asistent pre prepravu. Popíšte mi prosím vaše vozidlo a dostupnosť (napr. typ vozidla, nosnosť, lokalita, termíny...)."
     },
   ]);
   const [inputText, setInputText] = useState("");
@@ -30,22 +34,59 @@ const AIChat = ({ onClose }: AIChatProps) => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (initialPrompt && !inputText) {
+      setInputText(initialPrompt);
+      const fakeEvent = { preventDefault: () => {} } as React.FormEvent<HTMLFormElement>;
+      handleSubmit(fakeEvent);
+    }
+  }, [initialPrompt]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!inputText.trim() || isProcessing) return;
 
-    setMessages((prev) => [...prev, { role: "user", content: inputText }]);
+    const userMessage = inputText;
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setInputText("");
     setIsProcessing(true);
 
-    // Simulovaná odpoveď
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { role: "ai", content: "Simulovaná odpoveď AI." },
-      ]);
+    try {
+      const response = await fetch(import.meta.env.VITE_AI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept-Language': 'sk'
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          type: type,
+          language: 'sk'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      setMessages(prev => [...prev, { 
+        role: "ai", 
+        content: data.content 
+      }]);
+      
+      onMessage(data.content);
+
+    } catch (error) {
+      console.error('AI Chat Error:', error);
+      setMessages(prev => [...prev, { 
+        role: "ai", 
+        content: "Prepáčte, vyskytla sa chyba pri spracovaní vašej požiadavky. Skúste to prosím znova." 
+      }]);
+    } finally {
       setIsProcessing(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -55,6 +96,7 @@ const AIChat = ({ onClose }: AIChatProps) => {
         <button
           onClick={onClose}
           className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          aria-label="Zavrieť"
         >
           <span className="text-2xl">&times;</span>
         </button>
@@ -88,14 +130,16 @@ const AIChat = ({ onClose }: AIChatProps) => {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Napíšte správu..."
+            placeholder={type === 'sender' 
+              ? "Opíšte vašu zásielku..."
+              : "Opíšte vaše vozidlo a dostupnosť..."}
             className="flex-1 p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
             disabled={isProcessing}
           />
           <button
             type="submit"
             disabled={isProcessing || !inputText.trim()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Odoslať
           </button>

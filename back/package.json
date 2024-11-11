@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node dist/server.mjs",
+    "start": "node server.mjs",
     "dev": "node --loader ts-node/esm server.mjs",
     "build": "tsc --module es2022 --target es2022",
     "lint": "eslint .",

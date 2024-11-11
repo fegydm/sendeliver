@@ -1,6 +1,6 @@
 // ./front/src/types/lottie-web.d.ts
 declare module 'lottie-web/build/player/lottie_light.min' {
-  interface AnimationConfig {
+  export interface AnimationConfig {
     container: HTMLElement;
     renderer?: 'svg' | 'canvas' | 'html';
     loop?: boolean;
@@ -13,8 +13,8 @@ declare module 'lottie-web/build/player/lottie_light.min' {
       className?: string;
     };
   }
-
-  interface AnimationItem {
+ 
+  export interface AnimationItem {
     play(): void;
     stop(): void;
     pause(): void;
@@ -27,8 +27,8 @@ declare module 'lottie-web/build/player/lottie_light.min' {
     setSubframe(useSubFrames: boolean): void;
     getDuration(inFrames?: boolean): number;
   }
-
-  interface LottiePlayer {
+ 
+  export interface LottiePlayer {
     loadAnimation(config: AnimationConfig): AnimationItem;
     destroy(): void;
     setQuality(quality: string | number): void;
@@ -46,7 +46,14 @@ declare module 'lottie-web/build/player/lottie_light.min' {
     resize(): void;
     cleanup(): void;
   }
-
+ 
   const lottie: LottiePlayer;
+  export type { AnimationConfig, AnimationItem, LottiePlayer };
   export default lottie;
+}
+
+// Deklarácia pre JSON súbory
+declare module "*.json" {
+  const value: any;
+  export default value;
 }

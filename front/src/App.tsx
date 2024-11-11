@@ -1,104 +1,90 @@
 // ./front/src/App.tsx
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import WebSocketService from './services/websocket.service';
 import HomePage from './pages/home.page';
-import SenderPage from './pages/sender.page';
-import HaulerPage from './pages/hauler.page';
-import NotFound from './pages/notfound.page';
-import TestPage from './tests/test.page';
-import SecretPageJozo from './pages/secret1.page';
-import SecretPageLuke from './pages/secret2.page';
+import WebSocketService from './services/websocket.service';
 
-type UserState = 'COOKIES_DISABLED' | 'COOKIES_ENABLED' | 'LOGGED_IN';
+interface WebSocketMessage {
+ type: string;
+ data: any;
+}
 
 const App = () => {
-  const domain = window.location.hostname;
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [userState] = useState<UserState>('COOKIES_DISABLED');
-  console.log("Current Domain: ", domain);
+ const [isDarkMode, setIsDarkMode] = useState(() => {
+   // Kontrola uloženej preferencie dark mode
+   const savedMode = localStorage.getItem('darkMode');
+   return savedMode ? JSON.parse(savedMode) : false;
+ });
 
-  useEffect(() => {
-    WebSocketService.onMessage('connection', () => {
-      console.log('WebSocket Connected');
-    });
+ const [wsService] = useState(() => new WebSocketService(import.meta.env.VITE_WS_URL));
 
-    WebSocketService.onMessage('error', (error: unknown) => {
-      console.error('WebSocket Error:', error);
-    });
+ useEffect(() => {
+   // Uloženie dark mode preferencie
+   localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
 
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
-    if (prefersDarkMode) document.documentElement.classList.add('dark');
-  }, []);
+   // Aplikovanie dark mode na document
+   if (isDarkMode) {
+     document.documentElement.classList.add('dark');
+   } else {
+     document.documentElement.classList.remove('dark');
+   }
+ }, [isDarkMode]);
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(prev => !prev);
-    document.documentElement.classList.toggle('dark');
-  };
+ useEffect(() => {
+   // Inicializácia WebSocket pripojenia
+   const initWebSocket = () => {
+     wsService.connect();
 
-  const isDevEnvironment = domain.includes('github.dev') || domain === 'localhost' || domain === '127.0.0.1';
-  const isMainDomain = domain === 'www.sendeliver.com' || domain === 'sendeliver.com' || isDevEnvironment;
-  const isSenderDomain = domain === 'clients.sendeliver.com' || domain === 'sender.sendeliver.com';
-  const isHaulerDomain = domain === 'carriers.sendeliver.com' || domain === 'hauler.sendeliver.com';
+     const handleConnection = () => {
+       console.log('Connected to WebSocket server');
+     };
 
-  if (domain === 'jozo.sendeliver.com' || (isDevEnvironment && domain.includes('jozo'))) {
-    return (
-      <div className={isDarkMode ? 'dark' : ''}>
-        <SecretPageJozo />
-      </div>
-    );
-  }
+     const handleError = (error: unknown) => {
+       console.error('WebSocket error:', error);
+     };
 
-  if (domain === 'luke.sendeliver.com' || (isDevEnvironment && domain.includes('luke'))) {
-    return (
-      <div className={isDarkMode ? 'dark' : ''}>
-        <SecretPageLuke />
-      </div>
-    );
-  }
+     const handleMessage = (message: WebSocketMessage) => {
+       console.log('Received message:', message);
+       // Tu môžete spracovať prijaté správy podľa typu
+       switch (message.type) {
+         case 'update':
+           // Handle update
+           break;
+         case 'notification':
+           // Handle notification
+           break;
+         default:
+           console.log('Unhandled message type:', message.type);
+       }
+     };
 
-  return (
-    <Router>
-      <div className={isDarkMode ? 'dark' : ''}>
-        <Routes>
-          {isDevEnvironment && (
-            <Route 
-              path="/test" 
-              element={
-                <TestPage 
-                  isDarkMode={isDarkMode} 
-                  onToggleDarkMode={toggleDarkMode}
-                  userState={userState}
-                />
-              } 
-            />
-          )}
+     wsService.subscribe('connection', handleConnection);
+     wsService.subscribe('error', handleError);
+     wsService.subscribe('message', handleMessage);
 
-          {isSenderDomain && <Route path="/" element={<SenderPage />} />}
-          {isHaulerDomain && <Route path="/" element={<HaulerPage />} />}
+     // Cleanup pri unmount
+     return () => {
+       wsService.unsubscribe('connection', handleConnection);
+       wsService.unsubscribe('error', handleError);
+       wsService.unsubscribe('message', handleMessage);
+       wsService.disconnect();
+     };
+   };
 
-          {isMainDomain ? (
-            <>
-              <Route path="/" element={<HomePage isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />} />
-              <Route path="/sender" element={<SenderPage />} />
-              <Route path="/hauler" element={<HaulerPage />} />
+   return initWebSocket();
+ }, [wsService]);
 
-              <Route path="/clients" element={<Navigate to="/sender" replace />} />
-              <Route path="/carriers" element={<Navigate to="/hauler" replace />} />
+ const toggleDarkMode = () => {
+   setIsDarkMode(prevMode => !prevMode);
+ };
 
-              {isDevEnvironment && <Route path="/jozo" element={<SecretPageJozo />} />}
-              {isDevEnvironment && <Route path="/luke" element={<SecretPageLuke />} />}
-            </>
-          ) : (
-            <Route path="*" element={<NotFound />} />
-          )}
-
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </Router>
-  );
+ return (
+   <Layout>
+     <HomePage 
+       isDarkMode={isDarkMode} 
+       onToggleDarkMode={toggleDarkMode} 
+     />
+   </Layout>
+ );
 };
 
 export default App;

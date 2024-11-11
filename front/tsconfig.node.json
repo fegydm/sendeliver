@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
-    "composite": true, // Pridaj tento riadok
-    "module": "commonjs",
-    "target": "ESNext",
-    "esModuleInterop": true,
+    "composite": true,
     "skipLibCheck": true,
-    "strict": true
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["./configs/vite.config.ts"]
+  "include": ["vite.config.mts"]
 }
