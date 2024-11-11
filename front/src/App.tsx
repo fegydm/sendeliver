@@ -1,21 +1,21 @@
 // ./front/src/App.tsx
 import { useEffect, useState } from 'react';
 import HomePage from './pages/home.page';
-import WebSocketService from './services/websocket.service';
+import WebSocketService from './services/websocket.service.mts';
 
 interface WebSocketMessage {
  type: string;
  data: any;
 }
 
-const App = () => {
- const [isDarkMode, setIsDarkMode] = useState(() => {
+const App: React.FC = () => {
+ const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
    // Kontrola uloženej preferencie dark mode
    const savedMode = localStorage.getItem('darkMode');
    return savedMode ? JSON.parse(savedMode) : false;
  });
 
- const [wsService] = useState(() => new WebSocketService(import.meta.env.VITE_WS_URL));
+ const [wsService] = useState(() => new WebSocketService(import.meta.env.VITE_WS_URL || 'ws://localhost:5000'));
 
  useEffect(() => {
    // Uloženie dark mode preferencie
@@ -74,16 +74,18 @@ const App = () => {
  }, [wsService]);
 
  const toggleDarkMode = () => {
-   setIsDarkMode(prevMode => !prevMode);
+   setIsDarkMode((prevMode: boolean) => !prevMode);
  };
 
  return (
-   <Layout>
-     <HomePage 
-       isDarkMode={isDarkMode} 
-       onToggleDarkMode={toggleDarkMode} 
-     />
-   </Layout>
+   <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+     <div className="dark:bg-gray-900">
+       <HomePage 
+         isDarkMode={isDarkMode} 
+         onToggleDarkMode={toggleDarkMode} 
+       />
+     </div>
+   </div>
  );
 };
 
