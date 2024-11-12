@@ -1,4 +1,5 @@
 // ./front/configs/tailwind.config.js
+
 const formsPlugin = require("@tailwindcss/forms");
 
 /** @type {import('tailwindcss').Config} */
@@ -13,6 +14,10 @@ module.exports = {
       minWidth: {
         screen: "320px",
       },
+      maxWidth: {
+        screen: "1280px", // maximálna šírka celej aplikácie
+        container: "1280px", // maximálna šírka content containera
+      },
       screens: {
         xs: "320px",
         sm: "480px",
@@ -22,8 +27,24 @@ module.exports = {
         "2xl": "1280px",
       },
       colors: {
+        // Global grayscale color scale
+        gray: {
+          50: "#f8fafc",
+          100: "#f1f5f9",
+          200: "#e2e8f0",
+          300: "#cbd5e1",
+          400: "#94a3b8",
+          500: "#64748b",
+          600: "#475569",
+          700: "#334155",
+          800: "#1e293b",
+          900: "#0f172a",
+          950: "#020617",
+        },
+        // Project-specific color schemes
         hauler: {
           primary: {
+            DEFAULT: "#ec4899",
             50: "#fdf2f8",
             100: "#fce7f3",
             200: "#fbcfe8",
@@ -52,6 +73,7 @@ module.exports = {
         },
         client: {
           primary: {
+            DEFAULT: "#0e9f6e",
             50: "#f3faf7",
             100: "#def7ec",
             200: "#bcf0da",
@@ -64,25 +86,31 @@ module.exports = {
             900: "#014737",
             950: "#002419",
           },
-          gray: {
-            50: "#f8fafc",
-            100: "#f1f5f9",
-            200: "#e2e8f0",
-            300: "#cbd5e1",
-            400: "#94a3b8",
-            500: "#64748b",
-            600: "#475569",
-            700: "#334155",
-            800: "#1e293b",
-            900: "#0f172a",
-            950: "#020617",
-          },
         },
         status: {
           success: "#10B981",
           warning: "#F59E0B",
           error: "#EF4444",
           info: "#3B82F6",
+        },
+      },
+      height: {
+        navbar: "48px",
+        banner: "150px",
+        "banner-inner": "130px",
+      },
+      maxHeight: {
+        navbar: "48px",
+      },
+      padding: {
+        navigation: "4px",
+        banner: "10px",
+        container: {
+          DEFAULT: "1rem",
+          sm: "2rem",
+          lg: "4rem",
+          xl: "5rem",
+          "2xl": "6rem",
         },
       },
       boxShadow: {
@@ -114,6 +142,7 @@ module.exports = {
         "4xl": "2.25rem",
         "5xl": "3rem",
         mega: "4.5rem",
+        banner: "1.125rem",
       },
       spacing: {
         72: "18rem",
@@ -171,15 +200,36 @@ module.exports = {
     formsPlugin,
     function ({ addBase }) {
       addBase({
+        html: {
+          height: "100%",
+          margin: "0",
+          padding: "0",
+          backgroundColor: "#ffffff", // default white background for body
+        },
         body: {
           margin: "0",
+          padding: "0",
           minWidth: "320px",
-          overflowX: "auto",
+          minHeight: "100%",
           WebkitFontSmoothing: "antialiased",
           MozOsxFontSmoothing: "grayscale",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "none", // Pomáha s bounce efektom v Safari
+        },
+        "#root": {
+          minHeight: "100vh",
+          paddingTop: "48px", // výška navbaru
+          position: "relative",
+        },
+        main: {
+          marginTop: "48px", // výška navbaru
         },
         ".dark": {
           colorScheme: "dark",
+          "--bg-color": "#020617", // gray-950 pre dark mode
+        },
+        ":root": {
+          "--bg-color": "#ffffff", // white pre light mode
         },
       });
     },

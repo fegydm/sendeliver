@@ -42,5 +42,13 @@
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "editor.suggest.showStatusBar": true
+  "editor.suggest.showStatusBar": true,
+  "cSpell.words": [
+    "lucide",
+    "sendeliver",
+    "Subframe",
+    "svgr",
+    "tailwindcss",
+    "tsbuildinfo"
+  ]
 }

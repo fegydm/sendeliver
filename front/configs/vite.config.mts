@@ -7,26 +7,34 @@ import svgr from "vite-plugin-svgr";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { visualizer } from "rollup-plugin-visualizer";
 
-// ES module ekvivalent pre __dirname
+// Convert ES module URL to file path
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const frontDir = path.resolve(__dirname, "..");
 
 export default defineConfig(({ command, mode }) => {
+  // Load environment variables
   const env = loadEnv(mode, process.cwd(), "");
 
   return {
+    // Plugins configuration
     plugins: [
       react(),
       svgr(),
       tsconfigPaths(),
       command === "build" && visualizer(),
     ].filter(Boolean),
+
+    // Root directory configuration
     root: frontDir,
     publicDir: path.resolve(frontDir, "public"),
+
+    // CSS configuration
     css: {
       postcss: path.resolve(__dirname, "./postcss.config.cjs"),
     },
+
+    // Build configuration
     build: {
       outDir: path.resolve(frontDir, "dist"),
       assetsDir: "assets",
@@ -44,12 +52,16 @@ export default defineConfig(({ command, mode }) => {
         },
       },
     },
+
+    // Path resolution configuration
     resolve: {
       alias: {
         "@": path.resolve(frontDir, "src"),
         "@configs": path.resolve(frontDir, "configs"),
       },
     },
+
+    // Development server configuration
     server: {
       port: 3000,
       strictPort: true,
@@ -69,6 +81,8 @@ export default defineConfig(({ command, mode }) => {
         },
       },
     },
+
+    // Environment variable definitions
     define: {
       "process.env.NODE_ENV": JSON.stringify(mode),
       "import.meta.env.VITE_AI_API_URL": JSON.stringify(

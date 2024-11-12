@@ -1,20 +1,43 @@
 // ./front/src/App.tsx
-function App() {
+import { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
+import HomePage from "./pages/home.page";
+
+const App: React.FC = () => {
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const savedMode = localStorage.getItem("darkMode");
+    return savedMode ? JSON.parse(savedMode) : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
+
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode: boolean) => !prevMode);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-blue-600 mb-4">Tailwind Test</h1>
-        <button className="bg-hauler-primary-500 text-white px-4 py-2 rounded hover:bg-hauler-primary-600">
-          Test Button
-        </button>
-        <div className="mt-4 p-4 bg-white shadow-medium rounded">
-          <p className="text-gray-800">
-            If you see styled elements, Tailwind is working!
-          </p>
-        </div>
-      </div>
+    <div className="relative min-h-screen bg-white dark:bg-gray-950">
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <HomePage
+              isDarkMode={isDarkMode}
+              onToggleDarkMode={toggleDarkMode}
+            />
+          }
+        />
+      </Routes>
     </div>
   );
-}
+};
 
 export default App;
