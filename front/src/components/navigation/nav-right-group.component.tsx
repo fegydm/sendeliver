@@ -1,6 +1,6 @@
 // ./front/src/components/navigation/nav-right-group.component.tsx
 import React from "react";
-import { Sun, Moon } from "lucide-react";
+import { FiSun, FiMoon } from "react-icons/fi";
 
 interface NavRightGroupProps {
   isDarkMode: boolean;
@@ -25,9 +25,9 @@ const NavRightGroup: React.FC<NavRightGroupProps> = ({
       {/* Dark mode toggle */}
       <button onClick={onToggleDarkMode} aria-label="Toggle dark mode">
         {isDarkMode ? (
-          <Moon className="w-6 h-6" />
+          <FiMoon className="w-6 h-6" />
         ) : (
-          <Sun className="w-6 h-6" />
+          <FiSun className="w-6 h-6" />
         )}
       </button>
     </div>

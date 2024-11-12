@@ -1,6 +1,6 @@
 // ./front/src/components/content-section.component.tsx
 import React, { ReactNode } from "react";
-import { Package2, Truck } from "lucide-react";
+import { FaBox, FaTruck } from "react-icons/fa";
 import QuickStats from "./quick-stats.component";
 
 interface ContentSectionProps {
@@ -20,7 +20,7 @@ const ContentSection: React.FC<ContentSectionProps> = ({
     <section className="w-full">
       <div>
         <h2 className="flex items-center">
-          {type === "sender" ? <Package2 /> : <Truck />}
+          {type === "sender" ? <FaBox /> : <FaTruck />}
           {type === "sender" ? "Odosielateľ" : "Prepravca"}
         </h2>
         <p>

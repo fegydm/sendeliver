@@ -1,73 +1,37 @@
 // ./front/src/components/banners/banner.component.tsx
 import React, { useEffect, useRef } from "react";
-import lottie from "lottie-web";
-import type { AnimationItem } from "lottie-web";
+import lottie from "lottie-web/build/player/lottie_light"; // Používa ľahkú verziu lottie-web bez eval
+// Namiesto priameho importu JSON súboru použijeme URL z priečinka `public`
 
 const Banner: React.FC = () => {
   const container = useRef<HTMLDivElement>(null);
-  const anim = useRef<AnimationItem | null>(null);
 
   useEffect(() => {
-    let animationInstance: AnimationItem | null = null;
+    const anim = lottie.loadAnimation({
+      container: container.current!,
+      renderer: "svg",
+      loop: true,
+      autoplay: true,
+      path: "/animations/sendeliver-text.json", // Použite URL namiesto priameho importu JSON objektu
+    });
 
-    const loadAnimation = async () => {
-      if (container.current && !anim.current) {
-        try {
-          const response = await fetch("/animations/sendeliver-text.json");
-          const animationData = await response.json();
-
-          animationInstance = lottie.loadAnimation({
-            container: container.current,
-            renderer: "svg",
-            loop: true,
-            autoplay: true,
-            animationData,
-            rendererSettings: {
-              progressiveLoad: true,
-              hideOnTransparent: false,
-              className: "lottie-svg",
-            },
-          });
-
-          animationInstance.setSubframe(false);
-          anim.current = animationInstance;
-        } catch (error) {
-          console.error("Failed to load animation:", error);
-        }
-      }
-    };
-
-    loadAnimation();
-
-    return () => {
-      if (animationInstance) {
-        animationInstance.destroy();
-      }
-      if (anim.current) {
-        anim.current.destroy();
-        anim.current = null;
-      }
-    };
+    return () => anim.destroy(); // Vyčistenie animácie po demontáži komponentu
   }, []);
 
   return (
     <div className="h-banner bg-gray-950 py-banner">
       <div className="container mx-auto h-banner-inner">
         <div className="flex items-center justify-between h-full">
-          {/* Text section */}
+          {/* Textová sekcia */}
           <div className="text-white">
             <p className="text-banner font-light">
               Empowering connections between clients and carriers.
             </p>
           </div>
 
-          {/* Lottie animation container */}
+          {/* Lottie animácia */}
           <div className="relative w-1/2 h-full">
-            <div
-              ref={container}
-              className="absolute inset-0"
-              aria-hidden="true"
-            />
+            <div ref={container} className="absolute inset-0" aria-hidden="true" />
           </div>
         </div>
       </div>

@@ -1,67 +1,61 @@
 // ./front/configs/vite.config.mts
-import { defineConfig, loadEnv } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
-import { fileURLToPath } from "url";
-import svgr from "vite-plugin-svgr";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { visualizer } from "rollup-plugin-visualizer";
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { visualizer } from 'rollup-plugin-visualizer'; // Vizualizácia chunky
 
-// Convert ES module URL to file path
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const frontDir = path.resolve(__dirname, "..");
+// Definovanie cesty k priečinku front
+const frontDir = path.resolve(__dirname, '..');
 
 export default defineConfig(({ command, mode }) => {
-  // Load environment variables
-  const env = loadEnv(mode, process.cwd(), "");
+  const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    // Plugins configuration
+    // Pluginy
     plugins: [
       react(),
-      svgr(),
-      tsconfigPaths(),
-      command === "build" && visualizer(),
+      command === 'build' && visualizer({ filename: 'dist/stats.html', open: true }),
     ].filter(Boolean),
 
-    // Root directory configuration
+    // Nastavenie root adresára a verejných súborov
     root: frontDir,
-    publicDir: path.resolve(frontDir, "public"),
+    publicDir: path.resolve(frontDir, 'public'),
 
-    // CSS configuration
+    // CSS konfigurácia
     css: {
-      postcss: path.resolve(__dirname, "./postcss.config.cjs"),
+      postcss: path.resolve(__dirname, './postcss.config.cjs'),
+      modules: {
+        localsConvention: 'camelCase', // Použitie camelCase pre názvy CSS tried
+      },
     },
 
-    // Build configuration
+    // Konfigurácia buildu
     build: {
-      outDir: path.resolve(frontDir, "dist"),
-      assetsDir: "assets",
-      sourcemap: mode === "development",
-      chunkSizeWarningLimit: 1000,
+      outDir: path.resolve(frontDir, 'dist'),
+      assetsDir: 'assets',
+      sourcemap: mode === 'development',
+      chunkSizeWarningLimit: 1000, // Zvýšený limit pre veľkosť chunky
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ["react", "react-dom"],
-            lottie: ["lottie-web"],
-            lucide: ["lucide-react"],
-            utils: ["@/utils"],
-            components: ["@/components"],
+            vendor: ['react', 'react-dom'],
+            lottie: ['lottie-web'],
+            utils: ['@/utils'],
+            components: ['@/components'],
           },
         },
       },
     },
 
-    // Path resolution configuration
+    // Konfigurácia aliasov pre jednoduchší import
     resolve: {
       alias: {
-        "@": path.resolve(frontDir, "src"),
-        "@configs": path.resolve(frontDir, "configs"),
+        '@': path.resolve(frontDir, 'src'),
+        '@configs': path.resolve(frontDir, 'configs'),
       },
     },
 
-    // Development server configuration
+    // Konfigurácia servera pre vývoj
     server: {
       port: 3000,
       strictPort: true,
@@ -74,24 +68,24 @@ export default defineConfig(({ command, mode }) => {
         overlay: true,
       },
       proxy: {
-        "/api": {
-          target: "http://localhost:5000",
+        '/api': {
+          target: 'http://localhost:5000',
           changeOrigin: true,
           secure: false,
         },
       },
     },
 
-    // Environment variable definitions
+    // Definovanie premenných prostredia
     define: {
-      "process.env.NODE_ENV": JSON.stringify(mode),
-      "import.meta.env.VITE_AI_API_URL": JSON.stringify(
-        mode === "production"
-          ? "https://sendeliver.com/api/ai/chat"
-          : "http://localhost:5000/api/ai/chat"
+      'process.env.NODE_ENV': JSON.stringify(mode),
+      'import.meta.env.VITE_AI_API_URL': JSON.stringify(
+        mode === 'production'
+          ? 'https://sendeliver.com/api/ai/chat'
+          : 'http://localhost:5000/api/ai/chat'
       ),
-      "import.meta.env.PROD": mode === "production",
-      "import.meta.env.DEV": mode === "development",
+      'import.meta.env.PROD': mode === 'production',
+      'import.meta.env.DEV': mode === 'development',
     },
   };
 });

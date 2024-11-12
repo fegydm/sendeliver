@@ -5,7 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 
-// Pridáme manifest len v produkcii
+//Add manifest in production
 if (import.meta.env.PROD) {
   const link = document.createElement("link");
   link.rel = "manifest";

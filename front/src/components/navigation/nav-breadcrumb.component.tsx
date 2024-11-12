@@ -1,7 +1,6 @@
 // ./front/src/components/navigation/nav-breadcrumb.component.tsx
-
 import React from "react";
-import { ChevronRight } from "lucide-react";
+import { FaChevronRight } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 
 interface BreadcrumbSegment {
@@ -33,7 +32,7 @@ const BreadcrumbPath: React.FC = () => {
         <Link to="/"> (home) </Link>
         {segments.map((segment) => (
           <React.Fragment key={segment.path}>
-            <ChevronRight />
+            <FaChevronRight />
             <Link to={segment.path}>{segment.label}</Link>
           </React.Fragment>
         ))}
