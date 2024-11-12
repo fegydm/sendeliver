@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer'; // Vizualizácia chunky
 
+<<<<<<< HEAD
 // Definovanie cesty k priečinku front
 const frontDir = path.resolve(__dirname, '..');
 
@@ -12,16 +13,37 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     // Pluginy
+=======
+// Convert ES module URL to file path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontDir = path.resolve(__dirname, "..");
+
+export default defineConfig(({ command, mode }) => {
+  // Load environment variables
+  const env = loadEnv(mode, process.cwd(), "");
+
+  return {
+    // Plugins configuration
+>>>>>>> 5430219 (up css)
     plugins: [
       react(),
       command === 'build' && visualizer({ filename: 'dist/stats.html', open: true }),
     ].filter(Boolean),
 
+<<<<<<< HEAD
     // Nastavenie root adresára a verejných súborov
     root: frontDir,
     publicDir: path.resolve(frontDir, 'public'),
 
     // CSS konfigurácia
+=======
+    // Root directory configuration
+    root: frontDir,
+    publicDir: path.resolve(frontDir, "public"),
+
+    // CSS configuration
+>>>>>>> 5430219 (up css)
     css: {
       postcss: path.resolve(__dirname, './postcss.config.cjs'),
       modules: {
@@ -29,7 +51,11 @@ export default defineConfig(({ command, mode }) => {
       },
     },
 
+<<<<<<< HEAD
     // Konfigurácia buildu
+=======
+    // Build configuration
+>>>>>>> 5430219 (up css)
     build: {
       outDir: path.resolve(frontDir, 'dist'),
       assetsDir: 'assets',
@@ -47,7 +73,11 @@ export default defineConfig(({ command, mode }) => {
       },
     },
 
+<<<<<<< HEAD
     // Konfigurácia aliasov pre jednoduchší import
+=======
+    // Path resolution configuration
+>>>>>>> 5430219 (up css)
     resolve: {
       alias: {
         '@': path.resolve(frontDir, 'src'),
@@ -55,7 +85,11 @@ export default defineConfig(({ command, mode }) => {
       },
     },
 
+<<<<<<< HEAD
     // Konfigurácia servera pre vývoj
+=======
+    // Development server configuration
+>>>>>>> 5430219 (up css)
     server: {
       port: 3000,
       strictPort: true,
@@ -76,7 +110,11 @@ export default defineConfig(({ command, mode }) => {
       },
     },
 
+<<<<<<< HEAD
     // Definovanie premenných prostredia
+=======
+    // Environment variable definitions
+>>>>>>> 5430219 (up css)
     define: {
       'process.env.NODE_ENV': JSON.stringify(mode),
       'import.meta.env.VITE_AI_API_URL': JSON.stringify(

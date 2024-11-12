@@ -1,6 +1,10 @@
 // ./front/src/components/modals/avatar-modal.component.tsx
 import React from 'react';
+<<<<<<< HEAD
 import { FaTimes } from 'react-icons/fa';
+=======
+import { X } from 'lucide-react';
+>>>>>>> 5430219 (up css)
 
 interface AvatarModalProps {
   isOpen: boolean;
@@ -24,7 +28,11 @@ const AvatarModal: React.FC<AvatarModalProps> = ({ isOpen, onClose }) => {
                         dark:hover:bg-hauler-gray-700 rounded-lg transition-colors"
               aria-label="Close modal"
             >
+<<<<<<< HEAD
               <FaTimes size={20} />
+=======
+              <X size={20} />
+>>>>>>> 5430219 (up css)
             </button>
             <h2 className="text-2xl font-bold mb-4">Choose Avatar</h2>
             <div className="grid grid-cols-4 gap-4 mb-4">
@@ -53,4 +61,8 @@ const AvatarModal: React.FC<AvatarModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
+<<<<<<< HEAD
 export default AvatarModal;
+=======
+export default AvatarModal;
+>>>>>>> 5430219 (up css)

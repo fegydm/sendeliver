@@ -1,6 +1,10 @@
 // ./front/src/components/modals/register-modal.component.tsx
 import React from 'react';
+<<<<<<< HEAD
 import { FaTimes } from 'react-icons/fa';
+=======
+import { X } from 'lucide-react';
+>>>>>>> 5430219 (up css)
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -24,7 +28,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
                         dark:hover:bg-hauler-gray-700 rounded-lg transition-colors"
               aria-label="Close modal"
             >
+<<<<<<< HEAD
               <FaTimes size={20} />
+=======
+              <X size={20} />
+>>>>>>> 5430219 (up css)
             </button>
             <h2 className="text-2xl font-bold mb-4">Create Account</h2>
             <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
@@ -95,4 +103,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
+<<<<<<< HEAD
 export default RegisterModal;
+=======
+export default RegisterModal;
+>>>>>>> 5430219 (up css)

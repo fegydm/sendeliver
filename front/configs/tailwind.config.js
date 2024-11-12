@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // ./front/configs/tailwind.config.js 
+=======
+// ./front/configs/tailwind.config.js
+>>>>>>> 5430219 (up css)
 
 const formsPlugin = require("@tailwindcss/forms");
 
@@ -8,9 +12,31 @@ module.exports = {
   darkMode: "class",
   theme: {
     extend: {
+<<<<<<< HEAD
       colors: {
         'navbar-bg': '#e2e8f0', // svetlosivá farba pre pozadie navbaru (gray-200)
         'container-border': '#ff0000', // červená pre ohraničenie kontajnerov
+=======
+      fontFamily: {
+        sans: ["Inter", "Arial", "sans-serif"],
+      },
+      minWidth: {
+        screen: "320px",
+      },
+      maxWidth: {
+        screen: "1280px", // maximálna šírka celej aplikácie
+        container: "1280px", // maximálna šírka content containera
+      },
+      screens: {
+        xs: "320px",
+        sm: "480px",
+        md: "620px",
+        lg: "820px",
+        xl: "1024px",
+        "2xl": "1280px",
+      },
+      colors: {
+>>>>>>> 5430219 (up css)
         // Global grayscale color scale
         gray: {
           50: "#f8fafc",
@@ -78,6 +104,7 @@ module.exports = {
           info: "#3B82F6",
         },
       },
+<<<<<<< HEAD
       fontFamily: {
         sans: ["Inter", "Arial", "sans-serif"],
       },
@@ -98,14 +125,25 @@ module.exports = {
       },
       height: {
         navbar: "50px", // výška navbaru
+=======
+      height: {
+        navbar: "48px",
+>>>>>>> 5430219 (up css)
         banner: "150px",
         "banner-inner": "130px",
       },
       maxHeight: {
+<<<<<<< HEAD
         navbar: "50px",
       },
       padding: {
         navigation: "4px", // padding pre kontajnery
+=======
+        navbar: "48px",
+      },
+      padding: {
+        navigation: "4px",
+>>>>>>> 5430219 (up css)
         banner: "10px",
         container: {
           DEFAULT: "1rem",
@@ -220,11 +258,19 @@ module.exports = {
         },
         "#root": {
           minHeight: "100vh",
+<<<<<<< HEAD
           paddingTop: "50px", // výška navbaru
           position: "relative",
         },
         main: {
           marginTop: "50px", // výška navbaru
+=======
+          paddingTop: "48px", // výška navbaru
+          position: "relative",
+        },
+        main: {
+          marginTop: "48px", // výška navbaru
+>>>>>>> 5430219 (up css)
         },
         ".dark": {
           colorScheme: "dark",
