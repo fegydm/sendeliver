@@ -1,63 +1,69 @@
-// ./front/src/services/ai.service.mts
-export interface AIRequest {
-  message: string;
-  type: 'sender' | 'carrier';
-  language?: string;
-}
-
-export interface AIResponse {
-  content: string;
-  data?: {
-    pickupLocation?: string;
-    deliveryLocation?: string;
-    pickupTime?: string;
-    deliveryTime?: string;
-    weight?: number;
-    palletCount?: number;
-    additionalInfo?: {
-      vehicleType?: string;
-      requirements?: string[];
-      price?: number;
-      distance?: number;
-      adr?: boolean;
-      loadingType?: string;
-      temperature?: {
-        min?: number;
-        max?: number;
-        required?: boolean;
-      }
-    }
-  }
-}
+import OpenAI from "openai";
+import { AIRequest, AIResponse } from "../types/ai.types";
 
 export class AIService {
-  private static API_URL = import.meta.env.VITE_AI_API_URL;
+  private openai: OpenAI;
 
-  static async sendMessage(request: AIRequest): Promise<AIResponse> {
+  constructor() {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+
+  async processMessage(request: AIRequest): Promise<AIResponse> {
     try {
-      const response = await fetch(this.API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Accept-Language': request.language || 'sk'
-        },
-        body: JSON.stringify(request),
-        credentials: 'include'
+      const completion = await this.openai.chat.completions.create({
+        model: "gpt-4-0125-preview",
+        messages: [
+          {
+            role: "system",
+            content: this.getSystemPrompt(request.type, request.language),
+          },
+          {
+            role: "user",
+            content: request.message,
+          },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.7,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || `API Error: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (error: any) {
-      console.error('AI Service Error:', error);
-      if (error.message.includes('Failed to fetch')) {
-        throw new Error('Nepodarilo sa spojiť so serverom. Skontrolujte prosím vaše internetové pripojenie.');
-      }
+      const response = JSON.parse(completion.choices[0].message.content);
+      return {
+        content: response.content,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("OpenAI Service Error:", error);
       throw error;
     }
   }
+
+  private getSystemPrompt(
+    type: "sender" | "carrier",
+    language: string = "sk"
+  ): string {
+    const basePrompt =
+      language === "sk"
+        ? "Si asistent pre logistickú platformu. "
+        : "You are an assistant for a logistics platform. ";
+
+    if (type === "sender") {
+      return (
+        basePrompt +
+        (language === "sk"
+          ? "Pomáhaš odosielateľom analyzovať ich požiadavky na prepravu."
+          : "You help senders analyze their shipping requirements.")
+      );
+    } else {
+      return (
+        basePrompt +
+        (language === "sk"
+          ? "Pomáhaš prepravcom nájsť vhodné zákazky."
+          : "You help carriers find suitable shipping jobs.")
+      );
+    }
+  }
 }
+
+export const aiService = new AIService();
