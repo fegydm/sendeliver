@@ -29,27 +29,37 @@ const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50">
-        <nav className="h-navbar bg-gray-100 dark:bg-gray-900 shadow-medium backdrop-blur-sm">
+        <nav className="h-navbar bg-navbar-bg shadow-medium backdrop-blur-sm">
           <div className="container mx-auto px-container h-full">
             <div className="flex h-full items-center justify-between">
-              <NavLeftGroup
-                isMenuOpen={isMenuOpen}
-                showBreadcrumbs={showBreadcrumbs}
-                onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
-                onBreadcrumbsToggle={() => setShowBreadcrumbs(!showBreadcrumbs)}
-                onShowAbout={() => setShowAboutModal(true)}
-              />
+              
+              {/* Left Group Container */}
+              <div className="border border-container-border p-container">
+                <NavLeftGroup
+                  isMenuOpen={isMenuOpen}
+                  showBreadcrumbs={showBreadcrumbs}
+                  onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
+                  onBreadcrumbsToggle={() => setShowBreadcrumbs(!showBreadcrumbs)}
+                  onShowAbout={() => setShowAboutModal(true)}
+                />
+              </div>
 
-              <NavCenterGroup
-                onAvatarClick={() => setShowAvatarModal(true)}
-                onLoginClick={() => setShowLoginModal(true)}
-                onRegisterClick={() => setShowRegisterModal(true)}
-              />
+              {/* Center Group Container */}
+              <div className="border border-container-border p-container">
+                <NavCenterGroup
+                  onAvatarClick={() => setShowAvatarModal(true)}
+                  onLoginClick={() => setShowLoginModal(true)}
+                  onRegisterClick={() => setShowRegisterModal(true)}
+                />
+              </div>
 
-              <NavRightGroup
-                isDarkMode={isDarkMode}
-                onToggleDarkMode={onToggleDarkMode}
-              />
+              {/* Right Group Container */}
+              <div className="border border-container-border p-container">
+                <NavRightGroup
+                  isDarkMode={isDarkMode}
+                  onToggleDarkMode={onToggleDarkMode}
+                />
+              </div>
 
               <NavHamburger
                 isOpen={isMenuOpen}
