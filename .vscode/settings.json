@@ -1,54 +1,29 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-  "javascript.updateImportsOnFileMove.enabled": "always",
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "files.exclude": {
-    "**/.git": true,
-    "**/node_modules": true,
-    "**/build": true,
-    "**/dist": true
-  },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/build": true,
-    "**/dist": true
-  },
-  "typescript.preferences.importModuleSpecifier": "relative",
-
-  // Pridané nastavenia pre Tailwind CSS
-  "css.validate": false,
   "tailwindCSS.includeLanguages": {
-    "html": "html",
-    "javascript": "javascript",
-    "css": "css",
-    "typescript": "typescript",
-    "typescriptreact": "typescriptreact"
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
   },
-  "editor.quickSuggestions": {
-    "strings": true,
-    "comments": false,
-    "other": true
+  "workbench.panel.defaultLocation": "right",
+  "workbench.view.remote.panel.visible": true,
+  "remote.autoForwardPortsSource": "output",
+  "remote.portsAttributes": {
+    "3000": {
+      "label": "Frontend",
+      "onAutoForward": "openBrowser",
+      "elevateIfNeeded": true
+    },
+    "5000": {
+      "label": "Backend",
+      "onAutoForward": "notify",
+      "elevateIfNeeded": true
+    }
   },
-  "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "remote.autoForwardPorts": true,
+  "remote.forwardOnOpen": true,
+  "files.associations": {
+    "*.css": "postcss"
   },
-  "editor.suggest.showStatusBar": true,
-  "cSpell.words": [
-    "lucide",
-    "sendeliver",
-    "Subframe",
-    "svgr",
-    "tailwindcss",
-    "tsbuildinfo"
-  ]
+  "cSpell.words": ["sendeliver", "tailwindcss"]
 }

@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 // ./front/src/components/floating-button.component.tsx
-import React, { useState, useEffect } from 'react';
-import { FaArrowUp } from 'react-icons/fa';
-=======
-import React, { useState, useEffect } from 'react';
-import { ArrowRight } from 'lucide-react';
->>>>>>> 5430219 (up css)
+import React, { useState, useEffect } from "react";
+import { FaArrowUp } from "react-icons/fa";
 
 const FloatingButton: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -15,22 +10,18 @@ const FloatingButton: React.FC = () => {
       setIsVisible(window.scrollY > 200);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   if (!isVisible) return null;
 
   return (
-    <button 
+    <button
       className="fixed bottom-6 right-6 p-4 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-all md:hidden flex items-center"
-      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
     >
-<<<<<<< HEAD
       <FaArrowUp size={24} />
-=======
-      <ArrowRight className="w-6 h-6" />
->>>>>>> 5430219 (up css)
     </button>
   );
 };

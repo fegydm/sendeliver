@@ -5,11 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 
-<<<<<<< HEAD
-//Add manifest in production
-=======
-// Pridáme manifest len v produkcii
->>>>>>> 5430219 (up css)
+// Add manifest in production
 if (import.meta.env.PROD) {
   const link = document.createElement("link");
   link.rel = "manifest";
@@ -24,12 +20,7 @@ const root = createRoot(container);
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true,
-      }}
-    >
+    <BrowserRouter>
       <App />
     </BrowserRouter>
   </React.StrictMode>

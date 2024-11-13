@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2021",
-    "module": "esnext",
+    "target": "es2020",
+    "module": "es2020",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -11,8 +11,10 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "checkJs": true
+    "checkJs": true,
+    "lib": ["es2020"],
+    "rootDir": "./src"
   },
-  "include": ["src/**/*.js"],
+  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.json"],
   "exclude": ["node_modules", "dist"]
 }

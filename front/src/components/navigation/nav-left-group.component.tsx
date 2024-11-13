@@ -1,12 +1,8 @@
 // ./src/components/navigation/nav-left-group.component.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-<<<<<<< HEAD
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoChevronDown } from "react-icons/io5";
-=======
-import { Menu, X, ChevronDown } from "lucide-react";
->>>>>>> 5430219 (up css)
 
 interface NavLeftGroupProps {
   isMenuOpen: boolean;
@@ -31,11 +27,7 @@ const NavLeftGroup: React.FC<NavLeftGroupProps> = ({
         className="hover:text-hauler-primary-600 transition-colors"
         aria-label="Toggle menu"
       >
-<<<<<<< HEAD
         {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-=======
-        {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
->>>>>>> 5430219 (up css)
       </button>
 
       {/* Logo and breadcrumb container */}
@@ -56,21 +48,11 @@ const NavLeftGroup: React.FC<NavLeftGroupProps> = ({
           className="hover:text-hauler-primary-600 transition-colors"
           aria-label="Toggle breadcrumbs"
         >
-<<<<<<< HEAD
           <IoChevronDown
             size={16}
             className={`transform transition-transform duration-200 ${
               showBreadcrumbs ? "rotate-180" : ""
             }`}
-=======
-          <ChevronDown
-            size={16}
-            className={`
-              transform 
-              transition-transform duration-200 
-              ${showBreadcrumbs ? "rotate-180" : ""}
-            `}
->>>>>>> 5430219 (up css)
           />
         </button>
       </div>

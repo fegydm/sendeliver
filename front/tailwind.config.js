@@ -1,43 +1,41 @@
-<<<<<<< HEAD
-// ./front/configs/tailwind.config.js 
-=======
-// ./front/configs/tailwind.config.js
->>>>>>> 5430219 (up css)
-
 const formsPlugin = require("@tailwindcss/forms");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
-  darkMode: "class",
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}", // Include all relevant files for Tailwind processing
+    "./public/index.html", // Include public HTML file
+  ],
+  darkMode: "class", // Enable dark mode via 'dark' class
   theme: {
     extend: {
-<<<<<<< HEAD
-      colors: {
-        'navbar-bg': '#e2e8f0', // svetlosivá farba pre pozadie navbaru (gray-200)
-        'container-border': '#ff0000', // červená pre ohraničenie kontajnerov
-=======
+      container: {
+        padding: {
+          DEFAULT: "1rem",
+          sm: "2rem",
+          lg: "4rem",
+          xl: "5rem",
+          "2xl": "6rem",
+        },
+      },
       fontFamily: {
-        sans: ["Inter", "Arial", "sans-serif"],
+        sans: ["Inter", "Arial", "sans-serif"], // Custom font family for sans
       },
-      minWidth: {
-        screen: "320px",
-      },
-      maxWidth: {
-        screen: "1280px", // maximálna šírka celej aplikácie
-        container: "1280px", // maximálna šírka content containera
+      width: {
+        screen: {
+          min: "320px", // Minimum screen width
+          max: "1280px", // Maximum screen width
+        },
       },
       screens: {
-        xs: "320px",
-        sm: "480px",
-        md: "620px",
-        lg: "820px",
-        xl: "1024px",
-        "2xl": "1280px",
+        xs: "320px", // Extra small screens
+        sm: "480px", // Small screens
+        md: "620px", // Medium screens
+        lg: "820px", // Large screens
+        xl: "1024px", // Extra large screens
+        "2xl": "1280px", // Double extra large screens
       },
       colors: {
->>>>>>> 5430219 (up css)
-        // Global grayscale color scale
         gray: {
           50: "#f8fafc",
           100: "#f1f5f9",
@@ -51,7 +49,6 @@ module.exports = {
           900: "#0f172a",
           950: "#020617",
         },
-        // Project-specific color schemes
         hauler: {
           primary: {
             DEFAULT: "#ec4899",
@@ -104,54 +101,14 @@ module.exports = {
           info: "#3B82F6",
         },
       },
-<<<<<<< HEAD
-      fontFamily: {
-        sans: ["Inter", "Arial", "sans-serif"],
-      },
-      minWidth: {
-        screen: "320px",
-      },
-      maxWidth: {
-        screen: "1280px", // maximálna šírka celej aplikácie
-        container: "1280px", // maximálna šírka content containera
-      },
-      screens: {
-        xs: "320px",
-        sm: "480px",
-        md: "620px",
-        lg: "820px",
-        xl: "1024px",
-        "2xl": "1280px",
-      },
-      height: {
-        navbar: "50px", // výška navbaru
-=======
       height: {
         navbar: "48px",
->>>>>>> 5430219 (up css)
         banner: "150px",
         "banner-inner": "130px",
       },
-      maxHeight: {
-<<<<<<< HEAD
-        navbar: "50px",
-      },
-      padding: {
-        navigation: "4px", // padding pre kontajnery
-=======
-        navbar: "48px",
-      },
       padding: {
         navigation: "4px",
->>>>>>> 5430219 (up css)
         banner: "10px",
-        container: {
-          DEFAULT: "1rem",
-          sm: "2rem",
-          lg: "4rem",
-          xl: "5rem",
-          "2xl": "6rem",
-        },
       },
       boxShadow: {
         soft: "0 2px 15px rgba(0, 0, 0, 0.05)",
@@ -244,7 +201,7 @@ module.exports = {
           height: "100%",
           margin: "0",
           padding: "0",
-          backgroundColor: "#ffffff", // default white background for body
+          backgroundColor: "#ffffff",
         },
         body: {
           margin: "0",
@@ -254,30 +211,22 @@ module.exports = {
           WebkitFontSmoothing: "antialiased",
           MozOsxFontSmoothing: "grayscale",
           WebkitOverflowScrolling: "touch",
-          overscrollBehavior: "none", // Pomáha s bounce efektom v Safari
+          overscrollBehavior: "none",
         },
         "#root": {
           minHeight: "100vh",
-<<<<<<< HEAD
-          paddingTop: "50px", // výška navbaru
+          paddingTop: "48px",
           position: "relative",
         },
         main: {
-          marginTop: "50px", // výška navbaru
-=======
-          paddingTop: "48px", // výška navbaru
-          position: "relative",
-        },
-        main: {
-          marginTop: "48px", // výška navbaru
->>>>>>> 5430219 (up css)
+          marginTop: "48px",
         },
         ".dark": {
           colorScheme: "dark",
-          "--bg-color": "#020617", // gray-950 pre dark mode
+          "--bg-color": "#020617",
         },
         ":root": {
-          "--bg-color": "#ffffff", // white pre light mode
+          "--bg-color": "#ffffff",
         },
       });
     },

@@ -1,30 +1,37 @@
 {
-  "name": "front",
-  "private": true,
-  "version": "0.0.0",
+  "name": "sendeliver-frontend",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --config configs/vite.config.mts",
-    "build": "tsc && vite build --config configs/vite.config.mts",
-    "preview": "vite preview --config configs/vite.config.mts"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "lottie-web": "^5.12.2",
-    "lottie-web-light": "^1.1.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-icons": "^5.3.0",
-    "tailwindcss": "^3.4.14"
+    "react-icons": "^5.0.1"
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.3",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.3",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.48",
-    "rollup-plugin-visualizer": "^5.12.0",
-    "typescript": "~5.6.2",
-    "vite": "^5.4.11"
+    "@babel/core": "^7.24.0",
+    "@babel/plugin-transform-react-jsx": "^7.23.4",
+    "@babel/preset-react": "^7.23.3",
+    "@babel/preset-typescript": "^7.23.3",
+    "@tailwindcss/forms": "^0.5.7",
+    "@types/react": "^18.2.61",
+    "@types/react-dom": "^18.2.19",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "prettier": "^3.2.5",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }
