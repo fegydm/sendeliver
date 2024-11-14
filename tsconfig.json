@@ -13,17 +13,24 @@
     "allowJs": true,
     "checkJs": true,
     "lib": ["es2020", "dom"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["front/src/*"],
+      "@shared/*": ["shared/*"],
+      "@shared/enums/*": ["shared/enums/*"],
       "@back/*": ["back/src/*"],
-      "@shared/*": ["shared/*"]
+      "@front/*": ["front/src/*"]
     },
-    "jsx": "react-jsx",
-    "declaration": true,
-    "declarationMap": true,
-    "rootDir": "."
+    "jsx": "react-jsx"
   },
-  "include": ["front/**/*", "back/**/*", "shared/**/*"],
-  "exclude": ["node_modules", "dist", "**/dist", "**/.next", "**/build"]
+  "include": ["shared/**/*", "front/**/*", "back/**/*"],
+  "exclude": [
+    "**/node_modules",
+    "**/dist",
+    "**/build",
+    "**/.next",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

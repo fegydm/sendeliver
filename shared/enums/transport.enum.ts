@@ -1,4 +1,4 @@
-// shared/enums/transport.enums.ts
+// shared/enums/transport.enum.ts
 export enum VehicleType {
   VAN = "VAN",
   TRUCK_3_5T = "TRUCK_3_5T",

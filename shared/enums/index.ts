@@ -1,2 +1,2 @@
 // shared/enums/index.ts
-export * from "./transport.enums";
+export * from "@shared/enums/transport.enum";

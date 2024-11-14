@@ -1,7 +1,7 @@
 // ./back/configs/index.ts
 import dotenv from "dotenv";
 import path from "path";
-import * as redis from "./redis.mjs";
+import * as redis from "./redis.js";
 
 // Načítaj .env súbor
 dotenv.config({ path: path.join(process.cwd(), ".env") });

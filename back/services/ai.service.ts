@@ -1,10 +1,27 @@
-// front/src/services/ai.service.ts
-import { AIRequest, AIResponse } from "@shared/types/ai.types"; // Už správne importujeme AIResponse
+// ./back/services/ai.service.ts
+import { OpenAI } from "openai"; // Opravený import
+import { AIRequest, AIResponse } from "@shared/types/ai.types";
 
 export class AIService {
   private static API_URL = import.meta.env.VITE_AI_API_URL;
+  private static instance: AIService;
 
-  static async sendMessage(request: AIRequest): Promise<AIResponse> {
+  private openai: OpenAI;
+
+  private constructor() {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+
+  static getInstance(): AIService {
+    if (!this.instance) {
+      this.instance = new AIService();
+    }
+    return this.instance;
+  }
+
+  async sendMessage(request: AIRequest): Promise<AIResponse> {
     try {
       const response = await fetch(AIService.API_URL, {
         method: "POST",
@@ -34,6 +51,3 @@ export class AIService {
     }
   }
 }
-
-// Export the AIResponse from the same file so it can be used in other files
-export { AIResponse };

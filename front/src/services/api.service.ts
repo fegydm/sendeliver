@@ -1,9 +1,21 @@
-// src/api.js
+// .front/src/services/api.service.ts
 const apiUrl = 'https://dminvest.onrender.com';
 
-export const getProducts = async () => {
+// Typ pre produkt
+interface Product {
+  id?: string; // Predpokladám, že ID je voliteľné pri vytváraní nového produktu
+  name: string;
+  price: number;
+  description: string;
+  // Ak máš ďalšie vlastnosti, pridaj ich tu
+}
+
+export const getProducts = async (): Promise<Product[]> => {
   try {
     const response = await fetch(`${apiUrl}/api/products`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch products');
+    }
     return await response.json();
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -11,7 +23,7 @@ export const getProducts = async () => {
   }
 };
 
-export const addProduct = async (product) => {
+export const addProduct = async (product: Product): Promise<Product> => {
   try {
     const response = await fetch(`${apiUrl}/api/products`, {
       method: 'POST',
@@ -20,6 +32,11 @@ export const addProduct = async (product) => {
       },
       body: JSON.stringify(product),
     });
+
+    if (!response.ok) {
+      throw new Error('Failed to add product');
+    }
+
     return await response.json();
   } catch (error) {
     console.error('Error adding product:', error);

@@ -8,7 +8,7 @@ import AiSearch from "../components/ai/ai-search.component";
 import ContentSection from "../components/content-section.component";
 import FloatingButton from "../components/floating-button.component";
 import AIChat from "../components/ai/ai-chat.component";
-import { AIResponse } from "../services/ai.service.ts";
+import { AIResponse } from "../services/ai.service";
 
 interface TransportData {
   pickupLocation: string;

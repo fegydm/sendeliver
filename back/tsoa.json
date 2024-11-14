@@ -1,0 +1,13 @@
+{
+  "entryFile": "./back/server.ts",
+  "controllerPathGlobs": ["./src/controllers/*.ts"],
+  "swagger": {
+    "version": "1.0.0",
+    "title": "My API Documentation",
+    "description": "This is an automatically generated API documentation"
+  },
+  "spec": {
+    "outputDirectory": "./dist/swagger",
+    "specVersion": 3
+  }
+}

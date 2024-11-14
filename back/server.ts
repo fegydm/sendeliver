@@ -1,10 +1,12 @@
+// ./back/server.ts
+
 import express from "express";
 import cors from "cors";
 import http from "http";
 import { WebSocketServer } from "ws";
 import path from "path";
 import { fileURLToPath } from "url";
-import aiRoute from "./routes/ai.route.mjs";
+import { router as aiRoute } from "./routes/ai.route"; // Correct import for aiRoute
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,10 +22,10 @@ app.use(express.json());
 const server = http.createServer(app);
 
 // WebSocket server setup...
-// (ponecháme váš existujúci WebSocket kód)
+// (assuming your WebSocket setup is handled elsewhere)
 
 // API routes
-app.use("/api/ai", aiRoute); // Pridané AI routes
+app.use("/api/ai", aiRoute); // Added AI routes
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
@@ -39,12 +41,13 @@ app.get("*", (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000; // Ensure PORT is a number
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
 
 // Graceful shutdown...
-// (ponecháme váš existujúci shutdown kód)
+// (keeping your existing shutdown code here)
 
+// Export the server for use in testing or other purposes
 export default server;

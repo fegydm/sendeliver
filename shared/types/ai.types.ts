@@ -1,8 +1,8 @@
-// shared/types/ai.types.ts
+// ./shared/types/ai.types.ts
 export interface AIRequest {
   message: string;
   type: "sender" | "carrier";
-  language?: string;
+  lang1?: string; // lang1 je povolené (voliteľné)
 }
 
 export interface AIResponse {

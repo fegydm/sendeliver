@@ -1,8 +1,13 @@
-// ./back/configs/openai.config.mjs
+// ./back/configs/openai.config.ts
 import OpenAI from "openai";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+// Typ pre environment variable OPENAI_API_KEY
+interface ProcessEnv {
+  OPENAI_API_KEY: string;
+}
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY is not defined in environment variables");
@@ -18,7 +23,11 @@ export const AI_CONFIG = {
   max_tokens: 500,
   response_format: { type: "json_object" },
 
-  getSystemPrompt: (type, language = "sk") => {
+  // Typ pre 'type' parameter (sender alebo carrier)
+  getSystemPrompt: (
+    type: "sender" | "carrier",
+    language: string = "sk"
+  ): string => {
     const basePrompt =
       language === "sk"
         ? `Si logistický AI asistent.`
