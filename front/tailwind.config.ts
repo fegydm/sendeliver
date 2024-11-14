@@ -1,9 +1,7 @@
 // front/tailwind.config.ts
-
-import { defineConfig } from "tailwindcss";
 import formsPlugin from "@tailwindcss/forms";
 
-export default defineConfig({
+export default {
   content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
   darkMode: "class",
   theme: {
@@ -61,7 +59,7 @@ export default defineConfig({
   },
   plugins: [
     formsPlugin,
-    function ({ addBase }) {
+    function ({ addBase }: { addBase: Function }) {
       addBase({
         html: {
           height: "100%",
@@ -83,4 +81,4 @@ export default defineConfig({
       });
     },
   ],
-});
+};

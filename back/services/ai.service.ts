@@ -1,14 +1,18 @@
-// ./back/services/ai.service.ts
-import { OpenAI } from "openai"; // Opravený import
+import { OpenAI } from "openai";
 import { AIRequest, AIResponse } from "@shared/types/ai.types";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export class AIService {
-  private static API_URL = import.meta.env.VITE_AI_API_URL;
   private static instance: AIService;
-
   private openai: OpenAI;
 
   private constructor() {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not set in environment variables');
+    }
+
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -23,31 +27,28 @@ export class AIService {
 
   async sendMessage(request: AIRequest): Promise<AIResponse> {
     try {
-      const response = await fetch(AIService.API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Accept-Language": request.lang1 || "sk", // Použitie lang1
-        },
-        body: JSON.stringify(request),
-        credentials: "include",
+      const completion = await this.openai.chat.completions.create({
+        messages: [{ role: "user", content: request.message }],
+        model: "gpt-3.5-turbo",
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || `API Error: ${response.status}`);
-      }
+      // Získame text odpovede
+      const content = completion.choices[0].message.content || "";
+      
+      // Základná odpoveď
+      const response: AIResponse = {
+        content: content,
+        data: {} // prázdny objekt pre voliteľné dáta
+      };
 
-      const content = await response.json();
-      if (content && typeof content === "object" && content.data) {
-        return content as AIResponse;
-      } else {
-        throw new Error("Invalid content type");
-      }
+      // Tu môžete pridať logiku na parsovanie content do štruktúrovaných dát
+      // ak ich AI poskytuje v nejakom formáte (JSON, atď.)
+
+      return response;
+
     } catch (error: unknown) {
-      console.error("AI Service Error:", error);
-      throw new Error("An unknown error occurred.");
+      console.error("OpenAI API Error:", error);
+      throw new Error("An error occurred while processing your request");
     }
   }
 }

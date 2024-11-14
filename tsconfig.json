@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2020",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
@@ -11,26 +11,51 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "checkJs": true,
+    "checkJs": false,
     "lib": ["es2020", "dom"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
     "paths": {
+      "@/*": ["back/src/*"],
       "@shared/*": ["shared/*"],
-      "@shared/enums/*": ["shared/enums/*"],
       "@back/*": ["back/src/*"],
       "@front/*": ["front/src/*"]
     },
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "rootDirs": ["./back", "./shared"],
+    "noEmit": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "composite": true,
+    "declaration": true,
+    "sourceMap": true,
+    "removeComments": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "importHelpers": true
   },
-  "include": ["shared/**/*", "front/**/*", "back/**/*"],
+  "include": [
+    "back/**/*", 
+    "shared/**/*",
+    "back/**/*.json"
+  ],
   "exclude": [
     "**/node_modules",
     "**/dist",
     "**/build",
-    "**/.next",
+    "front",
     "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
-}
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx"
+  ],
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "NodeNext"
+    }
+  }
+ }
