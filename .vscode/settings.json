@@ -25,5 +25,5 @@
   "files.associations": {
     "*.css": "postcss"
   },
-  "cSpell.words": ["sendeliver", "tailwindcss"]
+  "cSpell.words": ["openai", "sendeliver", "tailwindcss"]
 }
