@@ -52,7 +52,7 @@
   },
   "include": [
     "back/src/**/*", // Backend source
-    "back/configs/**/*", // Backend configs
+    "back/src/configs/**/*", // Backend configs
     "shared/**/*", // Shared files
     "back/**/*.json" // Backend JSON files
   ],

@@ -1,4 +1,4 @@
-// ./back/configs/openai.config.ts
+// ./back/src/configs/openai.config.ts
 import OpenAI from "openai";
 import dotenv from "dotenv";
 
