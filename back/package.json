@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "cross-env NODE_ENV=development tsx watch server.ts",
-    "build": "tsc --project ../tsconfig.json",
+    "start": "node dist/back/src/server.ts",
+    "dev": "cross-env NODE_ENV=development tsx watch src/server.ts",
+    "build": "tsoa spec && tsoa routes && tsc --project ../tsconfig.json",
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -15,7 +15,7 @@
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio",
     "generate": "prisma generate",
-    "tsoa": "tsoa spec && tsoa swagger"
+    "tsoa": "tsoa spec && tsoa routes"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
@@ -38,16 +38,18 @@
     "redis": "^4.6.7",
     "redoc": "2.2.0",
     "swagger-ui-express": "5.0.1",
-    "ts-node": "^10.9.1",
     "winston": "3.17.0",
     "ws": "^8.13.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@babel/core": "^7.21.0",
+    "@babel/preset-typescript": "^7.21.0",
     "@types/cors": "2.8.17",
     "@types/dotenv": "6.1.1",
     "@types/express": "4.17.21",
     "@types/node": "20.17.6",
+    "@types/pg": "^8.11.0",
     "@types/swagger-ui-express": "4.1.7",
     "@types/ws": "8.5.13",
     "@typescript-eslint/eslint-plugin": "^5.3.0",
@@ -55,6 +57,7 @@
     "cross-env": "7.0.3",
     "nodemon": "^3.0.1",
     "prettier": "^3.3.0",
+    "ts-node": "^10.9.1",
     "tsoa": "6.5.1",
     "tsx": "4.19.2",
     "typescript": "5.6.3"

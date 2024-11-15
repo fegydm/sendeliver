@@ -1,86 +1,61 @@
+// ./front/vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import type { UserConfig } from "vite";
 
-export default defineConfig(({ mode }): UserConfig => ({
-  plugins: [react()],
-  root: '.',
-  publicDir: './front/public',
-  build: {
-    outDir: './front/dist',
-    emptimport { defineConfig } from "vite";
-    import react from "@vitejs/plugin-react";
-    import path from "path";
-    import type { UserConfig } from "vite";
-    
-    export default defineConfig(({ mode }): UserConfig => ({
-      plugins: [react()],
-      root: '.',
-      publicDir: './front/public',
-      build: {
-        outDir: './front/dist',
-        emptyOutDir: true,
-        // Optimalizácia buildu
-        target: 'esnext',
-        minify: mode === 'production' ? 'esbuild' : false,
-        rollupOptions: {
-          output: {
-            manualChunks: {
-              vendor: ['react', 'react-dom'],
-            },
+export default defineConfig(
+  ({ mode }): UserConfig => ({
+    plugins: [react()],
+    root: ".",
+    publicDir: "public", // upravené, lebo už sme vo front priečinku
+    build: {
+      outDir: "dist", // upravené, lebo už sme vo front priečinku
+      emptyOutDir: true,
+      // Build optimization
+      target: "esnext",
+      minify: mode === "production" ? "esbuild" : false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ["react", "react-dom"],
           },
         },
       },
-      // Optimalizácia dev servera
-      server: {
-        port: 3000,
-        proxy: {
-          "/api": {
-            target: "http://localhost:5000",
-            changeOrigin: true,
-            ws: true
-          }
+    },
+    // Dev server optimization
+    server: {
+      port: 3000,
+      proxy: {
+        "/api": {
+          target: "http://localhost:5000",
+          changeOrigin: true,
+          ws: true,
         },
-        hmr: {
-          overlay: false
-        },
-        watch: {
-          usePolling: false,
-          interval: 100
-        }
       },
-      // Optimalizácia resolve
-      resolve: {
-        alias: {
-          "@": path.resolve(__dirname, "./front/src"),
-          "@shared": path.resolve(__dirname, "./shared")
-        }
+      hmr: {
+        overlay: false,
       },
-      // Optimalizácia cache
-      optimizeDeps: {
-        include: ['react', 'react-dom'],
-        exclude: ['@shared']
+      watch: {
+        usePolling: false,
+        interval: 100,
       },
-      esbuild: {
-        logOverride: { 'this-is-undefined-in-esm': 'silent' }
-      }
-    }));yOutDir: true,
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./front/src"),
-      "@shared": path.resolve(__dirname, "./shared")
-    }
-  },
-  server: {
-    port: 3000,
-    proxy: {
-      "/api": {
-        target: "http://localhost:5000",
-        changeOrigin: true,
-        ws: true
-      }
-    }
-  }
-}));
+    },
+    // Resolve optimization
+    resolve: {
+      alias: {
+        "@back": path.resolve(__dirname, "../back/src"),
+        "@shared": path.resolve(__dirname, "../shared"),
+        "@front": path.resolve(__dirname, "./src"),
+      },
+    },
+    // Dependencies optimization
+    optimizeDeps: {
+      include: ["react", "react-dom"],
+      exclude: ["@shared"],
+    },
+    esbuild: {
+      logOverride: { "this-is-undefined-in-esm": "silent" },
+    },
+  })
+);

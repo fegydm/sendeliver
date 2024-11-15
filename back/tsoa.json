@@ -1,5 +1,5 @@
 {
-  "entryFile": "./back/server.ts",
+  "entryFile": "./src/server.ts",
   "controllerPathGlobs": ["./src/controllers/*.ts"],
   "swagger": {
     "version": "1.0.0",
@@ -9,5 +9,8 @@
   "spec": {
     "outputDirectory": "./dist/swagger",
     "specVersion": 3
+  },
+  "routes": {
+    "routesDir": "./srcsrc/routes"
   }
 }

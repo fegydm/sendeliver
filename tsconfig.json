@@ -1,52 +1,66 @@
 {
   "compilerOptions": {
-    "target": "es2020",
+    // Language Features
+    "target": "es2022",
     "module": "esnext",
+    "lib": ["es2022", "dom"],
+    "jsx": "react-jsx",
+
+    // Module Resolution
     "moduleResolution": "bundler",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist",
-    "strict": true,
-    "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "allowJs": true,
-    "checkJs": false,
-    "lib": ["es2020", "dom"],
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Project Structure
     "baseUrl": ".",
     "paths": {
-      "@/*": ["back/src/*"],
-      "@shared/*": ["shared/*"],
       "@back/*": ["back/src/*"],
+      "@shared/*": ["shared/*"],
       "@front/*": ["front/src/*"]
     },
-    "jsx": "react-jsx",
-    "rootDirs": ["./back", "./shared"],
-    "noEmit": true,
-    "isolatedModules": true,
-    "incremental": true,
-    "composite": true,
-    "declaration": true,
-    "sourceMap": true,
-    "removeComments": true,
+    "rootDir": ".",
+    "outDir": "./back/dist", // Zmenené na backend dist
+
+    // Type Checking
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "importHelpers": true
+
+    // Build Options
+    "sourceMap": true,
+    "declaration": true,
+    "removeComments": true,
+    "importHelpers": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "composite": true,
+
+    // JavaScript Support
+    "allowJs": true,
+    "checkJs": false,
+
+    // Decorators
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    // Skip Checks
+    "skipLibCheck": true
   },
   "include": [
-    "back/**/*", 
-    "shared/**/*",
-    "back/**/*.json"
+    "back/src/**/*", // Backend source
+    "back/configs/**/*", // Backend configs
+    "shared/**/*", // Shared files
+    "back/**/*.json" // Backend JSON files
   ],
   "exclude": [
     "**/node_modules",
     "**/dist",
     "**/build",
-    "front",
+    "front", // Úplne vylúčime frontend
     "**/*.test.ts",
     "**/*.spec.ts",
     "**/*.spec.tsx",
@@ -58,4 +72,4 @@
       "module": "NodeNext"
     }
   }
- }
+}

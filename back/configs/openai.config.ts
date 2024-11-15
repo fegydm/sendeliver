@@ -4,9 +4,13 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Typ pre environment variable OPENAI_API_KEY
-interface ProcessEnv {
-  OPENAI_API_KEY: string;
+// Správna deklarácia pre ProcessEnv
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      OPENAI_API_KEY: string;
+    }
+  }
 }
 
 if (!process.env.OPENAI_API_KEY) {
@@ -21,7 +25,7 @@ export const AI_CONFIG = {
   model: "gpt-4-turbo-preview",
   temperature: 0.7,
   max_tokens: 500,
-  response_format: { type: "json_object" },
+  response_format: { type: "json_object" } as const,
 
   // Typ pre 'type' parameter (sender alebo carrier)
   getSystemPrompt: (

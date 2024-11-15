@@ -1,4 +1,4 @@
-// .back/conrollers/users.controller.ts
+// .back/src/conrollers/users.controller.ts
 import { Controller, Get, Route } from "tsoa";
 
 @Route("users")

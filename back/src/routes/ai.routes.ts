@@ -1,19 +1,17 @@
+// ./back/routes/ai.route.ts
 import { Router, Request, Response } from "express";
-import { AIService } from "../services/ai.service";  // .ts prípona
-import { AIRequest, AIResponse } from "@shared/types/ai.types"; // .ts prípona
+import { AIService } from "../services/ai.services";
+import { AIRequest, AIResponse } from "@shared/types/ai.types";
 
 interface TypedRequestBody<T> extends Request {
-  body: T
+  body: T;
 }
 
 const router = Router();
 
 router.post(
-  "/send", 
-  async (
-    req: TypedRequestBody<AIRequest>, 
-    res: Response
-  ) => {
+  "/chat", // zmenené z /send na /chat
+  async (req: TypedRequestBody<AIRequest>, res: Response) => {
     const { message, lang1 = "sk", type } = req.body;
 
     try {
@@ -26,17 +24,19 @@ router.post(
       res.json(aiResponse);
     } catch (error) {
       console.error("AI Service Error:", error);
-      
+
       if (error instanceof Error) {
-        res.status(500).json({ 
-          message: "AI Service Error", 
+        res.status(500).json({
+          message: "AI Service Error",
           error: error.message,
-          ...(process.env.NODE_ENV === "development" ? { stack: error.stack } : {})
+          ...(process.env.NODE_ENV === "development"
+            ? { stack: error.stack }
+            : {}),
         });
       } else {
-        res.status(500).json({ 
+        res.status(500).json({
           message: "Unknown Error",
-          error: String(error)
+          error: String(error),
         });
       }
     }
