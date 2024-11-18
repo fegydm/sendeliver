@@ -1,4 +1,4 @@
-// ./front/src/components/ai/ai-chat.component.tsx
+// ./front/src/components/modals/ai-chat-modal.component.tsx
 import { useState, useEffect, useRef } from "react";
 import { FaRobot, FaUser, FaTimes, FaPaperPlane } from "react-icons/fa";
 import { AIRequest, AIResponse } from "@shared/types/ai.types";

@@ -21,7 +21,7 @@
       "@front/*": ["front/src/*"]
     },
     "rootDir": ".",
-    "outDir": "./back/dist", // Zmenené na backend dist
+    "outDir": "./back/dist",
 
     // Type Checking
     "strict": true,
@@ -54,13 +54,13 @@
     "back/src/**/*", // Backend source
     "back/src/configs/**/*", // Backend configs
     "shared/**/*", // Shared files
-    "back/**/*.json" // Backend JSON files
+    "back/**/*.json", // Backend JSON files
+    "front"
   ],
   "exclude": [
     "**/node_modules",
     "**/dist",
     "**/build",
-    "front", // Úplne vylúčime frontend
     "**/*.test.ts",
     "**/*.spec.ts",
     "**/*.spec.tsx",

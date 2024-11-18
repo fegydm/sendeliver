@@ -1,5 +1,5 @@
-// ./front/src/components/search-form.component.tsx
-import React from 'react';
+// ./front/src/components/search-forms/manual-search-form.component.tsx
+import React from "react";
 
 interface TransportData {
   pickupLocation: string;
@@ -11,20 +11,20 @@ interface TransportData {
 }
 
 interface SearchFormProps {
-  type: 'client' | 'carrier';
+  type: "client" | "carrier";
   data: TransportData;
   onUpdate: (newData: Partial<TransportData>) => void;
 }
 
 const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
-  const isClient = type === 'client';
-  
+  const isClient = type === "client";
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">
-            {isClient ? 'Miesto nakládky' : 'Aktuálna poloha'}
+            {isClient ? "Miesto nakládky" : "Aktuálna poloha"}
           </label>
           <input
             type="text"
@@ -35,7 +35,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">
-            {isClient ? 'Miesto vykládky' : 'Cieľová oblasť'}
+            {isClient ? "Miesto vykládky" : "Cieľová oblasť"}
           </label>
           <input
             type="text"
@@ -49,7 +49,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">
-            {isClient ? 'Čas nakládky' : 'Čas dostupnosti'}
+            {isClient ? "Čas nakládky" : "Čas dostupnosti"}
           </label>
           <input
             type="datetime-local"
@@ -60,7 +60,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">
-            {isClient ? 'Čas vykládky' : 'Koniec dostupnosti'}
+            {isClient ? "Čas vykládky" : "Koniec dostupnosti"}
           </label>
           <input
             type="datetime-local"
@@ -74,7 +74,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">
-            {isClient ? 'Hmotnosť (kg)' : 'Max. nosnosť (kg)'}
+            {isClient ? "Hmotnosť (kg)" : "Max. nosnosť (kg)"}
           </label>
           <input
             type="number"
@@ -87,7 +87,7 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">
-            {isClient ? 'Počet paliet' : 'Max. počet paliet'}
+            {isClient ? "Počet paliet" : "Max. počet paliet"}
           </label>
           <input
             type="number"

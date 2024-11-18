@@ -1,14 +1,14 @@
-// ./front/src/components/navigation.component.tsx
+// ./front/src/components/navbars/navbar.component.tsx
 import React, { useState } from "react";
-import NavLeftGroup from "./navigation/nav-left-group.component";
-import NavCenterGroup from "./navigation/nav-center-group.component";
-import NavRightGroup from "./navigation/nav-right-group.component";
-import NavHamburger from "./navigation/nav-hamburger.component";
-import NavBreadcrumb from "./navigation/nav-breadcrumb.component";
-import AboutModal from "./modals/about-modal.component";
-import LoginModal from "./modals/login-modal.component";
-import RegisterModal from "./modals/register-modal.component";
-import AvatarModal from "./modals/avatar-modal.component";
+import NavLeftGroup from "./nav-left-group.component";
+import NavCenterGroup from "./nav-center-group.component";
+import NavRightGroup from "./nav-right-group.component";
+import NavHamburger from "./nav-hamburger.component";
+import NavBreadcrumb from "./nav-breadcrumb.component";
+import AboutModal from "../modals/about-modal.component";
+import LoginModal from "../modals/login-modal.component";
+import RegisterModal from "../modals/register-modal.component";
+import AvatarModal from "../modals/avatar-modal.component";
 
 interface NavigationProps {
   isDarkMode: boolean;
