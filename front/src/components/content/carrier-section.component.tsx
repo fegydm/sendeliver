@@ -1,20 +1,19 @@
-// ./front/src/components/content/carrier-section.component.tsx
-
+// ./front/src/components/content/sender-section.component.tsx
 import React from "react";
 
-interface CarrierSectionProps {
+interface SenderSectionProps {
   children: React.ReactNode;
 }
 
-const CarrierSection: React.FC<CarrierSectionProps> = ({ children }) => {
+const SenderSection: React.FC<SenderSectionProps> = ({ children }) => {
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4 text-green-700">
-        Dopravcovská sekcia
+    <section className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-lg">
+      <h2 className="text-xl font-bold mb-4 text-purple-700 text-center">
+        Klientska sekcia
       </h2>
       {children}
-    </div>
+    </section>
   );
 };
 
-export default CarrierSection;
+export default SenderSection;

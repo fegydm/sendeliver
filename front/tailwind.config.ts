@@ -1,4 +1,4 @@
-// front/tailwind.config.ts
+// ./front/tailwind.config.ts
 import formsPlugin from "@tailwindcss/forms";
 
 export default {
@@ -19,10 +19,12 @@ export default {
         sans: ["Inter", "Arial", "sans-serif"],
       },
       width: {
-        screen: {
-          min: "320px",
-          max: "1280px",
-        },
+        full: "100%",
+        min: "320px",
+        max: "1280px",
+      },
+      maxWidth: {
+        content: "1200px", // Nastavenie maximálnej šírky pre obsah
       },
       screens: {
         xs: "320px",
@@ -46,10 +48,16 @@ export default {
           900: "#0f172a",
           950: "#020617",
         },
+        magenta: {
+          100: "#ffe0ff",
+          300: "#ff80ff",
+          500: "#ff00ff",
+          700: "#b200b2",
+        },
       },
       height: {
-        navbar: "48px",
-        banner: "150px",
+        navbar: "48px", // Výška navigácie
+        banner: "150px", // Výška banneru
       },
       padding: {
         navigation: "4px",
@@ -66,6 +74,11 @@ export default {
           margin: "0",
           padding: "0",
           backgroundColor: "#ffffff",
+          color: "#000000", // Základná farba textu
+          "@media (prefers-color-scheme: dark)": {
+            backgroundColor: "#0f172a", // Tmavý režim
+            color: "#f8fafc",
+          },
         },
         body: {
           margin: "0",
@@ -75,7 +88,6 @@ export default {
         },
         "#root": {
           minHeight: "100vh",
-          paddingTop: "48px",
           position: "relative",
         },
       });

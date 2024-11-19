@@ -20,7 +20,12 @@ const root = createRoot(container);
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true, // Aktivácia relatívneho splat routingu
+      }}
+    >
       <App />
     </BrowserRouter>
   </React.StrictMode>
