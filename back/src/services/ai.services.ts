@@ -1,8 +1,14 @@
-// ./back/src/services/ai.service.ts
+// ./back/src/services/ai.services.ts
 import { OpenAI } from "openai";
 import { AIRequest, AIResponse } from "@shared/types/ai.types";
 import { AI_CONFIG } from "@back/configs/openai.config";
 import path from "path";
+import { fileURLToPath } from "url";
+
+// Resolve __dirname in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 console.log(path.resolve(__dirname, "../../configs/openai.config"));
 
 export class AIService {
@@ -58,10 +64,10 @@ export class AIService {
           { role: "user", content: request.message },
         ],
         temperature: AI_CONFIG.temperature,
-        response_format: { type: "json_object" },
+        max_tokens: 1000, // Optional: Limit tokens for response size
       });
 
-      const content = completion.choices[0].message.content || "{}";
+      const content = completion.choices[0]?.message?.content || "{}";
 
       // Parse the JSON response
       try {

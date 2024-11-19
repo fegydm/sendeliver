@@ -1,10 +1,9 @@
 // ./front/src/components/results/client-results.component.tsx
-
 import React from "react";
-import ResultTable from "./result-table.component";
+import ResultTable, { ClientResultData } from "./result-table.component";
 
 const ClientResults: React.FC = () => {
-  const clientData = [
+  const clientData: ClientResultData[] = [
     {
       distance: "150 km",
       vehicleType: "Dodávka",
@@ -19,14 +18,12 @@ const ClientResults: React.FC = () => {
     },
   ];
 
-  const columns = ["Distance", "Vehicle Type", "Availability Time", "ETA"];
-
   return (
     <div>
       <h3 className="text-xl font-bold mb-4 text-purple-700">
         Výsledky pre klientov
       </h3>
-      <ResultTable columns={columns} data={clientData} />
+      <ResultTable type="client" data={clientData} />
     </div>
   );
 };

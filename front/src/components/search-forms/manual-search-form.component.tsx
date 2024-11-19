@@ -1,5 +1,5 @@
 // ./front/src/components/search-forms/manual-search-form.component.tsx
-import React from "react";
+import React, { useState } from "react";
 
 interface TransportData {
   pickupLocation: string;
@@ -10,17 +10,37 @@ interface TransportData {
   palletCount: number;
 }
 
-interface SearchFormProps {
+interface ManualSearchFormProps {
   type: "client" | "carrier";
-  data: TransportData;
-  onUpdate: (newData: Partial<TransportData>) => void;
+  onSubmit: (data: TransportData) => void;
 }
 
-const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
+const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
+  type,
+  onSubmit,
+}) => {
+  const [formData, setFormData] = useState<TransportData>({
+    pickupLocation: "",
+    deliveryLocation: "",
+    pickupTime: "",
+    deliveryTime: "",
+    weight: 0,
+    palletCount: 0,
+  });
+
+  const handleUpdate = (newData: Partial<TransportData>) => {
+    setFormData((prev) => {
+      const updated = { ...prev, ...newData };
+      onSubmit(updated); // Odosielame aktualizované dáta rodičovi
+      return updated;
+    });
+  };
+
   const isClient = type === "client";
 
   return (
     <div className="space-y-4">
+      {/* Lokality */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">
@@ -28,9 +48,10 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
           </label>
           <input
             type="text"
-            value={data.pickupLocation}
-            onChange={(e) => onUpdate({ pickupLocation: e.target.value })}
+            value={formData.pickupLocation}
+            onChange={(e) => handleUpdate({ pickupLocation: e.target.value })}
             className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+            placeholder="Zadajte miesto"
           />
         </div>
         <div>
@@ -39,13 +60,15 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
           </label>
           <input
             type="text"
-            value={data.deliveryLocation}
-            onChange={(e) => onUpdate({ deliveryLocation: e.target.value })}
+            value={formData.deliveryLocation}
+            onChange={(e) => handleUpdate({ deliveryLocation: e.target.value })}
             className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+            placeholder="Zadajte miesto"
           />
         </div>
       </div>
 
+      {/* Časové údaje */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">
@@ -53,8 +76,8 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
           </label>
           <input
             type="datetime-local"
-            value={data.pickupTime}
-            onChange={(e) => onUpdate({ pickupTime: e.target.value })}
+            value={formData.pickupTime}
+            onChange={(e) => handleUpdate({ pickupTime: e.target.value })}
             className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
           />
         </div>
@@ -64,13 +87,14 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
           </label>
           <input
             type="datetime-local"
-            value={data.deliveryTime}
-            onChange={(e) => onUpdate({ deliveryTime: e.target.value })}
+            value={formData.deliveryTime}
+            onChange={(e) => handleUpdate({ deliveryTime: e.target.value })}
             className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
           />
         </div>
       </div>
 
+      {/* Hmotnosť a počet paliet */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">
@@ -78,11 +102,12 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
           </label>
           <input
             type="number"
-            value={data.weight}
-            onChange={(e) => onUpdate({ weight: Number(e.target.value) })}
+            value={formData.weight}
+            onChange={(e) => handleUpdate({ weight: Number(e.target.value) })}
             className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
             min="0"
             step="100"
+            placeholder="0"
           />
         </div>
         <div>
@@ -91,11 +116,14 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
           </label>
           <input
             type="number"
-            value={data.palletCount}
-            onChange={(e) => onUpdate({ palletCount: Number(e.target.value) })}
+            value={formData.palletCount}
+            onChange={(e) =>
+              handleUpdate({ palletCount: Number(e.target.value) })
+            }
             className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
             min="0"
             max="33"
+            placeholder="0"
           />
         </div>
       </div>
@@ -103,4 +131,4 @@ const SearchForm: React.FC<SearchFormProps> = ({ type, data, onUpdate }) => {
   );
 };
 
-export default SearchForm;
+export default ManualSearchForm;

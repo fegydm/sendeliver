@@ -1,8 +1,5 @@
 // ./front/src/components/content/content.component.tsx
-
 import React from "react";
-import SenderSection from "./sender-section.component";
-import CarrierSection from "./carrier-section.component";
 
 interface ContentProps {
   senderContent: React.ReactNode;
@@ -11,15 +8,19 @@ interface ContentProps {
 
 const Content: React.FC<ContentProps> = ({ senderContent, carrierContent }) => {
   return (
-    <div className="flex flex-row w-full">
-      {/* Sender Section (ľavá polovica) */}
-      <div className="w-1/2 border-r border-gray-300 p-4">
-        <SenderSection>{senderContent}</SenderSection>
-      </div>
+    <div className="w-full px-4 py-8">
+      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Ľavá strana - Sender Content */}
+        <div className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-lg">
+          <h2 className="text-lg font-bold mb-4 text-center">Klient</h2>
+          {senderContent}
+        </div>
 
-      {/* Carrier Section (pravá polovica) */}
-      <div className="w-1/2 p-4">
-        <CarrierSection>{carrierContent}</CarrierSection>
+        {/* Pravá strana - Carrier Content */}
+        <div className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-lg">
+          <h2 className="text-lg font-bold mb-4 text-center">Dopravca</h2>
+          {carrierContent}
+        </div>
       </div>
     </div>
   );

@@ -1,10 +1,11 @@
 {
   "name": "sendeliver-root",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "preinstall": "npm install concurrently -D",
-    "install": "npm run install:front && npm run install:back",
+    "install": "npm install concurrently -D && npm run install:front && npm run install:back",
     "install:front": "cd front && npm install",
     "install:back": "cd back && npm install",
     "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
@@ -13,5 +14,8 @@
     "build:front": "cd front && npm run build",
     "build:back": "cd back && npm run build",
     "clean": "rm -rf back/dist && rm -rf front/dist"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
   }
 }

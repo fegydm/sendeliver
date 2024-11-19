@@ -8,6 +8,8 @@ interface AiSearchProps {
 
 const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
   const [prompt, setPrompt] = useState("");
+  const [error, setError] = useState(false);
+
   const bgColor = type === "client" ? "bg-[#FF00FF]/10" : "bg-[#74cc04]/10";
   const borderColor =
     type === "client" ? "border-[#FF00FF]/20" : "border-[#74cc04]/20";
@@ -17,7 +19,11 @@ const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
       : "bg-[#74cc04] hover:bg-[#74cc04]/80";
 
   const handleAIRequest = () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim()) {
+      setError(true);
+      return;
+    }
+    setError(false);
     onAIRequest(prompt);
     setPrompt("");
   };
@@ -31,10 +37,22 @@ const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
               ? "Popíšte požiadavky na prepravu..."
               : "Popíšte dostupnosť vozidla..."
           }
-          className="w-full p-4 border rounded-lg h-24 bg-white/90 dark:bg-gray-800 dark:text-white"
+          aria-label={
+            type === "client"
+              ? "Popíšte požiadavky na prepravu"
+              : "Popíšte dostupnosť vozidla"
+          }
+          className={`w-full p-4 border rounded-lg h-24 bg-white/90 dark:bg-gray-800 dark:text-white ${
+            error ? "border-red-500" : ""
+          }`}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
         />
+        {error && (
+          <p className="text-red-500 text-sm mt-2">
+            Zadajte prosím text pred odoslaním.
+          </p>
+        )}
         <button
           onClick={handleAIRequest}
           className={`absolute bottom-2 right-2 px-4 py-1 rounded-full text-white transition-colors ${buttonBgColor}`}

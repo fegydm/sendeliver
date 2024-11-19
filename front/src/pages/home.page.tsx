@@ -1,16 +1,17 @@
 // ./front/src/pages/home.page.tsx
-
 import { useState } from "react";
 import Navigation from "../components/navbars/navbar.component";
 import PageBanner from "../components/banners/banner.component";
 import Content from "../components/content/content.component";
 import AISearchForm from "../components/search-forms/ai-search-form.component";
 import ManualSearchForm from "../components/search-forms/manual-search-form.component";
-import ResultTable from "../components/results/result-table.component";
+import ResultTable, {
+  ClientResultData,
+  CarrierResultData,
+} from "../components/results/result-table.component";
 import AIChatModal from "../components/modals/ai-chat-modal.component";
 import PageFooter from "../components/footers/page-footer.component";
 import FloatingButton from "../components/controllers/floating-button.component";
-import { AIResponse } from "../services/ai.service";
 
 interface TransportData {
   pickupLocation: string;
@@ -32,30 +33,6 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
   >(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState("");
-  const [transportData, setTransportData] = useState<TransportData>({
-    pickupLocation: "",
-    deliveryLocation: "",
-    pickupTime: "",
-    deliveryTime: "",
-    weight: 0,
-    palletCount: 0,
-  });
-
-  const handleAIOutput = (
-    message: string,
-    structuredData?: AIResponse["data"]
-  ) => {
-    if (structuredData) {
-      setTransportData({
-        pickupLocation: structuredData.pickupLocation || "",
-        deliveryLocation: structuredData.deliveryLocation || "",
-        pickupTime: structuredData.pickupTime || "",
-        deliveryTime: structuredData.deliveryTime || "",
-        weight: structuredData.weight || 0,
-        palletCount: structuredData.palletCount || 0,
-      });
-    }
-  };
 
   const handleAIRequest = (section: "sender" | "carrier", prompt: string) => {
     setActiveSection(section);
@@ -63,25 +40,37 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
     setCurrentPrompt(prompt);
   };
 
+  const mockClientData: ClientResultData[] = [
+    {
+      distance: "50 km",
+      vehicleType: "Truck",
+      availabilityTime: "10:00",
+      eta: "12:00",
+    },
+  ];
+
+  const mockCarrierData: CarrierResultData[] = [
+    {
+      pickup: "Bratislava",
+      delivery: "Košice",
+      pallets: 10,
+      weight: "3.5t",
+    },
+  ];
+
   return (
     <>
-      {/* Navigation */}
       <Navigation isDarkMode={isDarkMode} onToggleDarkMode={onToggleDarkMode} />
-
-      {/* Page Banner */}
       <PageBanner />
 
-      {/* AI Chat Modal */}
       {isAIChatOpen && (
         <AIChatModal
           onClose={() => setIsAIChatOpen(false)}
-          onMessage={handleAIOutput}
           initialPrompt={currentPrompt}
           type={activeSection || "sender"}
         />
       )}
 
-      {/* Main Content */}
       <Content
         senderContent={
           <>
@@ -91,11 +80,11 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
             />
             <ManualSearchForm
               type="client"
-              onSubmit={(data) =>
-                setTransportData({ ...transportData, ...data })
-              }
+              onSubmit={(data: TransportData) => {
+                console.log("Sender form data:", data);
+              }}
             />
-            <ResultTable type="client" data={[]} />
+            <ResultTable type="client" data={mockClientData} />
           </>
         }
         carrierContent={
@@ -106,19 +95,16 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
             />
             <ManualSearchForm
               type="carrier"
-              onSubmit={(data) =>
-                setTransportData({ ...transportData, ...data })
-              }
+              onSubmit={(data: TransportData) => {
+                console.log("Carrier form data:", data);
+              }}
             />
-            <ResultTable type="carrier" data={[]} />
+            <ResultTable type="carrier" data={mockCarrierData} />
           </>
         }
       />
 
-      {/* Page Footer */}
       <PageFooter />
-
-      {/* Floating Button */}
       <FloatingButton />
     </>
   );

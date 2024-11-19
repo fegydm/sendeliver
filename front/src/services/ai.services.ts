@@ -36,4 +36,4 @@ export class AIService {
 }
 
 // Export the AIResponse from the same file so it can be used in other files
-export { AIResponse };
+export type { AIResponse };
