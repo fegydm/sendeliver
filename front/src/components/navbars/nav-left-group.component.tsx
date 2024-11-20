@@ -1,5 +1,5 @@
-// ./src/components/navigation/nav-left-group.component.tsx
-import React from "react";
+// ./front/src/components/navigation/nav-left-group.component.tsx
+import { type FC } from "react";
 import { Link } from "react-router-dom";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { IoChevronDown } from "react-icons/io5";
@@ -12,7 +12,7 @@ interface NavLeftGroupProps {
   onShowAbout: () => void;
 }
 
-const NavLeftGroup: React.FC<NavLeftGroupProps> = ({
+const NavLeftGroup: FC<NavLeftGroupProps> = ({
   isMenuOpen,
   showBreadcrumbs,
   onMenuToggle,
@@ -20,56 +20,55 @@ const NavLeftGroup: React.FC<NavLeftGroupProps> = ({
   onShowAbout,
 }) => {
   return (
-    <div className="flex items-center space-x-4">
-      {/* Menu toggle button with hamburger/close icon */}
+    <div className="flex items-center">
+      {/* Menu toggle button - visible only below 820px */}
       <button
         onClick={onMenuToggle}
-        className="hover:text-hauler-primary-600 transition-colors"
+        className="hidden max-lg:block mr-4 hover:opacity-80 transition-opacity"
         aria-label="Toggle menu"
       >
         {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
       </button>
 
-      {/* Logo and breadcrumb container */}
-      <div className="relative flex flex-col items-center">
-        {/* Logo with home link */}
-        <Link to="/" className="mb-1 hover:opacity-80 transition-opacity">
-          <img
-            src="/pics/logo.png"
-            alt="SenDeliver Logo"
-            className="h-8 w-auto object-contain"
-            aria-label="Home"
-          />
-        </Link>
+      {/* Logo container with name */}
+      <div className="flex items-center space-x-3">
+        {/* Logo with breadcrumbs toggle */}
+        <div className="relative">
+          {/* Top half - logo */}
+          <Link to="/" className="block hover:opacity-80 transition-opacity">
+            <img
+              src="/pics/logo.png"
+              alt="SenDeliver Logo"
+              className="h-5 w-auto object-contain"
+            />
+          </Link>
 
-        {/* Breadcrumb toggle button with animation */}
+          {/* Chevron - positioned between bottom of logo and navbar bottom */}
+          <button
+            onClick={onBreadcrumbsToggle}
+            className="absolute -bottom-1.5 left-0 right-0 flex justify-center"
+            aria-label="Toggle breadcrumbs"
+          >
+            <IoChevronDown
+              size={12}
+              className={`transform transition-transform duration-200 ${
+                showBreadcrumbs ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* SenDeliver text - hidden below 620px */}
         <button
-          onClick={onBreadcrumbsToggle}
-          className="hover:text-hauler-primary-600 transition-colors"
-          aria-label="Toggle breadcrumbs"
+          onClick={onShowAbout}
+          className="hidden md:block group relative"
         >
-          <IoChevronDown
-            size={16}
-            className={`transform transition-transform duration-200 ${
-              showBreadcrumbs ? "rotate-180" : ""
-            }`}
-          />
+          <span className="text-base font-semibold">
+            SenDeliver
+            <span className="absolute left-1/2 right-1/2 bottom-0 h-0.5 bg-current transition-all duration-300 group-hover:left-0 group-hover:right-0"></span>
+          </span>
         </button>
       </div>
-
-      {/* About link - visible only on screens wider than 620px */}
-      <button
-        onClick={onShowAbout}
-        className="
-          hidden min-[620px]:block 
-          hover:text-hauler-primary-600 
-          transition-colors 
-          cursor-pointer
-        "
-        aria-label="About SenDeliver"
-      >
-        SenDeliver
-      </button>
     </div>
   );
 };

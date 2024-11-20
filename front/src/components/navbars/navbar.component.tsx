@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// ./front/src/components/navbars/navbar.component.tsx
+import { useState, FC } from "react";
 import NavLeftGroup from "./nav-left-group.component";
 import NavCenterGroup from "./nav-center-group.component";
 import NavRightGroup from "./nav-right-group.component";
@@ -14,10 +15,7 @@ interface NavigationProps {
   onToggleDarkMode: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({
-  isDarkMode,
-  onToggleDarkMode,
-}) => {
+const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showBreadcrumbs, setShowBreadcrumbs] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
@@ -27,65 +25,67 @@ const Navigation: React.FC<NavigationProps> = ({
 
   return (
     <>
-      {/* Sticky Navbar */}
-      <header className="sticky top-0 z-50">
-        <nav
-          className={`h-navbar ${
-            isDarkMode ? "bg-gray-800" : "bg-gray-100"
-          } shadow-medium backdrop-blur-sm w-full`}
-        >
-          <div
-            className={`max-w-content mx-auto h-full flex items-center justify-between px-4 ${
-              isDarkMode ? "bg-gray-700" : "bg-gray-200"
-            }`}
-          >
-            {/* Left Group */}
-            <div className="flex items-center">
-              <NavLeftGroup
-                isMenuOpen={isMenuOpen}
-                showBreadcrumbs={showBreadcrumbs}
-                onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
-                onBreadcrumbsToggle={() => setShowBreadcrumbs(!showBreadcrumbs)}
-                onShowAbout={() => setShowAboutModal(true)}
-              />
-            </div>
+      <header className="sticky top-0 z-navbar">
+        <nav className="bg-navbar-light-bg dark:bg-navbar-dark-bg shadow-navbar">
+          <div className="max-w-content mx-auto h-navbar px-4">
+            <div className="relative flex items-center justify-between h-full">
+              {/* Left Group */}
+              <div className="relative z-navside">
+                <NavLeftGroup
+                  isMenuOpen={isMenuOpen}
+                  showBreadcrumbs={showBreadcrumbs}
+                  onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
+                  onBreadcrumbsToggle={() =>
+                    setShowBreadcrumbs(!showBreadcrumbs)
+                  }
+                  onShowAbout={() => setShowAboutModal(true)}
+                />
+              </div>
 
-            {/* Center Group */}
-            <div className="flex items-center">
-              <NavCenterGroup
-                onAvatarClick={() => setShowAvatarModal(true)}
-                onLoginClick={() => setShowLoginModal(true)}
-                onRegisterClick={() => setShowRegisterModal(true)}
-              />
-            </div>
+              {/* Center Group - ZACHOVANÉ PRESNÉ ZAROVNANIE */}
+              <div className="relative z-navcenter">
+                <NavCenterGroup
+                  onAvatarClick={() => setShowAvatarModal(true)}
+                  onLoginClick={() => setShowLoginModal(true)}
+                  onRegisterClick={() => setShowRegisterModal(true)}
+                />
+              </div>
 
-            {/* Right Group */}
-            <div className="flex items-center">
-              <NavRightGroup
-                isDarkMode={isDarkMode}
-                onToggleDarkMode={onToggleDarkMode}
-              />
-            </div>
+              {/* Right Group */}
+              <div className="relative z-navside">
+                <NavRightGroup
+                  isDarkMode={isDarkMode}
+                  onToggleDarkMode={onToggleDarkMode}
+                />
+              </div>
 
-            {/* Hamburger */}
-            <NavHamburger
-              isOpen={isMenuOpen}
-              onLoginClick={() => setShowLoginModal(true)}
-              onRegisterClick={() => setShowRegisterModal(true)}
-            />
+              {/* Hamburger */}
+              <div className="relative z-navside">
+                <NavHamburger
+                  isOpen={isMenuOpen}
+                  onLoginClick={() => setShowLoginModal(true)}
+                  onRegisterClick={() => setShowRegisterModal(true)}
+                  className="hidden max-lg:block"
+                />
+              </div>
+            </div>
           </div>
         </nav>
 
         {/* Breadcrumbs */}
         {showBreadcrumbs && (
-          <div
-            className={`${
-              isDarkMode ? "bg-gray-700" : "bg-gray-200"
-            } shadow-inner-soft`}
-          >
-            <div className="max-w-content mx-auto px-4">
-              <div className="text-xs">
-                <NavBreadcrumb />
+          <div className="absolute top-navbar left-0 right-0 z-dropdown shadow-dropdown">
+            <div className="w-full bg-navbar-light-bg dark:bg-navbar-dark-bg">
+              <div className="max-w-content mx-auto relative">
+                <div
+                  className="absolute -top-2 w-3 h-3 bg-navbar-light-bg dark:bg-navbar-dark-bg transform rotate-45"
+                  style={{
+                    left: "var(--chevron-position, var(--spacing-chevron))",
+                  }}
+                />
+                <div className="relative py-2 px-4">
+                  <NavBreadcrumb />
+                </div>
               </div>
             </div>
           </div>

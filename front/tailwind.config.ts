@@ -24,7 +24,8 @@ export default {
         max: "1280px",
       },
       maxWidth: {
-        content: "1200px", // Nastavenie maximálnej šírky pre obsah
+        content: "1200px",
+        modal: "32rem", // 512px pre modálne okná
       },
       screens: {
         xs: "320px",
@@ -35,33 +36,79 @@ export default {
         "2xl": "1280px",
       },
       colors: {
-        gray: {
-          50: "#f8fafc",
-          100: "#f1f5f9",
-          200: "#e2e8f0",
-          300: "#cbd5e1",
-          400: "#94a3b8",
-          500: "#64748b",
-          600: "#475569",
-          700: "#334155",
-          800: "#1e293b",
-          900: "#0f172a",
-          950: "#020617",
+        navbar: {
+          light: {
+            bg: "#dbeafe", // svetlomodrá
+            text: "#000000",
+            button: {
+              bg: "#000000",
+              text: "#ffffff",
+              hover: "#1e293b",
+            },
+          },
+          dark: {
+            bg: "#1e40af", // tmavomodrá
+            text: "#ffffff",
+            button: {
+              bg: "#ffffff",
+              text: "#1e40af",
+              hover: "#e2e8f0",
+            },
+          },
         },
-        magenta: {
-          100: "#ffe0ff",
-          300: "#ff80ff",
-          500: "#ff00ff",
-          700: "#b200b2",
+        modal: {
+          backdrop: "rgba(0, 0, 0, 0.5)",
+          light: {
+            bg: "#ffffff",
+            text: "#000000",
+            hover: "#f1f5f9",
+            border: "#e2e8f0",
+          },
+          dark: {
+            bg: "#1e293b",
+            text: "#ffffff",
+            hover: "#334155",
+            border: "#475569",
+          },
         },
       },
       height: {
-        navbar: "48px", // Výška navigácie
-        banner: "150px", // Výška banneru
+        navbar: "48px",
+        banner: "150px",
+        modal: "32rem", // 512px pre modálne okná
       },
-      padding: {
-        navigation: "4px",
-        banner: "10px",
+      spacing: {
+        modal: {
+          padding: "1.5rem", // 24px padding pre modaly
+          gap: "1rem", // 16px medzery v modaloch
+          offset: "10vh", // 10% od vrchu obrazovky
+        },
+      },
+      boxShadow: {
+        navbar: "0 2px 4px rgba(0,0,0,0.1)",
+        dropdown: "0 4px 6px -1px rgba(0,0,0,0.1)",
+        modal: "0 8px 16px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06)",
+      },
+      zIndex: {
+        navbar: "50",
+        dropdown: "40",
+        modalBackdrop: "998",
+        modal: "999",
+      },
+      borderRadius: {
+        modal: "0.75rem", // 12px zaoblenie pre modaly
+      },
+      backdropBlur: {
+        modal: "4px", // Jemné rozostrenie pozadia pre modaly
+      },
+      fontSize: {
+        modal: {
+          title: "1.5rem", // 24px pre nadpisy modalov
+          text: "1rem", // 16px pre text v modaloch
+        },
+      },
+      transitionDuration: {
+        modal: "200ms", // Pre jemné animácie modalov
       },
     },
   },
@@ -74,9 +121,9 @@ export default {
           margin: "0",
           padding: "0",
           backgroundColor: "#ffffff",
-          color: "#000000", // Základná farba textu
+          color: "#000000",
           "@media (prefers-color-scheme: dark)": {
-            backgroundColor: "#0f172a", // Tmavý režim
+            backgroundColor: "#0f172a",
             color: "#f8fafc",
           },
         },
@@ -89,6 +136,10 @@ export default {
         "#root": {
           minHeight: "100vh",
           position: "relative",
+        },
+        ":root": {
+          "--modal-offset": "10vh",
+          "--navbar-height": "48px",
         },
       });
     },

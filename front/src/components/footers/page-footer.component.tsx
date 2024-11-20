@@ -3,74 +3,43 @@ import React, { useState } from "react";
 import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
 
 const PageFooter: React.FC = () => {
-  const [language, setLanguage] = useState<"sk" | "en">("sk");
+  const [languageMode, setLanguageMode] = useState<boolean>(false);
 
-  const handleLanguageChange = (lang: "sk" | "en") => {
-    setLanguage(lang);
-    // Implementuj ďalšiu logiku na zmenu jazyka
+  const toggleLanguageMode = () => {
+    setLanguageMode((prevMode) => !prevMode);
+    console.log(`Language Mode: ${languageMode ? "No" : "Yes"}`);
   };
 
   return (
-    <footer className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 py-6">
-      <div className="container mx-auto px-4">
-        {/* Odkazy */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-          <ul className="flex gap-4 mb-4 md:mb-0">
-            <li>
-              <a href="/about" className="hover:underline">
-                O nás
-              </a>
-            </li>
-            <li>
-              <a href="/contact" className="hover:underline">
-                Kontakt
-              </a>
-            </li>
-            <li>
-              <a href="/terms" className="hover:underline">
-                Podmienky používania
-              </a>
-            </li>
-            <li>
-              <a href="/privacy" className="hover:underline">
-                GDPR
-              </a>
-            </li>
-          </ul>
-
-          {/* Jazykový prepínač */}
-          <div className="flex items-center gap-2">
-            <span>Jazyk:</span>
-            <button
-              onClick={() => handleLanguageChange("sk")}
-              className={`px-3 py-1 rounded ${
-                language === "sk"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 dark:bg-gray-700"
+    <footer className="relative w-full bg-footer-light dark:bg-footer-dark text-footer-light dark:text-footer-dark py-6">
+      <div className="max-w-content mx-auto px-container flex flex-col gap-6">
+        {/* Language Mode Switch */}
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-4 bg-footer-light dark:bg-footer-dark px-4 py-2 rounded-lg shadow">
+          <span className="text-sm font-medium">Language Mode:</span>
+          <button
+            onClick={toggleLanguageMode}
+            className={`relative w-14 h-8 bg-gray-300 dark:bg-gray-700 rounded-full transition-colors ${
+              languageMode ? "bg-blue-500" : "bg-gray-300"
+            }`}
+            aria-label="Toggle Language Mode"
+          >
+            <span
+              className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                languageMode ? "translate-x-6" : "translate-x-0"
               }`}
-            >
-              SK
-            </button>
-            <button
-              onClick={() => handleLanguageChange("en")}
-              className={`px-3 py-1 rounded ${
-                language === "en"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 dark:bg-gray-700"
-              }`}
-            >
-              EN
-            </button>
-          </div>
+            />
+          </button>
+          <span className="text-sm">{languageMode ? "Yes" : "No"}</span>
         </div>
 
-        {/* Sociálne siete */}
-        <div className="flex justify-center gap-4 mb-4">
+        {/* Social Media Icons */}
+        <div className="flex justify-center gap-6 mt-12">
           <a
             href="https://facebook.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-700 dark:text-gray-300 hover:text-blue-500"
+            className="text-social-facebook hover:opacity-80"
+            aria-label="Facebook"
           >
             <FaFacebook size={24} />
           </a>
@@ -78,7 +47,8 @@ const PageFooter: React.FC = () => {
             href="https://twitter.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-700 dark:text-gray-300 hover:text-blue-400"
+            className="text-social-twitter hover:opacity-80"
+            aria-label="Twitter"
           >
             <FaTwitter size={24} />
           </a>
@@ -86,7 +56,8 @@ const PageFooter: React.FC = () => {
             href="https://linkedin.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-700 dark:text-gray-300 hover:text-blue-600"
+            className="text-social-linkedin hover:opacity-80"
+            aria-label="LinkedIn"
           >
             <FaLinkedin size={24} />
           </a>
@@ -94,15 +65,40 @@ const PageFooter: React.FC = () => {
             href="https://instagram.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-700 dark:text-gray-300 hover:text-pink-500"
+            className="text-social-instagram hover:opacity-80"
+            aria-label="Instagram"
           >
             <FaInstagram size={24} />
           </a>
         </div>
 
+        {/* Menu */}
+        <ul className="flex justify-end gap-4 text-sm mt-6">
+          <li>
+            <a href="/about" className="hover:underline">
+              About
+            </a>
+          </li>
+          <li>
+            <a href="/contact" className="hover:underline">
+              Contact
+            </a>
+          </li>
+          <li>
+            <a href="/terms" className="hover:underline">
+              Terms of Use
+            </a>
+          </li>
+          <li>
+            <a href="/privacy" className="hover:underline">
+              GDPR
+            </a>
+          </li>
+        </ul>
+
         {/* Copyright */}
-        <div className="text-center text-sm">
-          © {new Date().getFullYear()} Sendeliver. Všetky práva vyhradené.
+        <div className="text-center text-xs mt-6">
+          © {new Date().getFullYear()} Sendeliver. All rights reserved.
         </div>
       </div>
     </footer>
