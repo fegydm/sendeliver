@@ -27,47 +27,42 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
     <>
       <header className="sticky top-0 z-navbar">
         <nav className="bg-navbar-light-bg dark:bg-navbar-dark-bg shadow-navbar">
-          <div className="max-w-content mx-auto h-navbar px-4">
-            <div className="relative flex items-center justify-between h-full">
-              {/* Left Group */}
-              <div className="relative z-navside">
-                <NavLeftGroup
-                  isMenuOpen={isMenuOpen}
-                  showBreadcrumbs={showBreadcrumbs}
-                  onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
-                  onBreadcrumbsToggle={() =>
-                    setShowBreadcrumbs(!showBreadcrumbs)
-                  }
-                  onShowAbout={() => setShowAboutModal(true)}
-                />
-              </div>
+          <div className="max-w-content mx-auto h-navbar px-4 flex items-center">
+            {/* Left Group */}
+            <div className="flex items-center">
+              <NavLeftGroup
+                isMenuOpen={isMenuOpen}
+                showBreadcrumbs={showBreadcrumbs}
+                onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
+                onBreadcrumbsToggle={() => setShowBreadcrumbs(!showBreadcrumbs)}
+                onShowAbout={() => setShowAboutModal(true)}
+              />
+            </div>
 
-              {/* Center Group - ZACHOVANÉ PRESNÉ ZAROVNANIE */}
-              <div className="relative z-navcenter">
-                <NavCenterGroup
-                  onAvatarClick={() => setShowAvatarModal(true)}
-                  onLoginClick={() => setShowLoginModal(true)}
-                  onRegisterClick={() => setShowRegisterModal(true)}
-                />
-              </div>
+            {/* Center Group */}
+            <div className="flex items-center gap-4">
+              <NavCenterGroup
+                onAvatarClick={() => setShowAvatarModal(true)}
+                onLoginClick={() => setShowLoginModal(true)}
+                onRegisterClick={() => setShowRegisterModal(true)}
+              />
+            </div>
 
-              {/* Right Group */}
-              <div className="relative z-navside">
-                <NavRightGroup
-                  isDarkMode={isDarkMode}
-                  onToggleDarkMode={onToggleDarkMode}
-                />
-              </div>
+            {/* Right Group */}
+            <div className="flex items-right ">
+              <NavRightGroup
+                isDarkMode={isDarkMode}
+                onToggleDarkMode={onToggleDarkMode}
+              />
+            </div>
 
-              {/* Hamburger */}
-              <div className="relative z-navside">
-                <NavHamburger
-                  isOpen={isMenuOpen}
-                  onLoginClick={() => setShowLoginModal(true)}
-                  onRegisterClick={() => setShowRegisterModal(true)}
-                  className="hidden max-lg:block"
-                />
-              </div>
+            {/* Hamburger */}
+            <div className="hidden max-lg:flex items-center">
+              <NavHamburger
+                isOpen={isMenuOpen}
+                onLoginClick={() => setShowLoginModal(true)}
+                onRegisterClick={() => setShowRegisterModal(true)}
+              />
             </div>
           </div>
         </nav>

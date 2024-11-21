@@ -1,4 +1,4 @@
-// ./front/src/components/navigation/nav-center-group.component.tsx
+// ./front/src/components/navbars/nav-center-group.component.tsx
 import { type FC } from "react";
 
 interface NavCenterGroupProps {
@@ -13,54 +13,29 @@ const NavCenterGroup: FC<NavCenterGroupProps> = ({
   onRegisterClick,
 }) => {
   return (
-    <div className="relative w-screen">
-      {/* 6 dots container - relative to avatar */}
-      <div className="absolute right-[calc(50%+2.5rem)] top-1/2 -translate-y-1/2">
-        <div className="p-2 flex flex-col gap-1">
-          <div className="flex gap-1">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={`top-${i}`}
-                className="w-1.5 h-1.5 rounded-full bg-current opacity-60"
-              />
-            ))}
-          </div>
-          <div className="flex gap-1">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={`bottom-${i}`}
-                className="w-1.5 h-1.5 rounded-full bg-current opacity-60"
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+      {/* Avatar - Presne na stred navbaru */}
+      <button
+        onClick={onAvatarClick}
+        className="h-[44px] w-[44px] rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+        aria-label="Open avatar menu"
+      >
+        <span className="text-base font-medium">A</span>
+      </button>
 
-      {/* Centered Avatar */}
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center h-navbar">
+      {/* Login a Register - Zarovnané relatívne k avataru */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-y-1/2 flex gap-3 ml-[60px]">
         <button
-          onClick={onAvatarClick}
-          className="h-[44px] aspect-square rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center hover:opacity-80 transition-opacity"
-          aria-label="Open avatar menu"
+          onClick={onLoginClick}
+          className="text-base font-semibold whitespace-nowrap px-4 py-2 bg-navbar-light-button-bg dark:bg-navbar-dark-button-bg text-navbar-light-button-text dark:text-navbar-dark-button-text rounded-md"
         >
-          <span className="text-base font-medium">A</span>
+          Log In
         </button>
-      </div>
-
-      {/* Login and Create account - relative to avatar */}
-      <div className="absolute left-[calc(50%+2.5rem)] top-1/2 -translate-y-1/2 hidden lg:flex items-center space-x-4">
-        <button onClick={onLoginClick} className="group relative">
-          <span className="text-base font-semibold group-hover:opacity-80 whitespace-nowrap">
-            Log&nbsp;In
-          </span>
-          <span className="absolute left-1/2 right-1/2 bottom-0 h-0.5 bg-current transition-all duration-300 group-hover:left-0 group-hover:right-0" />
-        </button>
-
         <button
           onClick={onRegisterClick}
-          className="px-4 py-1.5 rounded-md bg-navbar-light-button-bg dark:bg-navbar-dark-button-bg text-navbar-light-button-text dark:text-navbar-dark-button-text hover:bg-navbar-light-button-hover dark:hover:bg-navbar-dark-button-hover transition-colors whitespace-nowrap"
+          className="text-base font-semibold whitespace-nowrap px-4 py-2 bg-navbar-light-button-bg dark:bg-navbar-dark-button-bg text-navbar-light-button-text dark:text-navbar-dark-button-text rounded-md"
         >
-          Create account
+          Register
         </button>
       </div>
     </div>
