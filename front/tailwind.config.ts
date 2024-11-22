@@ -1,11 +1,58 @@
-// ./front/tailwind.config.ts
 import formsPlugin from "@tailwindcss/forms";
+
+const colors = {
+  navbar: {
+    light: {
+      bg: "#dbeafe",
+      text: "#000000",
+      button: {
+        bg: "#475569",
+        text: "#ffffff",
+        hover: "#334155",
+      },
+    },
+    dark: {
+      bg: "#1e40af",
+      text: "#ffffff",
+      button: {
+        bg: "#94a3b8",
+        text: "#1e293b",
+        hover: "#64748b",
+      },
+    },
+  },
+  dots: {
+    client: "#FF00FF",
+    forwarder: "#87CEEB",
+    carrier: "#4CC417",
+    anonymous: "#FF0000",
+    cookies: "#FFA500",
+    registered: "#008000",
+    inactive: "#808080",
+  },
+  modal: {
+    backdrop: "rgba(0, 0, 0, 0.5)",
+    light: {
+      bg: "#ffffff",
+      text: "#000000",
+      hover: "#f1f5f9",
+      border: "#e2e8f0",
+    },
+    dark: {
+      bg: "#1e293b",
+      text: "#ffffff",
+      hover: "#334155",
+      border: "#475569",
+    },
+  },
+};
 
 export default {
   content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
   darkMode: "class",
   theme: {
     extend: {
+      colors, // Farby pridané priamo sem
       container: {
         padding: {
           DEFAULT: "1rem",
@@ -35,65 +82,15 @@ export default {
         xl: "1024px",
         "2xl": "1280px",
       },
-      colors: {
-        navbar: {
-          light: {
-            bg: "#dbeafe", // svetlomodrá
-            text: "#000000",
-            button: {
-              bg: "#000000",
-              text: "#ffffff",
-              hover: "#1e293b",
-            },
-          },
-          dark: {
-            bg: "#1e40af", // tmavomodrá
-            text: "#ffffff",
-            button: {
-              bg: "#ffffff",
-              text: "#1e40af",
-              hover: "#e2e8f0",
-            },
-          },
-        },
-        modal: {
-          backdrop: "rgba(0, 0, 0, 0.5)",
-          light: {
-            bg: "#ffffff",
-            text: "#000000",
-            hover: "#f1f5f9",
-            border: "#e2e8f0",
-          },
-          dark: {
-            bg: "#1e293b",
-            text: "#ffffff",
-            hover: "#334155",
-            border: "#475569",
-          },
-        },
-      },
       height: {
         navbar: "48px",
         banner: "150px",
         modal: "32rem", // 512px pre modálne okná
       },
-      spacing: {
-        modal: {
-          padding: "1.5rem", // 24px padding pre modaly
-          gap: "1rem", // 16px medzery v modaloch
-          offset: "10vh", // 10% od vrchu obrazovky
-        },
-      },
       boxShadow: {
         navbar: "0 2px 4px rgba(0,0,0,0.1)",
         dropdown: "0 4px 6px -1px rgba(0,0,0,0.1)",
         modal: "0 8px 16px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06)",
-      },
-      zIndex: {
-        navbar: "50",
-        dropdown: "40",
-        modalBackdrop: "998",
-        modal: "999",
       },
       borderRadius: {
         modal: "0.75rem", // 12px zaoblenie pre modaly
@@ -109,6 +106,16 @@ export default {
       },
       transitionDuration: {
         modal: "200ms", // Pre jemné animácie modalov
+      },
+      spacing: {
+        modal: {
+          outer: "2rem", // 32px vonkajší padding
+          inner: "1.5rem", // 24px vnútorný padding
+          sides: "1rem", // 16px padding z bokov
+          gap: "1rem", // 16px medzery medzi prvkami
+          close: "1rem", // 16px padding pre close button
+          top: "10vh", // 10% od vrchu obrazovky pre pozíciu modalu
+        },
       },
     },
   },
@@ -138,7 +145,7 @@ export default {
           position: "relative",
         },
         ":root": {
-          "--modal-offset": "10vh",
+          "--modal-top-offset": "10vh",
           "--navbar-height": "48px",
         },
       });

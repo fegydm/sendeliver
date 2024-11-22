@@ -25,12 +25,9 @@ const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
     setResults(updatedResults);
   };
 
-  const magentaBg = "bg-magenta-500/10"; // Prispôsobte podľa Tailwind konfigurácie
-  const magentaBorder = "border-magenta-500/20";
-  const magentaButton = "bg-magenta-500 hover:bg-magenta-500/80";
-
   return (
-    <div className={`p-6 ${magentaBg} border-t-2 ${magentaBorder}`}>
+    <div className="p-6 bg-magenta-50/10 border-t-2 border-magenta-500/20">
+      {/* Title */}
       <div className="mb-4 text-lg font-semibold text-magenta-700 dark:text-magenta-300">
         Need to send something and find the perfect carrier? Ask AI or fill out
         the form.
@@ -44,8 +41,8 @@ const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
             onClick={() => setActiveTab(index)}
             className={`py-2 px-4 rounded-md border ${
               activeTab === index
-                ? "bg-magenta-500 text-white"
-                : "bg-white dark:bg-gray-700 dark:text-white"
+                ? "bg-magenta-500 text-white border-magenta-500"
+                : "bg-white dark:bg-gray-700 text-gray-700 dark:text-white"
             }`}
           >
             Tab {index + 1}
@@ -57,7 +54,7 @@ const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
       <div className="relative">
         <textarea
           placeholder="Write your request here..."
-          className="w-full p-4 border rounded-lg h-24 bg-white/90 dark:bg-gray-800 dark:text-white"
+          className="w-full p-4 border rounded-lg h-24 bg-white dark:bg-gray-800 dark:text-white resize-none"
           value={prompts[activeTab]}
           onChange={(e) => {
             const updatedPrompts = [...prompts];
@@ -67,7 +64,7 @@ const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
         />
         <button
           onClick={handleAIRequest}
-          className={`absolute -bottom-4 left-4 px-6 py-3 rounded-md text-white transition-colors ${magentaButton}`}
+          className="absolute -bottom-4 left-4 px-6 py-2 rounded-md text-white bg-magenta-500 hover:bg-magenta-600 transition"
         >
           Ask AI
         </button>

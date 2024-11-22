@@ -1,51 +1,56 @@
 // ./front/src/components/navbars/nav-left-group.component.tsx
-import { type FC } from "react";
+import { type FC, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaBars, FaTimes } from "react-icons/fa";
+import NavHamburger from "./nav-hamburger.component";
+import NavBreadcrumb from "./nav-breadcrumb.component";
 
 interface NavLeftGroupProps {
-  isMenuOpen: boolean;
   showBreadcrumbs: boolean;
-  onMenuToggle: () => void;
   onBreadcrumbsToggle: () => void;
   onShowAbout: () => void;
 }
 
 const NavLeftGroup: FC<NavLeftGroupProps> = ({
-  isMenuOpen,
   showBreadcrumbs,
-  onMenuToggle,
   onBreadcrumbsToggle,
   onShowAbout,
 }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
-    <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center">
+    <div className="flex items-center space-x-4">
       {/* Menu toggle */}
-      <button
-        onClick={onMenuToggle}
-        className="hidden max-lg:flex mr-4 items-center"
-        aria-label="Toggle menu"
-      >
-        {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-      </button>
+      <div>
+        <button
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="hidden max-lg:flex items-center"
+          aria-label="Toggle menu"
+        >
+          {isMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+        </button>
+        {isMenuOpen && (
+          <NavHamburger
+            isOpen={isMenuOpen}
+            onLoginClick={() => console.log("Login modal opened")}
+            onRegisterClick={() => console.log("Register modal opened")}
+            onShowAbout={onShowAbout}
+          />
+        )}
+      </div>
 
       {/* Logo container */}
       <div className="relative h-5">
-        {/* Logo */}
         <img
           src="/pics/logo.png"
           alt="SenDeliver Logo"
           className="h-5 w-auto"
         />
-
-        {/* Klikacia plocha pre homepage */}
         <Link
           to="/"
           className="absolute top-0 left-0 w-full h-[75%]"
           aria-label="Go to homepage"
         ></Link>
-
-        {/* Chevron tlačidlo */}
         <button
           onClick={onBreadcrumbsToggle}
           className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[25%] w-full"
@@ -70,13 +75,22 @@ const NavLeftGroup: FC<NavLeftGroupProps> = ({
       </div>
 
       {/* Name with animated underline */}
-      <button
-        onClick={onShowAbout}
-        className="ml-5 group relative hidden md:block"
-      >
+      <button onClick={onShowAbout} className="group relative hidden md:block">
         <span className="text-base font-semibold">SenDeliver</span>
         <span className="absolute left-1/2 right-1/2 bottom-0 h-0.5 bg-current transition-all duration-300 group-hover:left-0 group-hover:right-0" />
       </button>
+
+      {/* Breadcrumb */}
+      {showBreadcrumbs && (
+        <div
+          className="absolute left-1/2 transform -translate-x-1/2 z-[40]"
+          style={{
+            top: "calc(var(--navbar-height) + 4px)",
+          }}
+        >
+          <NavBreadcrumb />
+        </div>
+      )}
     </div>
   );
 };

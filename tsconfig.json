@@ -18,7 +18,8 @@
     "paths": {
       "@back/*": ["back/src/*"],
       "@shared/*": ["shared/*"],
-      "@front/*": ["front/src/*"]
+      "@front/*": ["front/src/*"],
+      "@tw": ["front/tailwind.config.ts"]
     },
     "rootDir": ".",
     "outDir": "./back/dist",
@@ -55,6 +56,7 @@
     "back/src/configs/**/*", // Backend configs
     "shared/**/*", // Shared files
     "back/**/*.json", // Backend JSON files
+    "front/tailwind.config.ts", // Tailwind config
     "front"
   ],
   "exclude": [
