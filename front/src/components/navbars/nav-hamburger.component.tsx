@@ -1,36 +1,44 @@
 // ./front/src/components/navbars/nav-hamburger.component.tsx
+import { type FC } from "react";
 
-import React from "react";
-
-interface MobileMenuProps {
+interface NavHamburgerProps {
   isOpen: boolean;
   onLoginClick: () => void;
   onRegisterClick: () => void;
-  className?: string;
+  onShowAbout: () => void;
 }
 
-const MobileMenu: React.FC<MobileMenuProps> = ({
+const NavHamburger: FC<NavHamburgerProps> = ({
   isOpen,
   onLoginClick,
   onRegisterClick,
-  className = "",
+  onShowAbout,
 }) => {
-  if (!isOpen) return null;
-
   return (
     <div
-      className={`absolute top-navbar right-0 w-48 py-2 bg-navbar-light-bg dark:bg-navbar-dark-bg shadow-lg rounded-b-lg ${className}`}
+      className={`absolute left-0 bg-navbar-light-bg dark:bg-navbar-dark-bg shadow-dropdown border-t border-navbar-light-hover dark:border-navbar-dark-hover z-dropdown transition-transform duration-200 ${
+        isOpen ? "visible opacity-100" : "invisible opacity-0"
+      }`}
+      style={{
+        top: "var(--navbar-height)", // Dynamické zarovnanie pod navbar
+      }}
     >
-      <div className="flex flex-col space-y-2 px-4">
+      <div className="divide-y divide-navbar-light-hover dark:divide-navbar-dark-hover">
+        <button
+          onClick={onShowAbout}
+          className="inline-flex items-center px-4 py-3 text-navbar-light-text dark:text-navbar-dark-text hover:bg-navbar-light-hover dark:hover:bg-navbar-dark-hover transition-colors"
+        >
+          SenDeliver
+        </button>
         <button
           onClick={onLoginClick}
-          className="text-left py-2 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          className="inline-flex items-center px-4 py-3 text-navbar-light-text dark:text-navbar-dark-text hover:bg-navbar-light-hover dark:hover:bg-navbar-dark-hover transition-colors"
         >
           Log In
         </button>
         <button
           onClick={onRegisterClick}
-          className="text-left py-2 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          className="inline-flex items-center px-4 py-3 text-navbar-light-text dark:text-navbar-dark-text hover:bg-navbar-light-hover dark:hover:bg-navbar-dark-hover transition-colors"
         >
           Create account
         </button>
@@ -39,4 +47,4 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   );
 };
 
-export default MobileMenu;
+export default NavHamburger;

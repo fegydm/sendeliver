@@ -12,9 +12,9 @@ const NavRightGroup: FC<NavRightGroupProps> = ({
   onToggleDarkMode,
 }) => {
   return (
-    <div className="ml-auto flex items-center space-x-4">
+    <div className="flex items-center space-x-4">
       {/* Language selector */}
-      <button className="p-2 rounded-md hover:bg-navbar-light-hover dark:hover:bg-navbar-dark-hover transition-colors">
+      <button className="p-2 rounded-md hover:bg-navbar-light-hover dark:hover:bg-navbar-dark-hover transition-colors flex items-center justify-center">
         <img
           src="/flags/4x3/optimized/gb.svg"
           alt="Change language"
@@ -25,7 +25,7 @@ const NavRightGroup: FC<NavRightGroupProps> = ({
       {/* Dark mode toggle */}
       <button
         onClick={onToggleDarkMode}
-        className="p-2 rounded-md hover:bg-navbar-light-hover dark:hover:bg-navbar-dark-hover transition-colors"
+        className="p-2 rounded-md hover:bg-navbar-light-hover dark:hover:bg-navbar-dark-hover transition-colors flex items-center justify-center"
         aria-label="Toggle dark mode"
       >
         {isDarkMode ? (
@@ -36,7 +36,7 @@ const NavRightGroup: FC<NavRightGroupProps> = ({
         ) : (
           <div className="group">
             <FiSun className="w-5 h-5 text-navbar-light-text group-hover:hidden" />
-            <FiMoon className="w-5 h-5 text-yellow-300 hidden group-hover:block" />
+            <FiMoon className="w-5 h-5 text-yellow-600 hidden group-hover:block" />
           </div>
         )}
       </button>

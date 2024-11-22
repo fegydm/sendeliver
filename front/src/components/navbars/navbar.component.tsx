@@ -1,14 +1,9 @@
-// ./front/src/components/navbars/navbar.component.tsx
 import { useState, FC } from "react";
 import NavLeftGroup from "./nav-left-group.component";
 import NavCenterGroup from "./nav-center-group.component";
 import NavRightGroup from "./nav-right-group.component";
 import NavHamburger from "./nav-hamburger.component";
 import NavBreadcrumb from "./nav-breadcrumb.component";
-import AboutModal from "../modals/about-modal.component";
-import LoginModal from "../modals/login-modal.component";
-import RegisterModal from "../modals/register-modal.component";
-import AvatarModal from "../modals/avatar-modal.component";
 
 interface NavigationProps {
   isDarkMode: boolean;
@@ -18,92 +13,81 @@ interface NavigationProps {
 const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showBreadcrumbs, setShowBreadcrumbs] = useState(false);
-  const [showAboutModal, setShowAboutModal] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [showAvatarModal, setShowAvatarModal] = useState(false);
+
+  const handleAvatarClick = () => {
+    console.log("Avatar clicked");
+    // Sem pridaj logiku pre avatar
+  };
+
+  const handleLoginClick = () => {
+    console.log("Login modal opened");
+    // Sem pridaj logiku pre login modal
+  };
+
+  const handleRegisterClick = () => {
+    console.log("Register modal opened");
+    // Sem pridaj logiku pre register modal
+  };
 
   return (
     <>
       <header className="sticky top-0 z-navbar">
         <nav className="bg-navbar-light-bg dark:bg-navbar-dark-bg shadow-navbar">
-          <div className="max-w-content mx-auto h-navbar px-4 flex items-center">
+          <div className="max-w-content mx-auto h-navbar px-4 relative flex items-center justify-between">
             {/* Left Group */}
-            <div className="flex items-center">
-              <NavLeftGroup
-                isMenuOpen={isMenuOpen}
-                showBreadcrumbs={showBreadcrumbs}
-                onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
-                onBreadcrumbsToggle={() => setShowBreadcrumbs(!showBreadcrumbs)}
-                onShowAbout={() => setShowAboutModal(true)}
-              />
-            </div>
+            <NavLeftGroup
+              isMenuOpen={isMenuOpen}
+              showBreadcrumbs={showBreadcrumbs}
+              onMenuToggle={() => setIsMenuOpen(!isMenuOpen)}
+              onBreadcrumbsToggle={() => setShowBreadcrumbs(!showBreadcrumbs)}
+              onShowAbout={() => console.log("About modal opened")}
+            />
 
             {/* Center Group */}
-            <div className="flex items-center gap-4">
-              <NavCenterGroup
-                onAvatarClick={() => setShowAvatarModal(true)}
-                onLoginClick={() => setShowLoginModal(true)}
-                onRegisterClick={() => setShowRegisterModal(true)}
-              />
-            </div>
+            <NavCenterGroup
+              onAvatarClick={handleAvatarClick}
+              onLoginClick={handleLoginClick}
+              onRegisterClick={handleRegisterClick}
+            />
 
             {/* Right Group */}
-            <div className="flex items-right ">
-              <NavRightGroup
-                isDarkMode={isDarkMode}
-                onToggleDarkMode={onToggleDarkMode}
-              />
-            </div>
+            <NavRightGroup
+              isDarkMode={isDarkMode}
+              onToggleDarkMode={onToggleDarkMode}
+            />
 
-            {/* Hamburger */}
-            <div className="hidden max-lg:flex items-center">
-              <NavHamburger
-                isOpen={isMenuOpen}
-                onLoginClick={() => setShowLoginModal(true)}
-                onRegisterClick={() => setShowRegisterModal(true)}
-              />
-            </div>
+            {/* Hamburger Button */}
+            <button
+              className="lg:hidden p-2"
+              aria-label="Menu"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <span>☰</span>
+            </button>
           </div>
         </nav>
 
         {/* Breadcrumbs */}
         {showBreadcrumbs && (
-          <div className="absolute top-navbar left-0 right-0 z-dropdown shadow-dropdown">
-            <div className="w-full bg-navbar-light-bg dark:bg-navbar-dark-bg">
-              <div className="max-w-content mx-auto relative">
-                <div
-                  className="absolute -top-2 w-3 h-3 bg-navbar-light-bg dark:bg-navbar-dark-bg transform rotate-45"
-                  style={{
-                    left: "var(--chevron-position, var(--spacing-chevron))",
-                  }}
-                />
-                <div className="relative py-2 px-4">
-                  <NavBreadcrumb />
-                </div>
+          <div className="absolute top-navbar left-0 right-0 z-dropdown">
+            <div className="max-w-content mx-auto relative">
+              <div className="flex items-center justify-center">
+                <NavBreadcrumb />
               </div>
             </div>
           </div>
         )}
       </header>
 
-      {/* Modals */}
-      <AboutModal
-        isOpen={showAboutModal}
-        onClose={() => setShowAboutModal(false)}
-      />
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-      />
-      <RegisterModal
-        isOpen={showRegisterModal}
-        onClose={() => setShowRegisterModal(false)}
-      />
-      <AvatarModal
-        isOpen={showAvatarModal}
-        onClose={() => setShowAvatarModal(false)}
-      />
+      {/* Hamburger Menu */}
+      {isMenuOpen && (
+        <NavHamburger
+          isOpen={isMenuOpen}
+          onLoginClick={handleLoginClick}
+          onRegisterClick={handleRegisterClick}
+          onShowAbout={() => console.log("About modal opened")}
+        />
+      )}
     </>
   );
 };
