@@ -6,7 +6,7 @@ interface AiSearchProps {
   onAIRequest: (prompt: string) => void;
 }
 
-const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
+const AiSearch: React.FC<AiSearchProps> = ({ type: _type, onAIRequest }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [prompts, setPrompts] = useState([
     "I need to ship 10 pallets of electronics from Berlin to Prague tomorrow.",
@@ -26,7 +26,7 @@ const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
   };
 
   return (
-    <div className="p-6 bg-magenta-50/10 border-t-2 border-magenta-500/20">
+    <div className="relative p-6 bg-magenta-50/10 border-t-2 border-magenta-500/20 z-30">
       {/* Title */}
       <div className="mb-4 text-lg font-semibold text-magenta-700 dark:text-magenta-300">
         Need to send something and find the perfect carrier? Ask AI or fill out
@@ -34,7 +34,7 @@ const AiSearch: React.FC<AiSearchProps> = ({ type, onAIRequest }) => {
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-4 mb-4">
+      <div className="relative flex space-x-4 mb-4">
         {prompts.map((_, index) => (
           <button
             key={index}

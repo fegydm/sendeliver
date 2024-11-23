@@ -24,7 +24,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-white dark:bg-gray-950">
+    <div className="relative min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
       <Routes>
         <Route
           path="/"

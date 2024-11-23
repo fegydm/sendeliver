@@ -1,19 +1,14 @@
 {
   "compilerOptions": {
-    // Language Features
     "target": "es2022",
     "module": "esnext",
     "lib": ["es2022", "dom"],
     "jsx": "react-jsx",
-
-    // Module Resolution
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
-
-    // Project Structure
     "baseUrl": ".",
     "paths": {
       "@back/*": ["back/src/*"],
@@ -23,15 +18,11 @@
     },
     "rootDir": ".",
     "outDir": "./back/dist",
-
-    // Type Checking
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-
-    // Build Options
     "sourceMap": true,
     "declaration": true,
     "removeComments": true,
@@ -39,24 +30,18 @@
     "isolatedModules": true,
     "incremental": true,
     "composite": true,
-
-    // JavaScript Support
     "allowJs": true,
     "checkJs": false,
-
-    // Decorators
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-
-    // Skip Checks
     "skipLibCheck": true
   },
   "include": [
-    "back/src/**/*", // Backend source
-    "back/src/configs/**/*", // Backend configs
-    "shared/**/*", // Shared files
-    "back/**/*.json", // Backend JSON files
-    "front/tailwind.config.ts", // Tailwind config
+    "back/src/**/*",
+    "back/src/configs/**/*",
+    "shared/**/*",
+    "back/**/*.json",
+    "front/tailwind.config.ts",
     "front"
   ],
   "exclude": [

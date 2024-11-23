@@ -1,3 +1,4 @@
+// ./front/tailwind.config.ts
 import formsPlugin from "@tailwindcss/forms";
 
 const colors = {
@@ -52,7 +53,7 @@ export default {
   darkMode: "class",
   theme: {
     extend: {
-      colors, // Farby pridané priamo sem
+      colors,
       container: {
         padding: {
           DEFAULT: "1rem",
@@ -72,7 +73,7 @@ export default {
       },
       maxWidth: {
         content: "1200px",
-        modal: "32rem", // 512px pre modálne okná
+        modal: "32rem",
       },
       screens: {
         xs: "320px",
@@ -85,7 +86,23 @@ export default {
       height: {
         navbar: "48px",
         banner: "150px",
-        modal: "32rem", // 512px pre modálne okná
+        modal: "32rem",
+      },
+      spacing: {
+        modal: {
+          outer: "2rem",
+          inner: "1.5rem",
+          sides: "1rem",
+          gap: "1rem",
+          close: "1rem",
+          top: "10vh",
+        },
+      },
+      zIndex: {
+        navbar: "50",
+        dropdown: "40",
+        modalBackdrop: "998",
+        modal: "999",
       },
       boxShadow: {
         navbar: "0 2px 4px rgba(0,0,0,0.1)",
@@ -93,29 +110,19 @@ export default {
         modal: "0 8px 16px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06)",
       },
       borderRadius: {
-        modal: "0.75rem", // 12px zaoblenie pre modaly
+        modal: "0.75rem",
       },
       backdropBlur: {
-        modal: "4px", // Jemné rozostrenie pozadia pre modaly
+        modal: "4px",
       },
       fontSize: {
         modal: {
-          title: "1.5rem", // 24px pre nadpisy modalov
-          text: "1rem", // 16px pre text v modaloch
+          title: "1.5rem",
+          text: "1rem",
         },
       },
       transitionDuration: {
-        modal: "200ms", // Pre jemné animácie modalov
-      },
-      spacing: {
-        modal: {
-          outer: "2rem", // 32px vonkajší padding
-          inner: "1.5rem", // 24px vnútorný padding
-          sides: "1rem", // 16px padding z bokov
-          gap: "1rem", // 16px medzery medzi prvkami
-          close: "1rem", // 16px padding pre close button
-          top: "10vh", // 10% od vrchu obrazovky pre pozíciu modalu
-        },
+        modal: "200ms",
       },
     },
   },
@@ -151,4 +158,4 @@ export default {
       });
     },
   ],
-};
+} as const;
