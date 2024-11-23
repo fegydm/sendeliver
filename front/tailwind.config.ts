@@ -136,6 +136,7 @@ export default {
           padding: "0",
           backgroundColor: "#ffffff",
           color: "#000000",
+          scrollBehavior: "smooth",
           "@media (prefers-color-scheme: dark)": {
             backgroundColor: "#0f172a",
             color: "#f8fafc",
@@ -146,6 +147,8 @@ export default {
           padding: "0",
           minWidth: "320px",
           minHeight: "100%",
+          overscrollBehavior: "contain",  // for windows
+          WebkitOverflowScrolling: "touch"  // for iOS
         },
         "#root": {
           minHeight: "100vh",
