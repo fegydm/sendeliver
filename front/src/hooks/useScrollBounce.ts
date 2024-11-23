@@ -3,34 +3,66 @@ import { useEffect } from 'react';
 
 const useScrollBounce = () => {
   useEffect(() => {
-    let lastScrollTop = 0;
-    let isAtTop = true;
+    let isAnimating = false;
+
+    // Preventívne nastavenie scrollu na 1px pri načítaní
+    window.scrollTo({
+      top: 1,
+      behavior: 'auto'
+    });
 
     const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-      // Kontrola či sme na vrchu
-      if (scrollTop === 0 && !isAtTop) {
-        isAtTop = true;
-        // Jednoduché posunutie dole a späť
-        window.requestAnimationFrame(() => {
-          document.body.style.transform = 'translateY(20px)';
-          setTimeout(() => {
-            document.body.style.transform = 'translateY(0)';
-            document.body.style.transition = 'transform 0.2s ease-out';
-          }, 50);
+      // Ak sme príliš blízko k vrchu (menej ako 1px), okamžite posunieme na 1px
+      if (currentScrollTop < 1) {
+        window.scrollTo({
+          top: 1,
+          behavior: 'auto'
         });
-      } else if (scrollTop > 0) {
-        isAtTop = false;
-        document.body.style.transition = '';
-        document.body.style.transform = '';
       }
 
-      lastScrollTop = scrollTop;
+      // Bounce efekt spustíme, keď sme veľmi blízko vrchu (ale nie na 0px)
+      if (currentScrollTop <= 1 && !isAnimating) {
+        isAnimating = true;
+
+        requestAnimationFrame(() => {
+          const content = document.body;
+          content.style.transform = 'translateY(7px)';  // Zmenšený odskok na 7px
+          content.style.transition = 'none';
+          
+          setTimeout(() => {
+            content.style.transform = 'translateY(0)';
+            content.style.transition = 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            setTimeout(() => {
+              content.style.transform = '';
+              content.style.transition = '';
+              isAnimating = false;
+            }, 400);
+          }, 50);
+        });
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Pridáme aj wheel event pre ešte rýchlejšiu reakciu
+    const handleWheel = (e: WheelEvent) => {
+      const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      if (currentScrollTop <= 1 && e.deltaY < 0) {
+        window.scrollTo({
+          top: 1,
+          behavior: 'auto'
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('wheel', handleWheel, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', handleWheel);
+    };
   }, []);
 };
 

@@ -2,8 +2,10 @@
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/home.page";
+import useScrollBounce from "./hooks/useScrollBounce";
 
 const App: React.FC = () => {
+  useScrollBounce();  // Pridaný hook
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const savedMode = localStorage.getItem("darkMode");
     return savedMode ? JSON.parse(savedMode) : false;
