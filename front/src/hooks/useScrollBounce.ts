@@ -28,7 +28,7 @@ const useScrollBounce = () => {
 
         requestAnimationFrame(() => {
           const content = document.body;
-          content.style.transform = 'translateY(7px)';  // Zmenšený odskok na 7px
+          content.style.transform = 'translateY(5px)';  // Zmenšený odskok na 5px
           content.style.transition = 'none';
           
           setTimeout(() => {
@@ -39,7 +39,7 @@ const useScrollBounce = () => {
               content.style.transform = '';
               content.style.transition = '';
               isAnimating = false;
-            }, 400);
+            }, 300);
           }, 50);
         });
       }
