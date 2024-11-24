@@ -25,11 +25,7 @@ type DotsColors = typeof colors.dots;
 const DOTS_COLORS = colors.dots;
 const DEFAULT_COLOR = DOTS_COLORS.inactive;
 
-// Mapovanie farieb na typy
-const COLOR_MAP: Record<
-  Exclude<keyof DotsColors, "inactive">,
-  SelectionType
-> = {
+const COLOR_MAP: Record<Exclude<keyof DotsColors, "inactive">, SelectionType> = {
   client: "client",
   forwarder: "forwarder",
   carrier: "carrier",
@@ -49,34 +45,32 @@ const DotsModal: React.FC<DotsModalProps> = ({
     let initialTop: TopRowType = null;
     let initialBottom: BottomRowType = null;
 
-    // Hľadáme aktívnu farbu v hornom rade
-    const activeTopColor = initialTopDots.find(
+    // Kontrola horného radu
+    const activeTopIndex = initialTopDots.findIndex(
       (color) => color !== DEFAULT_COLOR
     );
-    if (activeTopColor) {
-      const colorKey = Object.entries(DOTS_COLORS).find(
-        ([_, value]) => value === activeTopColor
+    if (activeTopIndex !== -1) {
+      const colorEntries = Object.entries(DOTS_COLORS);
+      const colorKey = colorEntries.find(
+        ([_, value]) => value === initialTopDots[activeTopIndex]
       )?.[0] as keyof typeof COLOR_MAP | undefined;
-      if (
-        colorKey &&
-        ["client", "forwarder", "carrier"].includes(COLOR_MAP[colorKey])
-      ) {
+
+      if (colorKey && ["client", "forwarder", "carrier"].includes(COLOR_MAP[colorKey])) {
         initialTop = COLOR_MAP[colorKey] as TopRowType;
       }
     }
 
-    // Hľadáme aktívnu farbu v spodnom rade
-    const activeBottomColor = initialBottomDots.find(
+    // Kontrola spodného radu
+    const activeBottomIndex = initialBottomDots.findIndex(
       (color) => color !== DEFAULT_COLOR
     );
-    if (activeBottomColor) {
-      const colorKey = Object.entries(DOTS_COLORS).find(
-        ([_, value]) => value === activeBottomColor
+    if (activeBottomIndex !== -1) {
+      const colorEntries = Object.entries(DOTS_COLORS);
+      const colorKey = colorEntries.find(
+        ([_, value]) => value === initialBottomDots[activeBottomIndex]
       )?.[0] as keyof typeof COLOR_MAP | undefined;
-      if (
-        colorKey &&
-        ["anonymous", "cookies", "registered"].includes(COLOR_MAP[colorKey])
-      ) {
+
+      if (colorKey && ["anonymous", "cookies", "registered"].includes(COLOR_MAP[colorKey])) {
         initialBottom = COLOR_MAP[colorKey] as BottomRowType;
       }
     }
@@ -84,11 +78,10 @@ const DotsModal: React.FC<DotsModalProps> = ({
     return { initialTop, initialBottom };
   };
 
-  const { initialTop, initialBottom } = getInitialSelection();
-  const [selectedTop, setSelectedTop] = React.useState<TopRowType>(initialTop);
-  const [selectedBottom, setSelectedBottom] =
-    React.useState<BottomRowType>(initialBottom);
+  const [selectedTop, setSelectedTop] = React.useState<TopRowType>(null);
+  const [selectedBottom, setSelectedBottom] = React.useState<BottomRowType>(null);
 
+  // Inicializácia a update pri zmene props
   React.useEffect(() => {
     if (isOpen) {
       const { initialTop, initialBottom } = getInitialSelection();
@@ -99,12 +92,19 @@ const DotsModal: React.FC<DotsModalProps> = ({
 
   const handleSelection = (type: SelectionType) => {
     if (["client", "forwarder", "carrier"].includes(type)) {
-      setSelectedTop(type as TopRowType);
-      onSelectionChange(type as TopRowType, selectedBottom);
+      const newTop = type as TopRowType;
+      setSelectedTop(newTop);
+      onSelectionChange(newTop, selectedBottom);
     } else {
-      setSelectedBottom(type as BottomRowType);
-      onSelectionChange(selectedTop, type as BottomRowType);
+      const newBottom = type as BottomRowType;
+      setSelectedBottom(newBottom);
+      onSelectionChange(selectedTop, newBottom);
     }
+  };
+
+  const handleApply = () => {
+    onSelectionChange(selectedTop, selectedBottom);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -131,7 +131,6 @@ const DotsModal: React.FC<DotsModalProps> = ({
             </h2>
 
             <div className="space-y-6">
-              {/* Top Row - Role */}
               <div>
                 <h3 className="font-semibold mb-3">Select Role:</h3>
                 <div className="flex justify-center gap-8">
@@ -160,7 +159,6 @@ const DotsModal: React.FC<DotsModalProps> = ({
                 </div>
               </div>
 
-              {/* Bottom Row - Status */}
               <div>
                 <h3 className="font-semibold mb-3">Select Status:</h3>
                 <div className="flex justify-center gap-8">
@@ -198,7 +196,7 @@ const DotsModal: React.FC<DotsModalProps> = ({
                 Cancel
               </button>
               <button
-                onClick={onClose}
+                onClick={handleApply}
                 className="px-4 py-2 bg-navbar-light-button-bg hover:bg-navbar-light-button-hover 
                          text-navbar-light-button-text dark:bg-navbar-dark-button-bg 
                          dark:hover:bg-navbar-dark-button-hover dark:text-navbar-dark-button-text 

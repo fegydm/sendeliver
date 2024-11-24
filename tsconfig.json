@@ -14,7 +14,14 @@
       "@back/*": ["back/src/*"],
       "@shared/*": ["shared/*"],
       "@front/*": ["front/src/*"],
-      "@tw": ["front/tailwind.config.ts"]
+      "@tw": ["front/tailwind.config.ts"],
+      "@components/*": ["front/src/components/*"],
+      "@constants/*": ["front/src/constants/*"],
+      "@modals/*": ["front/src/components/modals/*"],
+      "@navbars/*": ["front/src/components/navbars/*"],
+      "@hooks/*": ["front/src/hooks/*"],
+      "@types/*": ["front/src/types/*"],
+      "@utils/*": ["front/src/utils/*"]
     },
     "rootDir": ".",
     "outDir": "./back/dist",
@@ -34,15 +41,16 @@
     "checkJs": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "typeRoots": [
+      "node_modules/@types",
+      "front/src/types" 
+    ]
   },
   "include": [
-    "back/src/**/*",
-    "back/src/configs/**/*",
-    "shared/**/*",
-    "back/**/*.json",
-    "front/tailwind.config.ts",
-    "front"
+    "back",
+    "front",
+    "shared",
   ],
   "exclude": [
     "**/node_modules",
