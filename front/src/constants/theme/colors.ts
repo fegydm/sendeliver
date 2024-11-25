@@ -1,5 +1,5 @@
 // front/src/constants/theme/colors.ts
-export const TAILWIND_COLORS = {
+export const TWColor = {
   slate: true,
   gray: true,
   zinc: true,
@@ -24,6 +24,8 @@ export const TAILWIND_COLORS = {
   rose: true,
 } as const;
 
-export const CUSTOM_COLORS: Record<string, string> = {
-  // zatiaľ prázdne, budeme pridávať podľa potreby
-};
+export const CSColor: Record<string, string> = {
+  magenta: generateShades("#fce4f0", "#8b0046"),
+  skyBlue: generateShades("#e6f7ff", "#003666"),
+  appleGreen: generateShades("#e8fae6", "#1a5d1a"),
+} as const;

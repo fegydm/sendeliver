@@ -5,13 +5,7 @@ import ColorPaletteModal from "@components/modals/color-palette-modal.component"
 import { Switch } from "@components/ui/switch";
 
 const PageFooter: React.FC = () => {
-  const [languageMode, setLanguageMode] = useState<boolean>(false);
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
-
-  const toggleLanguageMode = () => {
-    setLanguageMode((prevMode) => !prevMode);
-    console.log(`Language Mode: ${languageMode ? "Yes" : "No"}`);
-  };
 
   const toggleColorPalette = () => {
     setIsColorPaletteOpen((prevState) => !prevState);
@@ -20,14 +14,14 @@ const PageFooter: React.FC = () => {
   return (
     <footer className="relative w-full bg-footer-light dark:bg-footer-dark text-footer-light dark:text-footer-dark py-4">
       <div className="max-w-content mx-auto px-container">
-        {/* Switch Row */}
+        {/* Switcher Row */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Switch
               defaultValue={false}
-              onChange={(value) => console.log(`Switch value: ${value}`)}
+              onChange={(value) => console.log(`Switcher value: ${value}`)}
             />
-            <span className="text-sm font-medium">Custom Switch</span>
+            <span className="text-sm font-medium">Custom Switcher</span>
           </div>
           <div className="flex justify-center w-full">
             <div className="flex gap-6">
@@ -68,15 +62,6 @@ const PageFooter: React.FC = () => {
                 <FaInstagram size={24} />
               </a>
             </div>
-          </div>
-        </div>
-
-        {/* Language Mode Row */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 whitespace-nowrap">
-            <span className="text-sm font-medium">Language Mode:</span>
-            <Switch defaultValue={languageMode} onChange={toggleLanguageMode} />
-            <span className="text-sm">{languageMode ? "Yes" : "No"}</span>
           </div>
         </div>
 
