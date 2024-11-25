@@ -19,6 +19,7 @@
     "concurrently": "^9.1.0"
   },
   "dependencies": {
-    "normalize.css": "^8.0.1"
+    "normalize.css": "^8.0.1",
+    "react-hot-toast": "^2.4.1"
   }
 }
