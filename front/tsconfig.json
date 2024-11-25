@@ -1,3 +1,4 @@
+// ./front/tsconfig.json
 {
   "compilerOptions": {
     "target": "es2022",
@@ -11,20 +12,18 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@back/*": ["back/src/*"],
-      "@shared/*": ["shared/*"],
-      "@front/*": ["front/src/*"],
-      "@tw": ["front/tailwind.config.ts"],
-      "@components/*": ["front/src/components/*"],
-      "@constants/*": ["front/src/constants/*"],
-      "@modals/*": ["front/src/components/modals/*"],
-      "@navbars/*": ["front/src/components/navbars/*"],
-      "@hooks/*": ["front/src/hooks/*"],
-      "@types/*": ["front/src/types/*"],
-      "@utils/*": ["front/src/utils/*"]
+      "@components/*": ["src/components/*"],
+      "@constants/*": ["src/constants/*"],
+      "@modals/*": ["src/components/modals/*"],
+      "@navbars/*": ["src/components/navbars/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@types/*": ["src/types/*"],
+      "@types": ["src/types/index"],
+      "@utils/*": ["src/utils/*"],
+      "@tw": ["tailwind.config.ts"]
     },
-    "rootDir": ".",
-    "outDir": "./back/dist",
+    "rootDir": "src",
+    "outDir": "dist",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -44,13 +43,11 @@
     "skipLibCheck": true,
     "typeRoots": [
       "node_modules/@types",
-      "front/src/types" 
+      "src/types"
     ]
   },
   "include": [
-    "back",
-    "front",
-    "shared",
+    "src"
   ],
   "exclude": [
     "**/node_modules",
@@ -60,11 +57,5 @@
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "**/*.test.tsx"
-  ],
-  "ts-node": {
-    "transpileOnly": true,
-    "compilerOptions": {
-      "module": "NodeNext"
-    }
-  }
+  ]
 }

@@ -1,4 +1,4 @@
-// shared/constants/api-endpoints.ts
+// back/src/constants/api-endpoints.ts
 export const API_ENDPOINTS = {
   AI: {
     CHAT: "/api/ai/chat",

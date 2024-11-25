@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "es2022", // Moderný JavaScript štandard
+    "module": "esnext", // Používať ESM
+    "moduleResolution": "node", // Node.js kompatibilita
+    "lib": ["es2022"], // Moderné knižnice
+    "outDir": "dist", // Výstupný priečinok
+    "rootDir": "src", // Koreňový priečinok zdrojových súborov
+    "strict": true, // Povolený prísny režim
+    "esModuleInterop": true, // Kompatibilita s CommonJS
+    "allowSyntheticDefaultImports": true, // Povolenie syntetických importov
+    "resolveJsonModule": true, // Import JSON súborov
+    "skipLibCheck": true, // Preskakovanie kontroly knižníc
+    "forceConsistentCasingInFileNames": true, // Konzistentné veľkosti písmen
+    "experimentalDecorators": true, // Povolenie dekorátorov
+    "emitDecoratorMetadata": true, // Generovanie metadát pre dekorátory
+    "baseUrl": "./", // Základná cesta pre aliasy
+    "paths": {
+      "@types/*": ["src/types/*"] // Alias pre typy
+    },
+    "typeRoots": [
+      "./node_modules/@types", // Predvolené typy
+      "./src/types" // Vlastné typy
+    ]
+  },
+  "include": ["src"], // Zahrň len zdrojové súbory
+  "exclude": [
+    "**/node_modules", // Ignorovať závislosti
+    "**/dist", // Ignorovať výstupné súbory
+    "**/build", // Ignorovať build priečinok
+    "**/*.test.ts", // Ignorovať testy
+    "**/*.spec.ts" // Ignorovať testy
+  ]
+}

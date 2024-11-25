@@ -1,3 +1,3 @@
-// shared/types/index.ts
+// back/src/types/index.ts
 export * from "./ai.types";
 export * from "./transport.types";

@@ -5,7 +5,7 @@
   "scripts": {
     "start": "npx tsx src/server.ts",
     "dev": "cross-env NODE_ENV=development tsx watch src/server.ts",
-    "build": "tsoa spec && tsoa routes && tsc --project ../tsconfig.json",
+    "build": "tsoa spec && tsoa routes && tsc --project tsconfig.json",
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",
     "test": "jest",
     "test:watch": "jest --watch",

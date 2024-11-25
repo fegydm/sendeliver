@@ -1,4 +1,4 @@
-// shared/utils/formatters.ts
+// back/src/utils/formatters.ts
 export const formatPrice = (
   amount: number,
   currency: string = "EUR"

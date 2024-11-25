@@ -1,18 +1,17 @@
 // ./front/src/components/modals/dots-modal.component.tsx
 import React from "react";
 import { FaTimes } from "react-icons/fa";
-import colors from "@shared/constants/colors";
+import colors from "@constants/colors";
+import type { TopRowType, BottomRowType, DotsArray, DotsColors, DotsColorValues } from "@types";
 
 interface DotsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectionChange: (top: TopRowType, bottom: BottomRowType) => void;
-  initialTopDots: string[];
-  initialBottomDots: string[];
+  initialTopDots: DotsArray;
+  initialBottomDots: DotsArray;
 }
 
-type TopRowType = "client" | "forwarder" | "carrier" | null;
-type BottomRowType = "anonymous" | "cookies" | "registered" | null;
 type SelectionType =
   | "client"
   | "forwarder"
@@ -20,9 +19,8 @@ type SelectionType =
   | "anonymous"
   | "cookies"
   | "registered";
-type DotsColors = typeof colors.dots;
 
-const DOTS_COLORS = colors.dots;
+const DOTS_COLORS = colors.components.dots;
 const DEFAULT_COLOR = DOTS_COLORS.inactive;
 
 const COLOR_MAP: Record<Exclude<keyof DotsColors, "inactive">, SelectionType> = {
@@ -47,7 +45,7 @@ const DotsModal: React.FC<DotsModalProps> = ({
 
     // Kontrola horného radu
     const activeTopIndex = initialTopDots.findIndex(
-      (color) => color !== DEFAULT_COLOR
+      (color: DotsColorValues) => color !== DEFAULT_COLOR
     );
     if (activeTopIndex !== -1) {
       const colorEntries = Object.entries(DOTS_COLORS);
@@ -62,7 +60,7 @@ const DotsModal: React.FC<DotsModalProps> = ({
 
     // Kontrola spodného radu
     const activeBottomIndex = initialBottomDots.findIndex(
-      (color) => color !== DEFAULT_COLOR
+      (color: DotsColorValues) => color !== DEFAULT_COLOR
     );
     if (activeBottomIndex !== -1) {
       const colorEntries = Object.entries(DOTS_COLORS);
@@ -81,7 +79,6 @@ const DotsModal: React.FC<DotsModalProps> = ({
   const [selectedTop, setSelectedTop] = React.useState<TopRowType>(null);
   const [selectedBottom, setSelectedBottom] = React.useState<BottomRowType>(null);
 
-  // Inicializácia a update pri zmene props
   React.useEffect(() => {
     if (isOpen) {
       const { initialTop, initialBottom } = getInitialSelection();

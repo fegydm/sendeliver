@@ -8,11 +8,10 @@ export default defineConfig(
   ({ mode }): UserConfig => ({
     plugins: [react()],
     root: ".",
-    publicDir: "public", // upravené, lebo už sme vo front priečinku
+    publicDir: "public",
     build: {
-      outDir: "dist", // upravené, lebo už sme vo front priečinku
+      outDir: "dist",
       emptyOutDir: true,
-      // Build optimization
       target: "esnext",
       minify: mode === "production" ? "esbuild" : false,
       rollupOptions: {
@@ -23,7 +22,6 @@ export default defineConfig(
         },
       },
     },
-    // Dev server optimization
     server: {
       port: 3000,
       proxy: {
@@ -41,18 +39,26 @@ export default defineConfig(
         interval: 100,
       },
     },
-    // Resolve optimization
     resolve: {
       alias: {
+        // Existujúce základné aliasy
         "@back": path.resolve(__dirname, "../back/src"),
-        "@shared": path.resolve(__dirname, "../shared"),
         "@front": path.resolve(__dirname, "./src"),
+        // Nové aliasy pre front-end komponenty a moduly
+        "@components": path.resolve(__dirname, "./src/components"),
+        "@navbars": path.resolve(__dirname, "./src/components/navbars"),
+        "@modals": path.resolve(__dirname, "./src/components/modals"),
+        "@constants": path.resolve(__dirname, "./src/constants"),
+        "@types": path.resolve(__dirname, "./src/types"),
+        "@hooks": path.resolve(__dirname, "./src/hooks"),
+        "@utils": path.resolve(__dirname, "./src/utils"),
+        "@assets": path.resolve(__dirname, "./src/assets"),
+        "@layouts": path.resolve(__dirname, "./src/layouts"),
+        "@styles": path.resolve(__dirname, "./src/styles"),
       },
     },
-    // Dependencies optimization
     optimizeDeps: {
       include: ["react", "react-dom"],
-      exclude: ["@shared"],
     },
     esbuild: {
       logOverride: { "this-is-undefined-in-esm": "silent" },

@@ -6,7 +6,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
-import { router as aiRouter } from "@back/routes/ai.routes";
+import { router as aiRouter } from "./routes/ai.routes";
 
 // Remove punycode warning
 process.removeAllListeners("warning");

@@ -1,4 +1,4 @@
-// shared/types/transport.types.ts
+// back/src/types/transport.types.ts
 export interface Location {
   address: string;
   city: string;

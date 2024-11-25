@@ -1,7 +1,7 @@
 // ./back/src/services/ai.services.ts
 import { OpenAI } from "openai";
-import { AIRequest, AIResponse } from "@shared/types/ai.types";
-import { AI_CONFIG } from "@back/configs/openai.config";
+import { AIRequest, AIResponse } from "../types/";
+import { AI_CONFIG } from "../configs/openai.config";
 import path from "path";
 import { fileURLToPath } from "url";
 

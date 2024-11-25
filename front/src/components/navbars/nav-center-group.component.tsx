@@ -1,6 +1,6 @@
 // ./front/src/components/navbars/nav-center-group.component.tsx
 import { type FC } from "react";
-import type { NavCenterGroupProps } from "@front/types";
+import type { NavCenterGroupProps } from "../../types/dots";
 
 const NavCenterGroup: FC<NavCenterGroupProps> = ({
   onAvatarClick,

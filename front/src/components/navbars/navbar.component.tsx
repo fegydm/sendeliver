@@ -8,8 +8,8 @@ import LoginModal from "@modals/login-modal.component";
 import RegisterModal from "@modals/register-modal.component";
 import DotsModal from "@modals/dots-modal.component";
 import AvatarModal from "@modals/avatar-modal.component";
-import { components } from "@front/constants/colors/components";
-import type { TopRowType, BottomRowType, DotsArray } from "@front/types";
+import { components } from "@constants/colors/components";
+import type { TopRowType, BottomRowType, DotsArray } from "../../types/dots";
 
 type ModalType = 'about' | 'login' | 'register' | 'dots' | 'avatar' | null;
 
