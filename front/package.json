@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules front/dist front/front/dist"
   },
   "dependencies": {
     "lottie-web": "^5.12.2",

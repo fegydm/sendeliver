@@ -1,4 +1,3 @@
-// ./front/vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -7,10 +6,10 @@ import type { UserConfig } from "vite";
 export default defineConfig(
   ({ mode }): UserConfig => ({
     plugins: [react()],
-    root: ".",
-    publicDir: "public",
+    root: path.resolve(__dirname), // Nastav root explicitne na projektovú zložku
+    publicDir: path.resolve(__dirname, "public"), // Definuj cestu explicitne
     build: {
-      outDir: "dist",
+      outDir: path.resolve(__dirname, "dist"), // Uisti sa, že výstup je v správnej ceste
       emptyOutDir: true,
       target: "esnext",
       minify: mode === "production" ? "esbuild" : false,
@@ -41,10 +40,8 @@ export default defineConfig(
     },
     resolve: {
       alias: {
-        // Existujúce základné aliasy
         "@back": path.resolve(__dirname, "../back/src"),
         "@front": path.resolve(__dirname, "./src"),
-        // Nové aliasy pre front-end komponenty a moduly
         "@components": path.resolve(__dirname, "./src/components"),
         "@navbars": path.resolve(__dirname, "./src/components/navbars"),
         "@modals": path.resolve(__dirname, "./src/components/modals"),
