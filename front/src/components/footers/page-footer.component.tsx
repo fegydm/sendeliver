@@ -1,4 +1,4 @@
-// front/src/components/footers/page-footer.tsx
+// front/src/components/footers/page-footer.component.tsx
 import React, { useState } from "react";
 import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
 import ColorPaletteModal from "@components/modals/color-palette-modal.component";
@@ -23,7 +23,10 @@ const PageFooter: React.FC = () => {
         {/* Switch Row */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Switch />
+            <Switch
+              defaultValue={false}
+              onChange={(value) => console.log(`Switch value: ${value}`)}
+            />
             <span className="text-sm font-medium">Custom Switch</span>
           </div>
           <div className="flex justify-center w-full">
@@ -72,17 +75,7 @@ const PageFooter: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 whitespace-nowrap">
             <span className="text-sm font-medium">Language Mode:</span>
-            <button
-              onClick={toggleLanguageMode}
-              className={`relative w-10 h-6 bg-gray-300 dark:bg-gray-700 rounded-full transition-colors`}
-              aria-label="Toggle Language Mode"
-            >
-              <span
-                className={`absolute top-1 right-1 w-4 h-4 rounded-full shadow transition-transform ${
-                  languageMode ? "bg-green-500" : "bg-gray-400"
-                }`}
-              />
-            </button>
+            <Switch defaultValue={languageMode} onChange={toggleLanguageMode} />
             <span className="text-sm">{languageMode ? "Yes" : "No"}</span>
           </div>
         </div>
