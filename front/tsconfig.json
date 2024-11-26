@@ -20,7 +20,8 @@
       "@types/*": ["src/types/*"],
       "@types": ["src/types/index"],
       "@utils/*": ["src/utils/*"],
-      "@tw": ["tailwind.config.ts"]
+      "@tw": ["tailwind.config.ts"],
+      "@/*": ["./src/*"]
     },
     "rootDir": "src",
     "outDir": "dist",

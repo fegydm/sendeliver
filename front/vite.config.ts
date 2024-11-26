@@ -52,6 +52,7 @@ export default defineConfig(
         "@assets": path.resolve(__dirname, "./src/assets"),
         "@layouts": path.resolve(__dirname, "./src/layouts"),
         "@styles": path.resolve(__dirname, "./src/styles"),
+        "@": path.resolve(__dirname, "./src/components/ui")
       },
     },
     optimizeDeps: {
