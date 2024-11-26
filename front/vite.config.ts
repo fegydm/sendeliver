@@ -40,19 +40,7 @@ export default defineConfig(
     },
     resolve: {
       alias: {
-        "@back": path.resolve(__dirname, "../back/src"),
-        "@front": path.resolve(__dirname, "./src"),
-        "@components": path.resolve(__dirname, "./src/components"),
-        "@navbars": path.resolve(__dirname, "./src/components/navbars"),
-        "@modals": path.resolve(__dirname, "./src/components/modals"),
-        "@constants": path.resolve(__dirname, "./src/constants"),
-        "@types": path.resolve(__dirname, "./src/types"),
-        "@hooks": path.resolve(__dirname, "./src/hooks"),
-        "@utils": path.resolve(__dirname, "./src/utils"),
-        "@assets": path.resolve(__dirname, "./src/assets"),
-        "@layouts": path.resolve(__dirname, "./src/layouts"),
-        "@styles": path.resolve(__dirname, "./src/styles"),
-        "@": path.resolve(__dirname, "./src/components/ui")
+        "@": path.resolve(__dirname, "./src"),
       },
     },
     optimizeDeps: {

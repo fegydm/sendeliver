@@ -1,7 +1,7 @@
 // ./front/src/components/modals/ai-chat-modal.component.tsx
 import React, { useState } from "react";
-import AIChat from "../chat/ai-chat.component";
-import MapView from "../maps/map-view.component";
+import AIChat from "../sections/content/chat/ai-chat.component";
+import MapView from "../sections/content/maps/map-view.component";
 
 interface AIChatModalProps {
   onClose: () => void;

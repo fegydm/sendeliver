@@ -5,7 +5,7 @@ import SocialLinks from "./SocialLinks";
 import FooterMenu from "./FooterMenu";
 import ColorPaletteModalTrigger from "./ColorPaletteModalTrigger";
 import FooterCopyright from "./FooterCopyright";
-import ThemeSwitcher from "@components/ui/theme-switcher.component";
+import ThemeSwitcher from "@/components/ui/theme-switcher.component";
 
 const PageFooter: React.FC = () => {
   return (

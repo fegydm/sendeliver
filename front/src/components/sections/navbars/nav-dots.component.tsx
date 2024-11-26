@@ -1,6 +1,10 @@
 import { FC, useState } from "react";
-import DotsModal from "../modals/dots-modal.component";
-import type { NavDotsProps, TopRowType, BottomRowType } from "../../types/dots";
+import DotsModal from "../../modals/dots-modal.component";
+import type {
+  NavDotsProps,
+  TopRowType,
+  BottomRowType,
+} from "../../../types/dots";
 
 const NavDots: FC<NavDotsProps> = ({ topDots, bottomDots, onClick }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,17 +1,17 @@
 // ./front/src/pages/home.page.tsx
 import { useState } from "react";
-import Navigation from "../components/navbars/navbar.component";
-import PageBanner from "../components/banners/banner.component";
-import Content from "../components/content/content.component";
-import AISearchForm from "../components/search-forms/ai-search-form.component";
-import ManualSearchForm from "../components/search-forms/manual-search-form.component";
+import Navigation from "@/components/sections/navbars/navbar.component";
+import PageBanner from "@/components/sections/banners/banner.component";
+import Content from "@/components/sections/content/content.component";
+import AISearchForm from "@/components/sections/content/search-forms/ai-search-form.component";
+import ManualSearchForm from "@/components/sections/content/search-forms/manual-search-form.component";
 import ResultTable, {
   ClientResultData,
   CarrierResultData,
-} from "../components/results/result-table.component";
-import AIChatModal from "../components/modals/ai-chat-modal.component";
-import PageFooter from "../components/footers/page-footer.component";
-import FloatingButton from "../components/controllers/floating-button.component";
+} from "@/components/sections/content/results/result-table.component";
+import AIChatModal from "@/components/modals/ai-chat-modal.component";
+import PageFooter from "@/components/sections/footers/page-footer.component";
+import FloatingButton from "@/components/elements/floating-button.component";
 
 interface TransportData {
   pickupLocation: string;

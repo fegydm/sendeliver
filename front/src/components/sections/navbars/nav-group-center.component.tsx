@@ -1,6 +1,6 @@
 // ./front/src/components/navbars/nav-center-group.component.tsx
 import { type FC } from "react";
-import type { NavCenterGroupProps } from "../../types/dots";
+import type { NavCenterGroupProps } from "../../../types/dots";
 import NavDots from "./nav-dots.component";
 
 const NavCenterGroup: FC<NavCenterGroupProps> = ({

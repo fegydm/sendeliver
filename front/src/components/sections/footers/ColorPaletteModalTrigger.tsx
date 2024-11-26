@@ -1,7 +1,7 @@
 // front/src/components/footers/ColorPaletteModalTrigger.tsx
 
 import React, { useState } from "react";
-import ColorPaletteModal from "@components/modals/color-palette-modal.component";
+import ColorPaletteModal from "@/components/modals/color-palette-modal.component";
 
 const ColorPaletteModalTrigger: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);

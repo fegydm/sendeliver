@@ -1,6 +1,9 @@
-// ./front/src/components/modals/login-modal.component.tsx
+// components/modals/login-modal.component.tsx
 import React from "react";
 import { FaTimes } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Wrapper } from "@/components/ui/wrapper";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -8,88 +11,38 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Login logic here
+  };
+
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-modal-backdrop backdrop-blur-modal z-modalBackdrop" />
+    <Wrapper variant="modal">
+      <div className="relative p-6">
+        <Button variant="close" onClick={onClose} aria-label="Close modal">
+          <FaTimes size={20} />
+        </Button>
 
-      {/* Modal container */}
-      <div
-        style={{ top: "var(--modal-top-offset)" }}
-        className="fixed left-1/2 transform -translate-x-1/2 w-full max-w-modal mx-modal-sides z-modal"
-      >
-        <div
-          className="bg-modal-light-bg dark:bg-modal-dark-bg rounded-modal shadow-modal 
-                   max-h-[90vh] overflow-y-auto"
-        >
-          <div className="relative p-6">
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-1 hover:bg-modal-light-hover 
-                        dark:hover:bg-modal-dark-hover rounded-lg transition-colors duration-modal"
-              aria-label="Close modal"
-            >
-              <FaTimes size={20} />
-            </button>
+        <h2 className="text-modal-title font-bold mb-modal-gap">Login</h2>
 
-            {/* Modal title */}
-            <h2 className="text-modal-title font-bold mb-modal-gap">Login</h2>
+        <form className="space-y-modal-gap" onSubmit={handleSubmit}>
+          <Input type="email" label="Email" placeholder="your@email.com" />
 
-            {/* Login Form */}
-            <form
-              className="space-y-modal-gap"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <div>
-                <label className="block mb-2 text-modal-text">Email</label>
-                <input
-                  type="email"
-                  className="w-full px-3 py-2 border border-modal-light-border 
-                           dark:border-modal-dark-border rounded-lg 
-                           bg-modal-light-bg dark:bg-modal-dark-bg"
-                  placeholder="your@email.com"
-                />
-              </div>
+          <Input type="password" label="Password" placeholder="••••••••" />
 
-              <div>
-                <label className="block mb-2 text-modal-text">Password</label>
-                <input
-                  type="password"
-                  className="w-full px-3 py-2 border border-modal-light-border 
-                           dark:border-modal-dark-border rounded-lg 
-                           bg-modal-light-bg dark:bg-modal-dark-bg"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-modal-gap">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 hover:bg-modal-light-hover 
-                           dark:hover:bg-modal-dark-hover rounded-lg 
-                           transition-colors duration-modal"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-navbar-light-button-bg hover:bg-navbar-light-button-hover 
-                           text-navbar-light-button-text dark:bg-navbar-dark-button-bg 
-                           dark:hover:bg-navbar-dark-button-hover dark:text-navbar-dark-button-text 
-                           rounded-lg transition-colors duration-modal"
-                >
-                  Login
-                </button>
-              </div>
-            </form>
+          <div className="flex justify-end space-x-modal-gap">
+            <Button variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit">
+              Login
+            </Button>
           </div>
-        </div>
+        </form>
       </div>
-    </>
+    </Wrapper>
   );
 };
 

@@ -1,5 +1,5 @@
-// ./front/tsconfig.json
 {
+  "name": "front/tsconfig",
   "compilerOptions": {
     "target": "es2022",
     "module": "esnext",
@@ -12,16 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@components/*": ["src/components/*"],
-      "@constants/*": ["src/constants/*"],
-      "@modals/*": ["src/components/modals/*"],
-      "@navbars/*": ["src/components/navbars/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@types/*": ["src/types/*"],
-      "@types": ["src/types/index"],
-      "@utils/*": ["src/utils/*"],
-      "@tw": ["tailwind.config.ts"],
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"]
     },
     "rootDir": "src",
     "outDir": "dist",
@@ -42,14 +33,9 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "typeRoots": [
-      "node_modules/@types",
-      "src/types"
-    ]
+    "typeRoots": ["node_modules/@types", "src/types"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "exclude": [
     "**/node_modules",
     "**/dist",

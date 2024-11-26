@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
-import colors from "@constants/colors";
+import colors from "@/constants/colors";
 
 // Definícia typov
 type TopRowType = "client" | "forwarder" | "carrier" | null;
@@ -27,6 +27,27 @@ interface DotsModalProps {
 const DOTS_COLORS = colors.components.dots;
 const DEFAULT_COLOR = DOTS_COLORS.inactive;
 
+// Helper functions
+const extractTopSelection = (dots: DotsArray): TopRowType => {
+  const keys: Array<"client" | "forwarder" | "carrier"> = [
+    "client",
+    "forwarder",
+    "carrier",
+  ];
+  const activeIndex = dots.findIndex((color) => color !== DEFAULT_COLOR);
+  return activeIndex !== -1 ? keys[activeIndex] : null;
+};
+
+const extractBottomSelection = (dots: DotsArray): BottomRowType => {
+  const keys: Array<"anonymous" | "cookies" | "registered"> = [
+    "anonymous",
+    "cookies",
+    "registered",
+  ];
+  const activeIndex = dots.findIndex((color) => color !== DEFAULT_COLOR);
+  return activeIndex !== -1 ? keys[activeIndex] : null;
+};
+
 const DotsModal: React.FC<DotsModalProps> = ({
   isOpen,
   onClose,
@@ -47,37 +68,20 @@ const DotsModal: React.FC<DotsModalProps> = ({
     }
   }, [isOpen, initialTopDots, initialBottomDots]);
 
-  const extractTopSelection = (dots: DotsArray): TopRowType => {
-    const keys: Array<"client" | "forwarder" | "carrier"> = [
-      "client",
-      "forwarder",
-      "carrier",
-    ];
-    const activeIndex = dots.findIndex((color) => color !== DEFAULT_COLOR);
-    return activeIndex !== -1 ? keys[activeIndex] : null;
-  };
-
-  const extractBottomSelection = (dots: DotsArray): BottomRowType => {
-    const keys: Array<"anonymous" | "cookies" | "registered"> = [
-      "anonymous",
-      "cookies",
-      "registered",
-    ];
-    const activeIndex = dots.findIndex((color) => color !== DEFAULT_COLOR);
-    return activeIndex !== -1 ? keys[activeIndex] : null;
-  };
-
   const handleSelection = (type: string) => {
+    let newTop = selectedTop;
+    let newBottom = selectedBottom;
+
     if (type === "client" || type === "forwarder" || type === "carrier") {
-      setSelectedTop(type as TopRowType);
-      onSelectionChange(type as TopRowType, selectedBottom);
+      newTop = type as TopRowType;
+      setSelectedTop(newTop);
     } else if (
       type === "anonymous" ||
       type === "cookies" ||
       type === "registered"
     ) {
-      setSelectedBottom(type as BottomRowType);
-      onSelectionChange(selectedTop, type as BottomRowType);
+      newBottom = type as BottomRowType;
+      setSelectedBottom(newBottom);
     }
   };
 

@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist node_modules front/dist front/front/dist"
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.4",
