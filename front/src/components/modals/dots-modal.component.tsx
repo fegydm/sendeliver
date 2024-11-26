@@ -1,8 +1,20 @@
-// ./front/src/components/modals/dots-modal.component.tsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import colors from "@constants/colors";
-import type { TopRowType, BottomRowType, DotsArray, DotsColors, DotsColorValues } from "@types";
+
+// Definícia typov
+type TopRowType = "client" | "forwarder" | "carrier" | null;
+type BottomRowType = "anonymous" | "cookies" | "registered" | null;
+type DotsArray = string[];
+type DotsColors = {
+  client: string;
+  forwarder: string;
+  carrier: string;
+  anonymous: string;
+  cookies: string;
+  registered: string;
+  inactive: string;
+};
 
 interface DotsModalProps {
   isOpen: boolean;
@@ -12,25 +24,8 @@ interface DotsModalProps {
   initialBottomDots: DotsArray;
 }
 
-type SelectionType =
-  | "client"
-  | "forwarder"
-  | "carrier"
-  | "anonymous"
-  | "cookies"
-  | "registered";
-
 const DOTS_COLORS = colors.components.dots;
 const DEFAULT_COLOR = DOTS_COLORS.inactive;
-
-const COLOR_MAP: Record<Exclude<keyof DotsColors, "inactive">, SelectionType> = {
-  client: "client",
-  forwarder: "forwarder",
-  carrier: "carrier",
-  anonymous: "anonymous",
-  cookies: "cookies",
-  registered: "registered",
-};
 
 const DotsModal: React.FC<DotsModalProps> = ({
   isOpen,
@@ -39,69 +34,58 @@ const DotsModal: React.FC<DotsModalProps> = ({
   initialTopDots,
   initialBottomDots,
 }) => {
-  const getInitialSelection = () => {
-    let initialTop: TopRowType = null;
-    let initialBottom: BottomRowType = null;
+  const [selectedTop, setSelectedTop] = useState<TopRowType>(null);
+  const [selectedBottom, setSelectedBottom] = useState<BottomRowType>(null);
 
-    // Kontrola horného radu
-    const activeTopIndex = initialTopDots.findIndex(
-      (color: DotsColorValues) => color !== DEFAULT_COLOR
-    );
-    if (activeTopIndex !== -1) {
-      const colorEntries = Object.entries(DOTS_COLORS);
-      const colorKey = colorEntries.find(
-        ([_, value]) => value === initialTopDots[activeTopIndex]
-      )?.[0] as keyof typeof COLOR_MAP | undefined;
-
-      if (colorKey && ["client", "forwarder", "carrier"].includes(COLOR_MAP[colorKey])) {
-        initialTop = COLOR_MAP[colorKey] as TopRowType;
-      }
-    }
-
-    // Kontrola spodného radu
-    const activeBottomIndex = initialBottomDots.findIndex(
-      (color: DotsColorValues) => color !== DEFAULT_COLOR
-    );
-    if (activeBottomIndex !== -1) {
-      const colorEntries = Object.entries(DOTS_COLORS);
-      const colorKey = colorEntries.find(
-        ([_, value]) => value === initialBottomDots[activeBottomIndex]
-      )?.[0] as keyof typeof COLOR_MAP | undefined;
-
-      if (colorKey && ["anonymous", "cookies", "registered"].includes(COLOR_MAP[colorKey])) {
-        initialBottom = COLOR_MAP[colorKey] as BottomRowType;
-      }
-    }
-
-    return { initialTop, initialBottom };
-  };
-
-  const [selectedTop, setSelectedTop] = React.useState<TopRowType>(null);
-  const [selectedBottom, setSelectedBottom] = React.useState<BottomRowType>(null);
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
-      const { initialTop, initialBottom } = getInitialSelection();
-      setSelectedTop(initialTop);
-      setSelectedBottom(initialBottom);
+      const topResult = extractTopSelection(initialTopDots);
+      const bottomResult = extractBottomSelection(initialBottomDots);
+
+      setSelectedTop(topResult);
+      setSelectedBottom(bottomResult);
     }
   }, [isOpen, initialTopDots, initialBottomDots]);
 
-  const handleSelection = (type: SelectionType) => {
-    if (["client", "forwarder", "carrier"].includes(type)) {
-      const newTop = type as TopRowType;
-      setSelectedTop(newTop);
-      onSelectionChange(newTop, selectedBottom);
-    } else {
-      const newBottom = type as BottomRowType;
-      setSelectedBottom(newBottom);
-      onSelectionChange(selectedTop, newBottom);
+  const extractTopSelection = (dots: DotsArray): TopRowType => {
+    const keys: Array<"client" | "forwarder" | "carrier"> = [
+      "client",
+      "forwarder",
+      "carrier",
+    ];
+    const activeIndex = dots.findIndex((color) => color !== DEFAULT_COLOR);
+    return activeIndex !== -1 ? keys[activeIndex] : null;
+  };
+
+  const extractBottomSelection = (dots: DotsArray): BottomRowType => {
+    const keys: Array<"anonymous" | "cookies" | "registered"> = [
+      "anonymous",
+      "cookies",
+      "registered",
+    ];
+    const activeIndex = dots.findIndex((color) => color !== DEFAULT_COLOR);
+    return activeIndex !== -1 ? keys[activeIndex] : null;
+  };
+
+  const handleSelection = (type: string) => {
+    if (type === "client" || type === "forwarder" || type === "carrier") {
+      setSelectedTop(type as TopRowType);
+      onSelectionChange(type as TopRowType, selectedBottom);
+    } else if (
+      type === "anonymous" ||
+      type === "cookies" ||
+      type === "registered"
+    ) {
+      setSelectedBottom(type as BottomRowType);
+      onSelectionChange(selectedTop, type as BottomRowType);
     }
   };
 
   const handleApply = () => {
-    onSelectionChange(selectedTop, selectedBottom);
-    onClose();
+    if (selectedTop !== null && selectedBottom !== null) {
+      onSelectionChange(selectedTop, selectedBottom);
+      onClose();
+    }
   };
 
   if (!isOpen) return null;
@@ -128,61 +112,27 @@ const DotsModal: React.FC<DotsModalProps> = ({
             </h2>
 
             <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold mb-3">Select Role:</h3>
-                <div className="flex justify-center gap-8">
-                  {[
-                    { id: "client", label: "Client" },
-                    { id: "forwarder", label: "Forwarder" },
-                    { id: "carrier", label: "Carrier" },
-                  ].map(({ id, label }) => (
-                    <button
-                      key={id}
-                      onClick={() => handleSelection(id as SelectionType)}
-                      className="flex flex-col items-center gap-2 w-[120px]"
-                    >
-                      <div
-                        className="w-4 h-4 rounded-full transition-colors duration-modal"
-                        style={{
-                          backgroundColor:
-                            selectedTop === id
-                              ? DOTS_COLORS[id as keyof typeof DOTS_COLORS]
-                              : DEFAULT_COLOR,
-                        }}
-                      />
-                      <span className="text-sm text-center">{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <SelectionGroup
+                title="Select Role:"
+                options={[
+                  { id: "client", label: "Client" },
+                  { id: "forwarder", label: "Forwarder" },
+                  { id: "carrier", label: "Carrier" },
+                ]}
+                selected={selectedTop}
+                onSelect={handleSelection}
+              />
 
-              <div>
-                <h3 className="font-semibold mb-3">Select Status:</h3>
-                <div className="flex justify-center gap-8">
-                  {[
-                    { id: "anonymous", label: "Anonymous" },
-                    { id: "cookies", label: "With Cookies" },
-                    { id: "registered", label: "Registered" },
-                  ].map(({ id, label }) => (
-                    <button
-                      key={id}
-                      onClick={() => handleSelection(id as SelectionType)}
-                      className="flex flex-col items-center gap-2 w-[120px]"
-                    >
-                      <div
-                        className="w-4 h-4 rounded-full transition-colors duration-modal"
-                        style={{
-                          backgroundColor:
-                            selectedBottom === id
-                              ? DOTS_COLORS[id as keyof typeof DOTS_COLORS]
-                              : DEFAULT_COLOR,
-                        }}
-                      />
-                      <span className="text-sm text-center">{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <SelectionGroup
+                title="Select Status:"
+                options={[
+                  { id: "anonymous", label: "Anonymous" },
+                  { id: "cookies", label: "With Cookies" },
+                  { id: "registered", label: "Registered" },
+                ]}
+                selected={selectedBottom}
+                onSelect={handleSelection}
+              />
             </div>
 
             <div className="flex justify-end space-x-modal-gap mt-6">
@@ -195,9 +145,9 @@ const DotsModal: React.FC<DotsModalProps> = ({
               <button
                 onClick={handleApply}
                 className="px-4 py-2 bg-navbar-light-button-bg hover:bg-navbar-light-button-hover 
-                         text-navbar-light-button-text dark:bg-navbar-dark-button-bg 
-                         dark:hover:bg-navbar-dark-button-hover dark:text-navbar-dark-button-text 
-                         rounded-lg transition-colors duration-modal"
+                        text-navbar-light-button-text dark:bg-navbar-dark-button-bg 
+                        dark:hover:bg-navbar-dark-button-hover dark:text-navbar-dark-button-text 
+                        rounded-lg transition-colors duration-modal"
               >
                 Apply
               </button>
@@ -208,5 +158,43 @@ const DotsModal: React.FC<DotsModalProps> = ({
     </>
   );
 };
+
+interface SelectionGroupProps {
+  title: string;
+  options: { id: string; label: string }[];
+  selected: string | null;
+  onSelect: (id: string) => void;
+}
+
+const SelectionGroup: React.FC<SelectionGroupProps> = ({
+  title,
+  options,
+  selected,
+  onSelect,
+}) => (
+  <div>
+    <h3 className="font-semibold mb-3">{title}</h3>
+    <div className="flex justify-center gap-8">
+      {options.map(({ id, label }) => (
+        <button
+          key={id}
+          onClick={() => onSelect(id)}
+          className="flex flex-col items-center gap-2 w-[120px]"
+        >
+          <div
+            className="w-4 h-4 rounded-full transition-colors duration-modal"
+            style={{
+              backgroundColor:
+                selected === id
+                  ? DOTS_COLORS[id as keyof typeof DOTS_COLORS]
+                  : DEFAULT_COLOR,
+            }}
+          />
+          <span className="text-sm text-center">{label}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+);
 
 export default DotsModal;

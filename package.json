@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "normalize.css": "^8.0.1",
-    "react-hot-toast": "^2.4.1"
+    "react-hot-toast": "^2.4.1",
+    "typescript": "^5.7.2"
   }
 }

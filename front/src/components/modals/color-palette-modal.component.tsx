@@ -1,28 +1,34 @@
 // front/src/components/modals/color-palette-modal.component.tsx
 import React, { useState } from "react";
-import { TAILWIND_COLORS } from "@constants/theme/colors";
-import { FaTimes } from "react-icons/fa";
-import Toast, { Toaster } from "react-hot-toast";
 
-interface ColorPaletteModalProps {
+interface CircularPaletteModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ColorPaletteModal: React.FC<ColorPaletteModalProps> = ({
+function generateShadesFromColor(color: string): string[] {
+  const baseHue = parseInt(color.slice(1), 16) % 360; // Výpočet Hue z HEX
+  return Array.from({ length: 10 }, (_, i) => {
+    const lightness = 10 + i * 9; // Rozsah svetlosti od 10% po 100%
+    return `hsl(${baseHue}, 70%, ${lightness}%)`;
+  });
+}
+
+const CircularPaletteModal: React.FC<CircularPaletteModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const [selectedColor, setSelectedColor] = useState("#ff5733"); // Defaultná farba
+  const shades = generateShadesFromColor(selectedColor);
+
   if (!isOpen) return null;
 
-  const copyColorToClipboard = (color: string) => {
-    navigator.clipboard.writeText(color);
-    Toast.success(`Copied ${color} to clipboard!`);
+  const handleColorPick = (hue: number) => {
+    setSelectedColor(`hsl(${hue}, 70%, 50%)`);
   };
 
   return (
     <>
-      <Toaster />
       {/* Overlay */}
       <div className="fixed inset-0 bg-modal-backdrop backdrop-blur-modal z-modalBackdrop" />
 
@@ -43,50 +49,64 @@ const ColorPaletteModal: React.FC<ColorPaletteModalProps> = ({
                         dark:hover:bg-modal-dark-hover rounded-lg transition-colors duration-modal"
               aria-label="Close modal"
             >
-              <FaTimes size={20} />
+              &times;
             </button>
 
             {/* Modal title */}
             <h2 className="text-modal-title font-bold mb-modal-gap">
-              Tailwind Color Palette
+              Choose Color
             </h2>
 
-            {/* Color Grid */}
-            <div className="grid grid-cols-6 gap-4 mb-modal-gap">
-              {Object.keys(TAILWIND_COLORS).map((colorGroup) => (
-                <div key={colorGroup} className="space-y-2">
-                  <h3 className="font-medium text-sm">{colorGroup}</h3>
-                  {[50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map(
-                    (shade) => (
-                      <div
-                        key={`${colorGroup}-${shade}`}
-                        className={`w-full h-10 rounded cursor-pointer hover:opacity-80`}
-                        style={{
-                          backgroundColor: `var(--tw-color-${colorGroup}-${shade})`,
-                        }}
-                        onClick={() =>
-                          copyColorToClipboard(
-                            `var(--tw-color-${colorGroup}-${shade})`
-                          )
-                        }
-                      >
-                        <span className="sr-only">{`var(--tw-color-${colorGroup}-${shade})`}</span>
-                      </div>
-                    )
-                  )}
-                </div>
+            {/* Circular Palette */}
+            <div className="relative w-64 h-64 mx-auto">
+              {Array.from({ length: 360 }, (_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-3 h-3 rounded-full cursor-pointer"
+                  style={{
+                    backgroundColor: `hsl(${i}, 70%, 50%)`,
+                    transform: `translate(-50%, -50%) rotate(${i}deg) translate(120px)`,
+                    transformOrigin: "center",
+                  }}
+                  onClick={() => handleColorPick(i)}
+                ></div>
+              ))}
+            </div>
+
+            {/* Zobrazenie vybranej farby */}
+            <div
+              className="mt-4 w-40 h-40 mx-auto rounded shadow-lg border"
+              style={{ backgroundColor: selectedColor }}
+            ></div>
+
+            {/* Shades Grid */}
+            <div className="grid grid-cols-10 gap-2 mt-4">
+              {shades.map((shade, index) => (
+                <div
+                  key={index}
+                  className="w-10 h-10 rounded border shadow"
+                  style={{ backgroundColor: shade }}
+                ></div>
               ))}
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-modal-gap">
+            <div className="flex justify-end space-x-modal-gap mt-4">
               <button
                 onClick={onClose}
                 className="px-4 py-2 hover:bg-modal-light-hover 
                          dark:hover:bg-modal-dark-hover rounded-lg 
                          transition-colors duration-modal"
               >
-                Close
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-navbar-light-button-bg hover:bg-navbar-light-button-hover 
+                         text-navbar-light-button-text dark:bg-navbar-dark-button-bg 
+                         dark:hover:bg-navbar-dark-button-hover dark:text-navbar-dark-button-text 
+                         rounded-lg transition-colors duration-modal"
+              >
+                Save Changes
               </button>
             </div>
           </div>
@@ -96,4 +116,4 @@ const ColorPaletteModal: React.FC<ColorPaletteModalProps> = ({
   );
 };
 
-export default ColorPaletteModal;
+export default CircularPaletteModal;

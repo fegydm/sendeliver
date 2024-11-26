@@ -1,6 +1,7 @@
 // ./front/src/components/navbars/nav-center-group.component.tsx
 import { type FC } from "react";
 import type { NavCenterGroupProps } from "../../types/dots";
+import NavDots from "./nav-dots.component";
 
 const NavCenterGroup: FC<NavCenterGroupProps> = ({
   onAvatarClick,
@@ -13,6 +14,7 @@ const NavCenterGroup: FC<NavCenterGroupProps> = ({
   return (
     <div className="relative flex justify-center items-center w-full h-navbar">
       <div className="relative h-full">
+        {/* Avatar Button */}
         <button
           onClick={onAvatarClick}
           className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 
@@ -24,37 +26,16 @@ const NavCenterGroup: FC<NavCenterGroupProps> = ({
           <span className="text-base font-medium">A</span>
         </button>
 
-        <button
+        {/* Dots */}
+        <NavDots
+          topDots={topDots}
+          bottomDots={bottomDots}
           onClick={onDotsClick}
-          className="absolute right-[60px] top-1/2 -translate-y-1/2"
-        >
-          <div className="flex flex-col gap-1">
-            <div className="flex gap-1">
-              {topDots.map((color, index) => (
-                <div
-                  key={`top-${index}`}
-                  className="w-1.5 h-1.5 rounded-full transition-colors duration-modal"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-            <div className="flex gap-1">
-              {bottomDots.map((color, index) => (
-                <div
-                  key={`bottom-${index}`}
-                  className="w-1.5 h-1.5 rounded-full transition-colors duration-modal"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
-          </div>
-        </button>
+        />
 
+        {/* Login & Register Buttons */}
         <div className="absolute left-[60px] top-1/2 -translate-y-1/2 hidden lg:flex items-center space-x-4">
-          <button
-            onClick={onLoginClick}
-            className="group relative"
-          >
+          <button onClick={onLoginClick} className="group relative">
             <span className="text-base font-semibold whitespace-nowrap">
               Log&nbsp;In
             </span>
