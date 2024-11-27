@@ -1,5 +1,5 @@
-// ./front/tailwind.config.ts
 import formsPlugin from "@tailwindcss/forms";
+import animatePlugin from "tailwindcss-animate"; // Import pluginu namiesto require
 import colors, { base } from "./src/constants/colors";
 
 export default {
@@ -141,6 +141,7 @@ export default {
   },
   plugins: [
     formsPlugin,
+    animatePlugin, // Správny spôsob pridania pluginu
     function ({ addBase }: { addBase: Function }) {
       addBase({
         html: {
@@ -174,6 +175,5 @@ export default {
         },
       });
     },
-    require("tailwindcss-animate"),
   ],
 } as const;

@@ -1,5 +1,5 @@
 // ./front/src/types/dots.ts
-import colors from "@constants/colors";
+import colors from "@/constants/colors";
 
 // Základné typy pre dots
 export type TopRowType = "client" | "forwarder" | "carrier" | null;
