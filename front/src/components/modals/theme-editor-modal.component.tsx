@@ -1,9 +1,13 @@
-// ./components/modals/theme-editor-modal.component.tsx
-import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import React, { useState, useEffect } from "react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs/tabs.ui";
+import { Card, CardContent } from "@/components/ui/card/card.ui";
+import { Label } from "@/components/ui/label/label.ui";
+import { Input } from "@/components/ui/input/input.ui";
 import GeneralModal from "./general-modal.component";
 
 interface ThemeEditorModalProps {
@@ -15,7 +19,54 @@ const ThemeEditorModal: React.FC<ThemeEditorModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const [activeTheme, setActiveTheme] = useState("default");
+  const [config, setConfig] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<string>("modal");
+
+  // Load configuration from JSON
+  useEffect(() => {
+    if (isOpen) {
+      fetch("/src/configs/theme-config.json")
+        .then((res) => res.json())
+        .then((data) => setConfig(data))
+        .catch((err) => console.error("Failed to load config:", err));
+    }
+  }, [isOpen]);
+
+  // Handle input change
+  const handleInputChange = (
+    section: string,
+    key: string,
+    value: string | number
+  ) => {
+    setConfig((prevConfig: any) => ({
+      ...prevConfig,
+      [section]: {
+        ...prevConfig[section],
+        [key]: value,
+      },
+    }));
+  };
+
+  // Save configuration to JSON
+  const saveConfig = async () => {
+    try {
+      await fetch("/src/configs/theme-config.json", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(config, null, 2),
+      });
+      alert("Configuration saved!");
+      onClose();
+    } catch (err) {
+      console.error("Failed to save config:", err);
+    }
+  };
+
+  if (!config) {
+    return null; // Render nothing while loading
+  }
 
   return (
     <GeneralModal
@@ -23,10 +74,7 @@ const ThemeEditorModal: React.FC<ThemeEditorModalProps> = ({
       onClose={onClose}
       actions={
         <button
-          onClick={() => {
-            // Tu uložíme zmeny
-            onClose();
-          }}
+          onClick={saveConfig}
           className="px-4 py-2 bg-primary text-white rounded-lg"
         >
           Save Changes
@@ -34,53 +82,46 @@ const ThemeEditorModal: React.FC<ThemeEditorModalProps> = ({
       }
     >
       <div className="w-full max-w-4xl">
-        <Tabs defaultValue="modal" className="w-full">
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="modal">Modal Windows</TabsTrigger>
-            <TabsTrigger value="navbar">Navigation</TabsTrigger>
-            {/* Ďalšie karty podľa potreby */}
+            {Object.keys(config).map((section) => (
+              <TabsTrigger key={section} value={section}>
+                {section.charAt(0).toUpperCase() + section.slice(1)}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          <TabsContent value="modal">
-            <Card>
-              <CardContent className="space-y-4 pt-4">
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="modal-bg-light">Background (Light)</Label>
-                    <Input
-                      id="modal-bg-light"
-                      type="color"
-                      defaultValue="#FFFFFF"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="modal-bg-dark">Background (Dark)</Label>
-                    <Input
-                      id="modal-bg-dark"
-                      type="color"
-                      defaultValue="#1F2937"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="modal-backdrop">Backdrop Opacity</Label>
-                    <Input
-                      id="modal-backdrop"
-                      type="range"
-                      min="0"
-                      max="100"
-                      defaultValue="50"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="navbar">
-            {/* Podobná štruktúra pre navbar nastavenia */}
-          </TabsContent>
+          {Object.keys(config).map((section) => (
+            <TabsContent key={section} value={section}>
+              <Card>
+                <CardContent className="space-y-4 pt-4">
+                  {Object.keys(config[section]).map((key) => (
+                    <div key={key} className="space-y-2">
+                      <Label htmlFor={`${section}-${key}`}>
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                      </Label>
+                      <Input
+                        id={`${section}-${key}`}
+                        type={
+                          typeof config[section][key] === "number"
+                            ? "number"
+                            : "text"
+                        }
+                        value={config[section][key]}
+                        onChange={(e) =>
+                          handleInputChange(
+                            section,
+                            key,
+                            e.target.value || e.target.valueAsNumber
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          ))}
         </Tabs>
       </div>
     </GeneralModal>

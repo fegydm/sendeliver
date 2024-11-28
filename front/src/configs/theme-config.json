@@ -1,0 +1,118 @@
+{
+  "button": {
+    "base": {
+      "borderRadius": "0.5rem",
+      "fontSize": "14px",
+      "customStyles": {}
+    },
+    "variants": {
+      "primary": {
+        "backgroundColor": "#1D4ED8",
+        "color": "#FFFFFF",
+        "hover": {
+          "backgroundColor": "#2563EB"
+        }
+      },
+      "secondary": {
+        "backgroundColor": "#E5E7EB",
+        "color": "#1F2937",
+        "hover": {
+          "backgroundColor": "#D1D5DB"
+        }
+      },
+      "close": {
+        "backgroundColor": "transparent",
+        "color": "#9CA3AF",
+        "hover": {
+          "backgroundColor": "#F3F4F6"
+        }
+      }
+    },
+    "sizes": {
+      "default": {
+        "padding": "0.5rem 1rem"
+      },
+      "small": {
+        "padding": "0.25rem 0.5rem",
+        "fontSize": "12px"
+      },
+      "large": {
+        "padding": "0.75rem 1.5rem",
+        "fontSize": "16px"
+      },
+      "icon": {
+        "padding": "0.25rem"
+      }
+    }
+  },
+  "label": {
+    "default": {
+      "color": "#000000",
+      "fontSize": "14px",
+      "fontWeight": "normal",
+      "hover": {
+        "color": "#333333"
+      },
+      "focus": {
+        "outline": "2px solid #000"
+      }
+    },
+    "error": {
+      "color": "#ff0000",
+      "fontSize": "14px",
+      "fontWeight": "bold",
+      "hover": {
+        "color": "#cc0000"
+      },
+      "focus": {
+        "outline": "2px solid #ff0000"
+      }
+    },
+    "success": {
+      "color": "#00ff00",
+      "fontSize": "14px",
+      "fontWeight": "bold",
+      "hover": {
+        "color": "#00cc00"
+      },
+      "focus": {
+        "outline": "2px solid #00ff00"
+      }
+    }
+  },
+  "input": {
+    "base": {
+      "borderRadius": "0.375rem",
+      "transition": "all 0.3s ease"
+    },
+    "variants": {
+      "default": {
+        "padding": "0.75rem 1rem",
+        "backgroundColor": "#FFFFFF",
+        "border": "1px solid #CCCCCC"
+      },
+      "search": {
+        "padding": "0.75rem 1rem",
+        "backgroundColor": "#F9F9F9",
+        "border": "1px solid #DDDDDD"
+      }
+    },
+    "states": {
+      "normal": {
+        "outline": "none",
+        "boxShadow": "0 0 0 2px #3182CE"
+      },
+      "error": {
+        "border": "1px solid #E53E3E",
+        "boxShadow": "0 0 0 2px #E53E3E"
+      },
+      "success": {
+        "border": "1px solid #38A169",
+        "boxShadow": "0 0 0 2px #38A169"
+      }
+    },
+    "labelColor": "#4A5568",
+    "errorColor": "#E53E3E",
+    "hoverBackground": "#EDF2F7"
+  }
+}

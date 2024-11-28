@@ -12,6 +12,7 @@ import ResultTable, {
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
 import PageFooter from "@/components/sections/footers/page-footer.component";
 import FloatingButton from "@/components/elements/floating-button.component";
+import TestFooter from "@/components/sections/footers/test-footer.component";
 
 interface TransportData {
   pickupLocation: string;
@@ -60,9 +61,13 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
 
   return (
     <>
+      {/* Navigation Bar */}
       <Navigation isDarkMode={isDarkMode} onToggleDarkMode={onToggleDarkMode} />
+
+      {/* Banner */}
       <PageBanner />
 
+      {/* AI Chat Modal */}
       {isAIChatOpen && (
         <AIChatModal
           onClose={() => setIsAIChatOpen(false)}
@@ -71,6 +76,7 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
         />
       )}
 
+      {/* Main Content */}
       <Content
         senderContent={
           <>
@@ -104,7 +110,13 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
         }
       />
 
+      {/* Footer */}
       <PageFooter />
+
+      {/* Development Footer */}
+      <TestFooter onOpenAdminPanel={() => console.log("Admin Panel Opened")} />
+
+      {/* Floating Button */}
       <FloatingButton />
     </>
   );

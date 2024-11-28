@@ -1,0 +1,15 @@
+{
+  "modal": {
+    "backdropOpacity": 50
+  },
+  "navbar": {
+    "fixed": true
+  },
+  "label": {
+    "hoverEnabled": true,
+    "focusEnabled": true
+  },
+  "input": {
+    "hoverEnabled": true
+  }
+}
