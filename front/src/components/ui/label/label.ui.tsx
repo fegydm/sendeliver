@@ -2,10 +2,11 @@
 import React from "react";
 import themeConfig from "@/configs/theme-config.json";
 
-interface LabelProps {
+export interface LabelProps {
+  // Explicitný export rozhrania
   variant?: "default" | "error" | "success";
   children: React.ReactNode;
-  htmlFor?: string; // Pridané pre podporu htmlFor
+  htmlFor?: string;
 }
 
 export const Label: React.FC<LabelProps> = ({
