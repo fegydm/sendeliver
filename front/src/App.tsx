@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/home.page";
-import useScrollBounce from "./hooks/useScrollBounce"; // Import pre useScrollBounce
+import useScrollBounce from "./hooks/useScrollBounce"; // Import for useScrollBounce
 
 const App: React.FC = () => {
-  useScrollBounce();  // Pridaný hook pre scroll bounce efekt
+  useScrollBounce(); // Hook for scroll bounce effect
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const savedMode = localStorage.getItem("darkMode");

@@ -5,13 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 
-// Add manifest in production
-if (import.meta.env.PROD) {
-  const link = document.createElement("link");
-  link.rel = "manifest";
-  link.href = "/manifest.json";
-  document.head.appendChild(link);
-}
+// removed manifest in production
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Failed to find the root element");
@@ -23,7 +17,7 @@ root.render(
     <BrowserRouter
       future={{
         v7_startTransition: true,
-        v7_relativeSplatPath: true, // Aktivácia relatívneho splat routingu
+        v7_relativeSplatPath: true, // activation of splat routing
       }}
     >
       <App />

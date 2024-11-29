@@ -1,34 +1,31 @@
 {
   "compilerOptions": {
-    "target": "es2022", // Moderný JavaScript štandard
-    "module": "esnext", // Používať ESM
-    "moduleResolution": "node", // Node.js kompatibilita
-    "lib": ["es2022"], // Moderné knižnice
-    "outDir": "dist", // Výstupný priečinok
-    "rootDir": "src", // Koreňový priečinok zdrojových súborov
-    "strict": true, // Povolený prísny režim
-    "esModuleInterop": true, // Kompatibilita s CommonJS
-    "allowSyntheticDefaultImports": true, // Povolenie syntetických importov
-    "resolveJsonModule": true, // Import JSON súborov
-    "skipLibCheck": true, // Preskakovanie kontroly knižníc
-    "forceConsistentCasingInFileNames": true, // Konzistentné veľkosti písmen
-    "experimentalDecorators": true, // Povolenie dekorátorov
-    "emitDecoratorMetadata": true, // Generovanie metadát pre dekorátory
-    "baseUrl": "./", // Základná cesta pre aliasy
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "lib": ["es2022"],
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": "./",
     "paths": {
-      "@types/*": ["src/types/*"] // Alias pre typy
+      "@types/*": ["src/types/*"]
     },
-    "typeRoots": [
-      "./node_modules/@types", // Predvolené typy
-      "./src/types" // Vlastné typy
-    ]
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src"], // Zahrň len zdrojové súbory
+  "include": ["src"],
   "exclude": [
-    "**/node_modules", // Ignorovať závislosti
-    "**/dist", // Ignorovať výstupné súbory
-    "**/build", // Ignorovať build priečinok
-    "**/*.test.ts", // Ignorovať testy
-    "**/*.spec.ts" // Ignorovať testy
+    "**/node_modules",
+    "**/dist",
+    "**/build",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

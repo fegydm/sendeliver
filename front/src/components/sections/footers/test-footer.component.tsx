@@ -1,26 +1,50 @@
 // ./front/src/components/sections/footers/test-footer.component.tsx
-import React from "react";
+import React, { useState } from "react";
+import ThemeSwitcher from "@/components/elements/theme-switcher.element";
+import ThemeEditorModal from "@/components/modals/theme-editor-modal.component";
+import ColorPaletteModal from "@/components/modals/color-palette-modal.component";
+import { Button } from "@/components/ui";
+import { Switch } from "@/components/ui";
 
-interface TestFooterProps {
-  onOpenAdminPanel: () => void;
-}
-
-const TestFooter: React.FC<TestFooterProps> = ({ onOpenAdminPanel }) => {
-  // Podmienka na nezobrazenie v produkčnom režime
-  if (process.env.NODE_ENV !== "development") return null;
+const TestFooter: React.FC = () => {
+  const [isThemeEditorOpen, setIsThemeEditorOpen] = useState(false);
+  const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
 
   return (
     <footer className="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 py-4">
-      <div className="max-w-content mx-auto px-container">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium">Development Footer</span>
-          <button
-            onClick={onOpenAdminPanel}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            Open Admin Panel
-          </button>
+      <div className="max-w-content mx-auto px-container flex justify-between items-center">
+        {/* ThemeSwitcher naľavo */}
+        <div className="flex gap-2 items-center">
+          <ThemeSwitcher />
         </div>
+
+        {/* Modálne okná a ich tlačidlá napravo */}
+        <div className="flex gap-4">
+          <Button
+            variant="secondary"
+            onClick={() => setIsThemeEditorOpen(true)}
+          >
+            Theme Editor
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => setIsColorPaletteOpen(true)}
+          >
+            Color Palette
+          </Button>
+        </div>
+
+        {/* Modálne okná */}
+        <ThemeEditorModal
+          isOpen={isThemeEditorOpen}
+          onClose={() => setIsThemeEditorOpen(false)}
+        />
+
+        <ColorPaletteModal
+          isOpen={isColorPaletteOpen}
+          onClose={() => setIsColorPaletteOpen(false)}
+        />
       </div>
     </footer>
   );

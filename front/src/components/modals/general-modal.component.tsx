@@ -1,4 +1,4 @@
-// ./components/modals/general-modal.component.tsx
+// ./front/src/components/modals/general-modal.component.tsx
 import React from "react";
 import { Button } from "@/components/ui";
 
@@ -7,6 +7,7 @@ interface GeneralModalProps {
   onClose: () => void;
   children?: React.ReactNode;
   actions?: React.ReactNode;
+  title?: string; // Optional title
 }
 
 const GeneralModal: React.FC<GeneralModalProps> = ({
@@ -14,34 +15,36 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
   onClose,
   children,
   actions,
+  title,
 }) => {
   React.useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      }
+    };
+
     if (isOpen) {
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
       document.body.style.paddingRight = `${scrollbarWidth}px`;
       document.body.style.overflow = "hidden";
-
-      const handleEsc = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          onClose();
-          if (document.activeElement instanceof HTMLElement) {
-            document.activeElement.blur();
-          }
-        }
-      };
-
       window.addEventListener("keydown", handleEsc);
-
-      return () => {
-        document.body.style.paddingRight = "";
-        document.body.style.overflow = "";
-        window.removeEventListener("keydown", handleEsc);
-      };
     }
+
+    return () => {
+      document.body.style.paddingRight = "";
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleEsc);
+    };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null; // Ensure this is explicitly returning null
+  }
 
   return (
     <>
@@ -63,6 +66,8 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
               &times;
             </span>
           </button>
+
+          {title && <h2 className="text-lg font-bold mb-4">{title}</h2>}
 
           <div className="mt-4">{children}</div>
 

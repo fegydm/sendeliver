@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 import colors from "@/constants/colors";
 
-// Definícia typov
+// Type definition
 type TopRowType = "client" | "forwarder" | "carrier" | null;
 type BottomRowType = "anonymous" | "cookies" | "registered" | null;
 type DotsArray = string[];
-type DotsColors = {
+type pm = {
   client: string;
   forwarder: string;
   carrier: string;

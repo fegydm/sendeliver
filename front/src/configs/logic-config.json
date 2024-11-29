@@ -1,4 +1,10 @@
 {
+  "pins": {
+    "play": "1234",
+    "pause": "5678",
+    "stop": "91011",
+    "admin": "4545"
+  },
   "modal": {
     "backdropOpacity": 50
   },

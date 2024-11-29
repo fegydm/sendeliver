@@ -1,4 +1,4 @@
-// ./front/src/components/floating-button.component.tsx
+// ./front/src/components/elements/floating-button.element.tsx
 import React, { useState, useEffect } from "react";
 import { FaArrowUp } from "react-icons/fa";
 

@@ -1,5 +1,5 @@
 // ./front/src/pages/home.page.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/sections/navbars/navbar.component";
 import PageBanner from "@/components/sections/banners/banner.component";
 import Content from "@/components/sections/content/content.component";
@@ -11,7 +11,7 @@ import ResultTable, {
 } from "@/components/sections/content/results/result-table.component";
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
 import PageFooter from "@/components/sections/footers/page-footer.component";
-import FloatingButton from "@/components/elements/floating-button.component";
+import FloatingButton from "@/components/elements/floating-button.element";
 import TestFooter from "@/components/sections/footers/test-footer.component";
 
 interface TransportData {
@@ -34,11 +34,24 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
   >(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState("");
+  const [isTestFooterVisible, setIsTestFooterVisible] = useState(false);
+
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  useEffect(() => {
+    if (isDevelopment) {
+      setIsTestFooterVisible(true);
+    }
+  }, []);
 
   const handleAIRequest = (section: "sender" | "carrier", prompt: string) => {
     setActiveSection(section);
     setIsAIChatOpen(true);
     setCurrentPrompt(prompt);
+  };
+
+  const handlePinVerified = () => {
+    setIsTestFooterVisible(true);
   };
 
   const mockClientData: ClientResultData[] = [
@@ -53,7 +66,7 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
   const mockCarrierData: CarrierResultData[] = [
     {
       pickup: "Bratislava",
-      delivery: "Košice",
+      delivery: "Kosice",
       pallets: 10,
       weight: "3.5t",
     },
@@ -61,13 +74,9 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
 
   return (
     <>
-      {/* Navigation Bar */}
       <Navigation isDarkMode={isDarkMode} onToggleDarkMode={onToggleDarkMode} />
-
-      {/* Banner */}
       <PageBanner />
 
-      {/* AI Chat Modal */}
       {isAIChatOpen && (
         <AIChatModal
           onClose={() => setIsAIChatOpen(false)}
@@ -76,7 +85,6 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
         />
       )}
 
-      {/* Main Content */}
       <Content
         senderContent={
           <>
@@ -110,13 +118,10 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
         }
       />
 
-      {/* Footer */}
-      <PageFooter />
+      <PageFooter onPinVerified={handlePinVerified} />
 
-      {/* Development Footer */}
-      <TestFooter onOpenAdminPanel={() => console.log("Admin Panel Opened")} />
+      {isTestFooterVisible && <TestFooter />}
 
-      {/* Floating Button */}
       <FloatingButton />
     </>
   );

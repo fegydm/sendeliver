@@ -44,12 +44,12 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
     setActiveModal(null);
   }, []);
 
-  // Handler pre breadcrumbs
+  // Handler for breadcrumbs
   const handleBreadcrumbsToggle = useCallback(() => {
     setShowBreadcrumbs((prev) => !prev);
   }, []);
 
-  // Handler pre zmenu dots
+  // Handler for change dots
   const handleDotsSelectionChange = useCallback(
     (top: TopRowType, bottom: BottomRowType) => {
       const newTopDots: DotsArray = Array(3).fill(components.dots.inactive);

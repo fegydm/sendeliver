@@ -1,49 +1,60 @@
-// front/src/components/footers/page-footer.component.tsx
+// ./front/src/components/sections/footers/page-footer.component.tsx
 import React, { useState } from "react";
 import SocialLinks from "./SocialLinks";
 import FooterMenu from "./FooterMenu";
-import ColorPaletteModalTrigger from "./ColorPaletteModalTrigger";
 import FooterCopyright from "./FooterCopyright";
-import ThemeSwitcher from "@/components/ui/theme-switcher.component";
-import ThemeEditorModal from "@/components/modals/theme-editor-modal.component";
+import PinModal from "@/components/modals/pin-modal.component";
+import logicConfig from "@/configs/logic-config.json";
 
-const PageFooter: React.FC = () => {
-  const [isThemeEditorOpen, setIsThemeEditorOpen] = useState(false);
+interface PageFooterProps {
+  onPinVerified?: () => void;
+}
+
+const PageFooter: React.FC<PageFooterProps> = ({ onPinVerified }) => {
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [isPinVerified, setIsPinVerified] = useState(false);
+
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   return (
     <footer className="relative w-full bg-footer-light dark:bg-footer-dark text-footer-light dark:text-footer-dark py-4">
       <div className="max-w-content mx-auto px-container">
-        {/* Top Row: Social Links */}
-        <div className="flex justify-between items-center mb-4">
+        {/* Social Links at the top */}
+        <div className="text-center mb-4">
           <SocialLinks />
-          <div className="flex items-center gap-4">
-            <ColorPaletteModalTrigger />
-            <button
-              onClick={() => setIsThemeEditorOpen(true)}
-              className="text-sm hover:underline"
-            >
-              Theme Editor
-            </button>
-          </div>
         </div>
 
-        {/* Bottom Row */}
+        {/* Footer copyright and menu */}
         <div className="flex justify-between items-center">
           <FooterCopyright />
           <FooterMenu />
         </div>
 
-        {/* Theme Switcher */}
-        <div className="mt-6">
-          <ThemeSwitcher />
-        </div>
-      </div>
+        {/* Hidden Admin Link - only in production */}
+        {!isDevelopment && !isPinVerified && (
+          <button
+            onClick={() => setIsPinModalOpen(true)}
+            aria-label="Admin Access"
+            className="absolute bottom-2 left-2 text-transparent focus:outline-none"
+          >
+            Administrator
+          </button>
+        )}
 
-      {/* Theme Editor Modal */}
-      <ThemeEditorModal
-        isOpen={isThemeEditorOpen}
-        onClose={() => setIsThemeEditorOpen(false)}
-      />
+        {/* PIN Modal - only in production */}
+        {!isDevelopment && (
+          <PinModal
+            isOpen={isPinModalOpen}
+            onClose={() => setIsPinModalOpen(false)}
+            requiredPin={logicConfig.pins.admin}
+            onPinSuccess={() => {
+              setIsPinVerified(true);
+              setIsPinModalOpen(false);
+              onPinVerified?.(); // Volať callback po úspešnej verifikácii
+            }}
+          />
+        )}
+      </div>
     </footer>
   );
 };

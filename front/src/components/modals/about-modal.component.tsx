@@ -28,27 +28,30 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
               <FaTimes size={20} />
             </button>
 
-            <h2 className="text-modal-title font-bold mb-modal-gap">About SenDeliver</h2>
+            <h2 className="text-modal-title font-bold mb-modal-gap">
+              About SenDeliver
+            </h2>
 
             <div className="space-y-modal-gap">
               <div className="text-modal-text">
                 <h3 className="font-semibold mb-2">Who We Are</h3>
                 <p className="mb-4">
-                  SenDeliver is your trusted partner in logistics and delivery solutions.
-                  We connect clients, forwarders, and carriers to create a seamless 
-                  delivery experience.
+                  SenDeliver is your trusted partner in logistics and delivery
+                  solutions. We connect clients, forwarders, and carriers to
+                  create a seamless delivery experience.
                 </p>
 
                 <h3 className="font-semibold mb-2">Our Mission</h3>
                 <p className="mb-4">
-                  To revolutionize the delivery industry by providing innovative, 
-                  efficient, and sustainable solutions that benefit all stakeholders
-                  in the delivery chain.
+                  To revolutionize the delivery industry by providing
+                  innovative, efficient, and sustainable solutions that benefit
+                  all stakeholders in the delivery chain.
                 </p>
 
                 <h3 className="font-semibold mb-2">Get Started</h3>
                 <p>
-                  Join our platform today to experience the future of delivery services.
+                  Join our platform today to experience the future of delivery
+                  services.
                 </p>
               </div>
 
@@ -62,8 +65,10 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <button
                   onClick={() => {
                     onClose();
-                    // Tu by sa mal otvoriť Register modal
-                    document.dispatchEvent(new CustomEvent('openRegisterModal'));
+                    // opening Register modal
+                    document.dispatchEvent(
+                      new CustomEvent("openRegisterModal")
+                    );
                   }}
                   className="px-4 py-2 bg-navbar-light-button-bg hover:bg-navbar-light-button-hover 
                            text-navbar-light-button-text dark:bg-navbar-dark-button-bg 
