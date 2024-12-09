@@ -1,13 +1,14 @@
+// ./front/src/components/modals/theme-editor-modal.component.tsx
 import React, { useState, useEffect } from "react";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components/ui/tabs/tabs.ui";
-import { Card, CardContent } from "@/components/ui/card/card.ui";
-import { Label } from "@/components/ui/label/label.ui";
-import { Input } from "@/components/ui/input/input.ui";
+} from "@/components/ui/tabs.ui";
+import { Card, CardContent } from "@/components/ui/card.ui";
+import { Label } from "@/components/ui/label.ui";
+import { Input } from "@/components/ui/input.ui";
 import GeneralModal from "./general-modal.component";
 
 interface ThemeEditorModalProps {

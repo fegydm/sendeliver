@@ -1,4 +1,4 @@
-// ./front/src/components/ui/tabs/tabs.stories.tsx
+// ./front/src/components/ui/tabs.stories.tsx
 import type { Meta, StoryObj } from "@storybook/react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs.ui";
 

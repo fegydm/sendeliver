@@ -1,6 +1,6 @@
 // ./front/src/components/elements/theme-switcher.component.tsx
 import * as React from "react";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group.ui";
 
 const themes = ["none", "default", "testing", "user-defined"] as const;
 type Theme = (typeof themes)[number];

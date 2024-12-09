@@ -1,4 +1,4 @@
-// ./front/src/components/ui/togle-group/toggle-group.ui.tsx
+// ./front/src/components/ui/toggle-group.ui.tsx
 import * as React from "react";
 
 type ToggleGroupValue = string | string[];
@@ -115,17 +115,17 @@ const ToggleGroupItem = React.forwardRef<HTMLButtonElement, ToggleItemProps>(
         aria-checked={isSelected}
         disabled={disabled || groupDisabled}
         className={`
-        px-3 py-1.5 text-sm font-medium rounded-md
-        transition-all duration-200
-        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-        disabled:pointer-events-none disabled:opacity-50
-        ${
-          isSelected
-            ? "bg-background text-foreground shadow-sm"
-            : "hover:bg-muted-foreground/10 hover:text-muted-foreground"
-        }
-        ${className}
-      `}
+          px-3 py-1.5 text-sm font-medium rounded-md
+          transition-all duration-200
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+          disabled:pointer-events-none disabled:opacity-50
+          ${
+            isSelected
+              ? "bg-background text-foreground shadow-sm"
+              : "hover:bg-muted-foreground/10 hover:text-muted-foreground"
+          }
+          ${className}
+        `}
         onClick={handleClick}
       >
         {children}
