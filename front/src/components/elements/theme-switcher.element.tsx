@@ -8,9 +8,14 @@ type Theme = (typeof themes)[number];
 const ThemeSwitcher: React.FC = () => {
   const [currentTheme, setCurrentTheme] = React.useState<Theme>("default");
 
-  const handleThemeChange = (value: string) => {
-    setCurrentTheme(value as Theme);
-    document.documentElement.setAttribute("data-theme", value);
+  const handleThemeChange = (value: string | string[]) => {
+    if (typeof value === "string") {
+      setCurrentTheme(value as Theme);
+      document.documentElement.setAttribute("data-theme", value);
+    } else {
+      // Handle the case where value is an array, if needed
+      console.error("Unexpected array value:", value);
+    }
   };
 
   return (
