@@ -1,47 +1,52 @@
 {
   "button": {
     "base": {
-      "borderRadius": "0.5rem",
-      "fontSize": "14px",
-      "customStyles": {}
+      "backgroundColor": "#e0e5ec",
+      "color": "#333",
+      "padding": "10px 20px",
+      "fontSize": "16px",
+      "borderRadius": "8px",
+      "boxShadow": "5px 5px 10px rgba(0, 0, 0, 0.1), -5px -5px 10px rgba(255, 255, 255, 1)"
     },
     "variants": {
       "primary": {
-        "backgroundColor": "#1D4ED8",
-        "color": "#FFFFFF",
+        "backgroundColor": "#4caf50",
+        "color": "#fff",
         "hover": {
-          "backgroundColor": "#2563EB"
+          "backgroundColor": "#45a049"
         }
       },
       "secondary": {
-        "backgroundColor": "#E5E7EB",
-        "color": "#1F2937",
+        "backgroundColor": "#ff9800",
+        "color": "#fff",
         "hover": {
-          "backgroundColor": "#D1D5DB"
+          "backgroundColor": "#e68900"
         }
       },
       "close": {
-        "backgroundColor": "transparent",
-        "color": "#9CA3AF",
+        "backgroundColor": "#f44336",
+        "color": "#fff",
         "hover": {
-          "backgroundColor": "#F3F4F6"
+          "backgroundColor": "#e53e3e"
         }
       }
     },
     "sizes": {
       "default": {
-        "padding": "0.5rem 1rem"
-      },
-      "small": {
-        "padding": "0.25rem 0.5rem",
-        "fontSize": "12px"
-      },
-      "large": {
-        "padding": "0.75rem 1.5rem",
+        "padding": "10px 20px",
         "fontSize": "16px"
       },
+      "small": {
+        "padding": "5px 10px",
+        "fontSize": "14px"
+      },
+      "large": {
+        "padding": "15px 30px",
+        "fontSize": "18px"
+      },
       "icon": {
-        "padding": "0.25rem"
+        "padding": "8px",
+        "fontSize": "20px"
       }
     }
   },

@@ -1,0 +1,59 @@
+/* styles.css */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #e0e5ec;
+}
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-checkbox {
+  display: none;
+}
+
+.toggle-label {
+  position: relative;
+  width: 80px; /* Wider container */
+  height: 40px;
+  background-color: #e0e5ec;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow:
+    inset 5px 5px 10px #cbd1da,
+    inset -5px -5px 10px #ffffff;
+  transition: background-color 0.3s;
+}
+
+.toggle-inner {
+  position: absolute;
+  width: 50px; /* Larger circle */
+  height: 50px;
+  background-color: #e0e5ec;
+  border-radius: 50%;
+  top: -5px; /* Adjusted position */
+  left: -5px; /* Adjusted position */
+  transition: left 0.3s;
+  box-shadow:
+    inset 5px 5px 10px #cbd1da,
+    inset -5px -5px 10px #ffffff;
+}
+
+.toggle-checkbox:checked + .toggle-label {
+  background-color: #4caf50;
+  box-shadow:
+    inset 5px 5px 10px #439a4d,
+    inset -5px -5px 10px #55c15e;
+}
+
+.toggle-checkbox:checked + .toggle-label .toggle-inner {
+  left: 35px; /* Adjusted position */
+  box-shadow:
+    inset 5px 5px 10px #439a4d,
+    inset -5px -5px 10px #55c15e;
+}

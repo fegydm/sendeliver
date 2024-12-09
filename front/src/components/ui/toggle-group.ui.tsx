@@ -1,5 +1,7 @@
-// ./front/src/components/ui/toggle-group.ui.tsx
+// src/components/ui/toggle-group.ui.tsx
 import * as React from "react";
+import "./toggle-group.ui.css";
+import themeConfig from "@/configs/theme-config.json";
 
 type ToggleGroupValue = string | string[];
 
@@ -10,6 +12,7 @@ interface ToggleGroupProps {
   onValueChange?: (value: ToggleGroupValue) => void;
   disabled?: boolean;
   className?: string;
+  label?: string; // Add label prop
   children: React.ReactNode;
 }
 
@@ -38,6 +41,7 @@ const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
       onValueChange,
       disabled = false,
       className = "",
+      label, // Destructure label prop
       children,
     },
     ref
@@ -57,6 +61,9 @@ const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
       onValueChange?.(newValue);
     };
 
+    const activeColor = themeConfig.button.base.backgroundColor;
+    const baseStyles = themeConfig.button.base;
+
     return (
       <ToggleGroupContext.Provider
         value={{
@@ -69,8 +76,17 @@ const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
         <div
           ref={ref}
           role={type === "single" ? "radiogroup" : "group"}
-          className={`inline-flex rounded-md bg-muted p-1 ${disabled ? "opacity-50" : ""} ${className}`}
+          className={`toggle-group ${disabled ? "opacity-50" : ""} ${className}`}
+          style={
+            {
+              "--background-color": baseStyles.backgroundColor,
+              "--color": baseStyles.color,
+              "--active-color": activeColor,
+            } as React.CSSProperties
+          }
         >
+          {label && <label className="toggle-label">{label}</label>}{" "}
+          {/* Add label */}
           {children}
         </div>
       </ToggleGroupContext.Provider>
@@ -114,18 +130,7 @@ const ToggleGroupItem = React.forwardRef<HTMLButtonElement, ToggleItemProps>(
         role={type === "single" ? "radio" : "checkbox"}
         aria-checked={isSelected}
         disabled={disabled || groupDisabled}
-        className={`
-          px-3 py-1.5 text-sm font-medium rounded-md
-          transition-all duration-200
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-          disabled:pointer-events-none disabled:opacity-50
-          ${
-            isSelected
-              ? "bg-background text-foreground shadow-sm"
-              : "hover:bg-muted-foreground/10 hover:text-muted-foreground"
-          }
-          ${className}
-        `}
+        className={`toggle-item ${isSelected ? "active" : ""} ${className}`}
         onClick={handleClick}
       >
         {children}
