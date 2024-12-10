@@ -1,9 +1,9 @@
-// ./front/src/components/ui/label/label.ui.tsx
+// src/components/ui/label/label.ui.tsx
 import React from "react";
+import "./label.ui.css";
 import themeConfig from "@/configs/theme-config.json";
 
 export interface LabelProps {
-  // Explicitný export rozhrania
   variant?: "default" | "error" | "success";
   children: React.ReactNode;
   htmlFor?: string;

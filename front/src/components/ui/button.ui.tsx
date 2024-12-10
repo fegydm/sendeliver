@@ -1,28 +1,32 @@
-// src/components/Button.tsx
 import React from "react";
 import "./button.ui.css";
-import logicConfig from "@/configs/logic-config.json";
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "close";
+  variant?: "primary" | "secondary" | "close" | "ghost";
   size?: "default" | "small" | "large" | "icon";
+  fullWidth?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
   variant = "primary",
   size = "default",
-  className,
+  fullWidth = false,
+  className = "",
   children,
   ...props
 }) => {
-  // Apply logic-based properties if needed
-  const isDisabled = logicConfig.modal.backdropOpacity === 0; // Example of using logicConfig
-
   return (
     <button
-      disabled={isDisabled || props.disabled}
-      className={`button ${variant} ${size} ${className}`}
+      className={`
+        btn
+        btn-${variant}
+        btn-${size}
+        ${fullWidth ? "btn-full-width" : ""}
+        ${className}
+      `
+        .trim()
+        .replace(/\s+/g, " ")}
       {...props}
     >
       {children}

@@ -1,13 +1,13 @@
-// ./front/src/components/modals/general-modal.component.tsx
 import React from "react";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/button.ui";
+import "./general.modal.css";
 
 interface GeneralModalProps {
   isOpen: boolean;
   onClose: () => void;
   children?: React.ReactNode;
   actions?: React.ReactNode;
-  title?: string; // Optional title
+  title?: string;
 }
 
 const GeneralModal: React.FC<GeneralModalProps> = ({
@@ -42,36 +42,29 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) {
-    return null; // Ensure this is explicitly returning null
-  }
+  if (!isOpen) return null;
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
+      <div className="modal-backdrop" />
       <div
         style={{ top: "var(--modal-top-offset)" }}
-        className="fixed left-1/2 transform -translate-x-1/2 w-full max-w-lg mx-4 z-50"
+        className="modal-container"
       >
-        <div
-          className="relative p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="absolute top-4 right-4 w-10 h-10 rounded hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition"
+            className="modal-close-button"
           >
-            <span className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-              &times;
-            </span>
+            <span className="modal-close-icon">&times;</span>
           </button>
 
-          {title && <h2 className="text-lg font-bold mb-4">{title}</h2>}
+          {title && <h2 className="modal-title">{title}</h2>}
 
-          <div className="mt-4">{children}</div>
+          <div className="modal-body">{children}</div>
 
-          <div className="flex justify-end items-center mt-6 gap-4">
+          <div className="modal-actions">
             <Button variant="secondary" onClick={onClose}>
               Cancel
             </Button>

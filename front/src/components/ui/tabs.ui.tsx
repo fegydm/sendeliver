@@ -1,78 +1,113 @@
-// ./front/src/components/ui/tabs.ui.tsx
 import * as React from "react";
+import "./tabs.ui.css";
 
-// Simple utility function to combine class names
-function cn(...classes: (string | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
+// Base interface for shared props
+interface BaseProps {
+  children: React.ReactNode;
+  className?: string;
 }
 
-// Tabs component to manage the state of active tab
-const Tabs = ({ children }: { children: React.ReactNode }) => {
-  const [activeTab, setActiveTab] = React.useState(0);
+// Props for the main Tabs component
+interface TabsProps extends BaseProps {
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+}
+
+// Props for the TabsList component
+interface TabsListProps extends BaseProps {}
+
+// Props for the TabsTrigger component
+interface TabsTriggerProps extends BaseProps {
+  value: string;
+}
+
+// Props for the TabsContent component
+interface TabsContentProps extends BaseProps {
+  value: string;
+}
+
+// Internal props for handling state
+interface InternalTabsProps {
+  selectedValue?: string;
+  onValueChange?: (value: string) => void;
+}
+
+const Tabs: React.FC<TabsProps> = ({
+  children,
+  value,
+  defaultValue,
+  onValueChange,
+  className,
+}) => {
+  // Internal state for uncontrolled usage
+  const [internalValue, setInternalValue] = React.useState(defaultValue);
+
+  // Determine which value to use (controlled vs uncontrolled)
+  const selectedValue = value ?? internalValue;
+  const handleValueChange = onValueChange ?? setInternalValue;
 
   return (
-    <div>
-      {React.Children.map(children, (child, index) => {
-        if (React.isValidElement(child) && child.type === TabsList) {
-          return React.cloneElement(child, {
-            activeTab,
-            setActiveTab,
-          });
-        }
-        if (React.isValidElement(child) && child.type === TabsContent) {
-          return React.cloneElement(child, {
-            activeTab,
-            index,
-          });
-        }
-        return child;
+    <div className={`tabs-container ${className || ""}`}>
+      {React.Children.map(children, (child) => {
+        if (!React.isValidElement(child)) return null;
+
+        return React.cloneElement(child, {
+          ...child.props,
+          selectedValue,
+          onValueChange: handleValueChange,
+        });
       })}
     </div>
   );
 };
 
-// TabsList component to render the list of tabs
-const TabsList = ({ children, activeTab, setActiveTab }: { children: React.ReactNode, activeTab: number, setActiveTab: (index: number) => void }) => {
+const TabsList: React.FC<TabsListProps & InternalTabsProps> = ({
+  children,
+  className,
+  selectedValue,
+  onValueChange,
+}) => {
   return (
-    <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
-      {React.Children.map(children, (child, index) => {
-        if (React.isValidElement(child) && child.type === TabsTrigger) {
-          return React.cloneElement(child, {
-            isActive: activeTab === index,
-            onClick: () => setActiveTab(index),
-          });
-        }
-        return child;
+    <div className={`tabs-list ${className || ""}`}>
+      {React.Children.map(children, (child) => {
+        if (!React.isValidElement(child)) return null;
+
+        return React.cloneElement(child, {
+          ...child.props,
+          isSelected: child.props.value === selectedValue,
+          onSelect: onValueChange,
+        });
       })}
     </div>
   );
 };
 
-// TabsTrigger component to render individual tab triggers
-const TabsTrigger = ({ children, isActive, onClick }: { children: React.ReactNode, isActive: boolean, onClick: () => void }) => {
+const TabsTrigger: React.FC<
+  TabsTriggerProps & {
+    isSelected?: boolean;
+    onSelect?: (value: string) => void;
+  }
+> = ({ children, value, className, isSelected, onSelect }) => {
   return (
     <button
-      className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-        isActive ? "bg-background text-foreground shadow" : ""
-      )}
-      onClick={onClick}
+      className={`tabs-trigger ${isSelected ? "tabs-trigger--active" : ""} ${className || ""}`}
+      onClick={() => onSelect?.(value)}
     >
       {children}
     </button>
   );
 };
 
-// TabsContent component to render the content of the active tab
-const TabsContent = ({ children, activeTab, index }: { children: React.ReactNode, activeTab: number, index: number }) => {
-  if (activeTab !== index) {
-    return null;
-  }
-  return (
-    <div className="mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-      {children}
-    </div>
-  );
+const TabsContent: React.FC<TabsContentProps & InternalTabsProps> = ({
+  children,
+  value,
+  className,
+  selectedValue,
+}) => {
+  if (value !== selectedValue) return null;
+
+  return <div className={`tabs-content ${className || ""}`}>{children}</div>;
 };
 
 export { Tabs, TabsList, TabsTrigger, TabsContent };

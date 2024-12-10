@@ -1,34 +1,63 @@
 /* src/components/ui/toggle-group.ui.css */
 .toggle-group {
-  display: flex;
-  gap: 10px;
+  display: inline-flex;
+  background: transparent;
+  gap: 0;
+  padding: 0;
+  position: relative;
+}
+
+.toggle-group-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--toggle-text);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .toggle-item {
-  padding: 10px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 8px;
+  position: relative;
+  height: 26px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--toggle-text);
+  background: var(--toggle-background);
+  border: 1px solid var(--toggle-border);
+  margin-left: -1px;
   cursor: pointer;
-  background-color: var(--background-color);
-  color: var(--color);
-  box-shadow:
-    inset 5px 5px 10px rgba(0, 0, 0, 0.1),
-    inset -5px -5px 10px rgba(255, 255, 255, 1);
-  transition:
-    background-color 0.3s,
-    box-shadow 0.3s;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
 }
 
-.toggle-item:hover {
-  box-shadow:
-    inset 7px 7px 14px rgba(0, 0, 0, 0.15),
-    inset -7px -7px 14px rgba(255, 255, 255, 1);
+.toggle-item:first-child {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  margin-left: 0;
 }
 
-.toggle-item.active {
-  background-color: var(--active-color);
-  box-shadow:
-    inset -5px -5px 10px rgba(0, 0, 0, 0.05),
-    inset 5px 5px 10px rgba(255, 255, 255, 1);
+.toggle-item:last-child {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+.toggle-item--selected {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--toggle-border);
+  z-index: 2;
+}
+
+.toggle-group-indicator {
+  position: absolute;
+  bottom: -5px;
+  width: 10px;
+  height: 5px;
+  background: var(--primary);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  transition: transform 0.2s ease;
 }

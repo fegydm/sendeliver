@@ -1,6 +1,6 @@
 // ./front/src/components/modals/pin-modal.component.tsx
 import React, { useState, useEffect } from "react";
-import GeneralModal from "./general-modal.component";
+import GeneralModal from "./general.modal";
 import PinInput from "@/components/elements/pin-input.element";
 
 interface PinModalProps {

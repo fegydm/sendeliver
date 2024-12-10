@@ -1,4 +1,12 @@
 {
+  "colors": {
+    "primary": "#007bff",
+    "primaryLight": "#e6f3ff",
+    "toggleBorder": "#ddd",
+    "toggleText": "#666",
+    "toggleBackground": "#f5f5f5"
+  },
+
   "button": {
     "base": {
       "backgroundColor": "#e0e5ec",

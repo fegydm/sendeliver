@@ -1,8 +1,8 @@
 // ./front/src/components/sections/footers/test-footer.component.tsx
 import React, { useState } from "react";
 import ThemeSwitcher from "@/components/elements/theme-switcher.element";
-import ThemeEditorModal from "@/components/modals/theme-editor-modal.component";
-import ColorPaletteModal from "@/components/modals/color-palette-modal.component";
+import ThemeEditorModal from "@/components/modals/theme-editor.modal";
+import ColorPaletteModal from "@/components/modals/color-palette.modal";
 import { Button } from "@/components/ui";
 import { Switch } from "@/components/ui";
 

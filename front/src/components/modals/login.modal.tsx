@@ -1,7 +1,7 @@
 // ./components/modals/login-modal.component.tsx
 import React from "react";
 import { Input, Button } from "@/components/ui";
-import GeneralModal from "@/components/modals/general-modal.component";
+import GeneralModal from "@/components/modals/general.modal";
 
 interface LoginModalProps {
   isOpen: boolean;

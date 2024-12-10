@@ -1,6 +1,6 @@
 // front/src/components/playground/component-playground.component.tsx
 import React from "react";
-import GeneralModal from "@/components/modals/general-modal.component";
+import GeneralModal from "@/components/modals/general.modal";
 import Card, {
   CardContent,
   CardTitle,

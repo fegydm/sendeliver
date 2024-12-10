@@ -4,10 +4,10 @@ import NavLeftGroup from "@/components/sections/navbars/nav-group-left.component
 import NavCenterGroup from "@/components/sections/navbars/nav-group-center.component";
 import NavRightGroup from "@/components/sections/navbars/nav-group-right.component";
 import AboutModal from "@/components/modals/about-modal.component";
-import LoginModal from "@/components/modals/login-modal.component";
+import LoginModal from "@/components/modals/login.modal";
 import RegisterModal from "@/components/modals/register-modal.component";
 import DotsModal from "@/components/modals/dots-modal.component";
-import AvatarModal from "@/components/modals/avatar-modal.component";
+import AvatarModal from "@/components/modals/avatar.modal";
 import { components } from "@/constants/colors/components";
 import type { TopRowType, BottomRowType, DotsArray } from "../../../types/dots";
 

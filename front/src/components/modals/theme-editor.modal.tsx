@@ -1,4 +1,3 @@
-// ./front/src/components/modals/theme-editor-modal.component.tsx
 import React, { useState, useEffect } from "react";
 import {
   Tabs,
@@ -9,7 +8,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card.ui";
 import { Label } from "@/components/ui/label.ui";
 import { Input } from "@/components/ui/input.ui";
-import GeneralModal from "./general-modal.component";
+import GeneralModal from "./general.modal";
 
 interface ThemeEditorModalProps {
   isOpen: boolean;

@@ -1,92 +1,68 @@
 // src/components/ui/toggle-group.ui.tsx
 import * as React from "react";
 import "./toggle-group.ui.css";
-import themeConfig from "@/configs/theme-config.json";
 
 type ToggleGroupValue = string | string[];
 
-interface ToggleGroupProps {
-  type?: "single" | "multiple";
-  value?: ToggleGroupValue;
-  defaultValue?: ToggleGroupValue;
-  onValueChange?: (value: ToggleGroupValue) => void;
-  disabled?: boolean;
-  className?: string;
-  label?: string; // Add label prop
-  children: React.ReactNode;
-}
-
-interface ToggleItemProps {
-  value: string;
-  disabled?: boolean;
-  className?: string;
-  children: React.ReactNode;
-}
-
-const ToggleGroupContext = React.createContext<{
+interface ToggleGroupContextValue {
   type: "single" | "multiple";
   value?: ToggleGroupValue;
   onValueChange?: (value: ToggleGroupValue) => void;
   disabled?: boolean;
-}>({
+}
+
+const ToggleGroupContext = React.createContext<ToggleGroupContextValue>({
   type: "single",
 });
+
+interface ToggleGroupProps {
+  type?: "single" | "multiple";
+  value?: ToggleGroupValue;
+  onValueChange?: (value: ToggleGroupValue) => void;
+  disabled?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}
+
+interface ToggleItemProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  value: string;
+  disabled?: boolean;
+  className?: string;
+  "data-value"?: string;
+  children: React.ReactNode;
+}
 
 const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
   (
     {
       type = "single",
       value,
-      defaultValue,
       onValueChange,
       disabled = false,
       className = "",
-      label, // Destructure label prop
       children,
     },
     ref
   ) => {
-    const [internalValue, setInternalValue] = React.useState<ToggleGroupValue>(
-      value ?? defaultValue ?? (type === "multiple" ? [] : "")
+    const contextValue = React.useMemo(
+      () => ({
+        type,
+        value,
+        onValueChange,
+        disabled,
+      }),
+      [type, value, onValueChange, disabled]
     );
 
-    React.useEffect(() => {
-      if (value !== undefined) {
-        setInternalValue(value);
-      }
-    }, [value]);
-
-    const handleValueChange = (newValue: ToggleGroupValue) => {
-      setInternalValue(newValue);
-      onValueChange?.(newValue);
-    };
-
-    const activeColor = themeConfig.button.base.backgroundColor;
-    const baseStyles = themeConfig.button.base;
-
     return (
-      <ToggleGroupContext.Provider
-        value={{
-          type,
-          value: internalValue,
-          onValueChange: handleValueChange,
-          disabled,
-        }}
-      >
+      <ToggleGroupContext.Provider value={contextValue}>
         <div
           ref={ref}
           role={type === "single" ? "radiogroup" : "group"}
-          className={`toggle-group ${disabled ? "opacity-50" : ""} ${className}`}
-          style={
-            {
-              "--background-color": baseStyles.backgroundColor,
-              "--color": baseStyles.color,
-              "--active-color": activeColor,
-            } as React.CSSProperties
-          }
+          aria-disabled={disabled}
+          className={`toggle-group ${disabled ? "toggle-group--disabled" : ""} ${className}`}
         >
-          {label && <label className="toggle-label">{label}</label>}{" "}
-          {/* Add label */}
           {children}
         </div>
       </ToggleGroupContext.Provider>
@@ -97,7 +73,7 @@ const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
 ToggleGroup.displayName = "ToggleGroup";
 
 const ToggleGroupItem = React.forwardRef<HTMLButtonElement, ToggleItemProps>(
-  ({ value, disabled = false, className = "", children }, ref) => {
+  ({ value, disabled = false, className = "", children, ...props }, ref) => {
     const {
       type,
       value: groupValue,
@@ -110,9 +86,10 @@ const ToggleGroupItem = React.forwardRef<HTMLButtonElement, ToggleItemProps>(
         ? groupValue === value
         : Array.isArray(groupValue) && groupValue.includes(value);
 
-    const handleClick = () => {
-      if (disabled || groupDisabled) return;
+    const isDisabled = disabled || groupDisabled;
 
+    const handleClick = () => {
+      if (isDisabled) return;
       if (type === "single") {
         onValueChange?.(value);
       } else if (Array.isArray(groupValue)) {
@@ -129,9 +106,13 @@ const ToggleGroupItem = React.forwardRef<HTMLButtonElement, ToggleItemProps>(
         type="button"
         role={type === "single" ? "radio" : "checkbox"}
         aria-checked={isSelected}
-        disabled={disabled || groupDisabled}
-        className={`toggle-item ${isSelected ? "active" : ""} ${className}`}
+        disabled={isDisabled}
+        data-value={value}
+        className={`toggle-item ${isSelected ? "toggle-item--selected" : ""} ${
+          isDisabled ? "toggle-item--disabled" : ""
+        } ${className}`}
         onClick={handleClick}
+        {...props}
       >
         {children}
       </button>
@@ -142,3 +123,4 @@ const ToggleGroupItem = React.forwardRef<HTMLButtonElement, ToggleItemProps>(
 ToggleGroupItem.displayName = "ToggleGroupItem";
 
 export { ToggleGroup, ToggleGroupItem };
+export type { ToggleGroupProps, ToggleItemProps, ToggleGroupValue };
