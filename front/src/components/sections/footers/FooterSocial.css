@@ -1,0 +1,25 @@
+/* Base styles for social icons */
+.social-icon {
+  transition: color 0.2s ease;
+  color: var(--text-muted, #666);
+}
+
+/* Facebook official brand color */
+.social-facebook:hover {
+  color: #1877f2;
+}
+
+/* Twitter official brand color */
+.social-twitter:hover {
+  color: #1da1f2;
+}
+
+/* LinkedIn official brand color */
+.social-linkedin:hover {
+  color: #0a66c2;
+}
+
+/* Instagram official brand color */
+.social-instagram:hover {
+  color: #e4405f; /* Official Instagram brand color */
+}

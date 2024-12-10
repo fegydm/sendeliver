@@ -1,6 +1,6 @@
 // ./front/src/components/sections/footers/page-footer.component.tsx
 import React, { useState } from "react";
-import SocialLinks from "./SocialLinks";
+import FooterSocial from "./FooterSocial";
 import FooterMenu from "./FooterMenu";
 import FooterCopyright from "./FooterCopyright";
 import PinModal from "@/components/modals/pin-modal.component";
@@ -19,15 +19,15 @@ const PageFooter: React.FC<PageFooterProps> = ({ onPinVerified }) => {
   return (
     <footer className="relative w-full bg-footer-light dark:bg-footer-dark text-footer-light dark:text-footer-dark py-4">
       <div className="max-w-content mx-auto px-container">
-        {/* Social Links at the top */}
-        <div className="text-center mb-4">
-          <SocialLinks />
+        {/* Center social links */}
+        <div className="flex justify-center mb-6">
+          <FooterSocial />
         </div>
 
-        {/* Footer copyright and menu */}
-        <div className="flex justify-between items-center">
-          <FooterCopyright />
+        {/* Menu and copyright in one row */}
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <FooterMenu />
+          <FooterCopyright />
         </div>
 
         {/* Hidden Admin Link - only in production */}
@@ -50,7 +50,7 @@ const PageFooter: React.FC<PageFooterProps> = ({ onPinVerified }) => {
             onPinSuccess={() => {
               setIsPinVerified(true);
               setIsPinModalOpen(false);
-              onPinVerified?.(); // Volať callback po úspešnej verifikácii
+              onPinVerified?.();
             }}
           />
         )}
