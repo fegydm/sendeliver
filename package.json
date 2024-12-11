@@ -13,7 +13,7 @@
     "build": "npm run build:front && npm run build:back",
     "build:front": "cd front && npm run build",
     "build:back": "cd back && npm run build",
-    "clean": "rm -rf back/dist && rm -rf front/dist"
+    "clean": "rm -rf back/dist front/dist node_modules back/node_modules front/node_modules back/package-lock.json front/package-lock.json package-lock.json"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

@@ -29,19 +29,19 @@ export function RegisterRoutes(app: Router) {
 
 
     
+        const argsUsersController_getUsers: Record<string, TsoaRoute.ParameterSchema> = {
+        };
         app.get('/users',
             ...(fetchMiddlewares<RequestHandler>(UsersController)),
             ...(fetchMiddlewares<RequestHandler>(UsersController.prototype.getUsers)),
 
             async function UsersController_getUsers(request: ExRequest, response: ExResponse, next: any) {
-            const args: Record<string, TsoaRoute.ParameterSchema> = {
-            };
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsUsersController_getUsers, request, response });
 
                 const controller = new UsersController();
 
