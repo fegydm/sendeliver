@@ -32,3 +32,15 @@
     inset -5px -5px 10px rgba(0, 0, 0, 0.05),
     inset 5px 5px 10px rgba(255, 255, 255, 1);
 }
+
+.toggle-group-indicator {
+  position: absolute;
+  bottom: -10px; /* Adjust this value to position the triangle correctly */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid var(--primary); /* Adjust the color as needed */
+}

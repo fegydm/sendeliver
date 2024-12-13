@@ -6,10 +6,11 @@ import { WebSocket, WebSocketServer } from "ws";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import dotenv from "dotenv";
 import { router as aiRouter } from "./routes/ai.routes";
+import themesRouter from "./routes/themes.routes";
 
-// Remove punycode warning
-process.removeAllListeners("warning");
+dotenv.config(); // Load environment variables from .env file
 
 // Types
 interface ExtendedWebSocket extends WebSocket {
@@ -19,11 +20,14 @@ interface ExtendedWebSocket extends WebSocket {
 // Path initialization
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectRoot = path.resolve(__dirname, "../.."); // Zmenené na dve úrovne nahor
-const frontendPath = path.join(projectRoot, "front/dist");
-const publicPath = path.join(projectRoot, "front/public");
+const projectRoot = path.resolve(__dirname, "../..");
+const frontendPath = process.env.FRONTEND_PATH
+  ? path.join(projectRoot, process.env.FRONTEND_PATH)
+  : path.join(projectRoot, "front/dist");
+const publicPath = process.env.PUBLIC_PATH
+  ? path.join(projectRoot, process.env.PUBLIC_PATH)
+  : path.join(projectRoot, "front/public");
 
-// Debug paths
 console.log("Project paths:");
 console.log("__dirname:", __dirname);
 console.log("projectRoot:", projectRoot);
@@ -105,6 +109,7 @@ wss.on("close", () => {
 
 // API Routes
 app.use("/api/ai", aiRouter);
+app.use("/api/themes", themesRouter);
 
 // Health check route
 app.get("/api/health", (_req: Request, res: Response) => {
@@ -128,7 +133,6 @@ const startServer = () => {
       console.warn(
         `Warning: Frontend dist directory not found at ${frontendPath}`
       );
-      // Log parent directory contents for debugging
       const parentDir = path.dirname(frontendPath);
       if (fs.existsSync(parentDir)) {
         console.log("Parent directory contents:", fs.readdirSync(parentDir));

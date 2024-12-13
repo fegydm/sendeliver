@@ -9,52 +9,57 @@ import ThemeEditorModal from "@/components/modals/theme-editor.modal";
 import themeConfig from "@/configs/theme-config.json";
 
 const ThemeSwitcher: React.FC = () => {
-  const [viewMode, setViewMode] = useState<string>("2D");
-  const [theme, setTheme] = useState<string>("none");
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const themeGroupRef = useRef<HTMLDivElement>(null);
-  const viewGroupRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<string>("2D"); // State to store the current view mode
+  const [theme, setTheme] = useState<string>("none"); // State to store the current theme
+  const [isEditorOpen, setIsEditorOpen] = useState(false); // State to control the modal visibility
+  const themeGroupRef = useRef<HTMLDivElement>(null); // Ref for the theme toggle group
+  const viewGroupRef = useRef<HTMLDivElement>(null); // Ref for the view mode toggle group
 
-  // Handler pre zmenu témy
+  // Handle theme changes
   const handleThemeChange = (value: ToggleGroupValue) => {
     if (typeof value === "string") {
       setTheme(value);
       if (value === "custom") {
-        setIsEditorOpen(true);
+        setIsEditorOpen(true); // Open modal for custom theme editing
       }
     }
   };
 
-  // Handler pre zmenu view mode
+  // Handle view mode changes
   const handleViewModeChange = (value: ToggleGroupValue) => {
     if (typeof value === "string") {
       setViewMode(value);
     }
   };
 
+  // Set default theme properties on component mount
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--primary",
-      themeConfig.colors.primary
-    );
-    document.documentElement.style.setProperty(
-      "--primary-light",
-      themeConfig.colors.primaryLight
-    );
-    document.documentElement.style.setProperty(
-      "--toggle-border",
-      themeConfig.colors.toggleBorder
-    );
-    document.documentElement.style.setProperty(
-      "--toggle-text",
-      themeConfig.colors.toggleText
-    );
-    document.documentElement.style.setProperty(
-      "--toggle-background",
-      themeConfig.colors.toggleBackground
-    );
+    const { colors } = themeConfig;
+    if (colors) {
+      document.documentElement.style.setProperty(
+        "--primary",
+        colors.primary || "#000"
+      );
+      document.documentElement.style.setProperty(
+        "--primary-light",
+        colors.primaryLight || "#fff"
+      );
+      document.documentElement.style.setProperty(
+        "--toggle-border",
+        colors.toggleBorder || "#ccc"
+      );
+      document.documentElement.style.setProperty(
+        "--toggle-text",
+        colors.toggleText || "#000"
+      );
+      document.documentElement.style.setProperty(
+        "--toggle-background",
+        colors.toggleBackground || "#f0f0f0"
+      );
+    }
   }, []);
 
+  // Calculate indicator position for toggle groups
   const getIndicatorPosition = (
     groupRef: React.RefObject<HTMLDivElement>,
     value: string
@@ -65,10 +70,42 @@ const ThemeSwitcher: React.FC = () => {
     if (selectedButton && groupRef.current) {
       const groupRect = groupRef.current.getBoundingClientRect();
       const buttonRect = selectedButton.getBoundingClientRect();
-      return buttonRect.left - groupRect.left + buttonRect.width / 2;
+      return buttonRect.left - groupRect.left + buttonRect.width / 2 - 10; // Center the triangle indicator
     }
     return 0;
   };
+
+  // Update indicator positions when theme or view mode changes
+  useEffect(() => {
+    if (themeGroupRef.current) {
+      const themePosition = getIndicatorPosition(themeGroupRef, theme);
+      themeGroupRef.current.style.setProperty(
+        "--theme-position",
+        `${themePosition}px`
+      );
+    }
+    if (viewGroupRef.current) {
+      const viewModePosition = getIndicatorPosition(viewGroupRef, viewMode);
+      viewGroupRef.current.style.setProperty(
+        "--view-mode-position",
+        `${viewModePosition}px`
+      );
+    }
+  }, [theme, viewMode]);
+
+  // Persist settings to local storage
+  useEffect(() => {
+    localStorage.setItem("theme", theme);
+    localStorage.setItem("viewMode", viewMode);
+  }, [theme, viewMode]);
+
+  // Load settings from local storage on component mount
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme");
+    const storedViewMode = localStorage.getItem("viewMode");
+    if (storedTheme) setTheme(storedTheme);
+    if (storedViewMode) setViewMode(storedViewMode);
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -96,7 +133,10 @@ const ThemeSwitcher: React.FC = () => {
           <div
             className="toggle-group-indicator"
             style={{
-              transform: `translateX(${getIndicatorPosition(themeGroupRef, theme)}px)`,
+              transform: `translateX(var(--theme-position, ${getIndicatorPosition(
+                themeGroupRef,
+                theme
+              )}px))`,
             }}
           />
         </div>
@@ -120,7 +160,10 @@ const ThemeSwitcher: React.FC = () => {
           <div
             className="toggle-group-indicator"
             style={{
-              transform: `translateX(${getIndicatorPosition(viewGroupRef, viewMode)}px)`,
+              transform: `translateX(var(--view-mode-position, ${getIndicatorPosition(
+                viewGroupRef,
+                viewMode
+              )}px))`,
             }}
           />
         </div>

@@ -1,130 +1,74 @@
-import React, { useState, useEffect } from "react";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs.ui";
-import { Card, CardContent } from "@/components/ui/card.ui";
-import { Label } from "@/components/ui/label.ui";
-import { Input } from "@/components/ui/input.ui";
-import GeneralModal from "./general.modal";
+import React, { useState } from "react";
+import { updateTheme } from "@/api/themes.api"; // Import API function
 
-interface ThemeEditorModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const ThemeEditorModal: React.FC<ThemeEditorModalProps> = ({
-  isOpen,
+const ThemeEditorModal: React.FC<{ theme: any; onClose: () => void }> = ({
+  theme,
   onClose,
 }) => {
-  const [config, setConfig] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<string>("modal");
+  const [formData, setFormData] = useState(theme);
 
-  // Load configuration from JSON
-  useEffect(() => {
-    if (isOpen) {
-      fetch("/src/configs/theme-config.json")
-        .then((res) => res.json())
-        .then((data) => setConfig(data))
-        .catch((err) => console.error("Failed to load config:", err));
-    }
-  }, [isOpen]);
-
-  // Handle input change
-  const handleInputChange = (
-    section: string,
-    key: string,
-    value: string | number
-  ) => {
-    setConfig((prevConfig: any) => ({
-      ...prevConfig,
-      [section]: {
-        ...prevConfig[section],
-        [key]: value,
-      },
-    }));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Save configuration to JSON
-  const saveConfig = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      await fetch("/src/configs/theme-config.json", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(config, null, 2),
-      });
-      alert("Configuration saved!");
-      onClose();
-    } catch (err) {
-      console.error("Failed to save config:", err);
+      await updateTheme(formData); // Call API to update theme
+      alert("Theme updated successfully!");
+      onClose(); // Close modal after successful update
+    } catch (error) {
+      console.error("Failed to update theme:", error);
+      alert("Error updating theme");
     }
   };
-
-  if (!config) {
-    return null; // Render nothing while loading
-  }
 
   return (
-    <GeneralModal
-      isOpen={isOpen}
-      onClose={onClose}
-      actions={
-        <button
-          onClick={saveConfig}
-          className="px-4 py-2 bg-primary text-white rounded-lg"
-        >
-          Save Changes
+    <div className="modal">
+      <form onSubmit={handleSubmit}>
+        <label>
+          None Value:
+          <input
+            type="text"
+            name="none_value"
+            value={formData.none_value || ""}
+            onChange={handleInputChange}
+          />
+        </label>
+        <label>
+          Default Value:
+          <input
+            type="text"
+            name="default_value"
+            value={formData.default_value || ""}
+            onChange={handleInputChange}
+          />
+        </label>
+        <label>
+          Test Value:
+          <input
+            type="text"
+            name="test_value"
+            value={formData.test_value || ""}
+            onChange={handleInputChange}
+          />
+        </label>
+        <label>
+          Custom Value:
+          <input
+            type="text"
+            name="custom_value"
+            value={formData.custom_value || ""}
+            onChange={handleInputChange}
+          />
+        </label>
+        <button type="submit">Save</button>
+        <button type="button" onClick={onClose}>
+          Cancel
         </button>
-      }
-    >
-      <div className="w-full max-w-4xl">
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            {Object.keys(config).map((section) => (
-              <TabsTrigger key={section} value={section}>
-                {section.charAt(0).toUpperCase() + section.slice(1)}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {Object.keys(config).map((section) => (
-            <TabsContent key={section} value={section}>
-              <Card>
-                <CardContent className="space-y-4 pt-4">
-                  {Object.keys(config[section]).map((key) => (
-                    <div key={key} className="space-y-2">
-                      <Label htmlFor={`${section}-${key}`}>
-                        {key.charAt(0).toUpperCase() + key.slice(1)}
-                      </Label>
-                      <Input
-                        id={`${section}-${key}`}
-                        type={
-                          typeof config[section][key] === "number"
-                            ? "number"
-                            : "text"
-                        }
-                        value={config[section][key]}
-                        onChange={(e) =>
-                          handleInputChange(
-                            section,
-                            key,
-                            e.target.value || e.target.valueAsNumber
-                          )
-                        }
-                      />
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </div>
-    </GeneralModal>
+      </form>
+    </div>
   );
 };
 
