@@ -1,0 +1,19 @@
+/* Nastavenie základných štýlov pre stránku */
+html, body {
+  margin: 0; /* Odstránenie okrajov */
+  padding: 0; /* Odstránenie vnútornej medzery */
+  width: 100%; /* Nastavenie šírky na celú obrazovku */
+  height: 100%; /* Nastavenie výšky na celú obrazovku */
+  background-color:rgb(35, 98, 160); /* Svetlomodré pozadie */
+  font-family: Arial, sans-serif; /* Nastavenie predvoleného fontu */
+  color: #333; /* Tmavošedý text */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Pridanie štýlov pre testovací obsah */
+h1 {
+  font-size: 2rem;
+  text-align: center;
+}

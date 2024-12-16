@@ -1,10 +1,9 @@
-// ./front/src/components/sections/footers/test-footer.component.tsx
 import React, { useState } from "react";
+import FooterSwitch from "@/components/elements/footer-switch.element";
 import ThemeSwitcher from "@/components/elements/theme-switcher.element";
 import ThemeEditorModal from "@/components/modals/theme-editor.modal";
 import ColorPaletteModal from "@/components/modals/color-palette.modal";
 import { Button } from "@/components/ui";
-import { Switch } from "@/components/ui";
 
 const TestFooter: React.FC = () => {
   const [isThemeEditorOpen, setIsThemeEditorOpen] = useState(false);
@@ -18,19 +17,18 @@ const TestFooter: React.FC = () => {
           <ThemeSwitcher />
         </div>
 
+        {/* FooterSwitch pre prepínanie štýlov */}
+        <div className="flex gap-2 items-center">
+          <FooterSwitch />
+        </div>
+
         {/* Modálne okná a ich tlačidlá napravo */}
         <div className="flex gap-4">
-          <Button
-            variant="secondary"
-            onClick={() => setIsThemeEditorOpen(true)}
-          >
+          <Button variant="secondary" onClick={() => setIsThemeEditorOpen(true)}>
             Theme Editor
           </Button>
 
-          <Button
-            variant="secondary"
-            onClick={() => setIsColorPaletteOpen(true)}
-          >
+          <Button variant="secondary" onClick={() => setIsColorPaletteOpen(true)}>
             Color Palette
           </Button>
         </div>
@@ -39,6 +37,10 @@ const TestFooter: React.FC = () => {
         <ThemeEditorModal
           isOpen={isThemeEditorOpen}
           onClose={() => setIsThemeEditorOpen(false)}
+          editorData={{}}
+          onSave={() => {
+            console.log("Save clicked");
+          }}
         />
 
         <ColorPaletteModal

@@ -1,11 +1,11 @@
 // ./front/src/types/dots.ts
 import colors from "@/constants/colors";
 
-// Základné typy pre dots
+// basic
 export type TopRowType = "client" | "forwarder" | "carrier" | null;
 export type BottomRowType = "anonymous" | "cookies" | "registered" | null;
 
-// Typy pre farby
+// for colors
 export type DotsColors = typeof colors.components.dots;
 export type DotsColorValues = DotsColors[keyof DotsColors];
 export type DotsArray = DotsColorValues[];
@@ -24,7 +24,7 @@ export interface NavCenterGroupProps extends Omit<NavDotsProps, "onClick"> {
   onRegisterClick: () => void;
 }
 
-// Props pre Modal
+// Props for Modal
 export interface DotsModalProps {
   isOpen: boolean;
   onClose: () => void;

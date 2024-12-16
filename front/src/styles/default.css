@@ -1,0 +1,14 @@
+/* Default štýly */
+body {
+  background-color: #f0f0f0;
+  color: #333;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+section {
+  background-color: lightblue;
+  padding: 20px;
+  border: 1px solid #ccc;
+}

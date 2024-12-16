@@ -1,16 +1,13 @@
 // ./front/src/components/modals/color-palette.modal.tsx
-import React, { useState, useEffect, useRef } from "react";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs.ui";
+import React, { useState } from "react";
+import { Tabs } from "@/components/ui/tabs.ui";
 import { Button } from "@/components/ui";
+import GeneralModal from "@/components/modals/general.modal";
 
-interface CircularPaletteModalProps {
+interface ColorPaletteModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onColorSelect?: (color: string) => void;
 }
 
 const TAILWIND_COLORS = {
@@ -45,59 +42,45 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
   initialAngle,
   onAngleChange,
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [angle, setAngle] = useState(initialAngle);
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [showTooltip, setShowTooltip] = useState(false);
+  const wheelSize = 400;
+  const center = wheelSize / 2;
+  const outerRadius = center - 40;
+  const innerRadius = outerRadius - 50;
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  // Generate color segments
+  const segments = Array.from({ length: 360 }, (_, i) => {
+    const startAngle = ((i - 2) * Math.PI) / 180;
+    const endAngle = ((i + 2) * Math.PI) / 180;
+    
+    const startX1 = center + Math.cos(startAngle) * outerRadius;
+    const startY1 = center + Math.sin(startAngle) * outerRadius;
+    const endX1 = center + Math.cos(endAngle) * outerRadius;
+    const endY1 = center + Math.sin(endAngle) * outerRadius;
+    
+    const startX2 = center + Math.cos(endAngle) * innerRadius;
+    const startY2 = center + Math.sin(endAngle) * innerRadius;
+    const endX2 = center + Math.cos(startAngle) * innerRadius;
+    const endY2 = center + Math.sin(startAngle) * innerRadius;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const outerRadius = Math.min(centerX, centerY) - 40;
-    const innerRadius = outerRadius - 50;
+    const path = `
+      M ${startX1} ${startY1}
+      A ${outerRadius} ${outerRadius} 0 0 1 ${endX1} ${endY1}
+      L ${startX2} ${startY2}
+      A ${innerRadius} ${innerRadius} 0 0 0 ${endX2} ${endY2}
+      Z
+    `;
 
-    for (let angle = 0; angle < 360; angle++) {
-      const startAngle = ((angle - 2) * Math.PI) / 180;
-      const endAngle = ((angle + 2) * Math.PI) / 180;
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
-      ctx.arc(centerX, centerY, innerRadius, endAngle, startAngle, true);
-      ctx.closePath();
-      ctx.fillStyle = `hsl(${angle}, 100%, 50%)`;
-      ctx.fill();
-    }
+    return {
+      path,
+      color: `hsl(${i}, 100%, 50%)`,
+      angle: i,
+    };
+  });
 
-    const handX =
-      centerX + Math.cos((angle * Math.PI) / 180) * (outerRadius - 25);
-    const handY =
-      centerY + Math.sin((angle * Math.PI) / 180) * (outerRadius - 25);
-    setTooltipPos({ x: handX, y: handY });
-
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.lineTo(handX, handY);
-    ctx.strokeStyle = "#333";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(handX, handY, 35, 0, Math.PI * 2);
-    ctx.fillStyle = selectedColor;
-    ctx.fill();
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-  }, [angle, selectedColor]);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.MouseEvent<SVGElement>) => {
     setIsDragging(true);
     setShowTooltip(true);
     handleMouseMove(e);
@@ -108,38 +91,69 @@ const ColorWheel: React.FC<ColorWheelProps> = ({
     setShowTooltip(false);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas || !isDragging) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left - canvas.width / 2;
-    const y = e.clientY - rect.top - canvas.width / 2;
+  const handleMouseMove = (e: React.MouseEvent<SVGElement>) => {
+    if (!isDragging) return;
+    const svgRect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - svgRect.left - center;
+    const y = e.clientY - svgRect.top - center;
     let newAngle = (Math.atan2(y, x) * 180) / Math.PI;
     if (newAngle < 0) newAngle += 360;
     setAngle(newAngle);
     onAngleChange(newAngle);
-    const newColor = `hsl(${newAngle}, 100%, 50%)`;
-    onColorSelect(newColor);
+    onColorSelect(`hsl(${newAngle}, 100%, 50%)`);
   };
+
+  // Calculate selector position
+  const selectorX = center + Math.cos((angle * Math.PI) / 180) * (outerRadius - 25);
+  const selectorY = center + Math.sin((angle * Math.PI) / 180) * (outerRadius - 25);
 
   return (
     <div className="relative">
-      <canvas
-        ref={canvasRef}
-        width={400}
-        height={400}
+      <svg
+        width={wheelSize}
+        height={wheelSize}
         className="cursor-pointer"
         onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-      />
+      >
+        {/* Color segments */}
+        {segments.map((segment, i) => (
+          <path
+            key={i}
+            d={segment.path}
+            fill={segment.color}
+          />
+        ))}
+        
+        {/* Selector line */}
+        <line
+          x1={center}
+          y1={center}
+          x2={selectorX}
+          y2={selectorY}
+          stroke="#333"
+          strokeWidth="3"
+        />
+        
+        {/* Selector circle */}
+        <circle
+          cx={selectorX}
+          cy={selectorY}
+          r="35"
+          fill={selectedColor}
+          stroke="#fff"
+          strokeWidth="3"
+        />
+      </svg>
+
       {showTooltip && (
         <div
           className="absolute bg-gray-900 text-white px-2 py-1 rounded text-sm whitespace-nowrap pointer-events-none"
           style={{
-            left: tooltipPos.x,
-            top: tooltipPos.y + 45,
+            left: selectorX,
+            top: selectorY + 45,
             transform: "translateX(-50%)",
           }}
         >
@@ -223,15 +237,21 @@ function generateShadesFromColor(color: string): string[] {
   });
 }
 
-const CircularPaletteModal: React.FC<CircularPaletteModalProps> = ({
+const ColorPaletteModal: React.FC<ColorPaletteModalProps> = ({
   isOpen,
   onClose,
+  onColorSelect,
 }) => {
   const [selectedColor, setSelectedColor] = useState("hsl(0, 100%, 50%)");
   const [currentAngle, setCurrentAngle] = useState(0);
   const [showCopied, setShowCopied] = useState(false);
   const [activeTab, setActiveTab] = useState("wheel");
   const shades = generateShadesFromColor(selectedColor);
+
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+    onColorSelect?.(color);
+  };
 
   const copyToClipboard = async () => {
     const hue = parseInt(selectedColor.match(/hsl\((\d+)/)?.[1] || "0");
@@ -248,93 +268,79 @@ const CircularPaletteModal: React.FC<CircularPaletteModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <>
-      <div className="fixed inset-0 bg-modal-backdrop backdrop-blur-modal z-modalBackdrop" />
-      <div
-        style={{ top: "var(--modal-top-offset)" }}
-        className="fixed left-1/2 transform -translate-x-1/2 w-full max-w-modal mx-modal-sides z-modal"
-      >
-        <div className="bg-modal-light-bg dark:bg-modal-dark-bg rounded-modal shadow-modal max-h-[90vh] overflow-y-auto">
-          <div className="relative p-6">
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-1 hover:bg-modal-light-hover dark:hover:bg-modal-dark-hover rounded-lg transition-colors duration-modal"
-              aria-label="Close modal"
-            >
-              &times;
-            </button>
-            <h2 className="text-modal-title font-bold mb-modal-gap">
-              Choose Color
-            </h2>
+    <GeneralModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Choose Color"
+      actions={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={() => {
+            handleColorSelect(selectedColor);
+            onClose();
+          }}>
+            Select Color
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col items-center space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs.List>
+            <Tabs.Trigger value="wheel">Color Wheel</Tabs.Trigger>
+            <Tabs.Trigger value="tailwind">Tailwind Colors</Tabs.Trigger>
+            <Tabs.Trigger value="custom">Custom Palette</Tabs.Trigger>
+          </Tabs.List>
 
-            <div className="flex flex-col items-center space-y-6">
-              <Tabs
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="w-full"
+          <Tabs.Content value="wheel">
+            <ColorWheel
+              onColorSelect={handleColorSelect}
+              selectedColor={selectedColor}
+              initialAngle={currentAngle}
+              onAngleChange={setCurrentAngle}
+            />
+          </Tabs.Content>
+          <Tabs.Content value="tailwind">
+            <TailwindPalette onColorSelect={handleColorSelect} />
+          </Tabs.Content>
+          <Tabs.Content value="custom">
+            <CustomPalette onColorSelect={handleColorSelect} />
+          </Tabs.Content>
+        </Tabs>
+
+        <div className="w-full">
+          <div className="relative">
+            <div
+              className="h-20 w-full rounded-lg shadow-lg border cursor-pointer"
+              style={{ backgroundColor: selectedColor }}
+              onClick={copyToClipboard}
+            />
+            {showCopied && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-75 text-white px-4 py-2 rounded-lg">
+                Copied to clipboard!
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-10 gap-2 mt-4">
+            {shades.map((shade, index) => (
+              <div
+                key={index}
+                className="w-full pt-[100%] relative rounded shadow-md cursor-pointer"
+                onClick={() => handleColorSelect(shade)}
               >
-                <TabsList className="w-full">
-                  <TabsTrigger value="wheel">Color Wheel</TabsTrigger>
-                  <TabsTrigger value="tailwind">Tailwind Colors</TabsTrigger>
-                  <TabsTrigger value="custom">Custom Palette</TabsTrigger>
-                </TabsList>
-                <TabsContent value="wheel">
-                  <ColorWheel
-                    onColorSelect={setSelectedColor}
-                    selectedColor={selectedColor}
-                    initialAngle={currentAngle}
-                    onAngleChange={setCurrentAngle}
-                  />
-                </TabsContent>
-                <TabsContent value="tailwind">
-                  <TailwindPalette onColorSelect={setSelectedColor} />
-                </TabsContent>
-                <TabsContent value="custom">
-                  <CustomPalette onColorSelect={setSelectedColor} />
-                </TabsContent>
-              </Tabs>
-
-              <div className="w-full">
-                <div className="relative">
-                  <div
-                    className="h-20 w-full rounded-lg shadow-lg border cursor-pointer"
-                    style={{ backgroundColor: selectedColor }}
-                    onClick={copyToClipboard}
-                  />
-                  {showCopied && (
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-75 text-white px-4 py-2 rounded-lg">
-                      Copied to clipboard!
-                    </div>
-                  )}
-                </div>
-                <div className="grid grid-cols-10 gap-2 mt-4">
-                  {shades.map((shade, index) => (
-                    <div
-                      key={index}
-                      className="w-full pt-[100%] relative rounded shadow-md cursor-pointer"
-                      onClick={() => setSelectedColor(shade)}
-                    >
-                      <div
-                        className="absolute inset-0 rounded"
-                        style={{ backgroundColor: shade }}
-                      />
-                    </div>
-                  ))}
-                </div>
+                <div
+                  className="absolute inset-0 rounded"
+                  style={{ backgroundColor: shade }}
+                />
               </div>
-
-              <div className="flex justify-end space-x-modal-gap w-full">
-                <Button variant="secondary" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button>Save Changes</Button>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
-    </>
+    </GeneralModal>
   );
 };
 
-export default CircularPaletteModal;
+export default ColorPaletteModal;

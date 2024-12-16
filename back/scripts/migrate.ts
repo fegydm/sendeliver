@@ -1,6 +1,6 @@
 // ./back/scripts/migrate.ts
 import { PrismaClient } from "@prisma/client";
-import { logger } from "../configs/logger";
+import { logger } from "../src/configs/logger";
 
 const prisma = new PrismaClient();
 

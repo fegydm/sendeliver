@@ -7,8 +7,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import dotenv from "dotenv";
-import { router as aiRouter } from "./routes/ai.routes";
-import themesRouter from "./routes/themes.routes";
+import aiRouter from "./routes/ai.routes.js";
+import themesRouter from "./routes/themes.routes.js";
 
 dotenv.config(); // Load environment variables from .env file
 

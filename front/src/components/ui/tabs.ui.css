@@ -55,7 +55,7 @@
   box-shadow: 0 0 0 2px var(--color-ring);
 }
 
-/* CSS premenné pre farebnú schému */
+/* CSS for color */
 :root {
   --color-background: #ffffff;
   --color-background-muted: #f4f4f5;

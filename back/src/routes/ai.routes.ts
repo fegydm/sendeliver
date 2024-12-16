@@ -1,6 +1,6 @@
 // ./back/src/routes/ai.routes.ts
 import { Router, Request, Response } from "express";
-import { AIService } from "../services/ai.services";
+import { AIService } from "../services/ai.services.js";
 import { AIRequest, AIResponse } from "../types/ai.types";
 
 interface TypedRequestBody<T> extends Request {
@@ -47,4 +47,4 @@ router.post(
   }
 );
 
-export { router };
+export default router;

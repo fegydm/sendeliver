@@ -1,0 +1,25 @@
+/* Základný stav bez štýlov */
+html:not([class]) * {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+/* Štýly pre default tému */
+html.theme-default {
+  /* tvoje default štýly */
+}
+
+/* Štýly pre testing tému */
+html.theme-testing {
+  /* tvoje testing štýly */
+}
+
+/* Štýly pre custom tému */
+html.theme-custom {
+  /* tvoje custom štýly používajúce CSS premenné */
+}

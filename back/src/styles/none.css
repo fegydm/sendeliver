@@ -1,0 +1,17 @@
+/* none.css */
+* {
+  all: revert !important;
+  background: initial !important;
+  color: initial !important;
+  font-family: initial !important;
+  box-sizing: border-box !important;
+}
+
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: white !important;
+  color: black !important;
+  font-family: sans-serif !important;
+  line-height: 1.2 !important;
+}

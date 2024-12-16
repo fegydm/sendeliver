@@ -1,4 +1,4 @@
-// ./components/modals/login-modal.component.tsx
+// .front/src/components/modals/login.modal.tsx
 import React from "react";
 import { Input, Button } from "@/components/ui";
 import GeneralModal from "@/components/modals/general.modal";

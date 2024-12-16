@@ -1,0 +1,41 @@
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: initial;
+  font-family: initial;
+  font-weight: initial;
+  line-height: initial;
+  text-align: initial;
+  text-decoration: initial;
+  box-shadow: none;
+  box-sizing: border-box;
+  position: initial;
+  display: initial;
+  transform: none;
+  transition: none;
+  outline: none;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Resetujeme CSS premenné */
+:root {
+  --page-background: initial;
+  --navbar-background: initial;
+  --modal-background: initial;
+  /* pridaj všetky CSS premenné ktoré používaš */
+}
+
+/* Základná funkcionalita */
+html, body {
+  height: 100%;
+  overflow: auto;
+}
+
+/* Zachovanie kurzorov */
+button, input, a {
+  cursor: pointer;
+}

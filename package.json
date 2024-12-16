@@ -1,26 +1,23 @@
+
 {
   "name": "sendeliver-root",
   "version": "1.0.0",
   "type": "module",
   "private": true,
   "scripts": {
-    "preinstall": "npm install concurrently -D",
-    "install": "npm install concurrently -D && npm run install:front && npm run install:back",
+    "install": "npm run install:front && npm run install:back",
     "install:front": "cd front && npm install",
     "install:back": "cd back && npm install",
     "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
     "start": "cd back && npm start",
+    "vite": "cd front && npm run dev",
     "build": "npm run build:front && npm run build:back",
     "build:front": "cd front && npm run build",
     "build:back": "cd back && npm run build",
-    "clean": "rm -rf back/dist front/dist node_modules back/node_modules front/node_modules back/package-lock.json front/package-lock.json package-lock.json"
+    "clean": "node back/scripts/clean.js"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
-  },
-  "dependencies": {
-    "normalize.css": "^8.0.1",
-    "react-hot-toast": "^2.4.1",
+    "concurrently": "^9.1.0",
     "typescript": "^5.7.2"
   }
 }
