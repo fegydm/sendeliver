@@ -1,0 +1,19 @@
+:root.theme-default {
+  /* Base colors */
+  --background: #000; /* Black background */
+  --foreground: #fff; /* White text */
+
+  /* Banner-specific styles */
+  --banner-background: #000; /* Black banner background */
+  --banner-text-color: #fff; /* White text color for banner */
+
+  /* Components */
+  --page-background: var(--background);
+  --navbar-background: var(--background);
+  --modal-background: var(--background);
+  --modal-foreground: var(--foreground);
+
+  /* Borders and sections */
+  --section-background: var(--background);
+  --section-border: #444;
+}

@@ -1,0 +1,39 @@
+:root.theme-none {
+  --background: transparent; /* Transparent background */
+  --foreground: inherit; /* Inherit default text color */
+
+  /* Banner-specific styles */
+  --banner-background: transparent; /* Transparent banner background */
+  --banner-text-color: inherit; /* Default text color for banner */
+
+  /* Other components */
+  --page-background: inherit;
+  --navbar-background: inherit;
+  --modal-background: inherit;
+  --modal-foreground: inherit;
+
+  /* System colors */
+  --primary: inherit;
+  --primary-foreground: inherit;
+  --secondary: inherit;
+  --secondary-foreground: inherit;
+  --muted: inherit;
+  --muted-foreground: inherit;
+  --accent: inherit;
+  --accent-foreground: inherit;
+  --destructive: inherit;
+  --destructive-foreground: inherit;
+  --card: inherit;
+  --card-foreground: inherit;
+  --popover: inherit;
+  --popover-foreground: inherit;
+  --border: inherit;
+  --input: inherit;
+  --ring: inherit;
+
+  /* Theme-specific rules */
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+}

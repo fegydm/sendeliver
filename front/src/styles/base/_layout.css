@@ -1,0 +1,16 @@
+/* Global body styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family, Arial, sans-serif);
+  background-color: var(--background, white);
+  color: var(--foreground, black);
+  line-height: 1.5;
+}
+
+/* Generic container for sections */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}

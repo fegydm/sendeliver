@@ -1,0 +1,33 @@
+:root {
+  /* Základné */
+  --background: white;
+  --foreground: black;
+
+  /* Komponenty */
+  --page-background: #ffffff;
+  --navbar-background: #ffffff;
+  --modal-background: #ffffff;
+  --modal-foreground: #000000;
+
+  /* Systémové farby */
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #18181b;
+
+  /* Radius */
+  --radius: 0.5rem;
+}

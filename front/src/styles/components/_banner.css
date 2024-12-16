@@ -1,0 +1,35 @@
+/* Banner styles */
+.banner {
+  background-color: var(--banner-background, transparent);
+  color: var(--banner-text-color, inherit);
+  height: var(--banner-height, 150px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: var(--banner-padding, 20px);
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+}
+
+.banner-title {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--banner-text-color, inherit);
+  margin-right: auto;
+  padding-right: var(--banner-padding, 20px);
+  max-width: 60%;
+}
+
+.banner-animation {
+  width: 300px;
+  height: 100%;
+  margin-left: auto;
+}

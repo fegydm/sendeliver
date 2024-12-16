@@ -1,0 +1,20 @@
+:root.theme-testing {
+  /* Base colors */
+  --background: lightblue;
+  --foreground: darkblue;
+
+  /* Components */
+  --page-background: var(--background);
+  --navbar-background: var(--background);
+  --modal-background: var(--background);
+  --modal-foreground: var(--foreground);
+
+  /* Font family */
+  --font-family: "Verdana", sans-serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-family);
+}

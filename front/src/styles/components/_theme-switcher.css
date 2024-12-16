@@ -1,4 +1,4 @@
-/* theme-switcher.element.css */
+/* Theme Switcher Styles */
 
 /* Toggle group container styles */
 .toggle-group {
@@ -6,7 +6,7 @@
   display: flex;
   gap: 8px;
   padding: 4px;
-  background-color: #f3f4f6;
+  background-color: var(--background, #f3f4f6);
   border-radius: 8px;
 }
 
@@ -19,7 +19,7 @@
   border-radius: 6px;
   cursor: pointer;
   background: transparent;
-  color: #4b5563;
+  color: var(--text-muted, #4b5563);
   transition: all 0.2s ease;
 }
 
@@ -30,14 +30,14 @@
 
 /* Active state using data-state attribute */
 .toggle-item[data-state="on"] {
-  background-color: white;
-  color: #1f2937;
+  background-color: var(--foreground, white);
+  color: var(--text-primary, #1f2937);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Triangle indicator for active item */
 .toggle-item[data-state="on"]::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -12px;
   left: 50%;
@@ -46,7 +46,7 @@
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid #1f2937;
+  border-top: 6px solid var(--text-primary, #1f2937);
 }
 
 /* Group label styles */
@@ -54,7 +54,7 @@
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--text-muted, #4b5563);
 }
 
 /* Responsive styles */
@@ -62,9 +62,31 @@
   .toggle-group {
     width: 100%;
   }
-  
+
   .toggle-item {
     flex: 1;
     text-align: center;
   }
+}
+/* Theme Switcher Styles */
+.theme-switcher-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.theme-switcher-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.theme-switcher-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted, #4b5563);
+}
+
+.theme-switcher-toggle {
+  position: relative;
 }
