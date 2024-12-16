@@ -8,7 +8,6 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import dotenv from "dotenv";
 import aiRouter from "./routes/ai.routes.js";
-import themesRouter from "./routes/themes.routes.js";
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -109,7 +108,6 @@ wss.on("close", () => {
 
 // API Routes
 app.use("/api/ai", aiRouter);
-app.use("/api/themes", themesRouter);
 
 // Health check route
 app.get("/api/health", (_req: Request, res: Response) => {

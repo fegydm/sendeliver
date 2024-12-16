@@ -1,10 +1,11 @@
+// front/tailwind.config.ts
 import formsPlugin from "@tailwindcss/forms";
-import animatePlugin from "tailwindcss-animate"; // Import pluginu namiesto require
+import animatePlugin from "tailwindcss-animate"; // Import the plugin instead of require
 import colors, { base } from "./src/constants/colors";
 
 export default {
-  content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
-  darkMode: "class",
+  content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"], // Define the paths to content files for purge
+  darkMode: "class", // Enable dark mode based on a CSS class
   theme: {
     colors: {
       ...base,
@@ -17,12 +18,12 @@ export default {
       border: colors.semantic.border,
       interactive: colors.semantic.interactive,
 
-      // Component colors
+      // Component-specific colors
       navbar: colors.components.navbar,
       modal: colors.components.modal,
       dots: colors.components.dots,
 
-      // UI System colors
+      // UI System colors using CSS variables
       background: "hsl(var(--background))",
       foreground: "hsl(var(--foreground))",
       card: {
@@ -141,7 +142,7 @@ export default {
   },
   plugins: [
     formsPlugin,
-    animatePlugin, // Správny spôsob pridania pluginu
+    animatePlugin, // Correctly add the plugin
     function ({ addBase }: { addBase: Function }) {
       addBase({
         html: {
