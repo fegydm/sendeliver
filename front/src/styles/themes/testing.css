@@ -3,18 +3,37 @@
   --background: lightblue;
   --foreground: darkblue;
 
+  /* Banner-specific styles */
+  --banner-background: lightblue;
+  --banner-text-color: darkblue;
+
+  /* Navbar-specific styles */
+  --navbar-background: lightblue;
+  --navbar-border: #5a9bd5;
+  --navbar-group-border: #5a9bd5;
+  --navbar-button-hover: #b0e0e6;
+  --navbar-icon-color: #004080;
+
+  /* Avatar button */
+  --avatar-bg: #add8e6;
+
+  /* Buttons */
+  --button-bg-color: #0066cc;
+  --button-hover-bg: #004080;
+  --button-text-color: #fff;
+
   /* Components */
   --page-background: var(--background);
-  --navbar-background: var(--background);
   --modal-background: var(--background);
   --modal-foreground: var(--foreground);
 
   /* Font family */
   --font-family: "Verdana", sans-serif;
-}
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-family);
+  /* Theme-specific rules */
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-family, Arial, sans-serif);
+  }
 }

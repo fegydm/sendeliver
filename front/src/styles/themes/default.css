@@ -4,16 +4,36 @@
   --foreground: #fff; /* White text */
 
   /* Banner-specific styles */
-  --banner-background: #000; /* Black banner background */
-  --banner-text-color: #fff; /* White text color for banner */
+  --banner-background: #000;
+  --banner-text-color: #fff;
+
+  /* Navbar-specific styles */
+  --navbar-background: #d1d5db; /* Gray 300 */
+  --navbar-border: #999;
+  --navbar-group-border: #ccc;
+  --navbar-button-hover: #e5e7eb;
+  --navbar-icon-color: #333;
+
+  /* Avatar button */
+  --avatar-bg: #e5e7eb;
+
+  /* Buttons */
+  --button-bg-color: #333;
+  --button-hover-bg: #555;
+  --button-text-color: #fff;
 
   /* Components */
   --page-background: var(--background);
-  --navbar-background: var(--background);
   --modal-background: var(--background);
   --modal-foreground: var(--foreground);
 
   /* Borders and sections */
   --section-background: var(--background);
   --section-border: #444;
+
+  /* Theme-specific rules */
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
 }

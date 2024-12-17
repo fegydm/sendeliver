@@ -3,14 +3,28 @@
   --foreground: inherit; /* Inherit default text color */
 
   /* Banner-specific styles */
-  --banner-background: transparent; /* Transparent banner background */
-  --banner-text-color: inherit; /* Default text color for banner */
+  --banner-background: transparent;
+  --banner-text-color: inherit;
+
+  /* Navbar-specific styles */
+  --navbar-background: transparent;
+  --navbar-border: #000;
+  --navbar-group-border: #000;
+  --navbar-button-hover: rgba(0, 0, 0, 0.1);
+  --navbar-icon-color: #000;
 
   /* Other components */
   --page-background: inherit;
-  --navbar-background: inherit;
   --modal-background: inherit;
   --modal-foreground: inherit;
+
+  /* Avatar button */
+  --avatar-bg: transparent;
+
+  /* Buttons */
+  --button-bg-color: transparent;
+  --button-hover-bg: #ddd;
+  --button-text-color: #000;
 
   /* System colors */
   --primary: inherit;

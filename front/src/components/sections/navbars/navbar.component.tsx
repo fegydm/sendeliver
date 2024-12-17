@@ -1,8 +1,8 @@
 // ./front/src/components/navbars/navbar.component.tsx
 import { useState, FC, useCallback } from "react";
-import NavLeftGroup from "@/components/sections/navbars/nav-group-left.component";
-import NavCenterGroup from "@/components/sections/navbars/nav-group-center.component";
-import NavRightGroup from "@/components/sections/navbars/nav-group-right.component";
+import NavLeftGroup from "@/components/sections/navbars/NavbarGroupLeft";
+import NavCenterGroup from "@/components/sections/navbars/NavbarGroupCenter";
+import NavRightGroup from "@/components/sections/navbars/NavbarGroupRight";
 import AboutModal from "@/components/modals/about-modal.component";
 import LoginModal from "@/components/modals/login.modal";
 import RegisterModal from "@/components/modals/register-modal.component";
@@ -10,6 +10,7 @@ import DotsModal from "@/components/modals/dots-modal.component";
 import AvatarModal from "@/components/modals/avatar.modal";
 import { components } from "@/constants/colors/components";
 import type { TopRowType, BottomRowType, DotsArray } from "../../../types/dots";
+import "@/styles/components/_navbar.css"; // Import custom CSS
 
 type ModalType = "about" | "login" | "register" | "dots" | "avatar" | null;
 
@@ -19,23 +20,16 @@ interface NavigationProps {
 }
 
 const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
-  // Navigation states
   const [showBreadcrumbs, setShowBreadcrumbs] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
-  // Dots states
-  const [topDots, setTopDots] = useState<DotsArray>([
-    components.dots.inactive,
-    components.dots.inactive,
-    components.dots.inactive,
-  ]);
-  const [bottomDots, setBottomDots] = useState<DotsArray>([
-    components.dots.inactive,
-    components.dots.inactive,
-    components.dots.inactive,
-  ]);
+  const [topDots, setTopDots] = useState<DotsArray>(
+    Array(3).fill(components.dots.inactive)
+  );
+  const [bottomDots, setBottomDots] = useState<DotsArray>(
+    Array(3).fill(components.dots.inactive)
+  );
 
-  // Modal handlers
   const handleModalOpen = useCallback((modalType: ModalType) => {
     setActiveModal(modalType);
   }, []);
@@ -44,29 +38,22 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
     setActiveModal(null);
   }, []);
 
-  // Handler for breadcrumbs
   const handleBreadcrumbsToggle = useCallback(() => {
     setShowBreadcrumbs((prev) => !prev);
   }, []);
 
-  // Handler for change dots
   const handleDotsSelectionChange = useCallback(
     (top: TopRowType, bottom: BottomRowType) => {
-      const newTopDots: DotsArray = Array(3).fill(components.dots.inactive);
-      const newBottomDots: DotsArray = Array(3).fill(components.dots.inactive);
+      const newTopDots = Array(3).fill(components.dots.inactive);
+      const newBottomDots = Array(3).fill(components.dots.inactive);
 
       if (top) {
         const index = ["client", "forwarder", "carrier"].indexOf(top);
-        if (index !== -1) {
-          newTopDots[index] = components.dots[top];
-        }
+        if (index !== -1) newTopDots[index] = components.dots[top];
       }
-
       if (bottom) {
         const index = ["anonymous", "cookies", "registered"].indexOf(bottom);
-        if (index !== -1) {
-          newBottomDots[index] = components.dots[bottom];
-        }
+        if (index !== -1) newBottomDots[index] = components.dots[bottom];
       }
 
       setTopDots(newTopDots);
@@ -76,43 +63,35 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
   );
 
   return (
-    <header className="sticky top-0 z-navbar">
-      <nav
-        className="bg-navbar-light-bg dark:bg-navbar-dark-bg shadow-navbar 
-                    border-b border-navbar-light-border dark:border-navbar-dark-border"
-      >
-        <div className="max-w-content mx-auto px-4">
-          <div className="h-navbar flex items-center">
-            {/* Left Group */}
-            <div className="flex-1">
-              <NavLeftGroup
-                showBreadcrumbs={showBreadcrumbs}
-                onBreadcrumbsToggle={handleBreadcrumbsToggle}
-                onShowAbout={() => handleModalOpen("about")}
-                onLoginClick={() => handleModalOpen("login")}
-                onRegisterClick={() => handleModalOpen("register")}
-              />
-            </div>
+    <header className="navbar-header">
+      <nav className={`navbar ${isDarkMode ? "dark-mode" : ""}`}>
+        <div className="navbar-container">
+          <div className="navbar-group left">
+            <NavLeftGroup
+              showBreadcrumbs={showBreadcrumbs}
+              onBreadcrumbsToggle={handleBreadcrumbsToggle}
+              onShowAbout={() => handleModalOpen("about")}
+              onLoginClick={() => handleModalOpen("login")}
+              onRegisterClick={() => handleModalOpen("register")}
+            />
+          </div>
 
-            {/* Center Group */}
-            <div className="flex-1 flex justify-center">
-              <NavCenterGroup
-                onAvatarClick={() => handleModalOpen("avatar")}
-                onDotsClick={() => handleModalOpen("dots")}
-                onLoginClick={() => handleModalOpen("login")}
-                onRegisterClick={() => handleModalOpen("register")}
-                topDots={topDots}
-                bottomDots={bottomDots}
-              />
-            </div>
+          <div className="navbar-group center">
+            <NavCenterGroup
+              onAvatarClick={() => handleModalOpen("avatar")}
+              onDotsClick={() => handleModalOpen("dots")}
+              onLoginClick={() => handleModalOpen("login")}
+              onRegisterClick={() => handleModalOpen("register")}
+              topDots={topDots}
+              bottomDots={bottomDots}
+            />
+          </div>
 
-            {/* Right Group */}
-            <div className="flex-1 flex justify-end">
-              <NavRightGroup
-                isDarkMode={isDarkMode}
-                onToggleDarkMode={onToggleDarkMode}
-              />
-            </div>
+          <div className="navbar-group right">
+            <NavRightGroup
+              isDarkMode={isDarkMode}
+              onToggleDarkMode={onToggleDarkMode}
+            />
           </div>
         </div>
       </nav>

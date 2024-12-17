@@ -1,6 +1,7 @@
-// ./front/src/components/navbars/nav-right-group.component.tsx
+// ./front/src/components/navbars/NavbarGroupRight.tsx
 import { type FC } from "react";
 import { FiSun, FiMoon } from "react-icons/fi";
+import "@/styles/components/_navbar.css"; // Unified navbar styles
 
 interface NavRightGroupProps {
   isDarkMode: boolean;
@@ -12,29 +13,29 @@ const NavRightGroup: FC<NavRightGroupProps> = ({
   onToggleDarkMode,
 }) => {
   return (
-    <div className="flex items-center space-x-4">
+    <div className="navbar-group right">
       {/* Language Selector */}
       <button
-        className="p-2 rounded-md hover:bg-navbar-light-hover dark:hover:bg-navbar-dark-hover transition-colors flex items-center justify-center"
+        className="navbar-language-button"
         aria-label="Change language"
       >
         <img
           src="/flags/4x3/optimized/gb.svg"
           alt="Change language"
-          className="w-6 h-4 grayscale hover:grayscale-0 transition-all duration-200"
+          className="language-icon"
         />
       </button>
 
       {/* Dark Mode Toggle */}
       <button
         onClick={onToggleDarkMode}
-        className="p-2 rounded-md hover:bg-navbar-light-hover dark:hover:bg-navbar-dark-hover transition-colors flex items-center justify-center"
+        className="navbar-darkmode-button"
         aria-label="Toggle dark mode"
       >
         {isDarkMode ? (
-          <FiMoon className="w-5 h-5 text-navbar-dark-text" />
+          <FiMoon className="darkmode-icon" />
         ) : (
-          <FiSun className="w-5 h-5 text-navbar-light-text" />
+          <FiSun className="darkmode-icon" />
         )}
       </button>
     </div>
