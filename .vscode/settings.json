@@ -26,6 +26,8 @@
     "*.css": "postcss"
   },
   "cSpell.words": [
+    "darkmode",
+    "grayscale",
     "Košice",
     "navbars",
     "openai",

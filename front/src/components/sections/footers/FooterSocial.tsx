@@ -1,7 +1,6 @@
 // front/src/components/sections/footers/FooterSocial.tsx
 import React from "react";
 import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
-import "./FooterSocial.css";
 
 const SOCIAL_LINKS = [
   {

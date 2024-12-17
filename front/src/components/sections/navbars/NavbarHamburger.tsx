@@ -1,4 +1,4 @@
-// ./front/src/components/navbars/nav-hamburger.component.tsx
+// ./front/src/components/navbars/NavbarHamburger.tsx
 import { type FC, useState, useCallback } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 
@@ -13,15 +13,9 @@ interface MenuItemProps {
   children: React.ReactNode;
 }
 
-// Vyextrahovaný MenuItem komponent pre lepšiu znovupoužiteľnosť
+// Extracted MenuItem component for reusability
 const MenuItem: FC<MenuItemProps> = ({ onClick, children }) => (
-  <button
-    onClick={onClick}
-    className="w-full inline-flex items-center px-4 py-3 
-             text-navbar-light-text dark:text-navbar-dark-text 
-             hover:bg-navbar-light-hover dark:hover:bg-navbar-dark-hover 
-             transition-colors"
-  >
+  <button onClick={onClick} className="nav-hamburger-item">
     {children}
   </button>
 );
@@ -34,7 +28,7 @@ const NavHamburger: FC<NavHamburgerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = useCallback(() => {
-    setIsOpen(prev => !prev);
+    setIsOpen((prev) => !prev);
   }, []);
 
   const handleItemClick = useCallback((handler: () => void) => {
@@ -43,10 +37,10 @@ const NavHamburger: FC<NavHamburgerProps> = ({
   }, []);
 
   return (
-    <div className="lg:hidden">
+    <div className="nav-hamburger">
       <button
         onClick={toggleMenu}
-        className="flex items-center hover:opacity-80 transition-opacity"
+        className="nav-hamburger-toggle"
         aria-label="Toggle menu"
         aria-expanded={isOpen}
         title={isOpen ? "Close menu" : "Open menu"}
@@ -55,18 +49,8 @@ const NavHamburger: FC<NavHamburgerProps> = ({
       </button>
 
       {isOpen && (
-        <div
-          className="absolute left-0 right-0 bg-navbar-light-bg dark:bg-navbar-dark-bg 
-                    shadow-dropdown border-t border-navbar-light-hover 
-                    dark:border-navbar-dark-hover z-dropdown"
-          style={{
-            top: "calc(var(--navbar-height) + 4px)",
-          }}
-        >
-          <div 
-            className="max-w-screen-xl mx-auto divide-y divide-navbar-light-hover dark:divide-navbar-dark-hover"
-            role="menu"
-          >
+        <div className="nav-hamburger-menu" role="menu">
+          <div className="nav-hamburger-content">
             <MenuItem onClick={() => handleItemClick(onShowAbout)}>
               About
             </MenuItem>

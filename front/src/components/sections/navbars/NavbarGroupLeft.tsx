@@ -1,9 +1,8 @@
 // ./front/src/components/navbars/NavbarGroupLeft.tsx
 import { FC } from "react";
 import { Link } from "react-router-dom";
-import NavHamburger from "./nav-hamburger.component";
-import NavBreadcrumb from "./nav-breadcrumb.component";
-import "@/styles/components/_navbar.css"; // Import CSS styles for this component
+import NavHamburger from "./NavbarHamburger";
+import NavBreadcrumb from "./NavbarBreadcrumb";
 
 // Props interface for the left navigation group
 interface NavLeftGroupProps {
@@ -34,16 +33,8 @@ const NavLeftGroup: FC<NavLeftGroupProps> = ({
 
       {/* Logo and breadcrumb toggle */}
       <div className="nav-logo-container">
-        <img
-          src="/pics/logo.png"
-          alt="SenDeliver Logo"
-          className="nav-logo"
-        />
-        <Link
-          to="/"
-          className="nav-logo-link"
-          aria-label="Go to homepage"
-        />
+        <img src="/pics/logo.png" alt="SenDeliver Logo" className="nav-logo" />
+        <Link to="/" className="nav-logo-link" aria-label="Go to homepage" />
         <button
           onClick={onBreadcrumbsToggle}
           className="nav-breadcrumb-toggle"
@@ -69,10 +60,7 @@ const NavLeftGroup: FC<NavLeftGroupProps> = ({
       </div>
 
       {/* Company name - visible only on desktop */}
-      <button
-        onClick={onShowAbout}
-        className="nav-company-name"
-      >
+      <button onClick={onShowAbout} className="nav-company-name">
         <span>SenDeliver</span>
         <span className="nav-company-name-underline" />
       </button>

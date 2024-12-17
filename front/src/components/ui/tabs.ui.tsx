@@ -1,7 +1,6 @@
 // .front/src/components/ui/tabs.ui.ts
 
 import * as React from "react";
-import "./tabs.ui.css";
 
 // Base interface for shared props
 interface BaseProps {
@@ -40,9 +39,10 @@ interface InternalTabsProps {
 // Main Tabs component
 const Tabs: React.FC<TabsProps> & {
   List: React.FC<TabsListProps & InternalTabsProps>;
-  Trigger: React.FC<TabsTriggerProps & { isSelected?: boolean; onSelect?: (value: string) => void }>;
+  Trigger: React.FC<TabsTriggerProps>;
   Content: React.FC<TabsContentProps & InternalTabsProps>;
 } = ({ children, value, defaultValue, onValueChange, className }) => {
+  // State management for selected tab
   const [internalValue, setInternalValue] = React.useState(defaultValue);
   const selectedValue = value ?? internalValue;
   const handleValueChange = onValueChange ?? setInternalValue;
@@ -91,7 +91,7 @@ const TabsTrigger: React.FC<TabsTriggerProps> = ({
   onSelect,
 }) => (
   <button
-    className={`tabs-trigger ${isSelected ? "tabs-trigger--active" : ""} ${className || ""}`}
+    className={`tabs-trigger ${isSelected ? "tabs-trigger--active" : ""} ${className || ""}`.trim()}
     onClick={() => onSelect?.(value)}
   >
     {children}
@@ -104,7 +104,10 @@ const TabsContent: React.FC<TabsContentProps & InternalTabsProps> = ({
   value,
   className,
   selectedValue,
-}) => (value !== selectedValue ? null : <div className={`tabs-content ${className || ""}`}>{children}</div>);
+}) =>
+  value === selectedValue ? (
+    <div className={`tabs-content ${className || ""}`}>{children}</div>
+  ) : null;
 
 // Attach subcomponents to the main Tabs component
 Tabs.List = TabsList;
@@ -112,3 +115,10 @@ Tabs.Trigger = TabsTrigger;
 Tabs.Content = TabsContent;
 
 export { Tabs };
+
+/* =============================================
+   Notes:
+   - Unified CSS is imported from _ui-components.css.
+   - Removed inline styles and directly applied CSS classes.
+   - All components share common utilities and styling rules.
+   ============================================= */

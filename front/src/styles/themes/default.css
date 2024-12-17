@@ -1,14 +1,14 @@
 :root.theme-default {
   /* Base colors */
-  --background: #000; /* Black background */
-  --foreground: #fff; /* White text */
+  --background: #fff; /* White background */
+  --foreground: #000; /* Black text */
 
   /* Banner-specific styles */
   --banner-background: #000;
   --banner-text-color: #fff;
 
   /* Navbar-specific styles */
-  --navbar-background: #d1d5db; /* Gray 300 */
+  --navbar-background: #d1d5db; /* Gray 500 */
   --navbar-border: #999;
   --navbar-group-border: #ccc;
   --navbar-button-hover: #e5e7eb;

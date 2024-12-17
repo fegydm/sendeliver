@@ -1,6 +1,6 @@
-import React from "react";
-import "./button.ui.css";
+// ./src/components/ui/button.ui.tsx
 
+import React from "react";
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "close" | "ghost";
@@ -16,19 +16,19 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   ...props
 }) => {
+  // Combine classes logically
+  const buttonClasses = [
+    "btn",
+    `btn-${variant}`,
+    `btn-${size}`,
+    fullWidth ? "btn-full-width" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <button
-      className={`
-        btn
-        btn-${variant}
-        btn-${size}
-        ${fullWidth ? "btn-full-width" : ""}
-        ${className}
-      `
-        .trim()
-        .replace(/\s+/g, " ")}
-      {...props}
-    >
+    <button className={buttonClasses} {...props}>
       {children}
     </button>
   );

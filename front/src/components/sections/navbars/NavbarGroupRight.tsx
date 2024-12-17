@@ -1,8 +1,6 @@
 // ./front/src/components/navbars/NavbarGroupRight.tsx
 import { type FC } from "react";
 import { FiSun, FiMoon } from "react-icons/fi";
-import "@/styles/components/_navbar.css"; // Unified navbar styles
-
 interface NavRightGroupProps {
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
@@ -15,10 +13,7 @@ const NavRightGroup: FC<NavRightGroupProps> = ({
   return (
     <div className="navbar-group right">
       {/* Language Selector */}
-      <button
-        className="navbar-language-button"
-        aria-label="Change language"
-      >
+      <button className="navbar-language-button" aria-label="Change language">
         <img
           src="/flags/4x3/optimized/gb.svg"
           alt="Change language"

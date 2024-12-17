@@ -10,7 +10,6 @@ import DotsModal from "@/components/modals/dots-modal.component";
 import AvatarModal from "@/components/modals/avatar.modal";
 import { components } from "@/constants/colors/components";
 import type { TopRowType, BottomRowType, DotsArray } from "../../../types/dots";
-import "@/styles/components/_navbar.css"; // Import custom CSS
 
 type ModalType = "about" | "login" | "register" | "dots" | "avatar" | null;
 
@@ -63,36 +62,37 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
   );
 
   return (
-    <header className="navbar-header">
-      <nav className={`navbar ${isDarkMode ? "dark-mode" : ""}`}>
-        <div className="navbar-container">
-          <div className="navbar-group left">
-            <NavLeftGroup
-              showBreadcrumbs={showBreadcrumbs}
-              onBreadcrumbsToggle={handleBreadcrumbsToggle}
-              onShowAbout={() => handleModalOpen("about")}
-              onLoginClick={() => handleModalOpen("login")}
-              onRegisterClick={() => handleModalOpen("register")}
-            />
-          </div>
+    <header className="navbar">
+      <nav className={`navbar-container ${isDarkMode ? "dark-mode" : ""}`}>
+        {/* Left Group */}
+        <div className="navbar-group left">
+          <NavLeftGroup
+            showBreadcrumbs={showBreadcrumbs}
+            onBreadcrumbsToggle={handleBreadcrumbsToggle}
+            onShowAbout={() => handleModalOpen("about")}
+            onLoginClick={() => handleModalOpen("login")}
+            onRegisterClick={() => handleModalOpen("register")}
+          />
+        </div>
 
-          <div className="navbar-group center">
-            <NavCenterGroup
-              onAvatarClick={() => handleModalOpen("avatar")}
-              onDotsClick={() => handleModalOpen("dots")}
-              onLoginClick={() => handleModalOpen("login")}
-              onRegisterClick={() => handleModalOpen("register")}
-              topDots={topDots}
-              bottomDots={bottomDots}
-            />
-          </div>
+        {/* Center Group */}
+        <div className="navbar-group center">
+          <NavCenterGroup
+            onAvatarClick={() => handleModalOpen("avatar")}
+            onDotsClick={() => handleModalOpen("dots")}
+            onLoginClick={() => handleModalOpen("login")}
+            onRegisterClick={() => handleModalOpen("register")}
+            topDots={topDots}
+            bottomDots={bottomDots}
+          />
+        </div>
 
-          <div className="navbar-group right">
-            <NavRightGroup
-              isDarkMode={isDarkMode}
-              onToggleDarkMode={onToggleDarkMode}
-            />
-          </div>
+        {/* Right Group */}
+        <div className="navbar-group right">
+          <NavRightGroup
+            isDarkMode={isDarkMode}
+            onToggleDarkMode={onToggleDarkMode}
+          />
         </div>
       </nav>
 

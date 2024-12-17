@@ -1,15 +1,35 @@
-:root {
-  /* Základné */
-  --background: white;
-  --foreground: black;
+// .front/src/styles/base/_variables.css
 
-  /* Komponenty */
+:root {
+  /* Basic Colors */
+  --background: white; /* Default background */
+  --foreground: black; /* Default text color */
+
+  /* Layout */
+  --body-padding: 1px; /* Default body padding */
+  --spacing-medium: 1px; /* Medium spacing */
+
+  /* Components */
   --page-background: #ffffff;
   --navbar-background: #ffffff;
+  --navbar-border: #000; /* Default navbar border */
   --modal-background: #ffffff;
   --modal-foreground: #000000;
 
-  /* Systémové farby */
+  /* Navbar Specific */
+  --navbar-height: 80px; /* Default navbar height */
+  --navbar-group-border: #ccc; /* Border for navbar groups */
+  --navbar-button-hover: #e5e7eb; /* Hover background for buttons */
+
+  /* Avatar */
+  --avatar-bg: #e5e7eb;
+
+  /* Buttons */
+  --button-bg-color: #333;
+  --button-hover-bg: #555;
+  --button-text-color: #fff;
+
+  /* System Colors */
   --primary: #000000;
   --primary-foreground: #ffffff;
   --secondary: #f4f4f5;
@@ -20,14 +40,36 @@
   --accent-foreground: #18181b;
   --destructive: #ef4444;
   --destructive-foreground: #f8fafc;
+
+  /* Cards and Popovers */
   --card: #ffffff;
   --card-foreground: #18181b;
   --popover: #ffffff;
   --popover-foreground: #18181b;
+
+  /* Borders and Inputs */
   --border: #e4e4e7;
   --input: #e4e4e7;
+
+  /* Focus Ring */
   --ring: #18181b;
+
+  /* Layout */
+  --spacing-horizontal: 16px; /* Default horizontal padding */
+  --spacing-medium: 16px; /* Default spacing between elements */
 
   /* Radius */
   --radius: 0.5rem;
+  --border-radius: 4px;
+
+  /* Font Sizes */
+  --font-size-small: 14px;
+  --font-size-medium: 16px;
+
+  /* Transitions */
+  --transition-default: 0.3s ease;
+
+  /* Navbar Dot Sizes */
+  --dot-size: 6px;
+  --dot-gap: 4px;
 }

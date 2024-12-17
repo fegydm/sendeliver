@@ -1,9 +1,7 @@
 // src/components/ui/toggle-group.ui.tsx
 import * as React from "react";
-import "./toggle-group.ui.css";
 
-type ToggleGroupValue = string | string[];
-
+/** Context to manage shared state between ToggleGroup and ToggleGroupItem */
 interface ToggleGroupContextValue {
   type: "single" | "multiple";
   value?: ToggleGroupValue;
@@ -14,6 +12,9 @@ interface ToggleGroupContextValue {
 const ToggleGroupContext = React.createContext<ToggleGroupContextValue>({
   type: "single",
 });
+
+/** Type definitions for ToggleGroup and its items */
+type ToggleGroupValue = string | string[];
 
 interface ToggleGroupProps {
   type?: "single" | "multiple";
@@ -29,10 +30,10 @@ interface ToggleItemProps
   value: string;
   disabled?: boolean;
   className?: string;
-  "data-value"?: string;
   children: React.ReactNode;
 }
 
+/** Main ToggleGroup component */
 const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
   (
     {
@@ -46,12 +47,7 @@ const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
     ref
   ) => {
     const contextValue = React.useMemo(
-      () => ({
-        type,
-        value,
-        onValueChange,
-        disabled,
-      }),
+      () => ({ type, value, onValueChange, disabled }),
       [type, value, onValueChange, disabled]
     );
 
@@ -61,7 +57,7 @@ const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
           ref={ref}
           role={type === "single" ? "radiogroup" : "group"}
           aria-disabled={disabled}
-          className={`toggle-group ${disabled ? "toggle-group--disabled" : ""} ${className}`}
+          className={`toggle-group ${disabled ? "toggle-group--disabled" : ""} ${className}`.trim()}
         >
           {children}
         </div>
@@ -69,9 +65,9 @@ const ToggleGroup = React.forwardRef<HTMLDivElement, ToggleGroupProps>(
     );
   }
 );
-
 ToggleGroup.displayName = "ToggleGroup";
 
+/** ToggleGroupItem component for individual toggle buttons */
 const ToggleGroupItem = React.forwardRef<HTMLButtonElement, ToggleItemProps>(
   ({ value, disabled = false, className = "", children, ...props }, ref) => {
     const {
@@ -107,10 +103,9 @@ const ToggleGroupItem = React.forwardRef<HTMLButtonElement, ToggleItemProps>(
         role={type === "single" ? "radio" : "checkbox"}
         aria-checked={isSelected}
         disabled={isDisabled}
-        data-value={value}
         className={`toggle-item ${isSelected ? "toggle-item--selected" : ""} ${
           isDisabled ? "toggle-item--disabled" : ""
-        } ${className}`}
+        } ${className}`.trim()}
         onClick={handleClick}
         {...props}
       >
@@ -119,8 +114,8 @@ const ToggleGroupItem = React.forwardRef<HTMLButtonElement, ToggleItemProps>(
     );
   }
 );
-
 ToggleGroupItem.displayName = "ToggleGroupItem";
 
+/** Exported components and types */
 export { ToggleGroup, ToggleGroupItem };
 export type { ToggleGroupProps, ToggleItemProps, ToggleGroupValue };

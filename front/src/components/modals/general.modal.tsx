@@ -1,7 +1,8 @@
-import React from "react";
+// src/components/ui/modals/general.modal.tsx
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button.ui";
-import "./general.modal.css";
 
+/** Props for GeneralModal component */
 interface GeneralModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -10,6 +11,7 @@ interface GeneralModalProps {
   title?: string;
 }
 
+/** GeneralModal Component */
 const GeneralModal: React.FC<GeneralModalProps> = ({
   isOpen,
   onClose,
@@ -17,27 +19,19 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
   actions,
   title,
 }) => {
-  React.useEffect(() => {
+  // Handle Escape key to close modal
+  useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-      }
+      if (e.key === "Escape") onClose();
     };
 
     if (isOpen) {
-      const scrollbarWidth =
-        window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-      document.body.style.overflow = "hidden";
+      document.body.classList.add("no-scroll");
       window.addEventListener("keydown", handleEsc);
     }
 
     return () => {
-      document.body.style.paddingRight = "";
-      document.body.style.overflow = "";
+      document.body.classList.remove("no-scroll");
       window.removeEventListener("keydown", handleEsc);
     };
   }, [isOpen, onClose]);
@@ -46,24 +40,33 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
 
   return (
     <>
-      <div className="modal-backdrop" />
-      <div
-        style={{ top: "var(--modal-top-offset)" }}
-        className="modal-container"
-      >
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      {/* Modal Backdrop */}
+      <div className="modal-backdrop" onClick={onClose} />
+
+      {/* Modal Container */}
+      <div className="modal-container">
+        <div
+          className="modal-content"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* Close Button */}
           <button
             onClick={onClose}
             aria-label="Close modal"
             className="modal-close-button"
           >
-            <span className="modal-close-icon">&times;</span>
+            <span>&times;</span>
           </button>
 
+          {/* Modal Title */}
           {title && <h2 className="modal-title">{title}</h2>}
 
+          {/* Modal Body */}
           <div className="modal-body">{children}</div>
 
+          {/* Modal Actions */}
           <div className="modal-actions">
             <Button variant="secondary" onClick={onClose}>
               Cancel

@@ -1,3 +1,4 @@
+// ./front/src/components/navbars/NavbarDots.tsx
 import { FC, useState } from "react";
 import DotsModal from "../../modals/dots-modal.component";
 import type {
@@ -9,33 +10,33 @@ import type {
 const NavDots: FC<NavDotsProps> = ({ topDots, bottomDots, onClick }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleSelectionChange = (top: TopRowType, bottom: BottomRowType) => {
-    // Tu môže byť logika pre zmenu stavu
-    onClick(); // Voláme pôvodný onClick handler z props
+  const handleSelectionChange = (_: TopRowType, __: BottomRowType) => {
+    // Handle dots selection changes
+    onClick();
   };
 
   return (
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="absolute right-[60px] top-1/2 -translate-y-1/2"
+        className="nav-dots-button"
         aria-label="Open dots menu"
       >
-        <div className="flex flex-col gap-1">
-          <div className="flex gap-1">
+        <div className="nav-dots-container">
+          <div className="nav-dots-row">
             {topDots.map((color, index) => (
               <div
                 key={`top-${index}`}
-                className="w-1.5 h-1.5 rounded-full transition-colors duration-modal"
+                className="nav-dot"
                 style={{ backgroundColor: color }}
               />
             ))}
           </div>
-          <div className="flex gap-1">
+          <div className="nav-dots-row">
             {bottomDots.map((color, index) => (
               <div
                 key={`bottom-${index}`}
-                className="w-1.5 h-1.5 rounded-full transition-colors duration-modal"
+                className="nav-dot"
                 style={{ backgroundColor: color }}
               />
             ))}

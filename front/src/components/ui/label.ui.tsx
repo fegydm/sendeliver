@@ -1,7 +1,6 @@
-// src/components/ui/label/label.ui.tsx
+// ./src/components/ui/label/label.ui.tsx
+
 import React from "react";
-import "./label.ui.css";
-import themeConfig from "@/configs/theme-config.json";
 
 export interface LabelProps {
   variant?: "default" | "error" | "success";
@@ -14,27 +13,9 @@ export const Label: React.FC<LabelProps> = ({
   children,
   htmlFor,
 }) => {
-  const styles = themeConfig.label[variant];
-
   return (
-    <label
-      htmlFor={htmlFor}
-      style={{
-        color: styles.color,
-        fontSize: styles.fontSize,
-        fontWeight: styles.fontWeight,
-      }}
-      className={`label ${variant}`}
-    >
+    <label htmlFor={htmlFor} className={`label label-${variant}`}>
       {children}
-      <style>{`
-        .label.${variant}:hover {
-          color: ${styles.hover?.color};
-        }
-        .label.${variant}:focus {
-          outline: ${styles.focus?.outline};
-        }
-      `}</style>
     </label>
   );
 };

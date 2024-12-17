@@ -1,3 +1,5 @@
+// .front/src/styles/base/_reset.css
+
 /* Normalize */
 html {
   line-height: 1.15;
@@ -17,7 +19,7 @@ html {
   box-sizing: border-box;
 }
 
-/* Základné elementy */
+/* Basic elements */
 html,
 body {
   height: 100%;

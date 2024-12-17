@@ -1,3 +1,5 @@
+/* .front/src/styles/main.css */
+
 /* basic */
 @import "./base/_variables.css";
 @import "./base/_reset.css";
@@ -5,8 +7,10 @@
 @import "./base/_layout.css";
 
 /* components */
-@import "./components/_theme-switcher.css" @import "./components/_navbar.css";
+@import "./components/_navbar.css";
 @import "./components/_banner.css";
+@import "./components/_ui-components.css";
+@import "./components/_theme-switcher.css";
 
 /* themes */
 @import "./themes/default.css";

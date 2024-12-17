@@ -1,7 +1,5 @@
-// ./front/src/components/banner.component.tsx
 import React, { useEffect, useRef } from "react";
 import lottie from "lottie-web/build/player/lottie_light";
-import "@/styles/components/_banner.css"; // Import CSS styles for the banner
 
 const Banner: React.FC = () => {
   const container = useRef<HTMLDivElement>(null);
@@ -26,7 +24,17 @@ const Banner: React.FC = () => {
           Empowering connections between clients and carriers.
         </h1>
         {/* Right section - Animation */}
-        <div className="banner-animation" ref={container} aria-hidden="true" />
+        <div
+          className="banner-animation"
+          ref={container}
+          aria-hidden="true"
+          style={{
+            width: "150px",
+            height: "150px",
+            margin: "0 auto", // Zarovnanie na stred
+            overflow: "hidden",
+          }}
+        />
       </div>
     </section>
   );

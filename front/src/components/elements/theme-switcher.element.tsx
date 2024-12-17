@@ -7,7 +7,6 @@ import {
   ToggleGroupValue,
 } from "@/components/ui/toggle-group.ui";
 import ThemeEditorModal from "@/components/modals/theme-editor.modal";
-import "@/styles/components/_theme-switcher.css"; // Import custom CSS
 
 // Define supported themes and view modes
 type ThemeType = "none" | "default" | "testing" | "custom";
@@ -17,7 +16,7 @@ type ThemeData = Record<string, string>;
 // Dynamic imports for theme styles
 const themeStyles = {
   none: () => import("@/styles/themes/none.css?inline"),
-  default: () => import("@/styles/themes/default.css?inline"),
+  // default: () => import("@/styles/themes/default.css?inline"),
   testing: () => import("@/styles/themes/testing.css?inline"),
 };
 

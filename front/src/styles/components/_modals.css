@@ -1,4 +1,4 @@
-/* general.modal.css */
+/* General Modal Styles */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -9,23 +9,42 @@
 
 .modal-container {
   position: fixed;
+  top: var(--modal-top-offset, 10vh);
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: var(--modal-max-width, 32rem);
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  margin: 0 auto;
+  padding: 0 1rem;
   z-index: var(--z-modal, 50);
 }
 
 .modal-content {
   position: relative;
-  padding: var(--modal-padding, 1.5rem);
-  background-color: var(--modal-bg, #fff);
+  background-color: var(--modal-bg, #ffffff);
+  color: var(--modal-foreground, #000);
   border-radius: var(--modal-radius, 0.5rem);
   box-shadow: var(--modal-shadow, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
+  padding: var(--modal-padding, 1.5rem);
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--modal-title-color, inherit);
+}
+
+.modal-body {
+  margin: 1rem 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 1.5rem;
+  gap: 1rem;
 }
 
 .modal-close-button {
@@ -37,11 +56,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
   background: none;
-  cursor: pointer;
+  border: none;
   border-radius: var(--modal-radius, 0.5rem);
-  transition: background-color 0.2s;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .modal-close-button:hover {
@@ -54,29 +73,11 @@
   color: var(--modal-close-color, inherit);
 }
 
-.modal-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: var(--modal-title-color, inherit);
-}
-
-.modal-body {
-  margin-top: 1rem;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 1.5rem;
-  gap: 1rem;
-}
-
-/* Dark mode */
+/* Dark Mode */
 @media (prefers-color-scheme: dark) {
   .modal-content {
     background-color: var(--modal-bg-dark, #1f2937);
+    color: var(--modal-foreground-dark, #f9fafb);
   }
 
   .modal-close-button:hover {
@@ -90,13 +91,29 @@
 
 /* CSS Variables */
 :root {
-  --modal-top-offset: 4rem;
+  /* Modal dimensions */
+  --modal-top-offset: 10vh;
   --modal-max-width: 32rem;
   --modal-padding: 1.5rem;
-  --modal-radius: 0.5rem;
+
+  /* Colors */
   --modal-bg: #ffffff;
   --modal-bg-dark: #1f2937;
+  --modal-foreground: #000000;
+  --modal-foreground-dark: #f9fafb;
+
+  --modal-close-hover: rgba(0, 0, 0, 0.05);
+  --modal-close-hover-dark: rgba(255, 255, 255, 0.1);
+  --modal-close-color: #000;
+  --modal-close-color-dark: #f9fafb;
+
+  /* Border radius */
+  --modal-radius: 0.5rem;
+
+  /* Shadow */
   --modal-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+  /* Z-index */
   --z-modal-backdrop: 40;
   --z-modal: 50;
 }

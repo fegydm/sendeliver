@@ -10,9 +10,9 @@ import ResultTable, {
   CarrierResultData,
 } from "@/components/sections/content/results/result-table.component";
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
-import PageFooter from "@/components/sections/footers/page-footer.component";
+import PageFooter from "@/components/sections/footers/footer-page.component";
 import FloatingButton from "@/components/elements/floating-button.element";
-import TestFooter from "@/components/sections/footers/test-footer.component";
+import TestFooter from "@/components/sections/footers/footer-test.component";
 
 interface TransportData {
   pickupLocation: string;

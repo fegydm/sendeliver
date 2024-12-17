@@ -1,69 +1,84 @@
-/* Global Navbar Styles */
+/* Navbar - Main Container */
 .navbar {
   background-color: var(--navbar-background, transparent);
   border-bottom: 2px solid var(--navbar-border, #000);
   height: var(--navbar-height, 60px);
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
   z-index: 50;
 }
 
-/* Navbar Group - Shared Styles */
+/* Navbar Inner Container */
+.navbar-container {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  align-items: center;
+  padding: 0 var(--spacing-horizontal, 16px);
+}
+
+/* Shared Navbar Group */
 .navbar-group {
   display: flex;
   align-items: center;
+  gap: var(--spacing-medium, 16px);
   height: 100%;
-  border: 1px solid var(--navbar-group-border, #ccc);
-  padding: 8px;
-  gap: 16px;
+  overflow: hidden; /* Prevent content overflow */
+  white-space: nowrap; /* Ensure content stays in a single line */
 }
 
-/* Left Group Specific */
+/* Left Group */
 .navbar-group.left {
   justify-content: flex-start;
+  flex: 1;
+  overflow: hidden;
 }
 
-.nav-logo-container {
-  position: relative;
-  height: 20px;
-  margin: 0 24px;
+/* Center Group */
+.navbar-group.center {
+  justify-content: center;
+  flex: 1;
+  overflow: hidden;
 }
 
-.nav-logo {
-  height: 100%;
-  width: auto;
+/* Right Group */
+.navbar-group.right {
+  justify-content: flex-end;
+  flex: 1;
+  overflow: hidden;
 }
 
-.nav-breadcrumb-toggle {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  height: 25%;
-  width: 100%;
-  opacity: 0;
+/* Elements Inside Groups */
+.navbar-group > * {
+  flex-shrink: 0; /* Prevent elements from shrinking */
+  display: inline-flex; /* Ensure all items align in a row */
+  align-items: center;
+}
+
+/* Hamburger Button */
+.nav-hamburger-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
   transition: opacity 0.3s ease;
 }
 
-.nav-logo-container:hover .nav-breadcrumb-toggle {
-  opacity: 1;
+.nav-hamburger-toggle:hover {
+  opacity: 0.8;
 }
 
-.nav-breadcrumb-icon {
-  width: 24px;
-  height: 24px;
-  transition: transform 0.2s ease;
+/* Logo */
+.nav-logo {
+  height: 20px;
 }
 
-.nav-breadcrumb-icon.rotated {
-  transform: rotate(180deg);
-}
-
+/* Company Name */
 .nav-company-name {
   position: relative;
-  font-size: 16px;
+  font-size: var(--font-size-medium, 16px);
   font-weight: 600;
   cursor: pointer;
 }
@@ -83,21 +98,10 @@
   right: 0;
 }
 
-/* Center Group Specific */
-.navbar-group.center {
-  justify-content: center;
-}
-
-.navbar-center-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-
+/* Avatar Button */
 .avatar-button {
-  height: 90%;
   width: calc(var(--navbar-height) * 0.9);
+  height: calc(var(--navbar-height) * 0.9);
   border-radius: 50%;
   background-color: var(--avatar-bg, #e5e7eb);
   display: flex;
@@ -111,71 +115,39 @@
   opacity: 0.8;
 }
 
-.avatar-initial {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--foreground, #000);
-}
-
+/* Login & Register Buttons */
 .auth-buttons {
-  position: absolute;
-  left: 60px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--spacing-medium, 16px);
 }
 
 .login-button {
-  position: relative;
-  font-size: 1rem;
-  font-weight: 600;
   background: none;
   border: none;
+  font-size: var(--font-size-small, 14px);
+  font-weight: 600;
   cursor: pointer;
-}
-
-.button-underline {
-  position: absolute;
-  left: 50%;
-  right: 50%;
-  bottom: 0;
-  height: 2px;
-  background-color: currentColor;
-  transition: all 0.3s ease;
-}
-
-.login-button:hover .button-underline {
-  left: 0;
-  right: 0;
 }
 
 .register-button {
   padding: 6px 16px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--button-text-color, #fff);
   background-color: var(--button-bg-color, #333);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  color: var(--button-text-color, #fff);
+  border-radius: var(--border-radius, 4px);
   transition: background-color 0.3s ease;
+  border: none;
 }
 
 .register-button:hover {
   background-color: var(--button-hover-bg, #555);
 }
 
-/* Right Group Specific */
-.navbar-group.right {
-  justify-content: flex-end;
-}
-
+/* Language and Dark Mode Buttons */
 .navbar-language-button,
 .navbar-darkmode-button {
   padding: 8px;
-  border-radius: 6px;
+  border-radius: var(--border-radius, 6px);
   background-color: transparent;
   display: flex;
   align-items: center;

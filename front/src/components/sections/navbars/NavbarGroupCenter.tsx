@@ -1,8 +1,7 @@
 // ./front/src/components/navbars/NavbarGroupCenter.tsx
 import { type FC } from "react";
 import type { NavCenterGroupProps } from "../../../types/dots";
-import NavDots from "./nav-dots.component";
-import "@/styles/components/_navbar.css"; // Import unified CSS styles
+import NavDots from "./NavbarDots";
 
 const NavCenterGroup: FC<NavCenterGroupProps> = ({
   onAvatarClick,
