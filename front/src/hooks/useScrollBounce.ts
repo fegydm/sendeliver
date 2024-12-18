@@ -5,7 +5,7 @@ const useScrollBounce = () => {
   useEffect(() => {
     let isAnimating = false;
 
-    // Funkcia na detekciu macOS
+    // macOS detection
     const isNonMacOS = () => {
       const platform = navigator.platform.toUpperCase();
       const userAgent = navigator.userAgent.toUpperCase();
@@ -16,7 +16,7 @@ const useScrollBounce = () => {
       return;
     }
 
-    // Nastavenie na 1px pri načítaní
+    // Setting 1px for opening
     window.scrollTo({
       top: 1,
       behavior: "auto",
@@ -68,7 +68,7 @@ const useScrollBounce = () => {
       }
     };
 
-    // Pridanie event listenerov
+    // Added event listener
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("wheel", handleWheel, { passive: true });
 

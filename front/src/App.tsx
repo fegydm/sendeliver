@@ -1,11 +1,10 @@
-// ./front/src/App.tsx
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/home.page";
-import useScrollBounce from "./hooks/useScrollBounce"; // Import for useScrollBounce
+import useScrollBounce from "./hooks/useScrollBounce";
 
 const App: React.FC = () => {
-  useScrollBounce(); // Hook for scroll bounce effect
+  useScrollBounce(); // Active scroll bounce effect for Windows
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const savedMode = localStorage.getItem("darkMode");
@@ -14,7 +13,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
-
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
     } else {
@@ -27,19 +25,17 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <HomePage
-              isDarkMode={isDarkMode}
-              onToggleDarkMode={toggleDarkMode}
-            />
-          }
-        />
-      </Routes>
-    </div>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <HomePage
+            isDarkMode={isDarkMode}
+            onToggleDarkMode={toggleDarkMode}
+          />
+        }
+      />
+    </Routes>
   );
 };
 

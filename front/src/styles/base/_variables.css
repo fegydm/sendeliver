@@ -1,4 +1,4 @@
-// .front/src/styles/base/_variables.css
+/* .front/src/styles/base/_variables.css */
 
 :root {
   /* Basic Colors */
@@ -10,14 +10,14 @@
   --spacing-medium: 1px; /* Medium spacing */
 
   /* Components */
-  --page-background: #ffffff;
-  --navbar-background: #ffffff;
+  --page-background:rgb(238, 234, 234);
+  --navbar-background:rgb(255, 255, 255);
   --navbar-border: #000; /* Default navbar border */
-  --modal-background: #ffffff;
+  --modal-background:rgb(255, 255, 255);
   --modal-foreground: #000000;
 
   /* Navbar Specific */
-  --navbar-height: 80px; /* Default navbar height */
+  --navbar-height: 50px; /* Default navbar height */
   --navbar-group-border: #ccc; /* Border for navbar groups */
   --navbar-button-hover: #e5e7eb; /* Hover background for buttons */
 

@@ -1,18 +1,43 @@
-/* .front/src/styles/main.css */
+/* =============================================
+   MAIN CSS IMPORTS
+   This file serves as the central hub for all CSS imports,
+   organized in a specific order to ensure proper cascade
+   and avoid specificity conflicts.
+   ============================================= */
 
-/* basic */
-@import "./base/_variables.css";
+/* ---------------------------------------------
+   Core Styles
+   Order is crucial:
+   1. Reset - Cleans browser defaults
+   2. Variables - Define design tokens
+   3. Typography - Base text styles
+   4. Layout - Core layout structures
+   --------------------------------------------- */
 @import "./base/_reset.css";
+@import "./base/_variables.css";
 @import "./base/_typography.css";
 @import "./base/_layout.css";
 
-/* components */
+/* ---------------------------------------------
+   Component Styles
+   Modular UI component styles.
+   Currently only navbar is active.
+   --------------------------------------------- */
 @import "./components/_navbar.css";
+/* Disabled component imports
 @import "./components/_banner.css";
+@import "./components/_footer.css";
 @import "./components/_ui-components.css";
 @import "./components/_theme-switcher.css";
+*/
 
-/* themes */
+/* ---------------------------------------------
+   Theme Styles
+   Different theme variations.
+   Currently disabled.
+   --------------------------------------------- */
+/* Disabled theme imports
 @import "./themes/default.css";
 @import "./themes/testing.css";
 @import "./themes/none.css";
+*/

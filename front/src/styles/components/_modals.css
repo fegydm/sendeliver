@@ -1,119 +1,109 @@
-/* General Modal Styles */
-.modal-backdrop {
+/* =============================================
+   Navbar Base Container
+   ============================================= */
+.navbar {
   position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: var(--z-modal-backdrop, 40);
-}
-
-.modal-container {
-  position: fixed;
-  top: var(--modal-top-offset, 10vh);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: var(--modal-max-width, 32rem);
-  margin: 0 auto;
-  padding: 0 1rem;
-  z-index: var(--z-modal, 50);
-}
-
-.modal-content {
-  position: relative;
-  background-color: var(--modal-bg, #ffffff);
-  color: var(--modal-foreground, #000);
-  border-radius: var(--modal-radius, 0.5rem);
-  box-shadow: var(--modal-shadow, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
-  padding: var(--modal-padding, 1.5rem);
-}
-
-.modal-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: var(--modal-title-color, inherit);
-}
-
-.modal-body {
-  margin: 1rem 0;
-}
-
-.modal-actions {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--navbar-height);
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 1.5rem;
-  gap: 1rem;
-}
-
-.modal-close-button {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  background: none;
-  border: none;
-  border-radius: var(--modal-radius, 0.5rem);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+  align-items: center;
+  background-color: var(--navbar-background);
+  border-bottom: 2px solid var(--navbar-border);
+  z-index: 50;
 }
 
-.modal-close-button:hover {
-  background-color: var(--modal-close-hover, rgba(0, 0, 0, 0.05));
+/* =============================================
+   Main Container - Max Width Wrapper
+   ============================================= */
+.navbar-container {
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-horizontal);
 }
 
-.modal-close-icon {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--modal-close-color, inherit);
+/* =============================================
+   Navbar Groups
+   ============================================= */
+.navbar-group {
+  width: 33.333%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
 }
 
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-  .modal-content {
-    background-color: var(--modal-bg-dark, #1f2937);
-    color: var(--modal-foreground-dark, #f9fafb);
-  }
-
-  .modal-close-button:hover {
-    background-color: var(--modal-close-hover-dark, rgba(255, 255, 255, 0.1));
-  }
-
-  .modal-close-icon {
-    color: var(--modal-close-color-dark, #f9fafb);
-  }
+.navbar-group.left {
+  justify-content: flex-start;
 }
 
-/* CSS Variables */
-:root {
-  /* Modal dimensions */
-  --modal-top-offset: 10vh;
-  --modal-max-width: 32rem;
-  --modal-padding: 1.5rem;
+.navbar-group.center {
+  justify-content: center;
+}
 
-  /* Colors */
-  --modal-bg: #ffffff;
-  --modal-bg-dark: #1f2937;
-  --modal-foreground: #000000;
-  --modal-foreground-dark: #f9fafb;
+.navbar-group.right {
+  justify-content: flex-end;
+}
 
-  --modal-close-hover: rgba(0, 0, 0, 0.05);
-  --modal-close-hover-dark: rgba(255, 255, 255, 0.1);
-  --modal-close-color: #000;
-  --modal-close-color-dark: #f9fafb;
+/* =============================================
+   Logo
+   ============================================= */
+.navbar img {
+  width: var(--navbar-image-size);
+  height: var(--navbar-image-size);
+  object-fit: fill;
+}
 
-  /* Border radius */
-  --modal-radius: 0.5rem;
+/* =============================================
+   Breadcrumb Styles
+   ============================================= */
+.navbar-breadcrumb {
+  display: flex;
+  align-items: center;
+}
 
-  /* Shadow */
-  --modal-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+.navbar-breadcrumb-container {
+  display: flex;
+  align-items: center;
+}
 
-  /* Z-index */
-  --z-modal-backdrop: 40;
-  --z-modal: 50;
+.navbar-breadcrumb-items {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+
+.navbar-breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.breadcrumb-separator {
+  color: var(--foreground);
+  font-size: var(--font-size-small);
+}
+
+.breadcrumb-link {
+  color: var(--foreground);
+  text-decoration: none;
+  font-size: var(--font-size-small);
+}
+
+.breadcrumb-current {
+  color: var(--muted-foreground);
+  font-size: var(--font-size-small);
+}
+
+/* Ensure all direct children of navbar-group are in one line */
+.navbar-group > * {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  flex-shrink: 0;
 }

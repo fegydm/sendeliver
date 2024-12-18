@@ -1,4 +1,6 @@
-// .front/src/styles/base/_layout.css
+/* =============================================
+   Global Layout Styles
+   ============================================= */
 
 /* Global body styles */
 body {
@@ -15,4 +17,39 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
+}
+
+/* Section Layout */
+.section {
+  padding: 2rem 0;
+}
+
+/* Section Header */
+.section-header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: var(--font-size-medium, 1.5rem);
+  font-weight: 600;
+  color: var(--foreground, black);
+}
+
+/* Flex Layout */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-space-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Footer Layout */
+.footer {
+  padding: 1rem 0;
+  background-color: var(--background, #f4f4f4);
+  color: var(--foreground, #333);
+  text-align: center;
 }
