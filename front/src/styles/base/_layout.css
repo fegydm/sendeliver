@@ -1,55 +1,139 @@
-/* =============================================
-   Global Layout Styles
-   ============================================= */
+/* ./front/src/styles/_layout.css */
 
-/* Global body styles */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: var(--font-family, Arial, sans-serif);
-  background-color: var(--background, white);
-  color: var(--foreground, black);
-  line-height: 1.5;
+/* CSS Variables */
+:root {
+  --navbar-height: 50px;
+  --navbar-bg-color: #f8f8f8;
+  --navbar-border-color: #ccc;
+  --navbar-item-spacing: 10px;
 }
 
-/* Generic container for sections */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-/* Section Layout */
-.section {
-  padding: 2rem 0;
-}
-
-/* Section Header */
-.section-header {
-  margin-bottom: 1.5rem;
-  text-align: center;
-  font-size: var(--font-size-medium, 1.5rem);
-  font-weight: 600;
-  color: var(--foreground, black);
-}
-
-/* Flex Layout */
-.flex-center {
+/* Navbar styles */
+.navbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  height: var(--navbar-height);
+  background-color: var(--navbar-bg-color);
+  border-bottom: 1px solid var(--navbar-border-color);
+  padding: 0 var(--navbar-item-spacing);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--navbar-item-spacing);
+}
+
+.navbar-center {
+  display: flex;
+  align-items: center;
+  gap: var(--navbar-item-spacing);
+  flex-grow: 1;
   justify-content: center;
 }
 
-.flex-space-between {
+.navbar-right {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: var(--navbar-item-spacing);
 }
 
-/* Footer Layout */
-.footer {
-  padding: 1rem 0;
-  background-color: var(--background, #f4f4f4);
-  color: var(--foreground, #333);
-  text-align: center;
+/* Navbar items */
+.navbar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 var(--navbar-item-spacing);
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.navbar-item img {
+  height: calc(var(--navbar-height) - 10px);
+}
+
+/* Dot button styles */
+.navbar-dots { /* Teraz sa nepoužíva priamo, ale štýly pre bodky sú nižšie */
+}
+
+.navbar-dots-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 24px;
+  height: 24px;
+  justify-content: center;
+  align-items: center;
+  margin-left: auto; /* Presunie kontajner na pravú stranu */
+    margin-right: var(--navbar-item-spacing); /* Pridá medzeru z pravej strany */
+}
+
+.navbar-dots-row {
+  display: flex;
+  gap: 2px;
+}
+
+.navbar-dots-item {
+  width: 8px;
+  height: 8px;
+  background-color: gray;
+  border-radius: 50%;
+}
+
+/* Dot styling matching size of Avatar (použité pre dynamické bodky) */
+.navbar-item.dot {
+  width: 40px;
+  height: 40px;
+  background-color: black;
+  border-radius: 50%;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.navbar-item.dot::before {
+  content: "D";
+}
+
+.navbar-item.language {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    color: black;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.navbar-item.language img {
+    width: 30px;
+    height: 20px;
+    object-fit: cover;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+/* Modal styling placeholder (if needed later) */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
 }

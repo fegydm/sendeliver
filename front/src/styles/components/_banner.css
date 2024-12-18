@@ -1,35 +1,30 @@
-/* Banner styles */
+/* CSS pre Banner */
+
 .banner {
-  background-color: var(--banner-background, transparent);
-  color: var(--banner-text-color, inherit);
-  height: var(--banner-height, 150px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: var(--banner-padding, 20px);
+  background-color: #2e2e2e; /* Tmavosivé pozadie */
+  color: #ffffff; /* Biela farba textu */
+  text-align: center; /* Zarovnanie textu na stred */
+  padding: 50px 20px; /* Priestor okolo obsahu */
 }
 
 .banner-content {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 1200px;
-  height: 100%;
+  justify-content: center;
+  min-height: 100vh; /* Výška sekcie pokryje celú výšku viewportu */
 }
 
 .banner-title {
-  font-size: 1.5rem;
-  font-weight: 400;
-  color: var(--banner-text-color, inherit);
-  margin-right: auto;
-  padding-right: var(--banner-padding, 20px);
-  max-width: 60%;
+  font-size: 2rem; /* Veľkosť písma */
+  margin-bottom: 100px; /* Odsadenie nadpisu od animácie */
 }
 
 .banner-animation {
-  width: 300px;
-  height: 100%;
-  margin-left: auto;
+  width: 150px;
+  height: 150px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

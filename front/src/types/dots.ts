@@ -11,13 +11,13 @@ export type DotsColorValues = DotsColors[keyof DotsColors];
 export type DotsArray = DotsColorValues[];
 
 // Props interfaces
-export interface NavDotsProps {
+export interface NavbarDotsProps {
   topDots: DotsArray;
   bottomDots: DotsArray;
   onClick: () => void;
 }
 
-export interface NavCenterGroupProps extends Omit<NavDotsProps, "onClick"> {
+export interface NavbarCenterGroupProps extends Omit<NavbarDotsProps, "onClick"> {
   onAvatarClick: () => void;
   onDotsClick: () => void;
   onLoginClick: () => void;
