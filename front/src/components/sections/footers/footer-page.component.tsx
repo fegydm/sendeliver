@@ -7,12 +7,23 @@ import PinModal from "@/components/modals/pin-modal.component";
 import logicConfig from "@/configs/logic-config.json";
 
 interface PageFooterProps {
-  onPinVerified?: () => void;
+  onPinVerified?: (isAccessible: boolean) => void;
 }
 
 const PageFooter: React.FC<PageFooterProps> = ({ onPinVerified }) => {
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [isPinVerified, setIsPinVerified] = useState(false);
+
+  const handleButtonClick = () => {
+    if (isPinVerified) {
+      // Reset state to make TestFooter inaccessible
+      setIsPinVerified(false);
+      onPinVerified?.(false); // Notify parent to disable TestFooter
+    } else {
+      // Open PIN modal
+      setIsPinModalOpen(true);
+    }
+  };
 
   return (
     <footer className="page-footer">
@@ -27,16 +38,14 @@ const PageFooter: React.FC<PageFooterProps> = ({ onPinVerified }) => {
         <FooterCopyright />
       </div>
 
-      {/* Admin Button - visible in all modes */}
-      {!isPinVerified && (
-        <button
-          onClick={() => setIsPinModalOpen(true)}
-          aria-label="Admin Access"
-          className="admin-button"
-        >
-          Administrator
-        </button>
-      )}
+      {/* Admin Button */}
+      <button
+        onClick={handleButtonClick}
+        aria-label={isPinVerified ? "Close Access" : "Admin Access"}
+        className={`admin-button ${process.env.NODE_ENV === "production" && !isPinVerified ? "transparent-text" : ""}`}
+      >
+        {isPinVerified ? "Close" : "Administrator"}
+      </button>
 
       {/* PIN Modal */}
       <PinModal
@@ -44,9 +53,9 @@ const PageFooter: React.FC<PageFooterProps> = ({ onPinVerified }) => {
         onClose={() => setIsPinModalOpen(false)}
         requiredPin={logicConfig.pins.admin}
         onPinSuccess={() => {
-          setIsPinVerified(true);
+          setIsPinVerified(true); // Show "Close" button
           setIsPinModalOpen(false);
-          onPinVerified?.();
+          onPinVerified?.(true); // Notify parent to enable TestFooter
         }}
       />
     </footer>

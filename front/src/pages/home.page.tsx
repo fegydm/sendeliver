@@ -8,7 +8,7 @@ import ManualSearchForm from "@/components/sections/content/search-forms/manual-
 import ResultTable from "@/components/sections/content/results/result-table.component";
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
 import QuickStats from "@/components/sections/stats/quick-stats.component"; // Updated import
-import PageFooter from "@/components/sections/footers/footer-page.component";
+import FooterPage from "@/components/sections/footers/footer-page.component"; // Updated name
 import TestFooter from "@/components/sections/footers/footer-test.component";
 import FloatingButton from "@/components/elements/floating-button.element";
 import { mockClientData, mockCarrierData } from "@/data/mockData";
@@ -22,15 +22,7 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
   const [activeSection, setActiveSection] = useState<"sender" | "carrier" | null>(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState("");
-  const [isTestFooterVisible, setIsTestFooterVisible] = useState(false);
-
-  const isDevelopment = process.env.NODE_ENV === "development";
-
-  useEffect(() => {
-    if (isDevelopment) {
-      setIsTestFooterVisible(true);
-    }
-  }, []);
+  const [isTestFooterAccessible, setIsTestFooterAccessible] = useState(false);
 
   const handleAIRequest = (section: "sender" | "carrier", prompt: string) => {
     setActiveSection(section);
@@ -81,10 +73,12 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
       <QuickStats type="sender" />
 
       {/* Footer */}
-      <PageFooter onPinVerified={() => setIsTestFooterVisible(true)} />
+      <FooterPage
+        onPinVerified={(isAccessible: boolean) => setIsTestFooterAccessible(isAccessible)}
+      />
 
       {/* Test Footer */}
-      {isTestFooterVisible && <TestFooter />}
+      {isTestFooterAccessible && <TestFooter />}
 
       {/* Floating Button */}
       <FloatingButton />
