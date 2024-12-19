@@ -8,37 +8,6 @@
   --navbar-item-spacing: 10px;
 }
 
-/* Navbar styles */
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: var(--navbar-height);
-  background-color: var(--navbar-bg-color);
-  border-bottom: 1px solid var(--navbar-border-color);
-  padding: 0 var(--navbar-item-spacing);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.navbar-left {
-  display: flex;
-  align-items: center;
-  gap: var(--navbar-item-spacing);
-}
-
-.navbar-center {
-  display: flex;
-  align-items: center;
-  gap: var(--navbar-item-spacing);
-  flex-grow: 1;
-  justify-content: center;
-}
-
-.navbar-right {
-  display: flex;
-  align-items: center;
-  gap: var(--navbar-item-spacing);
-}
 
 /* Navbar items */
 .navbar-item {

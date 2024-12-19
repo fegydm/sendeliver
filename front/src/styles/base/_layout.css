@@ -20,26 +20,6 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.navbar-left {
-  display: flex;
-  align-items: center;
-  gap: var(--navbar-item-spacing);
-}
-
-.navbar-center {
-  display: flex;
-  align-items: center;
-  gap: var(--navbar-item-spacing);
-  flex-grow: 1;
-  justify-content: center;
-}
-
-.navbar-right {
-  display: flex;
-  align-items: center;
-  gap: var(--navbar-item-spacing);
-}
-
 /* Navbar items */
 .navbar-item {
   display: flex;

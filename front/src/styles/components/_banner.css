@@ -4,27 +4,17 @@
   background-color: #2e2e2e; /* Tmavosivé pozadie */
   color: #ffffff; /* Biela farba textu */
   text-align: center; /* Zarovnanie textu na stred */
-  padding: 50px 20px; /* Priestor okolo obsahu */
+  padding: 20px 30px; /* Zmenšený padding */
+  min-height: 100px; /* Minimálna výška */
+  max-height: 180px; /* Maximálna výška */
+  overflow: hidden; /* Skrytie obsahu presahujúce max-height */
+  box-sizing: border-box; /* Padding sa započíta do celkovej výšky */
 }
 
 .banner-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh; /* Výška sekcie pokryje celú výšku viewportu */
-}
-
-.banner-title {
-  font-size: 2rem; /* Veľkosť písma */
-  margin-bottom: 100px; /* Odsadenie nadpisu od animácie */
-}
-
-.banner-animation {
-  width: 150px;
-  height: 150px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start; /* Zarovnanie na začiatok osi */
+  justify-content: flex-start; /* Zarovnanie na vrch */
+  flex-grow: 1; /* Umožní expanziu obsahu */
 }

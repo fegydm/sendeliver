@@ -1,20 +1,20 @@
 // ./front/src/components/navbars/navbar.component.tsx
 import { useState, FC } from "react";
-import NavbarBreadcrumb from "./NavbarBreadcrumb";
-import NavbarDarkmode from "./NavbarDarkmode";
-import NavbarDots from "./NavbarDots";
 import NavbarHamburger from "./NavbarHamburger";
-import NavbarLanguage from "./NavbarLanguage";
-import NavbarLogin from "./NavbarLogin";
 import NavbarLogo from "./NavbarLogo";
+import NavbarBreadcrumb from "./NavbarBreadcrumb";
 import NavbarName from "./NavbarName";
-import NavbarRegister from "./NavbarRegister";
+import NavbarDots from "./NavbarDots";
 import NavbarAvatar from "./NavbarAvatar";
+import NavbarLogin from "./NavbarLogin";
+import NavbarRegister from "./NavbarRegister";
+import NavbarLanguage from "./NavbarLanguage";
+import NavbarDarkmode from "./NavbarDarkmode";
 import AboutModal from "@/components/modals/about-modal.component";
-import LoginModal from "@/components/modals/login.modal";
-import RegisterModal from "@/components/modals/register-modal.component";
 import DotsModal from "@/components/modals/dots-modal.component";
 import AvatarModal from "@/components/modals/avatar.modal";
+import LoginModal from "@/components/modals/login.modal";
+import RegisterModal from "@/components/modals/register-modal.component";
 import { components } from "@/constants/colors/components";
 import type { TopRowType, BottomRowType, DotsArray } from "@/types/dots";
 
@@ -77,12 +77,12 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
         showBreadcrumbs={showBreadcrumbs}
       />
       <NavbarName onShowAbout={() => handleModalOpen("about")} />
-      <NavbarAvatar onClick={() => handleModalOpen("avatar")} />
       <NavbarDots
         topDots={topDots}
         bottomDots={bottomDots}
         onClick={() => handleModalOpen("dots")}
       />
+      <NavbarAvatar onClick={() => handleModalOpen("avatar")} />
       <NavbarLogin onLoginClick={() => handleModalOpen("login")} />
       <NavbarRegister onRegisterClick={() => handleModalOpen("register")} />
       <NavbarLanguage />
@@ -98,16 +98,16 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
         isOpen={activeModal === "register"}
         onClose={handleModalClose}
       />
+      <AvatarModal
+        isOpen={activeModal === "avatar"}
+        onClose={handleModalClose}
+      />
       <DotsModal
         isOpen={activeModal === "dots"}
         onClose={handleModalClose}
         initialTopDots={topDots}
         initialBottomDots={bottomDots}
         onSelectionChange={handleDotsSelectionChange}
-      />
-      <AvatarModal
-        isOpen={activeModal === "avatar"}
-        onClose={handleModalClose}
       />
     </header>
   );
