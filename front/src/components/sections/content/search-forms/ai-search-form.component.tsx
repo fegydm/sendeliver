@@ -9,9 +9,15 @@ interface AiSearchProps {
 const AiSearch: React.FC<AiSearchProps> = ({ type: _type, onAIRequest }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [prompts, setPrompts] = useState([
-    "I need to ship 10 pallets of electronics from Berlin to Prague tomorrow.",
-    "Looking for a truck to transport 500kg of goods from Paris to Lyon.",
-    "Need a refrigerated vehicle for frozen food delivery from Hamburg to Vienna.",
+    _type === "client"
+      ? "I need to ship 10 pallets of electronics from Berlin to Prague tomorrow."
+      : "Tomorrow I have an available truck in Brussels. Find me a load heading to Poland.",
+    _type === "client"
+      ? "Looking for a truck to transport 500kg of goods from Paris to Lyon."
+      : "Looking for transport today from Hamburg to Bucharest, max 1100kg, already free, tarpaulin van.",
+    _type === "client"
+      ? "Need a refrigerated vehicle for frozen food delivery from Hamburg to Vienna."
+      : "On Friday, I will be unloading a truck in Bratislava. Find me any load nearby."
   ]);
   const [results, setResults] = useState<string[]>(["", "", ""]);
 
@@ -26,23 +32,22 @@ const AiSearch: React.FC<AiSearchProps> = ({ type: _type, onAIRequest }) => {
   };
 
   return (
-    <div className="relative p-6 bg-magenta-50/10 border-t-2 border-magenta-500/20 z-30">
+    <div className={`ai-search-form ${_type === "carrier" ? "carrier" : ""}`}>
       {/* Title */}
-      <div className="mb-4 text-lg font-semibold text-magenta-700 dark:text-magenta-300">
-        Need to send something and find the perfect carrier? Ask AI or fill out
-        the form.
+      <div className={`ai-search-title ${_type === "carrier" ? "carrier" : ""}`}>
+        {_type === "client"
+          ? "Need to send something and find the perfect carrier? Ask AI or fill out the form."
+          : "Need to find a suitable load for your truck? Ask AI or fill out the relevant form."}
       </div>
 
       {/* Tabs */}
-      <div className="relative flex space-x-4 mb-4">
+      <div className="ai-search-tabs">
         {prompts.map((_, index) => (
           <button
             key={index}
             onClick={() => setActiveTab(index)}
-            className={`py-2 px-4 rounded-md border ${
-              activeTab === index
-                ? "bg-magenta-500 text-white border-magenta-500"
-                : "bg-white dark:bg-gray-700 text-gray-700 dark:text-white"
+            className={`ai-search-tab ${activeTab === index ? "active" : ""} ${
+              _type === "carrier" ? "carrier" : ""
             }`}
           >
             Tab {index + 1}
@@ -51,10 +56,9 @@ const AiSearch: React.FC<AiSearchProps> = ({ type: _type, onAIRequest }) => {
       </div>
 
       {/* Textarea and Button */}
-      <div className="relative">
+      <div className="ai-search-input">
         <textarea
           placeholder="Write your request here..."
-          className="w-full p-4 border rounded-lg h-24 bg-white dark:bg-gray-800 dark:text-white resize-none"
           value={prompts[activeTab]}
           onChange={(e) => {
             const updatedPrompts = [...prompts];
@@ -64,7 +68,7 @@ const AiSearch: React.FC<AiSearchProps> = ({ type: _type, onAIRequest }) => {
         />
         <button
           onClick={handleAIRequest}
-          className="absolute -bottom-4 left-4 px-6 py-2 rounded-md text-white bg-magenta-500 hover:bg-magenta-600 transition"
+          className={`ai-search-button ${_type === "carrier" ? "carrier" : ""}`}
         >
           Ask AI
         </button>
@@ -72,7 +76,7 @@ const AiSearch: React.FC<AiSearchProps> = ({ type: _type, onAIRequest }) => {
 
       {/* Display Results */}
       {results[activeTab] && (
-        <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border dark:border-gray-700">
+        <div className="ai-search-result">
           <strong>Result:</strong> {results[activeTab]}
         </div>
       )}

@@ -1,4 +1,4 @@
-// front/src/components/sections/footers/FooterSocial.tsx
+// ./front/src/components/sections/footers/FooterSocial.tsx
 import React from "react";
 import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
 
@@ -31,7 +31,7 @@ const SOCIAL_LINKS = [
 
 const SocialLinks: React.FC = () => {
   return (
-    <div className="flex gap-6">
+    <div className="social-links">
       {SOCIAL_LINKS.map(({ icon: Icon, href, label, className }) => (
         <a
           key={label}

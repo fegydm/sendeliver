@@ -8,6 +8,7 @@
   /* Layout */
   --body-padding: 1px; /* Default body padding */
   --spacing-medium: 1px; /* Medium spacing */
+  --max-page-width: 1300px; /* Maximum page width */
 
   /* Components */
   --page-background:rgb(238, 234, 234);

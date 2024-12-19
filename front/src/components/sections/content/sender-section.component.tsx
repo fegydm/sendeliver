@@ -9,7 +9,7 @@ const SenderSection: React.FC<SenderSectionProps> = ({ children }) => {
   return (
     <section className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-lg">
       <h2 className="text-xl font-bold mb-4 text-purple-700 text-center">
-        Klientska sekcia
+        Client Area      
       </h2>
       {children}
     </section>

@@ -1,0 +1,32 @@
+/* CSS for Banner */
+
+.banner {
+  background-color: #2e2e2e; /* Dark gray background */
+  color: #ffffff; /* White text color */
+  text-align: center; /* Center-align text */
+  padding: 20px 30px; /* Reduced padding */
+  min-height: 100px; /* Minimum height */
+  max-height: 180px; /* Maximum height */
+  overflow: hidden; /* Hide content exceeding max-height */
+  box-sizing: border-box; /* Include padding in the total height */
+  display: flex; /* Flexbox for vertical alignment */
+  align-items: center; /* Vertically center the content */
+  justify-content: space-between; /* Space between left and right sections */
+}
+
+.banner-content {
+  display: flex;
+  flex: 1;
+  justify-content: space-between; /* Align sections with space in between */
+}
+
+.banner-content .left-section {
+  flex: 0 0 60%; /* 60% width for the left section */
+}
+
+.banner-content .right-section {
+  flex: 0 0 40%; /* 40% width for the right section */
+  display: flex;
+  justify-content: center; /* Center content horizontally */
+  align-items: center; /* Center content vertically */
+}

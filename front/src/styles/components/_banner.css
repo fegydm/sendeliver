@@ -1,20 +1,50 @@
-/* CSS pre Banner */
+/* ./front/src/styles/_banner.css */
 
+/* CSS Variables */
+:root {
+  --banner-min-height: 100px;
+  --banner-max-height: 180px;
+  --banner-left-width: 60%;
+  --banner-right-width: 40%;
+}
+
+/* Banner styles */
 .banner {
-  background-color: #2e2e2e; /* Tmavosivé pozadie */
-  color: #ffffff; /* Biela farba textu */
-  text-align: center; /* Zarovnanie textu na stred */
-  padding: 20px 30px; /* Zmenšený padding */
-  min-height: 100px; /* Minimálna výška */
-  max-height: 180px; /* Maximálna výška */
-  overflow: hidden; /* Skrytie obsahu presahujúce max-height */
-  box-sizing: border-box; /* Padding sa započíta do celkovej výšky */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--banner-min-height);
+  max-height: var(--banner-max-height);
+  padding: 20px;
+  background-color: #f8f8f8; /* Light background */
+  border: 1px solid #ddd; /* Light border */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .banner-content {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start; /* Zarovnanie na začiatok osi */
-  justify-content: flex-start; /* Zarovnanie na vrch */
-  flex-grow: 1; /* Umožní expanziu obsahu */
+  width: 100%;
+  align-items: center; /* Vertically center the content */
+}
+
+.banner-title {
+  flex: 0 0 var(--banner-left-width);
+  font-size: 1.5rem;
+  line-height: 1.4;
+  color: #333;
+  padding-right: 20px;
+}
+
+.banner-animation {
+  flex: 0 0 var(--banner-right-width);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.banner-animation > div {
+  width: 150px;
+  height: 150px;
 }

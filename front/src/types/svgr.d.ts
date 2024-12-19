@@ -1,4 +1,4 @@
-// ./front/src/svgr.d.ts
+// ./front/src/types/svgr.d.ts
 declare module "*.svg" {
   import React from "react";
   export const ReactComponent: React.FC<React.SVGProps<SVGSVGElement>>;

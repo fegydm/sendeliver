@@ -1,11 +1,12 @@
 /* ./front/src/styles/_layout.css */
 
-/* CSS Variables */
-:root {
-  --navbar-height: 50px;
-  --navbar-bg-color: #f8f8f8;
-  --navbar-border-color: #ccc;
-  --navbar-item-spacing: 10px;
+/* Global container */
+body {
+  max-width: var(--max-page-width); /* Applied maximum page width */
+  margin: 0 auto; /* Center alignment */
+  padding: 0 var(--spacing-horizontal); /* Add horizontal padding */
+  background-color: var(--background); /* Use variable for background */
+  color: var(--foreground); /* Use variable for text */
 }
 
 /* Navbar styles */
@@ -16,7 +17,7 @@
   height: var(--navbar-height);
   background-color: var(--navbar-bg-color);
   border-bottom: 1px solid var(--navbar-border-color);
-  padding: 0 var(--navbar-item-spacing);
+  padding: 0 var(--spacing-horizontal);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -35,9 +36,6 @@
 }
 
 /* Dot button styles */
-.navbar-dots { /* Teraz sa nepoužíva priamo, ale štýly pre bodky sú nižšie */
-}
-
 .navbar-dots-container {
   display: flex;
   flex-direction: column;
@@ -46,8 +44,8 @@
   height: 24px;
   justify-content: center;
   align-items: center;
-  margin-left: auto; /* Presunie kontajner na pravú stranu */
-    margin-right: var(--navbar-item-spacing); /* Pridá medzeru z pravej strany */
+  margin-left: auto; /* Moves the container to the right side */
+  margin-right: var(--navbar-item-spacing); /* Adds spacing on the right side */
 }
 
 .navbar-dots-row {
@@ -62,7 +60,7 @@
   border-radius: 50%;
 }
 
-/* Dot styling matching size of Avatar (použité pre dynamické bodky) */
+/* Dot styling matching size of Avatar */
 .navbar-item.dot {
   width: 40px;
   height: 40px;
@@ -78,22 +76,22 @@
 }
 
 .navbar-item.language {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    color: black;
-    font-size: 16px;
-    font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: black;
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .navbar-item.language img {
-    width: 30px;
-    height: 20px;
-    object-fit: cover;
-    border: 1px solid #ccc;
-    border-radius: 3px;
+  width: 30px;
+  height: 20px;
+  object-fit: cover;
+  border: 1px solid #ccc;
+  border-radius: 3px;
 }
 
 /* Modal styling placeholder (if needed later) */

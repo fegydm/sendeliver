@@ -31,7 +31,7 @@ const Banner: React.FC = () => {
           style={{
             width: "150px",
             height: "150px",
-            margin: "0 auto", // Zarovnanie na stred
+            margin: "0 auto", // Center
             overflow: "hidden",
           }}
         />

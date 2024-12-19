@@ -26,15 +26,24 @@
     "*.css": "postcss"
   },
   "cSpell.words": [
+    "Cpath",
+    "Csvg",
     "darkmode",
+    "ehthumbs",
+    "eslintcache",
     "grayscale",
     "Košice",
+    "linecap",
+    "linejoin",
     "navbars",
+    "njsproj",
+    "ntvs",
     "openai",
     "preinstall",
     "sendeliver",
     "tailwindcss",
     "tsoa",
+    "vercel",
     "VITE"
   ]
 }

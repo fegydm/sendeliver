@@ -13,6 +13,7 @@
    3. Typography - Base text styles
    4. Layout - Core layout structures
    --------------------------------------------- */
+
 @import "./base/_reset.css";
 @import "./base/_variables.css";
 @import "./base/_typography.css";
@@ -21,21 +22,21 @@
 /* ---------------------------------------------
    Component Styles
    Modular UI component styles.
-   Currently only navbar is active.
    --------------------------------------------- */
+
 @import "./components/_navbar.css";
 @import "./components/_banner.css";
-
-/* @import "./components/_footer.css";
+@import "./components/_content.css";
+@import "./components/_footer.css";
 @import "./components/_ui-components.css";
 @import "./components/_theme-switcher.css";
-*/
+
 
 /* ---------------------------------------------
    Theme Styles
    Different theme variations.
-   Currently disabled.
    --------------------------------------------- */
+
 /* Disabled theme imports
 @import "./themes/default.css";
 @import "./themes/testing.css";

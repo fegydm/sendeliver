@@ -1,3 +1,4 @@
+// ./front/src/pages/home-page.component.tsx
 import { useState, useEffect } from "react";
 import Navigation from "@/components/sections/navbars/navbar.component";
 import PageBanner from "@/components/sections/banners/banner.component";
@@ -6,9 +7,10 @@ import AISearchForm from "@/components/sections/content/search-forms/ai-search-f
 import ManualSearchForm from "@/components/sections/content/search-forms/manual-search-form.component";
 import ResultTable from "@/components/sections/content/results/result-table.component";
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
+import QuickStats from "@/components/sections/stats/quick-stats.component"; // Updated import
 import PageFooter from "@/components/sections/footers/footer-page.component";
-import FloatingButton from "@/components/elements/floating-button.element";
 import TestFooter from "@/components/sections/footers/footer-test.component";
+import FloatingButton from "@/components/elements/floating-button.element";
 import { mockClientData, mockCarrierData } from "@/data/mockData";
 
 interface HomePageProps {
@@ -74,6 +76,9 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
           </>
         }
       />
+
+      {/* Quick Stats */}
+      <QuickStats type="sender" />
 
       {/* Footer */}
       <PageFooter onPinVerified={() => setIsTestFooterVisible(true)} />

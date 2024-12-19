@@ -1,29 +1,21 @@
-// front/src/components/footers/FooterMenu.tsx
+// ./front/src/components/footers/FooterMenu.tsx
 
 import React from "react";
 
 const FooterMenu: React.FC = () => {
   return (
-    <ul className="flex gap-4 text-sm">
+    <ul className="footer-menu">
       <li>
-        <a href="/about" className="hover:underline">
-          About
-        </a>
+        <a href="/about">About</a>
       </li>
       <li>
-        <a href="/contact" className="hover:underline">
-          Contact
-        </a>
+        <a href="/contact">Contact</a>
       </li>
       <li>
-        <a href="/terms" className="hover:underline">
-          Terms of Use
-        </a>
+        <a href="/terms">Terms of Use</a>
       </li>
       <li>
-        <a href="/privacy" className="hover:underline">
-          GDPR
-        </a>
+        <a href="/privacy">GDPR</a>
       </li>
     </ul>
   );

@@ -31,7 +31,7 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
   const handleUpdate = (newData: Partial<TransportData>) => {
     setFormData((prev) => {
       const updated = { ...prev, ...newData };
-      onSubmit(updated); // Odosielame aktualizované dáta rodičovi
+      onSubmit(updated); // Send updated data to the parent
       return updated;
     });
   };
@@ -39,80 +39,75 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
   const isClient = type === "client";
 
   return (
-    <div className="space-y-4">
-      {/* Lokality */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            {isClient ? "Miesto nakládky" : "Aktuálna poloha"}
+    <div className="manual-search-form">
+      {/* Locations */}
+      <div className="form-row">
+        <div className="form-group">
+          <label>
+            {isClient ? "Pickup location" : "Current location"}
           </label>
           <input
             type="text"
             value={formData.pickupLocation}
             onChange={(e) => handleUpdate({ pickupLocation: e.target.value })}
-            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-            placeholder="Zadajte miesto"
+            placeholder="Enter location"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            {isClient ? "Miesto vykládky" : "Cieľová oblasť"}
+        <div className="form-group">
+          <label>
+            {isClient ? "Delivery location" : "Destination area"}
           </label>
           <input
             type="text"
             value={formData.deliveryLocation}
             onChange={(e) => handleUpdate({ deliveryLocation: e.target.value })}
-            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-            placeholder="Zadajte miesto"
+            placeholder="Enter location"
           />
         </div>
       </div>
 
-      {/* Časové údaje */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            {isClient ? "Čas nakládky" : "Čas dostupnosti"}
+      {/* Time details */}
+      <div className="form-row">
+        <div className="form-group">
+          <label>
+            {isClient ? "Pickup time" : "Available from"}
           </label>
           <input
             type="datetime-local"
             value={formData.pickupTime}
             onChange={(e) => handleUpdate({ pickupTime: e.target.value })}
-            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            {isClient ? "Čas vykládky" : "Koniec dostupnosti"}
+        <div className="form-group">
+          <label>
+            {isClient ? "Delivery time" : "Available until"}
           </label>
           <input
             type="datetime-local"
             value={formData.deliveryTime}
             onChange={(e) => handleUpdate({ deliveryTime: e.target.value })}
-            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
           />
         </div>
       </div>
 
-      {/* Hmotnosť a počet paliet */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            {isClient ? "Hmotnosť (kg)" : "Max. nosnosť (kg)"}
+      {/* Weight and pallet count */}
+      <div className="form-row">
+        <div className="form-group">
+          <label>
+            {isClient ? "Weight (kg)" : "Max load (kg)"}
           </label>
           <input
             type="number"
             value={formData.weight}
             onChange={(e) => handleUpdate({ weight: Number(e.target.value) })}
-            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
             min="0"
             step="100"
             placeholder="0"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            {isClient ? "Počet paliet" : "Max. počet paliet"}
+        <div className="form-group">
+          <label>
+            {isClient ? "Number of pallets" : "Max pallets"}
           </label>
           <input
             type="number"
@@ -120,7 +115,6 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
             onChange={(e) =>
               handleUpdate({ palletCount: Number(e.target.value) })
             }
-            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
             min="0"
             max="33"
             placeholder="0"
