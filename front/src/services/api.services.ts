@@ -1,13 +1,13 @@
 // .front/src/services/api.service.ts
 const apiUrl = 'https://dminvest.onrender.com';
 
-// Typ pre produkt
+// Typ for product
 interface Product {
-  id?: string; // Predpokladám, že ID je voliteľné pri vytváraní nového produktu
+  id?: string; 
   name: string;
   price: number;
   description: string;
-  // Ak máš ďalšie vlastnosti, pridaj ich tu
+  // add next here
 }
 
 export const getProducts = async (): Promise<Product[]> => {
