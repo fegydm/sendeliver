@@ -1,5 +1,5 @@
 // ./front/src/components/sections/content/chat/ai-chat.component.tsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { AIService } from "@/services/ai.services";
 import "./ai-chat.component.css";
 
@@ -7,6 +7,7 @@ interface AIChatProps {
   initialPrompt: string;
   type: "sender" | "carrier";
   onDataReceived?: (data: any) => void;
+  autoSubmit?: boolean;
 }
 
 interface Message {
@@ -14,7 +15,12 @@ interface Message {
   content: string;
 }
 
-const AIChat: React.FC<AIChatProps> = ({ initialPrompt, type, onDataReceived }) => {
+const AIChat: React.FC<AIChatProps> = ({ 
+  initialPrompt, 
+  type, 
+  onDataReceived,
+  autoSubmit = true
+}) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
@@ -28,8 +34,15 @@ const AIChat: React.FC<AIChatProps> = ({ initialPrompt, type, onDataReceived }) 
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Efekt pre automatické odoslanie pri otvorení
+  useEffect(() => {
+    if (autoSubmit && initialPrompt) {
+      handleSendMessage(initialPrompt);
+    }
+  }, []); // Spustí sa len pri mount
+
   const handleSendMessage = async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || isLoading) return;
     
     setIsLoading(true);
     setError(null);
@@ -42,7 +55,7 @@ const AIChat: React.FC<AIChatProps> = ({ initialPrompt, type, onDataReceived }) 
       const response = await AIService.sendMessage({
         message: text,
         type,
-        lang1: "en"
+        lang1: type === "sender" ? "en" : "sk"
       });
       
       // Add AI response to chat
@@ -68,9 +81,19 @@ const AIChat: React.FC<AIChatProps> = ({ initialPrompt, type, onDataReceived }) 
     } finally {
       setIsLoading(false);
       
-      // Clear input
-      if (inputRef.current) {
+      // Clear input only if it's not auto-submitted
+      if (!autoSubmit && inputRef.current) {
         inputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const input = inputRef.current;
+      if (input) {
+        handleSendMessage(input.value);
       }
     }
   };
@@ -112,6 +135,8 @@ const AIChat: React.FC<AIChatProps> = ({ initialPrompt, type, onDataReceived }) 
           type="text"
           placeholder="Write a message..."
           disabled={isLoading}
+          defaultValue={initialPrompt} // Pridané pre zobrazenie initial promptu
+          onKeyPress={handleKeyPress}
         />
         <button type="submit" disabled={isLoading}>
           {isLoading ? 'Sending...' : 'Send'}

@@ -247,4 +247,42 @@ input::placeholder, textarea::placeholder {
     opacity: 1;
     transform: translateY(0);
   }
+}/* Pridajte tieto štýly do vášho existujúceho CSS */
+
+
+
+.voice-input-button {
+  position: absolute;
+  right: 70px;  /* Posunieme tlačidlo o 70px doprava */
+  bottom: -16px;
+  padding: 8px;
+  border-radius: 8px;
+  background-color: rgb(153, 57, 213);
+  color: white;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-input-button.carrier {
+  background-color: #3c8031;
+}
+
+.voice-input-button:hover {
+  background-color: #a044f2;
+}
+
+.voice-input-button.carrier:hover {
+  background-color: #2a5a22;
+}
+
+.voice-input-button.active {
+  background-color: #ef4444;
+}
+
+.voice-input-button.active:hover {
+  background-color: #dc2626;
 }

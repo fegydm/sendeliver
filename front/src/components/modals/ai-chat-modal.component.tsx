@@ -25,9 +25,15 @@ interface FormData {
   palletCount: number;
 }
 
+interface AIRequestData {
+  message: string;
+  type: "sender" | "carrier";
+  lang1?: string;
+}
+
 interface AIChatModalProps {
   onClose: () => void;
-  initialPrompt: string;
+  initialPrompt: AIRequestData;
   type: "sender" | "carrier";
   onDataReceived?: (data: FormData) => void;
 }
@@ -44,18 +50,10 @@ const AIChatModal: React.FC<AIChatModalProps> = ({
 
   const formatDateTime = (dateStr: string) => {
     if (!dateStr) {
-      // Ak nie je dátum, použijeme dnešný s časom 12:00
       const today = new Date().toISOString().split('T')[0];
       return `${today}T12:00`;
     }
-
-    // Skontrolujeme či dátum už obsahuje čas
-    if (dateStr.includes('T')) {
-      return dateStr; // Ak áno, vrátime ho bez zmeny
-    }
-
-    // Ak je len dátum (YYYY-MM-DD), pridáme 12:00
-    return `${dateStr}T12:00`;
+    return dateStr.includes('T') ? dateStr : `${dateStr}T12:00`;
   };
 
   const handleAIResponse = (response: AIResponse) => {
@@ -69,7 +67,6 @@ const AIChatModal: React.FC<AIChatModalProps> = ({
         return;
       }
 
-      // Konvertujeme všetky údaje z AI do formátu pre formulár
       const formCompatibleData: FormData = {
         pickupLocation: response.data.pickupLocation?.trim() || "",
         deliveryLocation: response.data.deliveryLocation?.trim() || "",
@@ -92,13 +89,12 @@ const AIChatModal: React.FC<AIChatModalProps> = ({
     }
   };
 
-  // Handler pre zmenu tabu
   const handleTabChange = (tab: "chat" | "map") => {
     setActiveTab(tab);
   };
 
   return (
-    <div className={`ai-chat-modal ${activeTab === "chat" ? "large" : ""}`}>
+    <div className="ai-chat-modal">
       <div className="ai-chat-modal-header">
         <h2 className="ai-chat-modal-title">
           {type === "sender" ? "AI Assistant for Clients" : "AI Assistant for Carriers"}
@@ -139,9 +135,10 @@ const AIChatModal: React.FC<AIChatModalProps> = ({
       >
         {activeTab === "chat" && (
           <AIChat 
-            initialPrompt={initialPrompt} 
-            type={type} 
+            initialPrompt={initialPrompt.message}
+            type={type}
             onDataReceived={handleAIResponse}
+            autoSubmit={true}  // Pridané automatické odoslanie
           />
         )}
         {activeTab === "map" && (
