@@ -30,7 +30,7 @@
 @import "./components/_footer.css";
 @import "./components/_ui-components.css";
 @import "./components/_theme-switcher.css";
-
+@import "./components/_elements.css"
 
 /* ---------------------------------------------
    Theme Styles

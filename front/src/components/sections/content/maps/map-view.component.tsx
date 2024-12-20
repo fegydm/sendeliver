@@ -1,11 +1,12 @@
 // ./front/src/components/maps/map-view.component.tsx
 import React from "react";
+import "./map-view.component.css"; // Import CSS file
 
 const MapView: React.FC = () => {
   return (
-    <div className="p-4">
-      <h3 className="text-lg font-bold mb-4">Interactive Map</h3>
-      <div className="w-full h-64 bg-gray-200 dark:bg-gray-700">
+    <div className="map-view">
+      <h3 className="map-view-title">Interactive Map</h3>
+      <div className="map-view-container">
         {/* Map implementation via API (e.g., Google Maps or Leaflet) */}
         The map will load here.
       </div>

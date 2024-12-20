@@ -1,5 +1,5 @@
 // front/src/services/ai.service.ts
-import { AIRequest, AIResponse } from "@shared/types/ai.types"; // Už správne importujeme AIResponse
+import { AIRequest, AIResponse } from "../types/ai.types"; // AIResponse
 
 export class AIService {
   private static API_URL = import.meta.env.VITE_AI_API_URL;
@@ -11,7 +11,7 @@ export class AIService {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Accept-Language": request.lang1 || "sk", // Použitie lang1
+          "Accept-Language": request.lang1 || "sk", // Using lang1
         },
         body: JSON.stringify(request),
         credentials: "include",

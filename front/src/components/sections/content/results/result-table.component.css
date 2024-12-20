@@ -1,0 +1,50 @@
+/* ./front/src/styles/result-table.component.css */
+
+.result-table-container {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: white;
+}
+
+.result-table-container.dark {
+  background-color: #1a202c; /* Dark mode background */
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.result-table th,
+.result-table td {
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+}
+
+.result-table th {
+  font-weight: bold;
+  color: #4a5568; /* Header text color */
+}
+
+.result-table th.dark {
+  color: #e2e8f0; /* Header text color in dark mode */
+}
+
+.result-table td {
+  color: #718096; /* Body text color */
+}
+
+.result-table td.dark {
+  color: #cbd5e0; /* Body text color in dark mode */
+}
+
+.result-table tr:hover {
+  background-color: #f7fafc; /* Hover effect for light mode */
+}
+
+.result-table tr:hover.dark {
+  background-color: #2d3748; /* Hover effect for dark mode */
+}

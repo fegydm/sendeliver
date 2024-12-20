@@ -1,5 +1,5 @@
 // ./front/src/pages/home-page.component.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react"; // Removed useEffect
 import Navigation from "@/components/sections/navbars/navbar.component";
 import PageBanner from "@/components/sections/banners/banner.component";
 import Content from "@/components/sections/content/content.component";

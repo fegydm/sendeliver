@@ -135,3 +135,33 @@
   border: 1px solid #ccc;
   border-radius: 3px;
 }
+
+
+/* ./front/src/styles/navbar-darkmode.css */
+
+/* Style for the dark mode toggle button */
+.navbar-darkmode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.navbar-darkmode:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.navbar-darkmode-icon {
+  font-size: 1.5rem; /* Icon size */
+  color: var(--text-color, #000); /* Default text color */
+  transition: color 0.3s ease;
+}
+
+.navbar-darkmode:hover .navbar-darkmode-icon {
+  color: var(--text-hover-color, #666); /* Hover text color */
+}

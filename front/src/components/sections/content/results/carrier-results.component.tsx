@@ -1,6 +1,7 @@
 // ./front/src/components/results/carrier-results.component.tsx
 import React from "react";
 import ResultTable, { CarrierResultData } from "./result-table.component";
+import "./carrier-results.component.css"; // Import CSS
 
 const CarrierResults: React.FC = () => {
   const carrierData: CarrierResultData[] = [
@@ -11,18 +12,16 @@ const CarrierResults: React.FC = () => {
       weight: "5 t",
     },
     {
-      pickup: "Praha",
-      delivery: "Viedeň",
+      pickup: "Prague",
+      delivery: "Vienna",
       pallets: 8,
       weight: "3 t",
     },
   ];
 
   return (
-    <div>
-      <h3 className="text-xl font-bold mb-4 text-green-700">
-        Dostupné vozidlá
-      </h3>
+    <div className="carrier-results-container">
+      <h3 className="carrier-results-title">Available Vehicles</h3>
       <ResultTable type="carrier" data={carrierData} />
     </div>
   );

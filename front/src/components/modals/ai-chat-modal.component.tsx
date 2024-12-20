@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import AIChat from "../sections/content/chat/ai-chat.component";
 import MapView from "../sections/content/maps/map-view.component";
+import ManualSearchForm from "../sections/content/search-forms/manual-search-form.component";
+import "./ai-chat-modal.component.css";
 
 interface AIChatModalProps {
   onClose: () => void;
@@ -15,54 +17,83 @@ const AIChatModal: React.FC<AIChatModalProps> = ({
   type,
 }) => {
   const [activeTab, setActiveTab] = useState<"chat" | "map">("chat");
+  const [formData, setFormData] = useState({
+    pickupLocation: "",
+    deliveryLocation: "",
+    pickupTime: "",
+    deliveryTime: "",
+    weight: 0,
+    palletCount: 0,
+  });
+
+  const handleAIResponse = (data: any) => {
+    if (data?.data) {
+      setFormData({
+        pickupLocation: data.data.pickupLocation || "",
+        deliveryLocation: data.data.deliveryLocation || "",
+        pickupTime: data.data.pickupTime || "",
+        deliveryTime: data.data.deliveryTime || "",
+        weight: data.data.weight || 0,
+        palletCount: data.data.palletCount || 0,
+      });
+    }
+  };
 
   return (
-    <div className="fixed z-50 bg-white dark:bg-gray-800 shadow-lg w-full h-full lg:w-[40%] lg:h-full bottom-0 lg:right-0 lg:bottom-auto transition-transform duration-300">
-      <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
-        <h2 className="text-xl font-bold">
+    <div className={`ai-chat-modal ${activeTab === "chat" ? "large" : ""}`}>
+      <div className="ai-chat-modal-header">
+        <h2 className="ai-chat-modal-title">
           {type === "sender"
-            ? "AI Asistent pre klientov"
-            : "AI Asistent pre dopravcov"}
+            ? "AI Assistant for Clients"
+            : "AI Assistant for Carriers"}
         </h2>
-        <button
-          onClick={onClose}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-          aria-label="Zavrieť"
-        >
-          Zavrieť
+        <button onClick={onClose} className="ai-chat-modal-close">
+          Close
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b dark:border-gray-700">
-        <button
-          onClick={() => setActiveTab("chat")}
-          className={`flex-1 p-4 text-center ${
-            activeTab === "chat"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-100 dark:bg-gray-700"
-          }`}
-        >
-          Chat
-        </button>
-        <button
-          onClick={() => setActiveTab("map")}
-          className={`flex-1 p-4 text-center ${
-            activeTab === "map"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-100 dark:bg-gray-700"
-          }`}
-        >
-          Mapa
-        </button>
-      </div>
+      <div className="ai-chat-modal-container">
+        <div className="ai-chat-modal-left">
+          {/* Tabs */}
+          <div className="ai-chat-modal-tabs">
+            <button
+              onClick={() => setActiveTab("chat")}
+              className={`ai-chat-modal-tab ${
+                activeTab === "chat" ? "active" : "inactive"
+              }`}
+            >
+              Chat
+            </button>
+            <button
+              onClick={() => setActiveTab("map")}
+              className={`ai-chat-modal-tab ${
+                activeTab === "map" ? "active" : "inactive"
+              }`}
+            >
+              Map
+            </button>
+          </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === "chat" && (
-          <AIChat initialPrompt={initialPrompt} type={type} />
-        )}
-        {activeTab === "map" && <MapView />}
+          {/* Content */}
+          <div className="ai-chat-modal-content">
+            {activeTab === "chat" && (
+              <AIChat 
+                initialPrompt={initialPrompt} 
+                type={type} 
+                onDataReceived={handleAIResponse}
+              />
+            )}
+            {activeTab === "map" && <MapView />}
+          </div>
+        </div>
+
+        <div className="ai-chat-modal-right">
+          <ManualSearchForm
+            type={type === "sender" ? "client" : "carrier"}
+            onSubmit={(data) => console.log("Form data updated:", data)}
+            initialData={formData}
+          />
+        </div>
       </div>
     </div>
   );

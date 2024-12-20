@@ -1,16 +1,12 @@
 // front/src/components/playground/component-playground.component.tsx
 import React from "react";
 import GeneralModal from "@/components/modals/general.modal";
-import Card, {
-  CardContent,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card.ui";
 
 interface ComponentPlaygroundProps {
   isOpen: boolean;
   onClose: () => void;
-  component: "card" | "button" | "input"; // přidáme další komponenty podle potřeby
+  component: "card" | "button" | "input"; // we can add other components
 }
 
 const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
@@ -56,7 +52,7 @@ const ComponentPlayground: React.FC<ComponentPlaygroundProps> = ({
             </section>
           </div>
         );
-      // Zde můžeme přidat další komponenty
+      // Place for next components
       default:
         return <div>Select a component to preview</div>;
     }

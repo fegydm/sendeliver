@@ -1,4 +1,4 @@
-// ./back/src/types/ai.types.ts
+// ./front/src/types/ai.types.ts
 export interface AIRequest {
   message: string;
   type: "sender" | "carrier";

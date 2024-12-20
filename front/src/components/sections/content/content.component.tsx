@@ -1,5 +1,7 @@
 // ./front/src/components/content/content.component.tsx
 import React from "react";
+import { Link } from "react-router-dom";
+import "./content.component.css"; // Import CSS file
 
 interface ContentProps {
   senderContent: React.ReactNode;
@@ -9,6 +11,17 @@ interface ContentProps {
 const Content: React.FC<ContentProps> = ({ senderContent, carrierContent }) => {
   return (
     <main>
+      {/* Buttons for navigation */}
+      <div className="button-container">
+        <Link to="/sender">
+          <button className="button button-left">Client Dashboard</button>
+        </Link>
+        <Link to="/hauler">
+          <button className="button button-right">Carrier Dashboard</button>
+        </Link>
+      </div>
+
+      {/* Main content container */}
       <div className="container">
         {/* Left section - Sender Content */}
         <section>

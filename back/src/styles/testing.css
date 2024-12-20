@@ -1,19 +1,19 @@
-/* Nastavenie základných štýlov pre stránku */
+/* Setting base styles for the page */
 html, body {
-  margin: 0; /* Odstránenie okrajov */
-  padding: 0; /* Odstránenie vnútornej medzery */
-  width: 100%; /* Nastavenie šírky na celú obrazovku */
-  height: 100%; /* Nastavenie výšky na celú obrazovku */
-  background-color:rgb(35, 98, 160); /* Svetlomodré pozadie */
-  font-family: Arial, sans-serif; /* Nastavenie predvoleného fontu */
-  color: #333; /* Tmavošedý text */
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  margin: 0; /* Remove default margins */
+  padding: 0; /* Remove default padding */
+  width: 100%; /* Set the width to cover the entire viewport */
+  height: 100%; /* Set the height to cover the entire viewport */
+  background-color: rgb(35, 98, 160); /* Light blue background color */
+  font-family: Arial, sans-serif; /* Set default font */
+  color: #333; /* Dark gray text color */
+  display: flex; /* Use flexbox for centering content */
+  justify-content: center; /* Horizontally center the content */
+  align-items: center; /* Vertically center the content */
 }
 
-/* Pridanie štýlov pre testovací obsah */
+/* Adding styles for test content */
 h1 {
-  font-size: 2rem;
-  text-align: center;
+  font-size: 2rem; /* Set the font size for the heading */
+  text-align: center; /* Center-align the text */
 }

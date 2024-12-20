@@ -13,10 +13,11 @@ const NavbarDarkmode: FC<NavbarDarkmodeProps> = ({
 }) => {
   return (
     <button
-      onClick={onToggleDarkMode}
+      onClick={onToggleDarkMode} // Toggle dark mode on button click
       className="navbar-darkmode"
-      aria-label="Toggle dark mode"
+      aria-label="Toggle dark mode" // Accessibility label for screen readers
     >
+      {/* Render appropriate icon based on dark mode state */}
       {isDarkMode ? (
         <FiMoon className="navbar-darkmode-icon" />
       ) : (

@@ -2,49 +2,51 @@
 
 /* CSS Variables */
 :root {
-  --banner-min-height: 100px;
-  --banner-max-height: 180px;
-  --banner-left-width: 60%;
-  --banner-right-width: 40%;
+  --banner-min-height: 100px; /* Minimum height of the banner */
+  --banner-max-height: 180px; /* Maximum height of the banner */
+  --banner-left-width: 60%; /* Width of the left section */
+  --banner-right-width: 40%; /* Width of the right section */
 }
 
 /* Banner styles */
 .banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: var(--banner-min-height);
-  max-height: var(--banner-max-height);
-  padding: 20px;
-  background-color: #f8f8f8; /* Light background */
-  border: 1px solid #ddd; /* Light border */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  background-color: #2e2e2e; /* Dark gray background */
+  color: #ffffff; /* White text color */
+  display: flex; /* Enables a flex container */
+  align-items: center; /* Vertically centers items */
+  justify-content: space-between; /* Places items at both ends of the container */
+  min-height: var(--banner-min-height); /* Applies minimum height */
+  max-height: var(--banner-max-height); /* Applies maximum height */
+  padding: 20px; /* Inner spacing around the content */
+  
+  border: 1px solid #ddd; /* Light gray border */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  overflow: hidden; /* Ensures child elements do not overflow the banner */
 }
 
 .banner-content {
-  display: flex;
-  width: 100%;
-  align-items: center; /* Vertically center the content */
+  display: flex; /* Enables a flex container */
+  width: 100%; /* Occupies full width */
+  align-items: center; /* Vertically centers content */
 }
 
 .banner-title {
-  flex: 0 0 var(--banner-left-width);
-  font-size: 1.5rem;
-  line-height: 1.4;
-  color: #333;
-  padding-right: 20px;
+  flex: 0 0 var(--banner-left-width); /* Fixed width for the title section */
+  font-size: 1.5rem; /* Large font size for the title */
+  line-height: 1.4; /* Line spacing for better readability */
+  color: white; /* Dark gray text color */
+  padding-right: 20px; /* Space between the title and adjacent content */
 }
 
 .banner-animation {
-  flex: 0 0 var(--banner-right-width);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+  flex: 0 0 var(--banner-right-width); /* Fixed width for the animation section */
+  display: flex; /* Enables a flex container */
+  justify-content: center; /* Centers the animation horizontally */
+  align-items: center; /* Centers the animation vertically */
+  overflow: hidden; /* Hides any overflowing animation content */
 }
 
 .banner-animation > div {
-  width: 150px;
-  height: 150px;
+  width: 150px; /* Fixed width for the animation container */
+  height: 150px; /* Fixed height for the animation container */
 }

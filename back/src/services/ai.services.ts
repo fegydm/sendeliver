@@ -5,11 +5,8 @@ import { AI_CONFIG } from "../configs/openai.config.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Resolve __dirname in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-console.log(path.resolve(__dirname, "../../configs/openai.config"));
 
 export class AIService {
   private static instance: AIService;
@@ -34,55 +31,61 @@ export class AIService {
 
   async sendMessage(request: AIRequest): Promise<AIResponse> {
     try {
-      const systemPrompt = `
-        Si logistický AI asistent. Analyzuj požiadavku na prepravu a vráť JSON s nasledujúcou štruktúrou:
-        {
-          "pickupLocation": string,
-          "deliveryLocation": string,
-          "pickupTime": string,
-          "deliveryTime": string | null,
-          "weight": number | null,
-          "palletCount": number | null,
-          "additionalInfo": {
-            "vehicleType": string | null,
-            "requirements": string[] | null,
-            "adr": boolean | null,
-            "loadingType": string | null,
-            "temperature": {
-              "required": boolean,
-              "min": number | null,
-              "max": number | null
-            }
-          }
-        }
-        Kde neznáme hodnoty nastav na null.`;
+      const language = request.lang1 || 'en';
+      
+      const systemPromptText = `You are a logistics AI assistant. Provide your response in two parts:
+
+1. First write a friendly message that:
+- Summarizes what you understand about the shipping request
+- Asks if they want to add any details
+- Mentions they can specify everything in the form below
+
+2. Then add a JSON object with shipping details. Do not use any markdown formatting or code blocks.
+
+Your response must follow this exact format:
+---MESSAGE START---
+[Your friendly message here]
+---MESSAGE END---
+---JSON START---
+{
+  "pickupLocation": "string",
+  ...rest of the json structure
+}
+---JSON END---`;
 
       const completion = await this.openai.chat.completions.create({
         model: AI_CONFIG.model,
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: systemPromptText },
           { role: "user", content: request.message },
         ],
         temperature: AI_CONFIG.temperature,
-        max_tokens: 1000, // Optional: Limit tokens for response size
+        max_tokens: 1000,
       });
 
-      const content = completion.choices[0]?.message?.content || "{}";
+      const content = completion.choices[0]?.message?.content || "";
 
-      // Parse the JSON response
-      try {
-        const parsedData = JSON.parse(content);
-        return {
-          content,
-          data: parsedData,
-        };
-      } catch (error) {
-        console.error("Failed to parse AI response:", error);
-        return {
-          content,
-          data: {},
-        };
+      // Extract message and JSON parts
+      const messageMatch = content.match(/---MESSAGE START---([\s\S]*?)---MESSAGE END---/);
+      const jsonMatch = content.match(/---JSON START---([\s\S]*?)---JSON END---/);
+
+      let data = {};
+      let humanResponse = messageMatch ? messageMatch[1].trim() : "";
+
+      if (jsonMatch) {
+        try {
+          const jsonString = jsonMatch[1].trim();
+          data = JSON.parse(jsonString);
+        } catch (error) {
+          console.error("Failed to parse JSON:", error);
+          console.log("Raw JSON string:", jsonMatch[1]);
+        }
       }
+
+      return {
+        content: humanResponse,
+        data: data,
+      };
     } catch (error) {
       console.error("OpenAI API Error:", error);
       throw error;

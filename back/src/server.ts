@@ -42,7 +42,15 @@ app.use((req: Request, _res: Response, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
-app.use(cors());
+
+// Updated CORS configuration
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://sendeliver.com'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language']
+}));
+
 app.use(express.json());
 
 // Static files configuration

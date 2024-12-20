@@ -35,18 +35,22 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
     Array(3).fill(components.dots.inactive)
   );
 
+  // Toggles breadcrumbs visibility
   const handleBreadcrumbsToggle = () => {
     setShowBreadcrumbs((prev) => !prev);
   };
 
+  // Opens a specified modal
   const handleModalOpen = (modalType: ModalType) => {
     setActiveModal(modalType);
   };
 
+  // Closes the currently open modal
   const handleModalClose = () => {
     setActiveModal(null);
   };
 
+  // Updates dot selections based on user input
   const handleDotsSelectionChange = (top: TopRowType, bottom: BottomRowType) => {
     const newTopDots = Array(3).fill(components.dots.inactive);
     const newBottomDots = Array(3).fill(components.dots.inactive);
@@ -66,26 +70,36 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
 
   return (
     <header className="navbar">
+      {/* Hamburger menu */}
       <NavbarHamburger
         onLoginClick={() => handleModalOpen("login")}
         onRegisterClick={() => handleModalOpen("register")}
         onShowAbout={() => handleModalOpen("about")}
       />
+      {/* Logo */}
       <NavbarLogo />
+      {/* Breadcrumb navigation */}
       <NavbarBreadcrumb
         onBreadcrumbsToggle={handleBreadcrumbsToggle}
         showBreadcrumbs={showBreadcrumbs}
       />
+      {/* Navigation name */}
       <NavbarName onShowAbout={() => handleModalOpen("about")} />
+      {/* Dot selector */}
       <NavbarDots
         topDots={topDots}
         bottomDots={bottomDots}
         onClick={() => handleModalOpen("dots")}
       />
+      {/* Avatar dropdown */}
       <NavbarAvatar onClick={() => handleModalOpen("avatar")} />
+      {/* Login button */}
       <NavbarLogin onLoginClick={() => handleModalOpen("login")} />
+      {/* Register button */}
       <NavbarRegister onRegisterClick={() => handleModalOpen("register")} />
+      {/* Language selector */}
       <NavbarLanguage />
+      {/* Dark mode toggle */}
       <NavbarDarkmode
         isDarkMode={isDarkMode}
         onToggleDarkMode={onToggleDarkMode}

@@ -1,5 +1,6 @@
 // ./front/src/components/results/result-table.component.tsx
 import React from "react";
+import "./result-table.component.css"; // Import CSS styles
 
 export interface ClientResultData {
   distance: string;
@@ -21,7 +22,6 @@ interface ResultTableProps {
 }
 
 const ResultTable: React.FC<ResultTableProps> = ({ type, data }) => {
-  // Definujeme columns podľa typu
   const columns =
     type === "client"
       ? ["Distance", "Vehicle Type", "Availability Time", "ETA"]
@@ -42,36 +42,21 @@ const ResultTable: React.FC<ResultTableProps> = ({ type, data }) => {
   };
 
   return (
-    <div className="overflow-auto border rounded p-4 bg-white dark:bg-gray-800">
-      <table className="table-auto w-full border-collapse text-left">
+    <div className={`result-table-container ${type === "client" ? "" : "dark"}`}>
+      <table className="result-table">
         <thead>
           <tr>
             {columns.map((col) => (
-              <th
-                key={col}
-                className="border-b p-2 font-semibold text-gray-700 dark:text-gray-300"
-              >
-                {col}
-              </th>
+              <th key={col}>{col}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {data.map((row, rowIndex) => (
-            <tr
-              key={rowIndex}
-              className="hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
+            <tr key={rowIndex}>
               {columns.map((col) => {
                 const key = getKeyForColumn(col);
-                return (
-                  <td
-                    key={col}
-                    className="border-b p-2 text-gray-600 dark:text-gray-200"
-                  >
-                    {(row as any)[key]?.toString() || "N/A"}
-                  </td>
-                );
+                return <td key={col}>{(row as any)[key]?.toString() || "N/A"}</td>;
               })}
             </tr>
           ))}

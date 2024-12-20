@@ -13,7 +13,7 @@
 
 main {
   background-color: var(--bg-content-light);
-  padding: 2rem;
+  padding: 0; /* Remove padding from top */
 }
 
 main.dark {
@@ -165,7 +165,6 @@ main.dark {
   border: 1px solid #ccc;
   border-radius: 8px;
 }
-
 
 /* ./front/src/components/search-forms/manual-search-form.component.css */
 
