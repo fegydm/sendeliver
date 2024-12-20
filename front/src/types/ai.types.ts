@@ -1,4 +1,3 @@
-// ./front/src/types/ai.types.ts
 export interface AIRequest {
   message: string;
   type: "sender" | "carrier";
@@ -12,20 +11,9 @@ export interface AIResponse {
     deliveryLocation?: string;
     pickupTime?: string;
     deliveryTime?: string;
-    weight?: number;
-    palletCount?: number;
-    additionalInfo?: {
-      vehicleType?: string;
-      requirements?: string[];
-      price?: number;
-      distance?: number;
-      adr?: boolean;
-      loadingType?: string;
-      temperature?: {
-        min?: number;
-        max?: number;
-        required?: boolean;
-      };
-    };
+    weight?: string;
+    quantity?: string;
+    vehicleType?: string;
+    cargoType?: string;
   };
 }

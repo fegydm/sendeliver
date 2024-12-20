@@ -2,25 +2,25 @@
 
 :root {
   /* Basic Colors */
-  --background: white; /* Default background */
-  --foreground: black; /* Default text color */
+  --background: white;
+  --foreground: black;
 
   /* Layout */
-  --body-padding: 1px; /* Default body padding */
-  --spacing-medium: 1px; /* Medium spacing */
-  --max-page-width: 1300px; /* Maximum page width */
+  --body-padding: 1px;
+  --spacing-medium: 1px;
+  --max-page-width: 1300px;
 
   /* Components */
-  --page-background:rgb(238, 234, 234);
-  --navbar-background:rgb(255, 255, 255);
-  --navbar-border: #000; /* Default navbar border */
-  --modal-background:rgb(255, 255, 255);
+  --page-background: rgb(238, 234, 234);
+  --navbar-background: rgb(255, 255, 255);
+  --navbar-border: #000;
+  --modal-background: rgb(255, 255, 255);
   --modal-foreground: #000000;
 
   /* Navbar Specific */
-  --navbar-height: 50px; /* Default navbar height */
-  --navbar-group-border: #ccc; /* Border for navbar groups */
-  --navbar-button-hover: #e5e7eb; /* Hover background for buttons */
+  --navbar-height: 50px;
+  --navbar-group-border: #ccc;
+  --navbar-button-hover: #e5e7eb;
 
   /* Avatar */
   --avatar-bg: #e5e7eb;
@@ -56,8 +56,8 @@
   --ring: #18181b;
 
   /* Layout */
-  --spacing-horizontal: 16px; /* Default horizontal padding */
-  --spacing-medium: 16px; /* Default spacing between elements */
+  --spacing-horizontal: 16px;
+  --spacing-medium: 16px;
 
   /* Radius */
   --radius: 0.5rem;
@@ -73,4 +73,27 @@
   /* Navbar Dot Sizes */
   --dot-size: 6px;
   --dot-gap: 4px;
+
+  /* Content Specific */
+  --bg-content-light: #f9f9f9;
+  --bg-content-dark: #1a202c;
+  --max-w-content: 1200px;
+  --px-container: 16px;
+  --bg-white: #ffffff;
+  --bg-gray-dark: #374151;
+  --text-purple: #6b46c1;
+  --text-green: #38a169;
+  
+  /* Client/Carrier Colors */
+  --color-primary-client: rgb(191, 90, 242);
+  --color-primary-carrier: #3c8031;
+  --color-bg-client: rgb(219, 179, 246);
+  --color-bg-carrier: #a8e4a0;
+  
+  /* Shadows */
+  --shadow-default: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  /* Form Validation */
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.1);
 }
