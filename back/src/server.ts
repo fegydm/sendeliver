@@ -1,4 +1,3 @@
-// ./back/src/server.ts
 import express, { Request, Response } from "express";
 import cors from "cors";
 import http from "http";
@@ -8,6 +7,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import dotenv from "dotenv";
 import aiRouter from "./routes/ai.routes.js";
+import deliveryRouter from "./routes/delivery.routes.js"; // Import nového routera
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -116,6 +116,7 @@ wss.on("close", () => {
 
 // API Routes
 app.use("/api/ai", aiRouter);
+app.use("/api/delivery", deliveryRouter);  // Registrovaný nový endpoint
 
 // Health check route
 app.get("/api/health", (_req: Request, res: Response) => {

@@ -35,7 +35,7 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "openai": "^4.28.0",
-    "pg": "^8.11.3",
+    "pg": "8.13.1",
     "redis": "^4.6.7",
     "redoc": "2.2.0",
     "swagger-ui-express": "5.0.1",
