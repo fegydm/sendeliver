@@ -1,48 +1,65 @@
-// ./front/src/components/sections/content/search-forms/ai-search-form.component.tsx
-import React, { useState, useCallback } from "react";
-import { Mic, MicOff } from 'lucide-react';
-import AIChatModal from '../../../modals/ai-chat-modal.component';
-import { useVoiceRecognition } from '../../../../hooks/use-voice-recognition';
+import React, { useRef } from "react";
+import "./ai-search-form.component.css";
 
-type UserType = "sender" | "carrier";
-
-interface AIRequestData {
-  message: string;
-  type: UserType;
-  lang1?: string;
-}
-
-interface AiSearchProps {
+interface AISearchFormProps {
   type: "client" | "carrier";
+  onAIRequest: (prompt: string) => void;
 }
 
-const AiSearch: React.FC<AiSearchProps> = ({ type: _type }) => {
-  const [inputText, setInputText] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentPrompt, setCurrentPrompt] = useState<AIRequestData | null>(null);
-  
-  const convertType = (type: "client" | "carrier"): UserType => {
-    return type === "client" ? "sender" : "carrier";
+const ENTER_SYMBOL = "↵";
+
+const AISearchForm: React.FC<AISearchFormProps> = ({ type: _type, onAIRequest }) => {
+  const editableRef = useRef<HTMLDivElement>(null);
+
+  const ensureSymbolAtEnd = () => {
+    if (!editableRef.current) return;
+
+    const content = editableRef.current.innerHTML;
+
+    // Odstráň existujúce symboly ENTER_SYMBOL
+    const cleanContent = content
+      .replace(new RegExp(`<span class="enter-symbol">${ENTER_SYMBOL}</span>`, "g"), "")
+      .trim();
+
+    // Pridaj symbol na koniec
+    editableRef.current.innerHTML = `${cleanContent}<span class="enter-symbol">${ENTER_SYMBOL}</span>`;
+
+    // Presun kurzora na koniec textu, pred symbol
+    const range = document.createRange();
+    const sel = window.getSelection();
+
+    if (editableRef.current.firstChild) {
+      const textNode = editableRef.current.firstChild;
+
+      // Ak textový uzol existuje, nastav kurzor na koniec textového obsahu
+      if (textNode.nodeType === Node.TEXT_NODE) {
+        range.setStart(textNode, textNode.textContent?.length || 0);
+      } else {
+        // Ak neexistuje textový uzol, nastav kurzor na koniec editovateľného divu
+        range.setStart(editableRef.current, editableRef.current.childNodes.length - 1);
+      }
+
+      range.collapse(true);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
   };
 
-  const openAIModal = useCallback((text: string) => {
-    if (!text.trim() || isModalOpen) return;
-    
-    const requestData: AIRequestData = {
-      message: text,
-      type: convertType(_type),
-      lang1: _type === "client" ? "en" : "sk"
-    };
+  const handleInput = () => {
+    ensureSymbolAtEnd();
+  };
 
-    setCurrentPrompt(requestData);
-    setIsModalOpen(true);
-  }, [_type, isModalOpen]);
+  const handleSubmit = () => {
+    if (!editableRef.current) return;
 
-  const { isListening, toggleListening } = useVoiceRecognition({
-    language: _type === "client" ? "en-US" : "sk-SK",
-    onTextChange: setInputText,
-    onRecognitionEnd: openAIModal
-  });
+    const content = editableRef.current.textContent || "";
+    const cleanText = content.replace(ENTER_SYMBOL, "").trim();
+
+    if (cleanText.length > 0) {
+      onAIRequest(cleanText);
+      editableRef.current.innerHTML = `<span class="enter-symbol">${ENTER_SYMBOL}</span>`;
+    }
+  };
 
   return (
     <div className={`ai-search-form ${_type === "carrier" ? "carrier" : ""}`}>
@@ -52,47 +69,25 @@ const AiSearch: React.FC<AiSearchProps> = ({ type: _type }) => {
           : "Need to find a suitable load for your truck? Ask AI or fill out the relevant form."}
       </div>
 
-      <div className="ai-search-input">
-        <textarea
-          placeholder="Write your request here or use voice input..."
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-        />
-        <div className="ai-search-controls">
-          <button
-            onClick={toggleListening}
-            className={`voice-input-button ${isListening ? 'active' : ''} ${
-              _type === "carrier" ? "carrier" : ""
-            }`}
-            title={isListening ? 'Stop recording' : 'Start recording'}
-            aria-label={isListening ? 'Stop recording' : 'Start recording'}
-          >
-            {isListening ? <MicOff size={20} /> : <Mic size={20} />}
-          </button>
-          <button
-            onClick={() => openAIModal(inputText)}
-            className={`ai-search-button ${_type === "carrier" ? "carrier" : ""}`}
-          >
-            Ask AI
-          </button>
-        </div>
+      <div
+        className="ai-editable"
+        contentEditable
+        ref={editableRef}
+        onInput={handleInput}
+        suppressContentEditableWarning
+        data-placeholder={
+          _type === "client"
+            ? "Describe what you need to send"
+            : "Describe what kind of load you're looking for"
+        }
+      >
+        <span className="enter-symbol">{ENTER_SYMBOL}</span>
       </div>
-
-      {isModalOpen && currentPrompt && (
-        <AIChatModal
-          initialPrompt={currentPrompt}
-          type={convertType(_type)}
-          onClose={() => {
-            setIsModalOpen(false);
-            setCurrentPrompt(null);
-          }}
-          onDataReceived={(data) => {
-            console.log('Received data from modal:', data);
-          }}
-        />
-      )}
+      <button onClick={handleSubmit} className="ai-submit-button">
+        Ask AI
+      </button>
     </div>
   );
 };
 
-export default AiSearch;
+export default AISearchForm;

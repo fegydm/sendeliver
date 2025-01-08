@@ -1,39 +1,15 @@
-// ./front/src/components/modals/ai-chat-modal.component.tsx
+// File: src/components/modals/ai-chat-modal.component.tsx
+// Last change: Refactored to use shared types and removed autoSubmit
+
 import React, { useState } from "react";
 import AIChat from "../sections/content/chat/ai-chat.component";
 import MapView from "../sections/content/maps/map-view.component";
+import { AIRequest, AIResponse, FormData } from "@/types/ai.types";
 import "./ai-chat-modal.component.css";
-
-interface AIResponse {
-  content: string;
-  data: {
-    pickupLocation: string;
-    deliveryLocation: string;
-    pickupTime: string;
-    deliveryTime: string;
-    weight: string;
-    palletCount: number;
-  };
-}
-
-interface FormData {
-  pickupLocation: string;
-  deliveryLocation: string;
-  pickupTime: string;
-  deliveryTime: string;
-  weight: number;
-  palletCount: number;
-}
-
-interface AIRequestData {
-  message: string;
-  type: "sender" | "carrier";
-  lang1?: string;
-}
 
 interface AIChatModalProps {
   onClose: () => void;
-  initialPrompt: AIRequestData;
+  initialPrompt: AIRequest;
   type: "sender" | "carrier";
   onDataReceived?: (data: FormData) => void;
 }
@@ -70,9 +46,9 @@ const AIChatModal: React.FC<AIChatModalProps> = ({
       const formCompatibleData: FormData = {
         pickupLocation: response.data.pickupLocation?.trim() || "",
         deliveryLocation: response.data.deliveryLocation?.trim() || "",
-        pickupTime: formatDateTime(response.data.pickupTime),
-        deliveryTime: formatDateTime(response.data.deliveryTime),
-        weight: parseInt(response.data.weight?.replace('kg', '')) || 0,
+        pickupTime: formatDateTime(response.data.pickupTime || ""),
+        deliveryTime: formatDateTime(response.data.deliveryTime || ""),
+        weight: parseInt(response.data.weight?.replace('kg', '') || "0"),
         palletCount: response.data.palletCount || 0
       };
 
@@ -138,7 +114,6 @@ const AIChatModal: React.FC<AIChatModalProps> = ({
             initialPrompt={initialPrompt.message}
             type={type}
             onDataReceived={handleAIResponse}
-            autoSubmit={true}  // Pridané automatické odoslanie
           />
         )}
         {activeTab === "map" && (

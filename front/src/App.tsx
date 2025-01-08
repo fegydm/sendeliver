@@ -1,4 +1,3 @@
-// ./front/src/App.tsx
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import HaulerPage from "./pages/hauler.page";
@@ -7,6 +6,7 @@ import SecretPage1 from "./pages/secret1.page";
 import SecretPage2 from "./pages/secret2.page";
 import NotFoundPage from "./pages/notfound.page";
 import HomePage from "./pages/home.page";
+import TestPage from "./pages/test.page"; // Import TestPage
 import useScrollBounce from "./hooks/useScrollBounce";
 
 const App: React.FC = () => {
@@ -47,6 +47,9 @@ const App: React.FC = () => {
       <Route path="/hauler" element={<HaulerPage />} />
       <Route path="/carrier" element={<HaulerPage />} />
       <Route path="/carriers" element={<HaulerPage />} />
+
+      {/* Test page */}
+      <Route path="/test" element={<TestPage />} />
 
       {/* Secret pages */}
       <Route path="/secret1" element={<SecretPage1 />} />

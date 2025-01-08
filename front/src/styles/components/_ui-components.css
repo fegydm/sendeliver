@@ -226,3 +226,22 @@
   --primary: #22c55e;
   --primary-foreground: #fafafa;
 }
+.input--floating-enter {
+  padding-right: 2.5rem; /* Priestor pre symbol */
+}
+
+.input-container .absolute {
+  pointer-events: none;
+}
+
+.input-container .text-black {
+  color: black;
+}
+
+.input-container .text-gray-400 {
+  color: gray;
+}
+
+.input-container .font-bold {
+  font-weight: bold;
+}

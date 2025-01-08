@@ -1,7 +1,6 @@
 /* ./front/src/styles/_content.css */
 
-
-/* Layout */
+/* =================== Layout =================== */
 main {
   background-color: var(--bg-content-light);
   padding: 0;
@@ -26,7 +25,7 @@ main.dark {
   }
 }
 
-/* Section Styles */
+/* =================== Section Styles =================== */
 .section {
   background-color: var(--bg-white);
   padding: 1.5rem;
@@ -53,7 +52,8 @@ main.dark {
   color: var(--text-green);
 }
 
-/* Form Styles - shared between AI and Manual forms */
+/* =================== Form Styles =================== */
+/* Shared Form Styles */
 .form-base {
   display: flex;
   flex-direction: column;
@@ -79,11 +79,11 @@ label {
 }
 
 input, textarea {
+  width: 100%;
   padding: 8px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 14px;
-  width: 100%;
   color: #333;
 }
 
@@ -97,7 +97,7 @@ input::placeholder, textarea::placeholder {
   color: #aaa;
 }
 
-/* AI Search Specific Styles */
+/* =================== AI Search Styles =================== */
 .ai-search-form {
   position: relative;
   padding: 24px;
@@ -122,36 +122,40 @@ input::placeholder, textarea::placeholder {
   color: var(--color-primary-carrier);
 }
 
-.ai-search-tabs {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
+.ai-search-input {
+  position: relative;
 }
 
-.ai-search-tab {
-  padding: 8px 16px;
-  border: 1px solid #ccc;
-  border-radius: var(--border-radius);
-  background-color: #fff;
-  color: #333;
-  cursor: pointer;
-  transition: background-color 0.3s;
+textarea {
+  height: 100px;
+  padding-right: 2.5rem;
+  font-family: monospace;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
-.ai-search-tab.active {
-  background-color: var(--color-primary-client);
-  color: #fff;
-  border-color: var(--color-primary-client);
+/* Placeholder for textarea */
+.ai-placeholder {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  color: lightgray;
+  font-style: italic;
+  pointer-events: none;
 }
 
-.ai-search-tab.active.carrier {
-  background-color: var(--color-primary-carrier);
-  border-color: var(--color-primary-carrier);
+textarea:focus + .ai-placeholder {
+  display: none;
 }
 
-.ai-search-input textarea {
-  resize: none;
-  height: 96px;
+/* Enter Symbol */
+textarea::after {
+  content: "↵";
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  color: lightgray;
+  font-weight: normal;
 }
 
 .ai-search-button {
@@ -179,38 +183,44 @@ input::placeholder, textarea::placeholder {
   background-color: #2a5a22;
 }
 
-.ai-search-result {
-  margin-top: 16px;
-  padding: 16px;
-  background-color: #f1f1f1;
-  border: 1px solid #ccc;
-  border-radius: var(--border-radius);
+/* Voice Input Button */
+.voice-input-button {
+  position: absolute;
+  right: 70px;
+  bottom: -16px;
+  padding: 8px;
+  border-radius: 8px;
+  background-color: rgb(153, 57, 213);
+  color: white;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Manual Search Form Specific */
-.manual-search-form {
-  composes: form-base;
-  margin-top: 30px;
+.voice-input-button.carrier {
+  background-color: #3c8031;
 }
 
-/* Validation styles */
-.text-red-500 {
-  color: #ef4444;
+.voice-input-button:hover {
+  background-color: #a044f2;
 }
 
-.border-red-500 {
-  border-color: #ef4444;
+.voice-input-button.carrier:hover {
+  background-color: #2a5a22;
 }
 
-.text-sm {
-  font-size: 0.875rem;
+.voice-input-button.active {
+  background-color: #ef4444;
 }
 
-.mt-1 {
-  margin-top: 0.25rem;
+.voice-input-button.active:hover {
+  background-color: #dc2626;
 }
 
-/* Quick Stats Component */
+/* =================== Quick Stats =================== */
 .quick-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -247,42 +257,42 @@ input::placeholder, textarea::placeholder {
     opacity: 1;
     transform: translateY(0);
   }
-}/* Pridajte tieto štýly do vášho existujúceho CSS */
+}
+----------------------
+.ai-search-form {
+  position: relative;
+}
 
+.ai-search-title {
+  margin-bottom: 16px;
+  font-size: 1.125rem;
+  font-weight: bold;
+}
 
+.ai-search-input {
+  position: relative;
+}
 
-.voice-input-button {
+.ai-textarea {
+  width: 100%;
+  height: 100px;
+  padding-right: 2.5rem;
+  font-family: monospace;
+  font-size: 16px;
+  line-height: 1.5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.ai-enter-symbol {
   position: absolute;
-  right: 70px;  /* Posunieme tlačidlo o 70px doprava */
-  bottom: -16px;
-  padding: 8px;
-  border-radius: 8px;
-  background-color: rgb(153, 57, 213);
-  color: white;
-  cursor: pointer;
-  border: none;
-  transition: background-color 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  right: 10px;
+  bottom: 10px;
+  font-size: 16px;
+  color: lightgray;
 }
 
-.voice-input-button.carrier {
-  background-color: #3c8031;
-}
-
-.voice-input-button:hover {
-  background-color: #a044f2;
-}
-
-.voice-input-button.carrier:hover {
-  background-color: #2a5a22;
-}
-
-.voice-input-button.active {
-  background-color: #ef4444;
-}
-
-.voice-input-button.active:hover {
-  background-color: #dc2626;
+.ai-enter-symbol.active {
+  color: black;
+  font-weight: bold;
 }

@@ -1,13 +1,15 @@
-// ./front/src/components/sections/content/chat/ai-chat.component.tsx
-import React, { useState, useRef, useEffect } from "react";
+// File: src/components/sections/content/chat/ai-chat.component.tsx
+// Last change: Fixed duplicate message sending by using useCallback and proper initialization
+
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { AIService } from "@/services/ai.services";
+import { AIRequest } from "@/types/ai.types";
 import "./ai-chat.component.css";
 
 interface AIChatProps {
   initialPrompt: string;
   type: "sender" | "carrier";
   onDataReceived?: (data: any) => void;
-  autoSubmit?: boolean;
 }
 
 interface Message {
@@ -18,45 +20,40 @@ interface Message {
 const AIChat: React.FC<AIChatProps> = ({ 
   initialPrompt, 
   type, 
-  onDataReceived,
-  autoSubmit = true
+  onDataReceived
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      content: initialPrompt || (type === "sender"
+      content: type === "sender"
         ? "Describe your shipment and transportation requirements."
-        : "Describe your vehicle and availability."),
-    },
+        : "Describe your vehicle and availability.",
+    }
   ]);
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const hasInitialPromptBeenProcessed = useRef(false);
 
-  // Efekt pre automatické odoslanie pri otvorení
-  useEffect(() => {
-    if (autoSubmit && initialPrompt) {
-      handleSendMessage(initialPrompt);
-    }
-  }, []); // Spustí sa len pri mount
-
-  const handleSendMessage = async (text: string) => {
-    if (!text.trim() || isLoading) return;
+  const handleAIResponse = useCallback(async (text: string) => {
+    if (isLoading || !text.trim()) return;
     
     setIsLoading(true);
     setError(null);
 
+    // Create request object
+    const request: AIRequest = {
+      message: text,
+      type,
+      lang1: type === "sender" ? "en" : "sk"
+    };
+
     // Add user message to chat
-    const newMessage: Message = { role: "user", content: text };
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => [...prev, { role: "user", content: text }]);
 
     try {
-      const response = await AIService.sendMessage({
-        message: text,
-        type,
-        lang1: type === "sender" ? "en" : "sk"
-      });
+      const response = await AIService.sendMessage(request);
       
       // Add AI response to chat
       setMessages(prev => [...prev, {
@@ -69,7 +66,6 @@ const AIChat: React.FC<AIChatProps> = ({
         onDataReceived(response);
       }
 
-      // Log structured data in development
       if (process.env.NODE_ENV === 'development') {
         console.log('Structured AI Response:', response.data);
       }
@@ -80,11 +76,24 @@ const AIChat: React.FC<AIChatProps> = ({
       console.error('Chat Error:', err);
     } finally {
       setIsLoading(false);
-      
-      // Clear input only if it's not auto-submitted
-      if (!autoSubmit && inputRef.current) {
-        inputRef.current.value = '';
-      }
+    }
+  }, [type, onDataReceived, isLoading]);
+
+  // Process initial prompt
+  useEffect(() => {
+    if (initialPrompt && !hasInitialPromptBeenProcessed.current) {
+      handleAIResponse(initialPrompt);
+      hasInitialPromptBeenProcessed.current = true;
+    }
+  }, [initialPrompt, handleAIResponse]);
+
+  const handleSendMessage = (text: string) => {
+    if (!text.trim() || isLoading) return;
+    handleAIResponse(text);
+    
+    // Clear input
+    if (inputRef.current) {
+      inputRef.current.value = '';
     }
   };
 
@@ -92,7 +101,7 @@ const AIChat: React.FC<AIChatProps> = ({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const input = inputRef.current;
-      if (input) {
+      if (input && input.value.trim()) {
         handleSendMessage(input.value);
       }
     }
@@ -124,7 +133,7 @@ const AIChat: React.FC<AIChatProps> = ({
         onSubmit={(e) => {
           e.preventDefault();
           const input = inputRef.current;
-          if (input) {
+          if (input && input.value.trim()) {
             handleSendMessage(input.value);
           }
         }}
@@ -135,7 +144,6 @@ const AIChat: React.FC<AIChatProps> = ({
           type="text"
           placeholder="Write a message..."
           disabled={isLoading}
-          defaultValue={initialPrompt} // Pridané pre zobrazenie initial promptu
           onKeyPress={handleKeyPress}
         />
         <button type="submit" disabled={isLoading}>

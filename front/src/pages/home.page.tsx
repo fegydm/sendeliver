@@ -1,4 +1,6 @@
-// ./front/src/pages/home-page.component.tsx
+// File: src/pages/home.page.tsx
+// Last change: Updated types using shared ai.types.ts
+
 import { useState } from "react";
 import Navigation from "@/components/sections/navbars/navbar.component";
 import PageBanner from "@/components/sections/banners/banner.component";
@@ -12,101 +14,103 @@ import FooterPage from "@/components/sections/footers/footer-page.component";
 import TestFooter from "@/components/sections/footers/footer-test.component";
 import FloatingButton from "@/components/elements/floating-button.element";
 import { mockClientData, mockCarrierData } from "@/data/mockData";
+import { AIRequest, FormData } from "@/types/ai.types";
 
 interface HomePageProps {
- isDarkMode: boolean;
- onToggleDarkMode: () => void;
-}
-
-interface TransportData {
- pickupLocation: string;
- deliveryLocation: string;
- pickupTime: string;
- deliveryTime: string;
- weight: number;
- palletCount: number;
+  isDarkMode: boolean;
+  onToggleDarkMode: () => void;
 }
 
 const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
- const [activeSection, setActiveSection] = useState<"sender" | "carrier" | null>(null);
- const [isAIChatOpen, setIsAIChatOpen] = useState(false);
- const [currentPrompt, setCurrentPrompt] = useState("");
- const [isTestFooterAccessible, setIsTestFooterAccessible] = useState(false);
- const [formData, setFormData] = useState<TransportData>({
-   pickupLocation: "",
-   deliveryLocation: "",
-   pickupTime: "",
-   deliveryTime: "",
-   weight: 0,
-   palletCount: 0
- });
+  const [activeSection, setActiveSection] = useState<"sender" | "carrier" | null>(null);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [currentPrompt, setCurrentPrompt] = useState<AIRequest | null>(null);
+  const [isTestFooterAccessible, setIsTestFooterAccessible] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    pickupLocation: "",
+    deliveryLocation: "",
+    pickupTime: "",
+    deliveryTime: "",
+    weight: 0,
+    palletCount: 0
+  });
 
- const handleAIRequest = (section: "sender" | "carrier", prompt: string) => {
-   setActiveSection(section);
-   setIsAIChatOpen(true);
-   setCurrentPrompt(prompt);
- };
+  const handleAIRequest = (section: "sender" | "carrier", prompt: string) => {
+    setActiveSection(section);
+    setIsAIChatOpen(true);
+    setCurrentPrompt({
+      message: prompt,
+      type: section,
+      lang1: section === "sender" ? "en" : "sk"
+    });
+  };
 
- const handleManualSubmit = (type: string, data: TransportData) => {
-   console.log(`${type} form data:`, data);
-   setFormData(data);
- };
+  const handleManualSubmit = (type: string, data: FormData) => {
+    console.log(`${type} form data:`, data);
+    setFormData(data);
+  };
 
- const handleAIData = (data: TransportData) => {
-   setFormData(data);
-   console.log('Received AI data:', data);
- };
+  const handleAIData = (data: FormData) => {
+    setFormData(data);
+    console.log('Received AI data:', data);
+  };
 
- return (
-   <>
-     <Navigation isDarkMode={isDarkMode} onToggleDarkMode={onToggleDarkMode} />
-     <PageBanner />
+  return (
+    <>
+      <Navigation isDarkMode={isDarkMode} onToggleDarkMode={onToggleDarkMode} />
+      <PageBanner />
 
-     {isAIChatOpen && (
-       <AIChatModal
-         onClose={() => setIsAIChatOpen(false)}
-         initialPrompt={currentPrompt}
-         type={activeSection || "sender"}
-         onDataReceived={handleAIData}
-       />
-     )}
+      {isAIChatOpen && currentPrompt && (
+        <AIChatModal
+          onClose={() => setIsAIChatOpen(false)}
+          initialPrompt={currentPrompt}
+          type={activeSection || "sender"}
+          onDataReceived={handleAIData}
+        />
+      )}
 
-     <Content
-       senderContent={
-         <>
-           <AISearchForm type="client" onAIRequest={(prompt) => handleAIRequest("sender", prompt)} />
-           <ManualSearchForm 
-             type="client" 
-             onSubmit={(data) => handleManualSubmit("Sender", data)} 
-             formData={formData}
-           />
-           <ResultTable type="client" data={mockClientData} />
-         </>
-       }
-       carrierContent={
-         <>
-           <AISearchForm type="carrier" onAIRequest={(prompt) => handleAIRequest("carrier", prompt)} />
-           <ManualSearchForm 
-             type="carrier" 
-             onSubmit={(data) => handleManualSubmit("Carrier", data)} 
-             formData={formData}
-           />
-           <ResultTable type="carrier" data={mockCarrierData} />
-         </>
-       }
-     />
+      <Content
+        senderContent={
+          <>
+            <AISearchForm 
+              type="client" 
+              onAIRequest={(prompt) => handleAIRequest("sender", prompt)} 
+            />
+            <ManualSearchForm 
+              type="client" 
+              onSubmit={(data) => handleManualSubmit("Sender", data)} 
+              formData={formData}
+            />
+            <ResultTable type="client" data={mockClientData} />
+          </>
+        }
+        carrierContent={
+          <>
+            <AISearchForm 
+              type="carrier" 
+              onAIRequest={(prompt) => handleAIRequest("carrier", prompt)} 
+            />
+            <ManualSearchForm 
+              type="carrier" 
+              onSubmit={(data) => handleManualSubmit("Carrier", data)} 
+              formData={formData}
+            />
+            <ResultTable type="carrier" data={mockCarrierData} />
+          </>
+        }
+      />
 
-     <QuickStats type="sender" />
+      <QuickStats type="sender" />
 
-     <FooterPage
-       onPinVerified={(isAccessible: boolean) => setIsTestFooterAccessible(isAccessible)}
-     />
+      <FooterPage
+        onPinVerified={(isAccessible: boolean) => setIsTestFooterAccessible(isAccessible)}
+      />
 
-     {isTestFooterAccessible && <TestFooter />}
-     
-     <FloatingButton />
-   </>
- );
+      {isTestFooterAccessible && <TestFooter />}
+      
+      <FloatingButton />
+    </>
+  );
 };
 
 export default HomePage;
