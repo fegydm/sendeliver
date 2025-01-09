@@ -5,8 +5,8 @@ import { Router, Request, Response } from "express";
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false,
-    },
+        rejectUnauthorized: false // allow (Render SSL)
+    }
 });
 
 const router = Router();
@@ -32,11 +32,9 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
     }
 
     try {
-        const existing = await pool.query(`SELECT * FROM deliveries WHERE delivery_id = $1`, [id]);
-        if (existing.rows.length > 0) {
-            return res.status(200).json({
-                message: `Delivery with ID ${id} already exists. No action taken.`
-            });
+        const existing = await pool.query(`SELECT 1 FROM deliveries WHERE delivery_id = $1 LIMIT 1`, [id]);
+        if ((existing.rowCount ?? 0) > 0) {
+            return res.status(200).json({ message: `Delivery with ID ${id} already exists. No action taken.` });
         }
 
         const result = await pool.query(
@@ -44,17 +42,18 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
             (delivery_id, delivery_date, delivery_time, delivery_type, 
             delivery_country, delivery_zip, delivery_city, weight, 
             id_pp, id_carrier, name_carrier, vehicle_type)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
             [id, delivery_date, delivery_time, delivery_type, delivery_country, 
              delivery_zip, delivery_city, weight, id_pp, id_carrier, name_carrier, vehicle_type]
         );
 
         res.status(201).json({
-            message: `Delivery with ID ${id} was successfully recorded.`
+            message: `Delivery with ID ${id} was successfully recorded.`,
+            data: result.rows[0]
         });
     } catch (error) {
-        console.error("Database error:", error);
-        res.status(500).json({ error: "Database error occurred." });
+        console.error("❌ Database error:", error);
+        res.status(500).json({ error: "Database error occurred.", details: error instanceof Error ? error.message : error });
     }
 });
 
