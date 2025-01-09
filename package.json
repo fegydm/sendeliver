@@ -12,7 +12,7 @@
     "build": "npm run build:front && npm run build:back",
     "build:front": "cd front && npm run build",
     "build:back": "cd back && npm run build",
-    "clean": "node back/scripts/clean.js"
+    "clean": "node back/src/scripts/clean.js"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
