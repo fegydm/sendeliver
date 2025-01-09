@@ -1,16 +1,14 @@
-
 {
   "name": "sendeliver-root",
   "version": "1.0.0",
   "type": "module",
   "private": true,
   "scripts": {
-    "install": "npm run install:front && npm run install:back",
+    "install": "npm run install:back && npm run install:front",
     "install:front": "cd front && npm install",
     "install:back": "cd back && npm install",
     "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
     "start": "cd back && npm start",
-    "vite": "cd front && npm run dev",
     "build": "npm run build:front && npm run build:back",
     "build:front": "cd front && npm run build",
     "build:back": "cd back && npm run build",

@@ -10,7 +10,6 @@ const pool = new Pool({
 });
 
 const router = Router();
-const deliveryApiUrl = process.env.DELIVERY_API_URL;
 
 router.post("/import-delivery", async (req: Request, res: Response) => {
     const {
