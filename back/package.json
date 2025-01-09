@@ -6,7 +6,7 @@
     "start": "node dist/server.js",
     "dev": "cross-env NODE_ENV=development tsx watch src/server.ts",
     "clean": "node -e \"if (require('fs').existsSync('dist')) require('fs').rmSync('dist', { recursive: true })\"",
-    "build": "npm run clean && tsoa spec && tsoa routes && tsc --project tsconfig.json",
+    "build": "npm run clean && npm ci && tsoa spec && tsoa routes && tsc --project tsconfig.json",
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",
     "test": "jest",
     "test:watch": "jest --watch",
