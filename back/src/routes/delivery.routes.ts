@@ -12,6 +12,8 @@ const pool = new Pool({
 const router = Router();
 
 // Endpoint to receive delivery data
+const deliveryApiUrl = process.env.DELIVERY_API_URL;
+
 router.post("/import-delivery", async (req: Request, res: Response) => {
     const {
         id,
@@ -28,22 +30,12 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
         vehicle_type
     } = req.body;
 
-    // Validate required fields
     if (!id || !delivery_date) {
         return res.status(400).json({ error: "Missing required fields: 'id' and 'delivery_date' are mandatory." });
     }
 
     try {
-        // Check if the ID already exists in the database
-        const existing = await pool.query(`SELECT id FROM deliveries WHERE delivery_id = $1`, [id]);
-        if (existing.rows.length > 0) {
-            return res.status(200).json({
-                message: `Delivery with ID ${id} already exists.`,
-            });
-        }
-
-        // Insert data into the database
-        await pool.query(
+        const result = await pool.query(
             `INSERT INTO deliveries 
             (delivery_id, delivery_date, delivery_time, delivery_type, 
             delivery_country, delivery_zip, delivery_city, weight, 
@@ -53,7 +45,6 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
              delivery_zip, delivery_city, weight, id_pp, id_carrier, name_carrier, vehicle_type]
         );
 
-        // Respond with success message
         res.status(201).json({
             message: `Delivery with ID ${id} was successfully recorded.`,
         });
@@ -62,4 +53,5 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
         res.status(500).json({ error: "Database error occurred." });
     }
 });
+
 export default router;
