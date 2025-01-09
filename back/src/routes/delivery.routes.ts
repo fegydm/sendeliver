@@ -5,13 +5,11 @@ import { Router, Request, Response } from "express";
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false, // Povolenie nezabezpečeného SSL certifikátu
+        rejectUnauthorized: false,
     },
 });
 
 const router = Router();
-
-// Endpoint to receive delivery data
 const deliveryApiUrl = process.env.DELIVERY_API_URL;
 
 router.post("/import-delivery", async (req: Request, res: Response) => {
@@ -35,6 +33,13 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
     }
 
     try {
+        const existing = await pool.query(`SELECT * FROM deliveries WHERE delivery_id = $1`, [id]);
+        if (existing.rows.length > 0) {
+            return res.status(200).json({
+                message: `Delivery with ID ${id} already exists. No action taken.`
+            });
+        }
+
         const result = await pool.query(
             `INSERT INTO deliveries 
             (delivery_id, delivery_date, delivery_time, delivery_type, 
@@ -46,7 +51,7 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
         );
 
         res.status(201).json({
-            message: `Delivery with ID ${id} was successfully recorded.`,
+            message: `Delivery with ID ${id} was successfully recorded.`
         });
     } catch (error) {
         console.error("Database error:", error);

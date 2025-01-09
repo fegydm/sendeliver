@@ -7,16 +7,14 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import dotenv from "dotenv";
 import aiRouter from "./routes/ai.routes.js";
-import deliveryRouter from "./routes/delivery.routes.js"; // Import nového routera
+import deliveryRouter from "./routes/delivery.routes.js"; 
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();
 
-// Types
 interface ExtendedWebSocket extends WebSocket {
   isAlive: boolean;
 }
 
-// Path initialization
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "../..");
@@ -27,23 +25,16 @@ const publicPath = process.env.PUBLIC_PATH
   ? path.join(projectRoot, process.env.PUBLIC_PATH)
   : path.join(projectRoot, "front/public");
 
-console.log("Project paths:");
-console.log("__dirname:", __dirname);
-console.log("projectRoot:", projectRoot);
-console.log("frontendPath:", frontendPath);
-console.log("publicPath:", publicPath);
-
-// App initialization
 const app = express();
 const server = http.createServer(app);
 
-// Middleware setup
 app.use((req: Request, _res: Response, next) => {
-  console.log(`${req.method} ${req.url}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`${req.method} ${req.url}`);
+  }
   next();
 });
 
-// Updated CORS configuration
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:5173', 'https://sendeliver.com'],
   credentials: true,
@@ -52,22 +43,17 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
-// Static files configuration
 app.use(express.static(frontendPath));
 app.use(express.static(publicPath));
 
-// Specific static paths
 app.use("/pics", express.static(path.join(publicPath, "pics")));
 app.use("/flags", express.static(path.join(publicPath, "flags")));
 app.use("/animations", express.static(path.join(publicPath, "animations")));
 app.use("/assets", express.static(path.join(frontendPath, "assets")));
 
-// WebSocket setup
 const wss = new WebSocketServer({ server });
 
 const setupWebSocket = (ws: ExtendedWebSocket) => {
-  console.log("New WebSocket connection");
   ws.isAlive = true;
 
   ws.on("pong", () => {
@@ -77,12 +63,8 @@ const setupWebSocket = (ws: ExtendedWebSocket) => {
   ws.on("message", (message) => {
     try {
       const data = JSON.parse(message.toString());
-      switch (data.type) {
-        case "ping":
-          ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
-          break;
-        default:
-          console.log("Unhandled message type:", data.type);
+      if (data.type === "ping") {
+        ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
       }
     } catch (error) {
       console.error("Error processing message:", error);
@@ -100,7 +82,6 @@ const setupWebSocket = (ws: ExtendedWebSocket) => {
 
 wss.on("connection", setupWebSocket);
 
-// WebSocket heartbeat
 const heartbeatInterval = setInterval(() => {
   wss.clients.forEach((ws) => {
     const extWs = ws as ExtendedWebSocket;
@@ -114,69 +95,39 @@ wss.on("close", () => {
   clearInterval(heartbeatInterval);
 });
 
-// API Routes
 app.use("/api/ai", aiRouter);
-app.use("/api/delivery", deliveryRouter);  // Registrovaný nový endpoint
+app.use("/api", deliveryRouter);
 
-// Health check route
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
-// SPA fallback - must be after API routes
 app.get("*", (req: Request, res: Response) => {
   if (!req.url.startsWith("/api")) {
     res.sendFile(path.join(frontendPath, "index.html"));
   }
 });
 
-// Server startup
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
 
 const startServer = () => {
-  // Check directory existence
   try {
     if (!fs.existsSync(frontendPath)) {
-      console.warn(
-        `Warning: Frontend dist directory not found at ${frontendPath}`
-      );
-      const parentDir = path.dirname(frontendPath);
-      if (fs.existsSync(parentDir)) {
-        console.log("Parent directory contents:", fs.readdirSync(parentDir));
-      }
+      console.warn(`Warning: Frontend dist directory not found at ${frontendPath}`);
     }
     if (!fs.existsSync(publicPath)) {
-      console.warn(
-        `Warning: Frontend public directory not found at ${publicPath}`
-      );
+      console.warn(`Warning: Frontend public directory not found at ${publicPath}`);
     }
 
-    server
-      .listen(
-        {
-          port: PORT,
-          host: "0.0.0.0",
-        },
-        () => {
-          console.log(`Server running on port ${PORT}`);
-          console.log("Static files directories:");
-          console.log(` - ${frontendPath} (dist)`);
-          console.log(` - ${publicPath} (public)`);
-        }
-      )
-      .on("error", (error) => {
-        console.error("Failed to start server:", error);
-        if ((error as NodeJS.ErrnoException).code === "EADDRINUSE") {
-          console.error(`Port ${PORT} is already in use`);
-        }
-      });
+    server.listen({ port: PORT, host: "0.0.0.0" }, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   } catch (error) {
-    console.error("Failed to start server due to file system error:", error);
+    console.error("Failed to start server due to error:", error);
     process.exit(1);
   }
 };
 
-// Error handling
 process.on("uncaughtException", (error) => {
   console.error("Uncaught Exception:", error);
   process.exit(1);
@@ -186,9 +137,7 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
-// Graceful shutdown
 process.on("SIGTERM", () => {
-  console.log("SIGTERM received. Closing server...");
   server.close(() => {
     console.log("Server closed");
     process.exit(0);
@@ -196,4 +145,9 @@ process.on("SIGTERM", () => {
 });
 
 startServer();
+
+if (process.env.NODE_ENV !== 'production') {
+  console.log("Debug log:", process.env.DELIVERY_API_URL);
+}
+
 export default server;
