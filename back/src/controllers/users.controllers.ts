@@ -1,10 +1,5 @@
-// ./back/src/controllers/users.controller.ts
-import { Controller, Get, Route } from "tsoa";
-
-@Route("users")
-export class UsersController extends Controller {
-  @Get("/")
+export class UsersController {
   public async getUsers(): Promise<string[]> {
-    return ["John", "Jane"];
+      return ["John", "Jane"];
   }
 }

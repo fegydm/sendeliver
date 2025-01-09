@@ -60,9 +60,9 @@ const setupWebSocket = (ws: ExtendedWebSocket) => {
     ws.isAlive = true;
   });
 
-  ws.on("message", (message) => {
+  ws.on("message", (message: string) => {
     try {
-      const data = JSON.parse(message.toString());
+      const data = JSON.parse(message);
       if (data.type === "ping") {
         ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
       }
@@ -71,7 +71,7 @@ const setupWebSocket = (ws: ExtendedWebSocket) => {
     }
   });
 
-  ws.on("error", (error) => {
+  ws.on("error", (error: Error) => {
     console.error("WebSocket error:", error);
   });
 

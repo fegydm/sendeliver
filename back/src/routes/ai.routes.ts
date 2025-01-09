@@ -1,7 +1,7 @@
 // ./back/src/routes/ai.routes.ts
 import { Router, Request, Response } from "express";
 import { AIService } from "../services/ai.services.js";
-import { AIRequest, AIResponse } from "../types/ai.types";
+import { AIRequest, AIResponse } from "../types/ai.types.js";
 
 interface TypedRequestBody<T> extends Request {
   body: T;

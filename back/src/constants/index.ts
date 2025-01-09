@@ -1,2 +1,2 @@
 // back/src/constants/index.ts
-export * from "./api-endpoints";
+export * from "./api-endpoints.js";

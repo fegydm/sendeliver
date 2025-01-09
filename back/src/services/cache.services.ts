@@ -1,5 +1,5 @@
 // ./back/services/cache.service.ts
-import { getCache, setCache } from "../configs/redis";
+import { getCache, setCache } from "../configs/redis.js";
 
 export const cacheData = async (key: string, data: any): Promise<void> => {
   await setCache(key, JSON.stringify(data));
