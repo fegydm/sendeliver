@@ -1,3 +1,4 @@
+// ./back/src/routes/delivery.routes.ts
 import pkg from 'pg';
 const { Pool } = pkg;
 import { Router, Request, Response } from "express";
@@ -5,7 +6,7 @@ import { Router, Request, Response } from "express";
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // allow (Render SSL)
+        rejectUnauthorized: false
     }
 });
 
@@ -27,14 +28,20 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
         vehicle_type
     } = req.body;
 
-    if (!id || !delivery_date) {
-        return res.status(400).json({ error: "Missing required fields: 'id' and 'delivery_date' are mandatory." });
+    if (!id_pp || !delivery_date) {
+        return res.status(400).json({ 
+            status: "NOT_OK", 
+            error: "Missing required fields: 'id_pp' and 'delivery_date' are mandatory." 
+        });
     }
 
     try {
-        const existing = await pool.query(`SELECT 1 FROM deliveries WHERE delivery_id = $1 LIMIT 1`, [id]);
+        const existing = await pool.query(`SELECT 1 FROM deliveries WHERE id_pp = $1 LIMIT 1`, [id_pp]);
         if ((existing.rowCount ?? 0) > 0) {
-            return res.status(200).json({ message: `Delivery with ID ${id} already exists. No action taken.` });
+            return res.status(200).json({ 
+                status: "NOT_OK",
+                message: `Delivery with ID_PP ${id_pp} already exists. No action taken.` 
+            });
         }
 
         const result = await pool.query(
@@ -48,12 +55,17 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
         );
 
         res.status(201).json({
-            message: `Delivery with ID ${id} was successfully recorded.`,
+            status: "OK",
+            message: `✅ Delivery with ID_PP ${id_pp} was successfully recorded.`,
             data: result.rows[0]
         });
     } catch (error) {
         console.error("❌ Database error:", error);
-        res.status(500).json({ error: "Database error occurred.", details: error instanceof Error ? error.message : error });
+        res.status(500).json({
+            status: "NOT_OK",
+            error: "Database error occurred.",
+            details: error instanceof Error ? error.message : String(error)
+        });
     }
 });
 
