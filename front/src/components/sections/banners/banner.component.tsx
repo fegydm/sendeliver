@@ -1,43 +1,29 @@
-import React, { useEffect, useRef } from "react";
-import lottie from "lottie-web/build/player/lottie_light";
+// File: front/src/components/sections/banners/banner.component.tsx
+// Last change: Added detailed console logs for debugging animation loading and rendering
+
+import React from "react";
+import CustomPlayer from "@/components/elements/animation/custom-player.element.js";
 
 const Banner: React.FC = () => {
-  const container = useRef<HTMLDivElement>(null);
+    console.log('Banner component rendered');
 
-  useEffect(() => {
-    const anim = lottie.loadAnimation({
-      container: container.current!,
-      renderer: "svg",
-      loop: true,
-      autoplay: true,
-      path: "/animations/sendeliver-text.json", // Path to animation
-    });
-
-    return () => anim.destroy(); // Cleanup on unmount
-  }, []);
-
-  return (
-    <section className="banner">
-      <div className="banner-content">
-        {/* Left section - Title */}
-        <h1 className="banner-title">
-          Empowering connections between clients and carriers.
-        </h1>
-        {/* Right section - Animation */}
-        <div
-          className="banner-animation"
-          ref={container}
-          aria-hidden="true"
-          style={{
-            width: "150px",
-            height: "150px",
-            margin: "0 auto", // Center
-            overflow: "hidden",
-          }}
-        />
-      </div>
-    </section>
-  );
+    return (
+        <section className="banner">
+            <div className="banner-content">
+                <h1 className="banner-title">
+                    Empowering connections between clients and carriers.
+                </h1>
+                <CustomPlayer
+                    src="/animations/sendeliver-text2.json"
+                    width={200}
+                    height={100}
+                    className="banner-animation"
+                    loop={true}
+                    autoplay={true}
+                />
+            </div>
+        </section>
+    );
 };
 
 export default Banner;
