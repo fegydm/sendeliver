@@ -9,13 +9,20 @@
     "install:back": "cd back && npm install",
     "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
     "start": "cd back && npm start",
-    "build": "npm run build:front && npm run build:back",
+    "build": "concurrently \"npm run build:front\" \"npm run build:back\"",
     "build:front": "cd front && npm run build",
     "build:back": "cd back && npm run build",
-    "clean": "node back/src/scripts/clean.js"
+    "clean": "node back/src/scripts/clean.js",
+    "depcheck": "npx depcheck"
+  },
+  "dependencies": {
+    "concurrently": "^9.1.0",
+    "lottie-web": "^5.12.2",
+    "pg": "^8.13.1",
+    "react-icons": "^5.4.0"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0",
-    "typescript": "^5.7.2"
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0"
   }
 }

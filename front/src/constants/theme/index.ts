@@ -1,3 +1,3 @@
 // front/src/constants/theme/index.ts
-export * from "@constants/theme/colorSchemes";
-export * from "@constants/theme/colors";
+export * from "./colorSchemes";
+export * from "./colors";

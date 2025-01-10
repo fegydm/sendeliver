@@ -1,8 +1,6 @@
-// ./lib/utils.ts
+// File: front/src/lib/utils.ts
+// Last change: Removed clsx and replaced with a simpler conditional class merge
 
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+export function cn(...inputs: (string | boolean | undefined | null)[]): string {
+  return inputs.filter(Boolean).join(' ');
 }

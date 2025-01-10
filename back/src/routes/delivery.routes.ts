@@ -1,47 +1,36 @@
-// ./back/src/routes/delivery.routes.ts
+// File: back/src/routes/delivery.routes.ts
+// Last change: Fixed TypeScript overload error by ensuring proper async handler typing
+
 import pkg from 'pg';
 const { Pool } = pkg;
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
+    ssl: { rejectUnauthorized: false }
 });
 
 const router = Router();
 
-router.post("/import-delivery", async (req: Request, res: Response) => {
-    const {
-        id,
-        delivery_date,
-        delivery_time,
-        delivery_type,
-        delivery_country,
-        delivery_zip,
-        delivery_city,
-        weight,
-        id_pp,
-        id_carrier,
-        name_carrier,
-        vehicle_type
-    } = req.body;
-
-    if (!id_pp || !delivery_date) {
-        return res.status(400).json({ 
-            status: "NOT_OK", 
-            error: "Missing required fields: 'id_pp' and 'delivery_date' are mandatory." 
-        });
-    }
-
+router.post("/import-delivery", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const existing = await pool.query(`SELECT 1 FROM deliveries WHERE id_pp = $1 LIMIT 1`, [id_pp]);
-        if ((existing.rowCount ?? 0) > 0) {
-            return res.status(200).json({ 
+        const { id, delivery_date, delivery_time, delivery_type, delivery_country, delivery_zip, delivery_city, weight, id_pp, id_carrier, name_carrier, vehicle_type } = req.body;
+
+        if (!id_pp || !delivery_date) {
+            res.status(400).json({
                 status: "NOT_OK",
-                message: `Delivery with ID_PP ${id_pp} already exists. No action taken.` 
+                error: "Missing required fields: 'id_pp' and 'delivery_date' are mandatory."
             });
+            return;
+        }
+
+        const existing = await pool.query(`SELECT 1 FROM deliveries WHERE id_pp = $1 LIMIT 1`, [id_pp]);
+        if (existing.rowCount && existing.rowCount > 0) {
+            res.status(200).json({
+                status: "NOT_OK",
+                message: `Delivery with ID_PP ${id_pp} already exists. No action taken.`
+            });
+            return;
         }
 
         const result = await pool.query(
@@ -50,8 +39,7 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
             delivery_country, delivery_zip, delivery_city, weight, 
             id_pp, id_carrier, name_carrier, vehicle_type)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-            [id, delivery_date, delivery_time, delivery_type, delivery_country, 
-             delivery_zip, delivery_city, weight, id_pp, id_carrier, name_carrier, vehicle_type]
+            [id, delivery_date, delivery_time, delivery_type, delivery_country, delivery_zip, delivery_city, weight, id_pp, id_carrier, name_carrier, vehicle_type]
         );
 
         res.status(201).json({
@@ -60,12 +48,7 @@ router.post("/import-delivery", async (req: Request, res: Response) => {
             data: result.rows[0]
         });
     } catch (error) {
-        console.error("❌ Database error:", error);
-        res.status(500).json({
-            status: "NOT_OK",
-            error: "Database error occurred.",
-            details: error instanceof Error ? error.message : String(error)
-        });
+        next(error); // Forwarding error to error-handling middleware
     }
 });
 

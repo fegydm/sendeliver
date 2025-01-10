@@ -1,59 +1,14 @@
-/* front/src/styles/base/_variables.css */
+/* File: front/src/styles/base/_variables.css */
+/* Last change: Added CSS variables for user customization */
 
-/* Core Colors */
 :root {
-    --background: white;
-    --foreground: black;
-    --primary: #007bff;
-    --primary-foreground: white;
-    --secondary: #f4f4f5;
-    --secondary-foreground: #18181b;
-    --destructive: #ef4444;
-    --destructive-foreground: #f8fafc;
+    --primary-color: #000000;
+    --background-color: #ffffff;
+    --font-size: 16px;
 }
 
-/* Layout and Spacing */
-:root {
-    --body-padding: 16px;
-    --spacing-medium: 16px;
-    --spacing-horizontal: 16px;
-    --max-page-width: 1300px;
-}
-
-/* Components */
-:root {
-    --navbar-background: white;
-    --navbar-border: #ccc;
-    --modal-background: white;
-    --modal-foreground: black;
-    --modal-top-offset: 10vh;
-}
-
-/* Buttons */
-:root {
-    --button-bg-color: #333;
-    --button-hover-bg: #555;
-    --button-text-color: white;
-}
-
-/* Forms and Inputs */
-:root {
-    --border: #e4e4e7;
-    --input: #e4e4e7;
-    --color-error: #ef4444;
-    --color-error-bg: rgba(239, 68, 68, 0.1);
-}
-
-/* Typography */
-:root {
-    --font-size-small: 14px;
-    --font-size-medium: 16px;
-    --radius: 0.5rem;
-    --border-radius: 4px;
-}
-
-/* Effects */
-:root {
-    --shadow-default: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --transition-default: 0.3s ease;
+body {
+    color: var(--primary-color);
+    background-color: var(--background-color);
+    font-size: var(--font-size);
 }

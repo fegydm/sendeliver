@@ -1,4 +1,8 @@
-// front/src/constants/theme/colors.ts
+// File: front/src/constants/theme/colors.ts
+// Last change: Fixed type conflict with generateShades function
+
+import { generateShades } from "@/utils/colorUtils";
+
 export const TWColor = {
   slate: true,
   gray: true,
@@ -24,7 +28,7 @@ export const TWColor = {
   rose: true,
 } as const;
 
-export const CSColor: Record<string, string> = {
+export const CSColor: Record<string, Record<string, string>> = {
   magenta: generateShades("#fce4f0", "#8b0046"),
   skyBlue: generateShades("#e6f7ff", "#003666"),
   appleGreen: generateShades("#e8fae6", "#1a5d1a"),
