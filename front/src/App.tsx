@@ -1,3 +1,6 @@
+// File: ./front/src/App.tsx
+// Last change: Refactored dark mode management and routing structure
+
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import HaulerPage from "./pages/hauler.page";
@@ -6,58 +9,71 @@ import SecretPage1 from "./pages/secret1.page";
 import SecretPage2 from "./pages/secret2.page";
 import NotFoundPage from "./pages/notfound.page";
 import HomePage from "./pages/home.page";
-import TestPage from "./pages/test.page"; // Import TestPage
+import TestPage from "./pages/test.page";
 import useScrollBounce from "./hooks/useScrollBounce";
+import { TestFooterProvider } from "./lib/test-footer-context";
+
+// Definujeme konštanty pre cesty
+const ROUTES = {
+  HOME: "/",
+  SENDER: ["/sender", "/client", "/clients"],
+  HAULER: ["/hauler", "/carrier", "/carriers"],
+  TEST: "/test",
+  SECRET: ["/secret1", "/secret2"],
+} as const;
 
 const App: React.FC = () => {
-  useScrollBounce(); // Active scroll bounce effect for Windows
+  useScrollBounce();
 
+  // Inicializácia dark mode zo storage
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    
+    // Skontrolujeme systémové preferencie
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const savedMode = localStorage.getItem("darkMode");
-    return savedMode ? JSON.parse(savedMode) : false;
+    
+    return savedMode ? JSON.parse(savedMode) : prefersDark;
   });
 
+  // Efekt pre aplikovanie dark mode
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode: boolean) => !prevMode);
-  };
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
 
   return (
-    <Routes>
-      {/* Root path */}
-      <Route
-        path="/"
-        element={<HomePage isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />}
-      />
+    <TestFooterProvider>
+      <Routes>
+        {/* Home */}
+        <Route 
+          path={ROUTES.HOME} 
+          element={<HomePage isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />} 
+        />
 
-      {/* Sender paths */}
-      <Route path="/sender" element={<SenderPage />} />
-      <Route path="/client" element={<SenderPage />} />
-      <Route path="/clients" element={<SenderPage />} />
+        {/* Sender Routes */}
+        {ROUTES.SENDER.map(path => (
+          <Route key={path} path={path} element={<SenderPage />} />
+        ))}
 
-      {/* Hauler paths */}
-      <Route path="/hauler" element={<HaulerPage />} />
-      <Route path="/carrier" element={<HaulerPage />} />
-      <Route path="/carriers" element={<HaulerPage />} />
+        {/* Hauler Routes */}
+        {ROUTES.HAULER.map(path => (
+          <Route key={path} path={path} element={<HaulerPage />} />
+        ))}
 
-      {/* Test page */}
-      <Route path="/test" element={<TestPage />} />
+        {/* Test Route */}
+        <Route path={ROUTES.TEST} element={<TestPage />} />
 
-      {/* Secret pages */}
-      <Route path="/secret1" element={<SecretPage1 />} />
-      <Route path="/secret2" element={<SecretPage2 />} />
+        {/* Secret Routes */}
+        <Route path="/secret1" element={<SecretPage1 />} />
+        <Route path="/secret2" element={<SecretPage2 />} />
 
-      {/* Catch-all for 404 */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        {/* 404 */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </TestFooterProvider>
   );
 };
 

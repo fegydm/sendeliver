@@ -1,65 +1,67 @@
-// ./front/src/components/sections/footers/page-footer.component.tsx
+// File: ./front/src/components/sections/footers/footer-page.component.tsx
+// Last change: Optimized footer test rendering
+
 import React, { useState } from "react";
 import FooterSocial from "./FooterSocial";
 import FooterMenu from "./FooterMenu";
 import FooterCopyright from "./FooterCopyright";
 import PinModal from "@/components/modals/pin-modal.component";
-import logicConfig from "@/configs/logic-config.json";
+import FooterTest from "@/components/sections/footers/footer-test.component";
+import { useTestFooter } from "@/lib/test-footer-context";
 
-interface PageFooterProps {
-  onPinVerified?: (isAccessible: boolean) => void;
+interface FooterPageProps {
+    onPinVerified?: (isAccessible: boolean) => void;
 }
 
-const PageFooter: React.FC<PageFooterProps> = ({ onPinVerified }) => {
-  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-  const [isPinVerified, setIsPinVerified] = useState(false);
+const FooterPage: React.FC<FooterPageProps> = ({ onPinVerified }) => {
+    const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+    const { isTestFooterVisible, setTestFooterVisible } = useTestFooter();
+    const isDevMode = process.env.NODE_ENV === "development";
 
-  const handleButtonClick = () => {
-    if (isPinVerified) {
-      // Reset state to make TestFooter inaccessible
-      setIsPinVerified(false);
-      onPinVerified?.(false); // Notify parent to disable TestFooter
-    } else {
-      // Open PIN modal
-      setIsPinModalOpen(true);
-    }
-  };
+    const handleButtonClick = () => {
+        if (isTestFooterVisible) {
+            setTestFooterVisible(false);
+            onPinVerified?.(false);
+        } else {
+            setIsPinModalOpen(true);
+        }
+    };
 
-  return (
-    <footer className="page-footer">
-      {/* Center social links */}
-      <div className="footer-social">
-        <FooterSocial />
-      </div>
+    const handlePinSuccess = () => {
+        setTestFooterVisible(true);
+        onPinVerified?.(true);
+        setIsPinModalOpen(false);
+    };
 
-      {/* Menu and copyright in one row */}
-      <div className="footer-row">
-        <FooterMenu />
-        <FooterCopyright />
-      </div>
+    return (
+        <footer className="page-footer">
+            <div className="footer-social">
+                <FooterSocial />
+            </div>
 
-      {/* Admin Button */}
-      <button
-        onClick={handleButtonClick}
-        aria-label={isPinVerified ? "Close Access" : "Admin Access"}
-        className={`admin-button ${process.env.NODE_ENV === "production" && !isPinVerified ? "transparent-text" : ""}`}
-      >
-        {isPinVerified ? "Close" : "Administrator"}
-      </button>
+            <div className="footer-row">
+                <FooterMenu />
+                <FooterCopyright />
+            </div>
 
-      {/* PIN Modal */}
-      <PinModal
-        isOpen={isPinModalOpen}
-        onClose={() => setIsPinModalOpen(false)}
-        requiredPin={logicConfig.pins.admin}
-        onPinSuccess={() => {
-          setIsPinVerified(true); // Show "Close" button
-          setIsPinModalOpen(false);
-          onPinVerified?.(true); // Notify parent to enable TestFooter
-        }}
-      />
-    </footer>
-  );
+            <button
+                onClick={handleButtonClick}
+                aria-label={isTestFooterVisible ? "Close Access" : "Admin Access"}
+                className={`admin-button ${!isTestFooterVisible && process.env.NODE_ENV === "production" ? "transparent-text" : ""}`}
+            >
+                {isTestFooterVisible ? "Close" : "Administrator"}
+            </button>
+
+            <PinModal
+                isOpen={isPinModalOpen}
+                onClose={() => setIsPinModalOpen(false)}
+                requiredPin="4545"
+                onPinSuccess={handlePinSuccess}
+            />
+
+            {isDevMode && <FooterTest />}
+        </footer>
+    );
 };
 
-export default PageFooter;
+export default FooterPage;

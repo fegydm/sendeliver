@@ -1,53 +1,7 @@
-:root.theme-none {
-  --background: transparent; /* Transparent background */
-  --foreground: inherit; /* Inherit default text color */
-
-  /* Banner-specific styles */
-  --banner-background: transparent;
-  --banner-text-color: inherit;
-
-  /* Navbar-specific styles */
-  --navbar-background: transparent;
-  --navbar-border: #000;
-  --navbar-group-border: #000;
-  --navbar-button-hover: rgba(0, 0, 0, 0.1);
-  --navbar-icon-color: #000;
-
-  /* Other components */
-  --page-background: inherit;
-  --modal-background: inherit;
-  --modal-foreground: inherit;
-
-  /* Avatar button */
-  --avatar-bg: transparent;
-
-  /* Buttons */
-  --button-bg-color: transparent;
-  --button-hover-bg: #ddd;
-  --button-text-color: #000;
-
-  /* System colors */
-  --primary: inherit;
-  --primary-foreground: inherit;
-  --secondary: inherit;
-  --secondary-foreground: inherit;
-  --muted: inherit;
-  --muted-foreground: inherit;
-  --accent: inherit;
-  --accent-foreground: inherit;
-  --destructive: inherit;
-  --destructive-foreground: inherit;
-  --card: inherit;
-  --card-foreground: inherit;
-  --popover: inherit;
-  --popover-foreground: inherit;
-  --border: inherit;
-  --input: inherit;
-  --ring: inherit;
-
-  /* Theme-specific rules */
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-  }
+/* ./front/src/styles/themes/none.css */
+body, html {
+    all: unset !important;
+    display: block;
+    line-height: 1.6;
+    font-family: system-ui, sans-serif;
 }

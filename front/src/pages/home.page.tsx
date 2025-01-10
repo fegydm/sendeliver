@@ -1,5 +1,5 @@
 // File: src/pages/home.page.tsx
-// Last change: Updated types using shared ai.types.ts
+// Last change: Removed duplicate FooterTest rendering
 
 import { useState } from "react";
 import Navigation from "@/components/sections/navbars/navbar.component";
@@ -11,7 +11,6 @@ import ResultTable from "@/components/sections/content/results/result-table.comp
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
 import QuickStats from "@/components/sections/stats/quick-stats.component";
 import FooterPage from "@/components/sections/footers/footer-page.component";
-import TestFooter from "@/components/sections/footers/footer-test.component";
 import FloatingButton from "@/components/elements/floating-button.element";
 import { mockClientData, mockCarrierData } from "@/data/mockData";
 import { AIRequest, FormData } from "@/types/ai.types";
@@ -25,7 +24,6 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
   const [activeSection, setActiveSection] = useState<"sender" | "carrier" | null>(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState<AIRequest | null>(null);
-  const [isTestFooterAccessible, setIsTestFooterAccessible] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     pickupLocation: "",
     deliveryLocation: "",
@@ -102,11 +100,7 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
 
       <QuickStats type="sender" />
 
-      <FooterPage
-        onPinVerified={(isAccessible: boolean) => setIsTestFooterAccessible(isAccessible)}
-      />
-
-      {isTestFooterAccessible && <TestFooter />}
+      <FooterPage onPinVerified={() => {}} />
       
       <FloatingButton />
     </>

@@ -1,99 +1,59 @@
-/* .front/src/styles/base/_variables.css */
+/* front/src/styles/base/_variables.css */
 
+/* Core Colors */
 :root {
-  /* Basic Colors */
-  --background: white;
-  --foreground: black;
+    --background: white;
+    --foreground: black;
+    --primary: #007bff;
+    --primary-foreground: white;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #18181b;
+    --destructive: #ef4444;
+    --destructive-foreground: #f8fafc;
+}
 
-  /* Layout */
-  --body-padding: 1px;
-  --spacing-medium: 1px;
-  --max-page-width: 1300px;
+/* Layout and Spacing */
+:root {
+    --body-padding: 16px;
+    --spacing-medium: 16px;
+    --spacing-horizontal: 16px;
+    --max-page-width: 1300px;
+}
 
-  /* Components */
-  --page-background: rgb(238, 234, 234);
-  --navbar-background: rgb(255, 255, 255);
-  --navbar-border: #000;
-  --modal-background: rgb(255, 255, 255);
-  --modal-foreground: #000000;
+/* Components */
+:root {
+    --navbar-background: white;
+    --navbar-border: #ccc;
+    --modal-background: white;
+    --modal-foreground: black;
+    --modal-top-offset: 10vh;
+}
 
-  /* Navbar Specific */
-  --navbar-height: 50px;
-  --navbar-group-border: #ccc;
-  --navbar-button-hover: #e5e7eb;
+/* Buttons */
+:root {
+    --button-bg-color: #333;
+    --button-hover-bg: #555;
+    --button-text-color: white;
+}
 
-  /* Avatar */
-  --avatar-bg: #e5e7eb;
+/* Forms and Inputs */
+:root {
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --color-error: #ef4444;
+    --color-error-bg: rgba(239, 68, 68, 0.1);
+}
 
-  /* Buttons */
-  --button-bg-color: #333;
-  --button-hover-bg: #555;
-  --button-text-color: #fff;
+/* Typography */
+:root {
+    --font-size-small: 14px;
+    --font-size-medium: 16px;
+    --radius: 0.5rem;
+    --border-radius: 4px;
+}
 
-  /* System Colors */
-  --primary: #000000;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-  --destructive: #ef4444;
-  --destructive-foreground: #f8fafc;
-
-  /* Cards and Popovers */
-  --card: #ffffff;
-  --card-foreground: #18181b;
-  --popover: #ffffff;
-  --popover-foreground: #18181b;
-
-  /* Borders and Inputs */
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-
-  /* Focus Ring */
-  --ring: #18181b;
-
-  /* Layout */
-  --spacing-horizontal: 16px;
-  --spacing-medium: 16px;
-
-  /* Radius */
-  --radius: 0.5rem;
-  --border-radius: 4px;
-
-  /* Font Sizes */
-  --font-size-small: 14px;
-  --font-size-medium: 16px;
-
-  /* Transitions */
-  --transition-default: 0.3s ease;
-
-  /* Navbar Dot Sizes */
-  --dot-size: 6px;
-  --dot-gap: 4px;
-
-  /* Content Specific */
-  --bg-content-light: #f9f9f9;
-  --bg-content-dark: #1a202c;
-  --max-w-content: 1200px;
-  --px-container: 16px;
-  --bg-white: #ffffff;
-  --bg-gray-dark: #374151;
-  --text-purple: #6b46c1;
-  --text-green: #38a169;
-  
-  /* Client/Carrier Colors */
-  --color-primary-client: rgb(191, 90, 242);
-  --color-primary-carrier: #3c8031;
-  --color-bg-client: rgb(219, 179, 246);
-  --color-bg-carrier: #a8e4a0;
-  
-  /* Shadows */
-  --shadow-default: 0 4px 6px rgba(0, 0, 0, 0.1);
-  
-  /* Form Validation */
-  --color-error: #ef4444;
-  --color-error-bg: rgba(239, 68, 68, 0.1);
+/* Effects */
+:root {
+    --shadow-default: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition-default: 0.3s ease;
 }

@@ -1,39 +1,6 @@
-:root.theme-default {
-  /* Base colors */
-  --background: #fff; /* White background */
-  --foreground: #000; /* Black text */
-
-  /* Banner-specific styles */
-  --banner-background: #000;
-  --banner-text-color: #fff;
-
-  /* Navbar-specific styles */
-  --navbar-background: #d1d5db; /* Gray 500 */
-  --navbar-border: #999;
-  --navbar-group-border: #ccc;
-  --navbar-button-hover: #e5e7eb;
-  --navbar-icon-color: #333;
-
-  /* Avatar button */
-  --avatar-bg: #e5e7eb;
-
-  /* Buttons */
-  --button-bg-color: #333;
-  --button-hover-bg: #555;
-  --button-text-color: #fff;
-
-  /* Components */
-  --page-background: var(--background);
-  --modal-background: var(--background);
-  --modal-foreground: var(--foreground);
-
-  /* Borders and sections */
-  --section-background: var(--background);
-  --section-border: #444;
-
-  /* Theme-specific rules */
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-  }
-}
+/* ./front/src/styles/themes/default.css */
+@import "./basic.css";
+@import "../components/_navbar.css";
+@import "../components/_footer.css";
+@import "../components/_banner.css";
+@import "../components/_content.css";

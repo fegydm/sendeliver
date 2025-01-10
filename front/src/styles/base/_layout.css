@@ -1,118 +1,86 @@
-/* ./front/src/styles/_layout.css */
+/* front/src/styles/base/_layout.css */
 
-/* Global container */
+/* Global layout container for page structure */
 body {
-  max-width: var(--max-page-width); /* Define the maximum width of the page */
-  margin: 0 auto; /* Center the container horizontally */
-  padding: 0 var(--spacing-horizontal); /* Add horizontal padding */
-  background-color: var(--background); /* Use the variable for background color */
-  color: var(--foreground); /* Use the variable for text color */
+    max-width: var(--max-page-width);
+    margin: 0 auto;
+    padding: 0 var(--spacing-horizontal);
+    background-color: var(--background);
+    color: var(--foreground);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-/* Navbar styles */
+/* Navbar basic structure */
 .navbar {
-  display: flex; /* Use flexbox layout */
-  align-items: center; /* Align items vertically in the center */
-  justify-content: space-between; /* Distribute space between navbar items */
-  height: var(--navbar-height); /* Use the defined height variable */
-  background-color: var(--navbar-bg-color); /* Set background color */
-  border-bottom: 1px solid var(--navbar-border-color); /* Add a bottom border */
-  padding: 0 var(--spacing-horizontal); /* Horizontal padding */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--navbar-height);
+    background-color: var(--navbar-background);
+    border-bottom: 1px solid var(--navbar-border);
+    padding: 0 var(--spacing-horizontal);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Navbar items */
+/* Navbar item structure */
 .navbar-item {
-  display: flex; /* Center the content */
-  align-items: center; /* Align items vertically in the center */
-  justify-content: center; /* Center content horizontally */
-  margin: 0 var(--navbar-item-spacing); /* Horizontal spacing between items */
-  min-width: 40px; /* Minimum width for items */
-  min-height: 40px; /* Minimum height for items */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 var(--spacing-medium);
+    min-width: 40px;
+    min-height: 40px;
 }
 
-.navbar-item img {
-  height: calc(var(--navbar-height) - 10px); /* Adjust the image height relative to navbar */
-}
-
-/* Dot button styles */
-.navbar-dots-container {
-  display: flex; /* Use flexbox for layout */
-  flex-direction: column; /* Stack dots vertically */
-  gap: 5px; /* Add spacing between rows */
-  width: 24px; /* Fixed width for the container */
-  height: 24px; /* Fixed height for the container */
-  justify-content: center; /* Center items vertically */
-  align-items: center; /* Center items horizontally */
-  margin-left: auto; /* Push the container to the right */
-  margin-right: var(--navbar-item-spacing); /* Add spacing on the right */
-}
-
-.navbar-dots-row {
-  display: flex; /* Use flexbox for layout */
-  gap: 2px; /* Add spacing between dots */
-}
-
-.navbar-dots-item {
-  width: 8px; /* Dot width */
-  height: 8px; /* Dot height */
-  background-color: gray; /* Default dot color */
-  border-radius: 50%; /* Make dots circular */
-}
-
-/* Dot styling matching size of Avatar */
+/* Navbar dot design */
 .navbar-item.dot {
-  width: 40px; /* Set width to match avatar size */
-  height: 40px; /* Set height to match avatar size */
-  background-color: black; /* Set background color */
-  border-radius: 50%; /* Make circular */
-  color: white; /* Set text color */
-  font-size: 16px; /* Font size for text inside dots */
-  font-weight: bold; /* Bold font */
+    width: 40px;
+    height: 40px;
+    background-color: var(--foreground);
+    border-radius: 50%;
+    color: var(--background);
+    font-size: 16px;
+    font-weight: bold;
 }
 
-.navbar-item.dot::before {
-  content: "D"; /* Add "D" as default content */
+/* Main content container */
+main {
+    flex: 1;
+    padding: var(--spacing-medium);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Language selector */
-.navbar-item.language {
-  display: flex; /* Use flexbox for layout */
-  align-items: center; /* Align items vertically */
-  justify-content: center; /* Center items horizontally */
-  width: 40px; /* Fixed width */
-  height: 40px; /* Fixed height */
-  color: black; /* Text color */
-  font-size: 16px; /* Font size */
-  font-weight: bold; /* Bold text */
+/* Footer basic structure */
+footer {
+    padding: var(--spacing-medium);
+    background-color: var(--navbar-background);
+    border-top: 1px solid var(--navbar-border);
+    text-align: center;
 }
 
-.navbar-item.language img {
-  width: 30px; /* Image width */
-  height: 20px; /* Image height */
-  object-fit: cover; /* Maintain aspect ratio */
-  border: 1px solid #ccc; /* Add border to the image */
-  border-radius: 3px; /* Round the corners slightly */
-}
-
-/* Modal styling placeholder (if needed later) */
+/* Modal structure for basic alignment */
 .modal {
-  position: fixed; /* Fixed positioning on the screen */
-  top: 50%; /* Center vertically */
-  left: 50%; /* Center horizontally */
-  transform: translate(-50%, -50%); /* Center using translate */
-  background: white; /* Modal background color */
-  padding: 20px; /* Add padding */
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* Add shadow for depth */
-  z-index: 1000; /* Ensure it appears above other content */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: var(--spacing-medium);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
 }
 
 .modal-overlay {
-  position: fixed; /* Fixed positioning to cover the viewport */
-  top: 0; /* Cover the entire viewport */
-  left: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
-  z-index: 999; /* Ensure it is below the modal */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
 }
