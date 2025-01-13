@@ -1,7 +1,0 @@
-/* ./front/src/styles/themes/testing.css */
-@import "./basic.css";
-@import "../components/_navbar.css";
-@import "../components/_footer.css";
-body {
-    border: 5px dashed red;
-}

@@ -1,7 +1,7 @@
 // ./front/src/components/content/content.component.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-import "./content.component.css"; // Import CSS file
+// import "./content.component.css"; // Import CSS file old version
 
 interface ContentProps {
   senderContent: React.ReactNode;

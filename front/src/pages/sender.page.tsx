@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Navigation from "@/components/sections/navbars/navbar.component";
 import BannerS from "@/components/sections/banners/banner-s.component"; // Import BannerS
 import UnderConstruction from "@/components/elements/under-construction.element";
-import "./sender.page.css"; // Import CSS styles
+// import "./sender.page.css"; // Import CSS styles
 
 const SenderPage: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);

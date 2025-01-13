@@ -1,5 +1,5 @@
 // File: ./front/src/App.tsx
-// Last change: Refactored dark mode management and routing structure
+// Last change: Cleaned up dark mode handling and routing logic
 
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
@@ -13,7 +13,7 @@ import TestPage from "./pages/test.page";
 import useScrollBounce from "./hooks/useScrollBounce";
 import { TestFooterProvider } from "./lib/test-footer-context";
 
-// Definujeme konštanty pre cesty
+// Define route constants for better readability and maintenance
 const ROUTES = {
   HOME: "/",
   SENDER: ["/sender", "/client", "/clients"],
@@ -25,18 +25,15 @@ const ROUTES = {
 const App: React.FC = () => {
   useScrollBounce();
 
-  // Inicializácia dark mode zo storage
+  // State for dark mode, using system preference fallback
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     
-    // Skontrolujeme systémové preferencie
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const savedMode = localStorage.getItem("darkMode");
-    
     return savedMode ? JSON.parse(savedMode) : prefersDark;
   });
 
-  // Efekt pre aplikovanie dark mode
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
     document.documentElement.classList.toggle("dark", isDarkMode);
@@ -47,11 +44,8 @@ const App: React.FC = () => {
   return (
     <TestFooterProvider>
       <Routes>
-        {/* Home */}
-        <Route 
-          path={ROUTES.HOME} 
-          element={<HomePage isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />} 
-        />
+        {/* Home Route */}
+        <Route path={ROUTES.HOME} element={<HomePage isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />} />
 
         {/* Sender Routes */}
         {ROUTES.SENDER.map(path => (
@@ -70,7 +64,7 @@ const App: React.FC = () => {
         <Route path="/secret1" element={<SecretPage1 />} />
         <Route path="/secret2" element={<SecretPage2 />} />
 
-        {/* 404 */}
+        {/* 404 - Not Found */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </TestFooterProvider>

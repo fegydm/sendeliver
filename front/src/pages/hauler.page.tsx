@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Navigation from "@/components/sections/navbars/navbar.component";
 import BannerH from "@/components/sections/banners/banner-h.component";
 import UnderConstruction from "@/components/elements/under-construction.element";
-import "./hauler.page.css"; // Import CSS styles
+// import "./hauler.page.css"; // Import CSS styles
 
 const HaulerPage: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);

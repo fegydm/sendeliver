@@ -1,0 +1,31 @@
+/* File: front/src/styles/base/variables-default.css */
+/* Last change: Default theme variables for ThemeSwitcher and ThemeEditorModal */
+
+:root {
+    /* Colors */
+    --color-page-bg: #ffffff;
+    --color-navbar-bg: #f8f8f8;
+    --color-footer-bg: #eeeeee;
+    --color-modal-bg: #ffffff;
+    --color-text-primary: #000000;
+    --color-text-secondary: #333333;
+
+    /* Heights */
+    --height-header: 100px;
+    --height-footer: 200px;
+    --height-banner: 300px;
+
+    /* Modal offset */
+    --modal-offset-top: 10vh;
+
+    /* Font Sizes */
+    --font-size-base: 16px;
+    --font-size-lg: 20px;
+    --font-size-sm: 14px;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+}

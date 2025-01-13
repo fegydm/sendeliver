@@ -1,75 +1,62 @@
-// .front/vite.config.ts
+// File: front/vite.config.ts
+// Last change: Fixed 403 error for all src files by adjusting fs settings and base path
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import type { UserConfig } from "vite";
 
-// Vite configuration file
-export default defineConfig(
-  ({ mode }): UserConfig => ({
-    // Plugins configuration
+// Vite configuration ensuring proper handling of assets and source files
+export default defineConfig({
     plugins: [react()],
 
-    // Define root directory and public assets directory
-    root: path.resolve(__dirname),
-    publicDir: path.resolve(__dirname, "public"),
+    root: path.resolve(__dirname), 
+    publicDir: "public", // Ensure public assets are correctly served
 
-    // Build configuration
     build: {
-      cssCodeSplit: false, // Prevent splitting of CSS into multiple files
-      outDir: path.resolve(__dirname, "dist"), // Output directory for built files
-      emptyOutDir: true, // Clean the output directory before building
-      target: "esnext", // Modern JS target
-      minify: mode === "production" ? "esbuild" : false, // Use esbuild only for production
-      sourcemap: mode !== "production", // Generate source maps only in non-production
-      rollupOptions: {
-        output: {
-          manualChunks: undefined, // Prevent manual code splitting
-        },
-      },
+        cssCodeSplit: false,
+        outDir: path.resolve(__dirname, "dist"), 
+        emptyOutDir: true, 
+        target: "esnext", 
+        minify: "esbuild", 
+        sourcemap: true
     },
 
-    // Development server configuration
     server: {
-      port: 3000, // Default development server port
-      proxy: {
-        // Proxy API calls to backend server
-        "/api": {
-          target: "http://localhost:5000", // Local backend server
-          changeOrigin: true, // Change origin to match backend
-          ws: true, // Enable WebSocket proxy
+        port: 3000,
+        strictPort: true,
+        open: true,
+        proxy: {
+            "/api": {
+                target: "http://localhost:5000",
+                changeOrigin: true,
+            },
         },
-      },
-      hmr: {
-        overlay: false, // Disable full-screen error overlay
-      },
+        fs: {
+            // Allowing full access to the src folder to avoid 403 errors
+            allow: [path.resolve(__dirname, "src"), path.resolve(__dirname, "public")],
+        },
     },
 
-    // CSS configuration
     css: {
-      modules: {
-        // Scoped CSS name generation
-        generateScopedName:
-          mode === "production" ? "[hash:base64:8]" : "[name]__[local]",
-      },
-      devSourcemap: true, // Enable source maps for CSS
+        modules: {
+            generateScopedName: "[name]__[local]__[hash:base64:5]",
+        },
+        devSourcemap: false // Disabled inline CSS sourcemaps for cleaner development
     },
 
-    // Path aliases for cleaner imports
     resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "./src"), // Short alias for ./src
-      },
+        alias: {
+            "@": path.resolve(__dirname, "src"), 
+        },
     },
 
-    // Optimize dependencies
     optimizeDeps: {
-      include: ["react", "react-dom"], // Pre-bundle core dependencies
+        include: ["react", "react-dom"],
     },
 
-    // Define environment-specific configurations
     define: {
-      __DEV__: mode !== "production", // Add global variable for development mode
+        __DEV__: true, 
     },
-  })
-);
+
+    base: "/", // Ensure paths are correctly resolved from the root
+});

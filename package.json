@@ -16,7 +16,8 @@
     "depcheck": "npx depcheck"
   },
   "dependencies": {
-    "concurrently": "^9.1.0"
-   }
-  
+    "concurrently": "^9.1.0",
+    "lottie-web": "^5.12.2",
+    "lottie-web-light": "^1.1.0"
+  }
 }

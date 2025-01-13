@@ -1,5 +1,169 @@
-/* ./front/src/styles/themes/basic.css */
-@import "../base/_reset.css";
-@import "../base/_variables.css";
-@import "../base/_typography.css";
-@import "../base/_layout.css";
+/* File: front/src/styles/themes/basic.css */
+/* Last change: Adjusted h1 size for none and basic styles */
+
+@import './none.css';
+
+/* Basic document setup */
+html, body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    line-height: 1.2;
+    color: black;
+    background-color: white;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Layout containers */
+.navbar-container {
+    height: 80px;
+    max-height: 80px;
+    padding: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navbar-container nav {
+    display: flex;
+    gap: 3px;
+}
+
+.breadcrumb {
+    font-size: 0.75rem;
+    color: gray;
+}
+
+/* Banner Section */
+.banner-container {
+    height: 200px;
+    max-height: 200px;
+    padding: 3px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Hide banner for pages with the .no-banner class */
+body.no-banner .banner-container {
+    display: none;
+}
+
+/* Main Content Section */
+.content-container {
+    flex-grow: 1;
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* Footer Section */
+.footer-container {
+    height: 150px;
+    max-height: 150px;
+    padding: 3px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Optional containers for ads, side content, and expandable notes */
+.aside-container {
+    padding: 3px;
+    display: none;
+}
+
+.details-container {
+    padding: 3px;
+    display: none;
+}
+
+/* Headings - functional spacing */
+h1 {
+    font-size: 1.5rem; /* Reduced for none and basic styles */
+    margin: 0;
+    padding: 3px 0;
+    font-weight: bold;
+}
+
+/* Larger typography for default and testing themes */
+.typography-large h1 {
+    font-size: 3rem;
+}
+
+h2, h3, h4, h5, h6 {
+    margin: 0;
+    padding: 3px 0;
+    font-weight: bold;
+}
+
+/* Paragraphs and lists */
+p {
+    margin: 3px 0;
+}
+
+ul, ol {
+    padding-left: 3px;
+}
+
+/* Links */
+a {
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Buttons and inputs - functional, not styled */
+button, input, select, textarea {
+    border: 1px solid #ccc;
+    padding: 3px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #f0f0f0;
+}
+
+/* Tables with minimal functional styling */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid black;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 3px;
+    text-align: left;
+}
+
+/* Forms - minimal functional structure */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+/* Image and media elements */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Containers and sections */
+section, article, div {
+    padding: 3px;
+    border: none;
+}
+
+/* Accessibility focus outline */
+*:focus {
+    outline: 2px solid blue;
+}

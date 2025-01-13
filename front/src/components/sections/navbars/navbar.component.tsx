@@ -1,4 +1,6 @@
-// ./front/src/components/navbars/navbar.component.tsx
+// File: front/src/components/navbars/navbar.component.tsx
+// Last change: Added ARIA labels for accessibility and reorganized structure
+
 import { useState, FC } from "react";
 import NavbarHamburger from "./NavbarHamburger";
 import NavbarLogo from "./NavbarLogo";
@@ -35,22 +37,18 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
     Array(3).fill(components.dots.inactive)
   );
 
-  // Toggles breadcrumbs visibility
   const handleBreadcrumbsToggle = () => {
     setShowBreadcrumbs((prev) => !prev);
   };
 
-  // Opens a specified modal
   const handleModalOpen = (modalType: ModalType) => {
     setActiveModal(modalType);
   };
 
-  // Closes the currently open modal
   const handleModalClose = () => {
     setActiveModal(null);
   };
 
-  // Updates dot selections based on user input
   const handleDotsSelectionChange = (top: TopRowType, bottom: BottomRowType) => {
     const newTopDots = Array(3).fill(components.dots.inactive);
     const newBottomDots = Array(3).fill(components.dots.inactive);
@@ -69,41 +67,35 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
   };
 
   return (
-    <header className="navbar">
-      {/* Hamburger menu */}
-      <NavbarHamburger
-        onLoginClick={() => handleModalOpen("login")}
-        onRegisterClick={() => handleModalOpen("register")}
-        onShowAbout={() => handleModalOpen("about")}
-      />
-      {/* Logo */}
-      <NavbarLogo />
-      {/* Breadcrumb navigation */}
-      <NavbarBreadcrumb
-        onBreadcrumbsToggle={handleBreadcrumbsToggle}
-        showBreadcrumbs={showBreadcrumbs}
-      />
-      {/* Navigation name */}
-      <NavbarName onShowAbout={() => handleModalOpen("about")} />
-      {/* Dot selector */}
-      <NavbarDots
-        topDots={topDots}
-        bottomDots={bottomDots}
-        onClick={() => handleModalOpen("dots")}
-      />
-      {/* Avatar dropdown */}
-      <NavbarAvatar onClick={() => handleModalOpen("avatar")} />
-      {/* Login button */}
-      <NavbarLogin onLoginClick={() => handleModalOpen("login")} />
-      {/* Register button */}
-      <NavbarRegister onRegisterClick={() => handleModalOpen("register")} />
-      {/* Language selector */}
-      <NavbarLanguage />
-      {/* Dark mode toggle */}
-      <NavbarDarkmode
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={onToggleDarkMode}
-      />
+    <header className="navbar-container" aria-label="Main Navigation">
+      <nav aria-label="Primary Navigation">
+        <NavbarHamburger
+          onLoginClick={() => handleModalOpen("login")}
+          onRegisterClick={() => handleModalOpen("register")}
+          onShowAbout={() => handleModalOpen("about")}
+        />
+        <NavbarLogo />
+        <NavbarName onShowAbout={() => handleModalOpen("about")} />
+        <NavbarDots
+          topDots={topDots}
+          bottomDots={bottomDots}
+          onClick={() => handleModalOpen("dots")}
+        />
+        <NavbarAvatar onClick={() => handleModalOpen("avatar")} />
+        <NavbarLogin onLoginClick={() => handleModalOpen("login")} />
+        <NavbarRegister onRegisterClick={() => handleModalOpen("register")} />
+        <NavbarLanguage />
+        <NavbarDarkmode
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={onToggleDarkMode}
+        />
+      </nav>
+      <nav aria-label="Breadcrumb Navigation">
+        <NavbarBreadcrumb
+          onBreadcrumbsToggle={handleBreadcrumbsToggle}
+          showBreadcrumbs={showBreadcrumbs}
+        />
+      </nav>
 
       {/* Modals */}
       <AboutModal isOpen={activeModal === "about"} onClose={handleModalClose} />

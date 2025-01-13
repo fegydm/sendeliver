@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import lottie from "lottie-web/build/player/lottie_light";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import "./under-construction.component.css"; // Import CSS styles
+// import "./under-construction.component.css"; // Import CSS styles old version
 
 const UnderConstruction = () => {
   const navigate = useNavigate();

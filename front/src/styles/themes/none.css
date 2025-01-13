@@ -1,7 +1,15 @@
-/* ./front/src/styles/themes/none.css */
-body, html {
-    all: unset !important;
-    display: block;
-    line-height: 1.6;
-    font-family: system-ui, sans-serif;
+/* File: front/src/styles/themes/none.css */
+/* Last change: Reset to default browser behavior with minimal overrides */
+
+html, body {
+    margin: initial;
+    padding: initial;
+    font-family: initial;
+    line-height: initial;
+    color: initial;
+    background-color: initial;
+}
+
+button, input, select, textarea {
+    all: revert;
 }

@@ -11,9 +11,10 @@ import ResultTable from "@/components/sections/content/results/result-table.comp
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
 import QuickStats from "@/components/sections/stats/quick-stats.component";
 import FooterPage from "@/components/sections/footers/footer-page.component";
-import FloatingButton from "@/components/elements/floating-button.element";
+import FloatingButton from "@/components/elements/animation/floating-button.element";
 import { mockClientData, mockCarrierData } from "@/data/mockData";
 import { AIRequest, FormData } from "@/types/ai.types";
+import "@/styles/main.css";
 
 interface HomePageProps {
   isDarkMode: boolean;

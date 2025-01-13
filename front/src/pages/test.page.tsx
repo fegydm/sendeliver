@@ -125,7 +125,7 @@ const TestPage: React.FC = () => {
             event.preventDefault();
             
             if (isRightSide) {
-                alert('Akcia A - Odoslanie textu');
+                alert('Action A - sending text');
             } else {
                 setTextLeft(
                     textLeft.slice(0, currentPosition) + '\n' + textLeft.slice(currentPosition)
