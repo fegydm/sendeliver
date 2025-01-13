@@ -1,11 +1,9 @@
 // File: front/src/components/elements/animation/dual-lottie-player.element.tsx
-// Last change: Fixed animation rendering issue and ensured proper scaling.
+// Last change: Fixed TypeScript error by ensuring numeric width and height types.
 
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
-import lottie, { AnimationItem } from 'lottie-web';
-import CustomAnimationRenderer from "@/components/elements/animation/custom-lottie-player.element";
-
-const MAX_HEIGHT = 150; // Fixed height control for the player container.
+import Lottie from 'lottie-react';
+import CustomAnimationRenderer from './custom-lottie-player.element';
 
 interface LottieJSON {
     v: string;
@@ -14,13 +12,11 @@ interface LottieJSON {
     op: number;
     w: number;
     h: number;
-    layers: any[];
+    layers: Array<{ ty: number; [key: string]: any }>;
 }
 
 interface DualLottiePlayerProps {
     animationData: LottieJSON | any;
-    className?: string;
-    maxHeight?: number;
     isPaused?: boolean;
 }
 
@@ -28,81 +24,50 @@ export type DualLottiePlayerRef = {
     play: () => void;
     pause: () => void;
     stop: () => void;
-}
-
-const isLottieFormat = (data: any): data is LottieJSON => {
-    return data && typeof data === 'object' && Array.isArray(data.layers);
 };
 
-const DualLottiePlayer = forwardRef<DualLottiePlayerRef, DualLottiePlayerProps>(({
-    animationData,
-    className = '',
-    maxHeight = MAX_HEIGHT,
-    isPaused = false
-}, ref) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const animationRef = useRef<AnimationItem | null>(null);
-    const isLottieAnimation = isLottieFormat(animationData);
+const isLottieFormat = (data: any): boolean => {
+    return (
+        data &&
+        typeof data.v === 'string' &&
+        typeof data.fr === 'number' &&
+        typeof data.ip === 'number' &&
+        typeof data.op === 'number' &&
+        typeof data.w === 'number' &&
+        typeof data.h === 'number' &&
+        Array.isArray(data.layers) &&
+        data.layers.length > 0
+    );
+};
+
+const DualLottiePlayer = forwardRef<DualLottiePlayerRef, DualLottiePlayerProps>(({ animationData, isPaused = false }, ref) => {
+    const lottieRef = useRef<any>(null);
 
     useImperativeHandle(ref, () => ({
-        play: () => animationRef.current?.play(),
-        pause: () => animationRef.current?.pause(),
-        stop: () => animationRef.current?.stop()
+        play: () => lottieRef.current?.play(),
+        pause: () => lottieRef.current?.pause(),
+        stop: () => lottieRef.current?.stop()
     }), []);
 
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        if (!isLottieAnimation) {
-            return undefined; // Return for non-lottie animation
-        }
-
-        // ✅ Clear container before rendering (prevent overlapping)
-        containerRef.current.innerHTML = '';
-
-        try {
-            const newAnimation = lottie.loadAnimation({
-                container: containerRef.current,
-                renderer: 'svg',
-                loop: true,
-                autoplay: !isPaused,
-                animationData,
-                rendererSettings: {
-                    preserveAspectRatio: 'xMidYMid meet' // Prevent cropping and scale correctly
-                }
-            });
-
-            animationRef.current = newAnimation;
-            return () => newAnimation.destroy();
-        } catch (error) {
-            console.error('Error loading animation:', error);
-            return undefined;
-        }
-    }, [animationData, isPaused, isLottieAnimation]);
+    const isLottie = isLottieFormat(animationData);
+    const width = isLottie ? (animationData.w / animationData.h) * 150 : 150; // Ensuring numeric width
 
     return (
-        <div 
-            className={`banner-animation player-container ${className}`}
-            style={{
-                maxHeight: maxHeight, 
-                width: '100%',
-                overflow: 'hidden'
-            }}
-        >
-            {isLottieAnimation ? (
-                <div 
-                    ref={containerRef}
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        overflow: 'hidden'
-                    }}
+        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            {isLottie ? (
+                <Lottie
+                    lottieRef={lottieRef}
+                    animationData={animationData}
+                    loop
+                    autoplay={!isPaused}
+                    style={{ height: '150px', width: `${width}px` }}
+                    rendererSettings={{ preserveAspectRatio: 'xMidYMid meet' }}
                 />
             ) : (
-                <CustomAnimationRenderer 
+                <CustomAnimationRenderer
                     animationData={animationData}
-                    width={maxHeight}      
-                    height={maxHeight}    
+                    width={width}
+                    height={150}
                     loop
                 />
             )}
@@ -111,4 +76,5 @@ const DualLottiePlayer = forwardRef<DualLottiePlayerRef, DualLottiePlayerProps>(
 });
 
 DualLottiePlayer.displayName = 'DualLottiePlayer';
+
 export default DualLottiePlayer;

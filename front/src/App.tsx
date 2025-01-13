@@ -1,5 +1,5 @@
 // File: ./front/src/App.tsx
-// Last change: Cleaned up dark mode handling and routing logic
+// Last change: Added test2 route for Lottie animation demo
 
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
@@ -10,6 +10,7 @@ import SecretPage2 from "./pages/secret2.page";
 import NotFoundPage from "./pages/notfound.page";
 import HomePage from "./pages/home.page";
 import TestPage from "./pages/test.page";
+import Test2Page from "./pages/test2";
 import useScrollBounce from "./hooks/useScrollBounce";
 import { TestFooterProvider } from "./lib/test-footer-context";
 
@@ -19,6 +20,7 @@ const ROUTES = {
   SENDER: ["/sender", "/client", "/clients"],
   HAULER: ["/hauler", "/carrier", "/carriers"],
   TEST: "/test",
+  TEST2: "/test2",
   SECRET: ["/secret1", "/secret2"],
 } as const;
 
@@ -57,8 +59,9 @@ const App: React.FC = () => {
           <Route key={path} path={path} element={<HaulerPage />} />
         ))}
 
-        {/* Test Route */}
+        {/* Test Routes */}
         <Route path={ROUTES.TEST} element={<TestPage />} />
+        <Route path={ROUTES.TEST2} element={<Test2Page />} />
 
         {/* Secret Routes */}
         <Route path="/secret1" element={<SecretPage1 />} />

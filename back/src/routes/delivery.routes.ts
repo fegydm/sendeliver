@@ -27,7 +27,7 @@ router.post("/import-delivery", async (req: Request, res: Response, next: NextFu
         const existing = await pool.query(`SELECT 1 FROM deliveries WHERE id_pp = $1 LIMIT 1`, [id_pp]);
         if (existing.rowCount && existing.rowCount > 0) {
             res.status(200).json({
-                status: "NOT_OK",
+                status: "OK",
                 message: `Delivery with ID_PP ${id_pp} already exists. No action taken.`
             });
             return;

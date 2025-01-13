@@ -1,25 +1,38 @@
 {
-  "v": "5.7.4",
-  "fr": 30,
-  "ip": 0,
-  "op": 120,
-  "w": 200,
-  "h": 200,
-  "layers": [
+  "type": "custom-animation",
+  "frames": 120,
+  "width": 500,
+  "height": 200,
+  "shapes": [
     {
-      "ty": 4,
-      "shapes": [
-        {
-          "ty": "sh",
-          "ks": {
-            "k": [
-              {
-                "s": "M 10 80 C 40 10, 65 10, 95 80 S 150 150, 180 80"
-              }
-            ]
-          }
-        }
-      ]
+      "type": "text",
+      "text": "SEND",
+      "color": "#FF00FF",
+      "startPosition": [50, 100],
+      "endPosition": [200, 100],
+      "startScale": 50,
+      "endScale": 100,
+      "startFrame": 0,
+      "endFrame": 30
+    },
+    {
+      "type": "text",
+      "text": "DELIVER",
+      "color": "#7CFC00",
+      "startPosition": [450, 100],
+      "endPosition": [300, 100],
+      "startScale": 50,
+      "endScale": 100,
+      "startFrame": 30,
+      "endFrame": 60
+    },
+    {
+      "type": "merge",
+      "text": "SENDELIVER",
+      "color": "#000000",
+      "position": [300, 100],
+      "startFrame": 60,
+      "endFrame": 90
     }
   ]
 }

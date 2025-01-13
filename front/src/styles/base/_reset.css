@@ -1,66 +1,11 @@
-/* front/src/styles/base/_reset.css */
+/* File: front/src/styles/base/_reset.css */
+/* Last change: Limited to player-container height adjustment only */
 
-/* Box sizing border-box globally applied */
-*,
-*::before,
-*::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* Prevent oversized player container rendering */
+/*
+.player-container {
+    max-height: 150px;
+    width: 100%;
+    overflow: hidden;
 }
-
-/* HTML and body height and basic typography */
-html {
-    -webkit-text-size-adjust: 100%;
-    -webkit-font-smoothing: antialiased;
-    scroll-behavior: smooth;
-}
-
-body {
-    height: 100%;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    line-height: 1.5;
-    text-rendering: optimizeSpeed;
-    overflow-x: hidden;
-}
-
-/* Media elements standardized */
-img,
-picture,
-video,
-canvas,
-svg {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
-
-/* Button and form element reset */
-button,
-input,
-textarea,
-select {
-    font: inherit;
-    color: inherit;
-    border: none;
-    outline: none;
-}
-
-/* Remove list styles */
-ul,
-ol {
-    list-style: none;
-}
-
-/* Anchor elements reset */
-a {
-    text-decoration: none;
-    color: inherit;
-    cursor: pointer;
-}
-
-/* Focus visibility for accessibility */
-:focus-visible {
-    outline: 2px solid var(--primary, #007bff);
-    outline-offset: 2px;
-}
+*/

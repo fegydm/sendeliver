@@ -1,0 +1,23 @@
+{
+    "frames": [
+      {
+        "shapes": [
+          {
+            "type": "rectangle",
+            "position": [50, 50],
+            "width": 100,
+            "height": 50,
+            "color": "#FF0000"
+          },
+          {
+            "type": "circle",
+            "position": [100, 100],
+            "radius": 40,
+            "color": "#00FF00"
+          }
+        ]
+      }
+    ],
+    "op": 120
+  }
+  
