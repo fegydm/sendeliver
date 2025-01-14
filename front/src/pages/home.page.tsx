@@ -1,8 +1,7 @@
 // File: src/pages/home.page.tsx
-// Last change: Removed duplicate FooterTest rendering
+// Last change: Removed footer and moved to the main layout (app.tsx)
 
 import { useState } from "react";
-import Navigation from "@/components/sections/navbars/navbar.component";
 import PageBanner from "@/components/sections/banners/banner.component";
 import Content from "@/components/sections/content/content.component";
 import AISearchForm from "@/components/sections/content/search-forms/ai-search-form.component";
@@ -10,18 +9,12 @@ import ManualSearchForm from "@/components/sections/content/search-forms/manual-
 import ResultTable from "@/components/sections/content/results/result-table.component";
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
 import QuickStats from "@/components/sections/stats/quick-stats.component";
-import FooterPage from "@/components/sections/footers/footer-page.component";
 import FloatingButton from "@/components/elements/animation/floating-button.element";
 import { mockClientData, mockCarrierData } from "@/data/mockData";
 import { AIRequest, FormData } from "@/types/ai.types";
 import "@/styles/main.css";
 
-interface HomePageProps {
-  isDarkMode: boolean;
-  onToggleDarkMode: () => void;
-}
-
-const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
+const HomePage = () => {
   const [activeSection, setActiveSection] = useState<"sender" | "carrier" | null>(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState<AIRequest | null>(null);
@@ -56,7 +49,6 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
 
   return (
     <>
-      <Navigation isDarkMode={isDarkMode} onToggleDarkMode={onToggleDarkMode} />
       <PageBanner />
 
       {isAIChatOpen && currentPrompt && (
@@ -100,8 +92,6 @@ const HomePage = ({ isDarkMode, onToggleDarkMode }: HomePageProps) => {
       />
 
       <QuickStats type="sender" />
-
-      <FooterPage onPinVerified={() => {}} />
       
       <FloatingButton />
     </>

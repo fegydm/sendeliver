@@ -1,7 +1,7 @@
-/* File: front/src/components/banner-h.component.css */
-/* Last change: Renamed CSS classes to match the "banner-h" convention */
+/* File: front/src/styles/banner-s.component.css */
 
-.banner-h-container {
+/* Main Container */
+.banner-s-container {
     background-color: #4a5568;
     color: white;
     position: relative;
@@ -10,17 +10,19 @@
     text-align: center;
 }
 
-.banner-h-dark {
+.banner-s-container.banner-s-dark {
     background-color: #2d3748;
 }
 
-.banner-h-title {
+/* Title Styling */
+.banner-s-title {
     font-size: 2rem;
     font-weight: bold;
     text-align: center;
 }
 
-.banner-h-menu-container {
+/* Menu Grid */
+.banner-s-menu-container {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
     gap: 16px;
@@ -28,18 +30,19 @@
 }
 
 @media (min-width: 768px) {
-    .banner-h-menu-container {
+    .banner-s-menu-container {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
 @media (min-width: 1024px) {
-    .banner-h-menu-container {
+    .banner-s-menu-container {
         grid-template-columns: repeat(5, 1fr);
     }
 }
 
-.banner-h-menu-item {
+/* Menu Item Styling */
+.banner-s-menu-item {
     padding: 16px;
     border-radius: 8px 8px 0 0;
     text-align: center;
@@ -49,32 +52,34 @@
     color: white;
 }
 
-.banner-h-menu-item:hover {
+.banner-s-menu-item:hover {
     transform: scale(1.05);
     background-color: #718096;
 }
 
-.banner-h-active {
+.banner-s-menu-item.banner-s-active {
     background-color: #edf2f7;
     color: #2d3748;
 }
 
-.banner-h-dark .banner-h-menu-item {
+.banner-s-menu-item.banner-s-dark {
     background-color: #2d3748;
     color: white;
 }
 
-.banner-h-menu-icon {
+/* Icon and Title Styling */
+.banner-s-menu-icon {
     font-size: 1.5rem;
     margin-bottom: 8px;
 }
 
-.banner-h-menu-title {
+.banner-s-menu-title {
     font-size: 1rem;
     font-weight: 600;
 }
 
-.banner-h-menu-underline {
+/* Underline Animation */
+.banner-s-menu-underline {
     width: 0;
     height: 2px;
     background-color: #4a5568;
@@ -82,8 +87,8 @@
     transition: width 0.3s;
 }
 
-.banner-h-menu-item:hover .banner-h-menu-underline,
-.banner-h-active .banner-h-menu-underline {
+.banner-s-menu-item:hover .banner-s-menu-underline,
+.banner-s-menu-item.banner-s-active .banner-s-menu-underline {
     width: 100%;
     background-color: #2d3748;
 }

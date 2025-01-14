@@ -1,6 +1,8 @@
-// ./front/src/components/banner-s.component.tsx
+// File: front/src/components/banner-s.component.tsx
+// Last change: Renamed CSS classes to ensure isolation.
+
 import React, { useState } from "react";
-import "./banner-s.css-component.css"; // Import CSS styles
+import "./banner-s.component.css"; // Corrected import for CSS styles
 
 const BannerS: React.FC = () => {
   const [activeCard, setActiveCard] = useState<string>("dashboard");
@@ -12,10 +14,10 @@ const BannerS: React.FC = () => {
   ];
 
   return (
-    <div className={`banner-container ${activeCard === "dark" ? "dark" : ""}`}>
-      <div className="banner-title">clients.sendeliver.com</div>
+    <div className={`banner-s-container ${activeCard === "dark" ? "banner-s-dark" : ""}`}>
+      <div className="banner-s-title">clients.sendeliver.com</div>
 
-      <div className="menu-container">
+      <div className="banner-s-menu-container">
         {menuItems.map((item) => {
           const isActive = activeCard === item.id;
 
@@ -23,11 +25,11 @@ const BannerS: React.FC = () => {
             <div
               key={item.id}
               onClick={() => setActiveCard(item.id)}
-              className={`menu-item ${isActive ? "active" : ""}`}
+              className={`banner-s-menu-item ${isActive ? "banner-s-active" : ""}`}
             >
-              <div className="menu-icon">{item.icon}</div>
-              <div className="menu-title">{item.title}</div>
-              <div className={`menu-underline ${isActive ? "active" : ""}`} />
+              <div className="banner-s-menu-icon">{item.icon}</div>
+              <div className="banner-s-menu-title">{item.title}</div>
+              <div className={`banner-s-menu-underline ${isActive ? "banner-s-active" : ""}`} />
             </div>
           );
         })}

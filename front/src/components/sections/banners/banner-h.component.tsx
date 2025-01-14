@@ -1,6 +1,8 @@
-// ./front/src/components/banner-h.component.tsx
+// File: front/src/components/banner-h.component.tsx
+// Last change: Renamed CSS classes to match the "banner-h" convention.
+
 import React, { useState } from "react";
-import "./banner-h.component.css"; // Import CSS styles
+import "./banner-h.component.css"; // Corrected import for CSS styles
 
 const BannerH: React.FC = () => {
   const [activeCard, setActiveCard] = useState<string>("dashboard");
@@ -14,10 +16,10 @@ const BannerH: React.FC = () => {
   ];
 
   return (
-    <div className={`banner-container ${activeCard === "dark" ? "dark" : ""}`}>
-      <div className="banner-title">carriers.sendeliver.com</div>
+    <div className={`banner-h-container ${activeCard === "dark" ? "banner-h-dark" : ""}`}>
+      <div className="banner-h-title">carriers.sendeliver.com</div>
 
-      <div className="menu-container">
+      <div className="banner-h-menu-container">
         {menuItems.map((item) => {
           const isActive = activeCard === item.id;
 
@@ -25,11 +27,11 @@ const BannerH: React.FC = () => {
             <div
               key={item.id}
               onClick={() => setActiveCard(item.id)}
-              className={`menu-item ${isActive ? "active" : ""}`}
+              className={`banner-h-menu-item ${isActive ? "banner-h-active" : ""}`}
             >
-              <div className="menu-icon">{item.icon}</div>
-              <div className="menu-title">{item.title}</div>
-              <div className={`menu-underline ${isActive ? "active" : ""}`} />
+              <div className="banner-h-menu-icon">{item.icon}</div>
+              <div className="banner-h-menu-title">{item.title}</div>
+              <div className={`banner-h-menu-underline ${isActive ? "banner-h-active" : ""}`} />
             </div>
           );
         })}

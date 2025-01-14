@@ -1,9 +1,14 @@
 // File: front/src/components/elements/animation/dual-lottie-player.element.tsx
+<<<<<<< HEAD
 // Last change: Enhanced type safety and error handling for animation data
 
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+=======
+import { useRef, useImperativeHandle, forwardRef, CSSProperties } from 'react';
+>>>>>>> fdf2a50 (up lottie)
 import Lottie from 'lottie-react';
-import CustomAnimationRenderer from './custom-lottie-player.element';
+import CustomAnimationRenderer from '../../../lib/CustomAnimationRenderer';
+import { BANNER_HEIGHT } from '@/constants/layout.constants';
 
 interface LottieJSON {
     v: string;
@@ -55,26 +60,53 @@ const DualLottiePlayer = forwardRef<DualLottiePlayerRef, DualLottiePlayerProps>(
         }), []);
 
         const isLottie = isLottieFormat(animationData);
+<<<<<<< HEAD
         const width = isLottie && animationData.h > 0 
             ? (animationData.w / animationData.h) * 150 
             : 150; // Default width if height is invalid
 
         return (
             <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+=======
+
+        // Correct style applied to the container instead of the Lottie component directly
+        const containerStyle: CSSProperties = {
+            height: `${BANNER_HEIGHT}px`,
+            width: '100%',
+            maxWidth: '100%',
+            objectFit: 'cover',
+            pointerEvents: 'none',
+            display: 'flex',
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+        };
+
+        return (
+            <div style={containerStyle}>
+>>>>>>> fdf2a50 (up lottie)
                 {isLottie ? (
                     <Lottie
                         lottieRef={lottieRef}
                         animationData={animationData}
                         loop
                         autoplay={!isPaused}
+<<<<<<< HEAD
                         style={{ height: '150px', width: `${width}px` }}
                         rendererSettings={{ preserveAspectRatio: 'xMidYMid meet' }}
+=======
+                        rendererSettings={{
+                            preserveAspectRatio: 'xMidYMid meet'
+                        }}
+>>>>>>> fdf2a50 (up lottie)
                     />
                 ) : (
                     <CustomAnimationRenderer
                         animationData={animationData}
+<<<<<<< HEAD
                         width={width}
                         height={150}
+=======
+>>>>>>> fdf2a50 (up lottie)
                         loop
                     />
                 )}

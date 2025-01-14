@@ -1,7 +1,8 @@
-// ./front/src/components/content/content.component.tsx
+// File: front/src/components/sections/content/content.component.tsx
+// Last change: Reorganized content structure into navigation, sender, and carrier groups.
+
 import React from "react";
 import { Link } from "react-router-dom";
-// import "./content.component.css"; // Import CSS file old version
 
 interface ContentProps {
   senderContent: React.ReactNode;
@@ -10,9 +11,9 @@ interface ContentProps {
 
 const Content: React.FC<ContentProps> = ({ senderContent, carrierContent }) => {
   return (
-    <main>
-      {/* Buttons for navigation */}
-      <div className="button-container">
+    <div className="content">
+      {/* Content Navigation Section */}
+      <div className="content-navigation">
         <Link to="/sender">
           <button className="button button-left">Client Dashboard</button>
         </Link>
@@ -21,21 +22,21 @@ const Content: React.FC<ContentProps> = ({ senderContent, carrierContent }) => {
         </Link>
       </div>
 
-      {/* Main content container */}
-      <div className="container">
-        {/* Left section - Sender Content */}
-        <section>
-          <h2>Client area</h2>
+      {/* Content Wrapper for Sections */}
+      <div className="content-wrapper">
+        {/* Sender Section */}
+        <section className="content-sender">
+          <h2>Client Area</h2>
           {senderContent}
         </section>
 
-        {/* Right section - Hauler Content */}
-        <section>
-          <h2>Carrier area</h2>
+        {/* Carrier Section */}
+        <section className="content-carrier">
+          <h2>Carrier Area</h2>
           {carrierContent}
         </section>
       </div>
-    </main>
+    </div>
   );
 };
 
