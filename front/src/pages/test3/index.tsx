@@ -1,15 +1,18 @@
 // File: src/pages/test3/index.tsx
-// Last change: Added an H1 heading for the Custom Animation Test
-
 import React from 'react';
-import CustomAnimationRenderer from '@/lib/CustomAnimationRenderer';
-import animationData from './test-animation.json'; 
+import SendDeliverAnimation from '@/lib/SendDeliverAnimation'; // Importuj komponentu S
 
 const Test3Page: React.FC = () => {
   return (
     <div>
       <h1>Custom Animation Test</h1>
-      <CustomAnimationRenderer animationData={animationData} />
+      <SendDeliverAnimation 
+        width={900}
+        height={200}
+        fill="#ff00ff" // Nastav farbu výplne podľa potreby
+        // stroke="black" // Ak chceš obrys
+        // strokeWidth={2} // Ak chceš obrys
+      />
     </div>
   );
 };

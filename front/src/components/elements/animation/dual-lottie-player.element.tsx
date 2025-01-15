@@ -1,25 +1,11 @@
-// File: front/src/components/elements/animation/dual-lottie-player.element.tsx
-// Last change: Enhanced type safety and error handling for animation data
+// File: src/components/elements/animation/dual-lottie-player.element.tsx
+// Last change: Fixed TypeScript typing issue and ensured proper export of DualLottiePlayerRef.
 
-import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import { useRef, useImperativeHandle, forwardRef } from 'react';
 import Lottie from 'lottie-react';
-import CustomAnimationRenderer from '../../../lib/CustomAnimationRenderer';
-import { BANNER_HEIGHT } from '@/constants/layout.constants';
+import SendDeliverAnimation from '../../../lib/SendDeliverAnimation';
 
-interface LottieJSON {
-    v: string;
-    fr: number;
-    ip: number;
-    op: number;
-    w: number;
-    h: number;
-    layers: Array<{ ty: number; [key: string]: any }>;
-}
-
-interface DualLottiePlayerProps {
-    animationData: LottieJSON | any;
-    isPaused?: boolean;
-}
+export type AnimationType = "lottie" | "sendDeliver" | "svg";
 
 export type DualLottiePlayerRef = {
     play: () => void;
@@ -27,57 +13,64 @@ export type DualLottiePlayerRef = {
     stop: () => void;
 };
 
-const isLottieFormat = (data: any): boolean => {
-    try {
-        return (
-            data &&
-            typeof data.v === 'string' &&
-            typeof data.fr === 'number' &&
-            typeof data.ip === 'number' &&
-            typeof data.op === 'number' &&
-            typeof data.w === 'number' &&
-            typeof data.h === 'number' &&
-            Array.isArray(data.layers) &&
-            data.layers.length > 0
-        );
-    } catch {
-        return false;
-    }
+interface DualLottiePlayerProps {
+    animationType: AnimationType;
+    animationData?: any;
+    svgPath?: string;
+    isPaused?: boolean;
+}
+
+// Fallback Lottie animation if data is invalid
+const fallbackAnimation = {
+    v: "5.7.4",
+    fr: 30,
+    ip: 0,
+    op: 120,
+    w: 500,
+    h: 500,
+    layers: [
+        {
+            ty: 4,
+            shapes: [
+                { ty: "sh", ks: { k: { i: [], o: [], v: [[250, 250]], c: true } } }
+            ]
+        }
+    ]
 };
 
+const isValidLottie = (data: any): boolean =>
+    data?.v && Array.isArray(data.layers) && data.layers.length > 0;
+
 const DualLottiePlayer = forwardRef<DualLottiePlayerRef, DualLottiePlayerProps>(
-    ({ animationData, isPaused = false }, ref) => {
+    ({ animationData, animationType, svgPath, isPaused = false }, ref) => {
         const lottieRef = useRef<any>(null);
 
         useImperativeHandle(ref, () => ({
             play: () => lottieRef.current?.play(),
             pause: () => lottieRef.current?.pause(),
             stop: () => lottieRef.current?.stop()
-        }), []);
+        }));
 
-        const isLottie = isLottieFormat(animationData);
-        const width = isLottie && animationData.h > 0 
-            ? (animationData.w / animationData.h) * 150 
-            : 150; // Default width if height is invalid
+        const isLottieFormat = animationType === "lottie";
+        const isSvgFormat = animationType === "svg";
 
         return (
-            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                {isLottie ? (
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {isLottieFormat && animationData ? (
                     <Lottie
                         lottieRef={lottieRef}
-                        animationData={animationData}
+                        animationData={isValidLottie(animationData) ? animationData : fallbackAnimation}
                         loop
                         autoplay={!isPaused}
-                        rendererSettings={{
-                            preserveAspectRatio: 'xMidYMid meet'
-                        }}
                     />
+                ) : isSvgFormat && svgPath ? (
+                    <object type="image/svg+xml" data={svgPath} width="100%" height="100%" />
                 ) : (
-                    <CustomAnimationRenderer
-                        animationData={animationData}
-                        width={width}
-                        height={150}
-                        loop
+                    <SendDeliverAnimation
+                        width={300}
+                        height={300}
+                        sendColor="#ff00ff"
+                        deliverColor="#80ff00"
                     />
                 )}
             </div>

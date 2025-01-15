@@ -11,8 +11,8 @@ import SecretPage2 from "./pages/secret2.page";
 import NotFoundPage from "./pages/notfound.page";
 import HomePage from "./pages/home.page";
 import TestPage from "./pages/test.page";
-import Test2Page from "./pages/test2";
-import Test3Page from "./pages/test3";
+import Test2Page from "./pages/test1";
+import Test1Page from "./pages/test1";
 import FooterPage from "@/components/sections/footers/footer-page.component";
 import useScrollBounce from "./hooks/useScrollBounce";
 import { TestFooterProvider } from "./lib/test-footer-context";
@@ -23,7 +23,7 @@ const ROUTES = {
   HAULER: ["/hauler", "/carrier", "/carriers"],
   TEST: "/test",
   TEST2: "/test2",
-  TEST3: "/test3",  // Added Test3Page route
+  TEST1: "/test1",  // Added Test3Page route
   SECRET: ["/secret1", "/secret2"],
 } as const;
 
@@ -47,7 +47,7 @@ const App: React.FC = () => {
 
   // Determine if the current route is Test2 or Test3 for conditional rendering
   const isTestPageWithoutHeaderFooter = 
-    window.location.pathname === ROUTES.TEST2 || window.location.pathname === ROUTES.TEST3;
+    window.location.pathname === ROUTES.TEST2 || window.location.pathname === ROUTES.TEST1;
 
   return (
     <>
@@ -73,7 +73,7 @@ const App: React.FC = () => {
 
           <Route path={ROUTES.TEST} element={<TestPage />} />
           <Route path={ROUTES.TEST2} element={<Test2Page />} />
-          <Route path={ROUTES.TEST3} element={<Test3Page />} /> {/* Added Test3Page */}
+          <Route path={ROUTES.TEST1} element={<Test1Page />} /> {/* Added Test1Page */}
 
           <Route path="/secret1" element={<SecretPage1 />} />
           <Route path="/secret2" element={<SecretPage2 />} />

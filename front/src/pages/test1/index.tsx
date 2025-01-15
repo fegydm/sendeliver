@@ -1,45 +1,41 @@
-// File: src/components/sections/banners/banner.component.tsx
-// Last change: Removed max height and ensured proper spacing between banner and content.
+// File: src/pages/test1/index.tsx
+// Last change: Added dropdown for selecting animations from the public folder.
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import DualLottiePlayer, { type DualLottiePlayerRef, AnimationType } from "@/components/elements/animation/dual-lottie-player.element";
 
-// Automatically import all animations from the public folder
-const animations = import.meta.glob('/public/animations/*.{json,svg}');
-
-// Validate if the provided data is a valid Lottie animation
+// Kontrola platnosti Lottie JSON súboru
 const isValidLottie = (data: any): boolean =>
     data?.v && Array.isArray(data.layers) && data.layers.length > 0;
 
-const Banner: React.FC = () => {
+// Automatické načítanie animácií z priečinka
+const animations = import.meta.glob('/public/animations/*.{json,svg}');
+
+const Test1Page: React.FC = () => {
     const playerRef = useRef<DualLottiePlayerRef>(null);
     const [isPaused, setIsPaused] = useState(false);
     const [animationData, setAnimationData] = useState<any>(null);
-    const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null);
     const [animationType, setAnimationType] = useState<AnimationType>("lottie");
+    const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null);
     const [animationList, setAnimationList] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
 
-    // Load all available animations when the component mounts
+    // Načíta zoznam animácií pri načítaní stránky
     useEffect(() => {
-        document.title = "Banner";
-        
         const loadAnimationList = async () => {
-            const filePaths = Object.keys(animations).map(file =>
-                file.replace('/public/animations/', '')
-            ).sort();
-
+            const filePaths = Object.keys(animations).map(file => file.replace('/public/animations/', '')).sort();
             if (filePaths.length > 0) {
                 setAnimationList(filePaths);
-                setSelectedAnimation(filePaths[0]); // Select the first animation by default
+                setSelectedAnimation(filePaths[0]); // Predvolene zvoli prvú animáciu
             } else {
+                console.warn("No animations found.");
                 setError("No animations available.");
             }
         };
         loadAnimationList();
     }, []);
 
-    // Load the selected animation and validate the format
+    // Načíta vybranú animáciu z dropdownu
     useEffect(() => {
         const loadSelectedAnimation = async () => {
             if (!selectedAnimation) return;
@@ -53,20 +49,23 @@ const Banner: React.FC = () => {
                     setAnimationType("lottie");
                     setError(null);
                 } else {
-                    setAnimationType("svg");
-                    setAnimationData(null);
-                    setError(null);
+                    throw new Error("Invalid Lottie animation data.");
                 }
             } catch (error) {
                 console.error("Error loading animation:", error);
-                setError("Invalid animation file.");
+                setError("Failed to load a valid animation file.");
             }
         };
 
-        loadSelectedAnimation();
+        if (selectedAnimation?.endsWith('.json')) {
+            loadSelectedAnimation();
+        } else {
+            setAnimationType("svg");
+            setAnimationData(null);
+            setError(null);
+        }
     }, [selectedAnimation]);
 
-    // Toggle Play/Pause for the animation
     const handlePlayPause = () => {
         setIsPaused((prev) => {
             const nextState = !prev;
@@ -76,29 +75,27 @@ const Banner: React.FC = () => {
     };
 
     return (
-        <div style={{ marginBottom: "50px" }}>
-            {/* Slogan above the animation */}
-            <h2>Empowering Connections Between Clients and Carriers.</h2>
+        <div>
+            <h1>Test 1 - Dynamic Animation Player</h1>
+            
+            {/* Dropdown na výber animácie */}
+            <label htmlFor="animationSelect">Select Animation:</label>
+            <select
+                id="animationSelect"
+                value={selectedAnimation || ''}
+                onChange={(e) => setSelectedAnimation(e.target.value)}
+            >
+                {animationList.map((file, index) => (
+                    <option key={index} value={file}>
+                        {file}
+                    </option>
+                ))}
+            </select>
 
-            {/* Animation selection dropdown (only in development mode) */}
-            {!import.meta.env.PROD && (
-                <>
-                    <label htmlFor="animationSelect">Select Animation:</label>
-                    <select
-                        id="animationSelect"
-                        value={selectedAnimation || ''}
-                        onChange={(e) => setSelectedAnimation(e.target.value)}
-                    >
-                        {animationList.map((file, index) => (
-                            <option key={index} value={file}>
-                                {file}
-                            </option>
-                        ))}
-                    </select>
-                </>
-            )}
+            <p>Player Type: <strong>{animationType.toUpperCase()}</strong></p>
+            <p>Selected Animation: <strong>{selectedAnimation || "None"}</strong></p>
 
-            {/* Render the player or display error message */}
+            {/* Kontrola chýb */}
             {error ? (
                 <p style={{ color: 'red' }}>{error}</p>
             ) : (
@@ -111,12 +108,12 @@ const Banner: React.FC = () => {
                 />
             )}
 
-            {/* Control buttons for play/pause */}
-            <div>
-                <button onClick={handlePlayPause}>{isPaused ? "Play" : "Pause"}</button>
-            </div>
+            {/* Tlačidlo pre pauzu */}
+            <button onClick={handlePlayPause}>
+                {isPaused ? "Play" : "Pause"}
+            </button>
         </div>
     );
 };
 
-export default Banner;
+export default Test1Page;

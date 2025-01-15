@@ -1,7 +1,7 @@
 // File: front/src/components/elements/animation/lottie-player.element.tsx
 // Last change: Added proper scaling
 
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import lottie, { AnimationItem } from 'lottie-web';
 
 interface LottieJSON {
