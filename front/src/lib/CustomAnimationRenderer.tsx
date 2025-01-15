@@ -1,62 +1,62 @@
 // File: src/lib/CustomAnimationRenderer.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
-// Define the structure of the animation data
 interface AnimationData {
-  v: string; // Lottie version
-  fr: number; // Frame rate
-  ip: number; // Initial frame
-  op: number; // End frame
-  w: number; // Width
-  h: number; // Height
-  nm: string; // Name
+  v: string;
+  fr: number;
+  ip: number;
+  op: number;
+  w: number;
+  h: number;
+  nm: string;
   layers: {
-    ty: number; // Layer type (5 = text)
-    nm: string; // Layer name
+    ty: number;
+    nm: string;
     t: {
       d: {
         k: {
           s: {
-            f: string; // Font
-            s: number; // Font size
-            t: string; // Text
-            j: number; // Justification
-            fc: number[]; // Text color (RGB)
+            f: string;
+            s: number;
+            t: string;
+            j: number;
+            fc: number[];
           };
-          t: number; // Start time
+          t: number;
         }[];
       };
     };
-    p: { a: number; k: number[] }; // Position
-    a: { a: number; k: number[] }; // Anchor point
-    s: { a: number; k: number[] }; // Scale
+    p: { a: number; k: number[] };
+    a: { a: number; k: number[] };
+    s: { a: number; k: number[] };
     ks: {
-      o: { a: number; k: number }; // Opacity
-      r: { a: number; k: number }; // Rotation
+      o: { a: number; k: number };
+      r: { a: number; k: number };
       p: {
-        a: number; // Position animation
+        a: number;
         k: {
-          t: number; // Time
-          s: number[]; // Start position
-          e: number[]; // End position
-          i: { x: number; y: number }; // Bezier in
-          o: { x: number; y: number }; // Bezier out
+          t: number;
+          s: number[];
+          e: number[];
+          i: { x: number; y: number };
+          o: { x: number; y: number };
         }[];
       };
-      a: { a: number; k: number[] }; // Anchor point
-      s: { a: number; k: number[] }; // Scale
+      a: { a: number; k: number[] };
+      s: { a: number; k: number[] };
     };
   }[];
 }
 
-// Props for the renderer
 interface CustomAnimationRendererProps {
   animationData: AnimationData;
 }
 
 const CustomAnimationRenderer: React.FC<CustomAnimationRendererProps> = ({ animationData }) => {
   const [styles, setStyles] = useState<React.CSSProperties[]>([]);
+  const animationFrameRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     // Initialize styles for each layer
@@ -65,31 +65,51 @@ const CustomAnimationRenderer: React.FC<CustomAnimationRendererProps> = ({ anima
       return {
         opacity: 0,
         transform: `translate(${startPosition[0]}px, ${startPosition[1]}px)`,
-        color: `rgb(${layer.t.d.k[0].s.fc.join(',')})`,
+        color: `rgb(${layer.t.d.k[0].s.fc.map((c) => Math.round(c * 255)).join(',')})`,
         fontSize: `${layer.t.d.k[0].s.s}px`,
-        position: 'absolute' as const, // Explicitly set the type to 'absolute'
+        fontFamily: layer.t.d.k[0].s.f,
+        position: 'absolute' as const,
+        whiteSpace: 'nowrap',
       };
     });
     setStyles(initialStyles);
 
-    // Animate each layer
-    animationData.layers.forEach((layer, index) => {
-      const { s: startPosition, e: endPosition } = layer.ks.p.k[0];
-      const duration = (animationData.op - animationData.ip) / animationData.fr;
+    // Start animation
+    const animate = (timestamp: number) => {
+      if (!startTimeRef.current) startTimeRef.current = timestamp;
 
-      setTimeout(() => {
-        setStyles((prevStyles) => {
-          const updatedStyles = [...prevStyles];
-          updatedStyles[index] = {
-            ...updatedStyles[index],
-            opacity: 1,
-            transform: `translate(${endPosition[0]}px, ${endPosition[1]}px)`,
-            transition: `opacity ${duration}ms, transform ${duration}ms`,
-          };
-          return updatedStyles;
-        });
-      }, layer.ks.p.k[0].t);
-    });
+      const progress = timestamp - startTimeRef.current;
+      const duration = (animationData.op - animationData.ip) / animationData.fr * 1000; // Prevod na milisekundy
+
+      const newStyles = animationData.layers.map((layer, index) => {
+        const { s: startPosition, e: endPosition } = layer.ks.p.k[0];
+        const percentage = Math.min(progress / duration, 1);
+
+        const currentX = startPosition[0] + (endPosition[0] - startPosition[0]) * percentage;
+        const currentY = startPosition[1] + (endPosition[1] - startPosition[1]) * percentage;
+
+        return {
+          ...initialStyles[index], // Zachovaj pôvodné štýly
+          opacity: percentage,
+          transform: `translate(${currentX}px, ${currentY}px)`,
+        };
+      });
+
+      setStyles(newStyles);
+
+      if (progress < duration) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrameRef.current = requestAnimationFrame(animate);
+
+    // Cleanup
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
   }, [animationData]);
 
   return (

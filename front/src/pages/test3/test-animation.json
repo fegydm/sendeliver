@@ -5,7 +5,7 @@
   "op": 90,
   "w": 800,
   "h": 600,
-  "nm": "Text Animation with Custom Font",
+  "nm": "Text Animation with Sans-Serif Font",
   "layers": [
     {
       "ty": 5,
@@ -15,7 +15,7 @@
           "k": [
             {
               "s": {
-                "f": "Roboto",
+                "f": "Arial",
                 "s": 60,
                 "t": "SEND",
                 "j": 1,
@@ -37,7 +37,7 @@
           "k": [
             {
               "t": 0,
-              "s": [0, 50, 0],
+              "s": [-200, 50, 0],
               "e": [400, 50, 0],
               "i": { "x": 0.667, "y": 1 },
               "o": { "x": 0.333, "y": 0 }
