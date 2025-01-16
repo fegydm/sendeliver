@@ -11,7 +11,7 @@ import SecretPage2 from "./pages/secret2.page";
 import NotFoundPage from "./pages/notfound.page";
 import HomePage from "./pages/home.page";
 import TestPage from "./pages/test.page";
-import Test2Page from "./pages/test1";
+import Test2Page from "./pages/test2";
 import Test1Page from "./pages/test1";
 import FooterPage from "@/components/sections/footers/footer-page.component";
 import useScrollBounce from "./hooks/useScrollBounce";

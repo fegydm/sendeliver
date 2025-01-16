@@ -2,7 +2,7 @@
 // Last change: Removed max height and ensured proper spacing between banner and content.
 
 import React, { useState, useEffect, useRef } from 'react';
-import DualLottiePlayer, { type DualLottiePlayerRef, AnimationType } from "@/components/elements/animation/dual-lottie-player.element";
+import DualPlayer, { type DualPlayerRef, AnimationType } from "@/components/elements/animation/dual-player.element";
 
 // Automatically import all animations from the public folder
 const animations = import.meta.glob('/public/animations/*.{json,svg}');
@@ -12,7 +12,7 @@ const isValidLottie = (data: any): boolean =>
     data?.v && Array.isArray(data.layers) && data.layers.length > 0;
 
 const Banner: React.FC = () => {
-    const playerRef = useRef<DualLottiePlayerRef>(null);
+    const playerRef = useRef<DualPlayerRef>(null);
     const [isPaused, setIsPaused] = useState(false);
     const [animationData, setAnimationData] = useState<any>(null);
     const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null);
@@ -102,7 +102,7 @@ const Banner: React.FC = () => {
             {error ? (
                 <p style={{ color: 'red' }}>{error}</p>
             ) : (
-                <DualLottiePlayer
+                <DualPlayer
                     ref={playerRef}
                     animationType={animationType}
                     animationData={animationType === "lottie" ? animationData : undefined}

@@ -1,117 +1,118 @@
 // File: src/pages/test1/index.tsx
-// Last change: Added dropdown for selecting animations from the public folder.
+// Last change: Fixed dynamic animation loading and Lottie initialization
 
 import React, { useRef, useState, useEffect } from 'react';
-import DualLottiePlayer, { type DualLottiePlayerRef, AnimationType } from "@/components/elements/animation/dual-lottie-player.element";
+import DualPlayer, { type DualPlayerRef } from "@/components/elements/animation/dual-player.element";
 
-// Kontrola platnosti Lottie JSON súboru
-const isValidLottie = (data: any): boolean =>
-    data?.v && Array.isArray(data.layers) && data.layers.length > 0;
-
-// Automatické načítanie animácií z priečinka
-const animations = import.meta.glob('/public/animations/*.{json,svg}');
+// Load animations using Vite's dynamic import
+const animations = import.meta.glob(
+  '/public/animations/*.{json,svg}',
+  { eager: true }  // Important: This loads the files eagerly
+);
 
 const Test1Page: React.FC = () => {
-    const playerRef = useRef<DualLottiePlayerRef>(null);
+    const playerRef = useRef<DualPlayerRef>(null);
     const [isPaused, setIsPaused] = useState(false);
-    const [animationData, setAnimationData] = useState<any>(null);
-    const [animationType, setAnimationType] = useState<AnimationType>("lottie");
     const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null);
     const [animationList, setAnimationList] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
 
-    // Načíta zoznam animácií pri načítaní stránky
+    // Initialize animation list
     useEffect(() => {
-        const loadAnimationList = async () => {
-            const filePaths = Object.keys(animations).map(file => file.replace('/public/animations/', '')).sort();
-            if (filePaths.length > 0) {
-                setAnimationList(filePaths);
-                setSelectedAnimation(filePaths[0]); // Predvolene zvoli prvú animáciu
-            } else {
-                console.warn("No animations found.");
-                setError("No animations available.");
+        try {
+            const paths = Object.keys(animations)
+                .map(path => path.replace('/public/animations/', ''))
+                .sort();
+
+            if (paths.length === 0) {
+                setError('No animations found in the animations directory');
+                return;
             }
-        };
-        loadAnimationList();
+
+            setAnimationList(paths);
+            setSelectedAnimation(paths[0]);
+            setError(null);
+        } catch (err) {
+            console.error('Failed to load animation list:', err);
+            setError('Failed to load animations');
+        }
     }, []);
 
-    // Načíta vybranú animáciu z dropdownu
-    useEffect(() => {
-        const loadSelectedAnimation = async () => {
-            if (!selectedAnimation) return;
-            try {
-                const response = await fetch(`/animations/${selectedAnimation}`);
-                if (!response.ok) throw new Error("Failed to load the animation file.");
-                const jsonData = await response.json();
-
-                if (isValidLottie(jsonData)) {
-                    setAnimationData(jsonData);
-                    setAnimationType("lottie");
-                    setError(null);
-                } else {
-                    throw new Error("Invalid Lottie animation data.");
-                }
-            } catch (error) {
-                console.error("Error loading animation:", error);
-                setError("Failed to load a valid animation file.");
-            }
-        };
-
-        if (selectedAnimation?.endsWith('.json')) {
-            loadSelectedAnimation();
-        } else {
-            setAnimationType("svg");
-            setAnimationData(null);
-            setError(null);
-        }
-    }, [selectedAnimation]);
-
+    // Handle play/pause
     const handlePlayPause = () => {
-        setIsPaused((prev) => {
+        setIsPaused(prev => {
             const nextState = !prev;
-            nextState ? playerRef.current?.pause() : playerRef.current?.play();
+            if (nextState) {
+                playerRef.current?.pause();
+            } else {
+                playerRef.current?.play();
+            }
             return nextState;
         });
     };
 
+    // Get full path for selected animation
+    const getAnimationPath = (filename: string | null) => {
+        if (!filename) return null;
+        return `/animations/${filename}`;
+    };
+
     return (
-        <div>
-            <h1>Test 1 - Dynamic Animation Player</h1>
+        <div style={{ padding: '20px' }}>
+            <h1 style={{ marginBottom: '20px' }}>
+                Test 1 - Dynamic Animation Player
+            </h1>
             
-            {/* Dropdown na výber animácie */}
-            <label htmlFor="animationSelect">Select Animation:</label>
-            <select
-                id="animationSelect"
-                value={selectedAnimation || ''}
-                onChange={(e) => setSelectedAnimation(e.target.value)}
-            >
-                {animationList.map((file, index) => (
-                    <option key={index} value={file}>
-                        {file}
-                    </option>
-                ))}
-            </select>
+            {/* Animation selector */}
+            <div style={{ marginBottom: '20px' }}>
+                <label htmlFor="animationSelect" style={{ marginRight: '10px' }}>
+                    Select Animation:
+                </label>
+                <select
+                    id="animationSelect"
+                    value={selectedAnimation || ''}
+                    onChange={(e) => setSelectedAnimation(e.target.value)}
+                    style={{ padding: '5px' }}
+                >
+                    {animationList.map((file) => (
+                        <option key={file} value={file}>
+                            {file}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
-            <p>Player Type: <strong>{animationType.toUpperCase()}</strong></p>
-            <p>Selected Animation: <strong>{selectedAnimation || "None"}</strong></p>
-
-            {/* Kontrola chýb */}
-            {error ? (
-                <p style={{ color: 'red' }}>{error}</p>
-            ) : (
-                <DualLottiePlayer
-                    ref={playerRef}
-                    animationType={animationType}
-                    animationData={animationType === "lottie" ? animationData : undefined}
-                    svgPath={animationType === "svg" ? `/animations/${selectedAnimation}` : undefined}
-                    isPaused={isPaused}
-                />
+            {error && (
+                <div style={{ color: 'red', marginBottom: '20px' }}>
+                    {error}
+                </div>
             )}
 
-            {/* Tlačidlo pre pauzu */}
-            <button onClick={handlePlayPause}>
-                {isPaused ? "Play" : "Pause"}
-            </button>
+            {selectedAnimation && (
+                <div>
+                    <p style={{ marginBottom: '10px' }}>
+                        Current Animation: <strong>{selectedAnimation}</strong>
+                    </p>
+
+                    <div style={{ marginBottom: '20px' }}>
+                        <DualPlayer
+                            ref={playerRef}
+                            animationPath={getAnimationPath(selectedAnimation)}
+                            isPaused={isPaused}
+                        />
+                    </div>
+
+                    <button 
+                        onClick={handlePlayPause}
+                        style={{
+                            padding: '8px 16px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        {isPaused ? "Play" : "Pause"}
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
