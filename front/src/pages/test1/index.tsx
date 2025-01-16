@@ -1,120 +1,130 @@
 // File: src/pages/test1/index.tsx
-// Last change: Fixed dynamic animation loading and Lottie initialization
+// Last change: Added detailed console logging for debugging
 
-import React, { useRef, useState, useEffect } from 'react';
-import DualPlayer, { type DualPlayerRef } from "@/components/elements/animation/dual-player.element";
-
-// Load animations using Vite's dynamic import
-const animations = import.meta.glob(
-  '/public/animations/*.{json,svg}',
-  { eager: true }  // Important: This loads the files eagerly
-);
+import React, { useEffect, useRef, useState } from "react";
+import DualPlayer, { type DualPlayerRef, type AnimationType } from "@/components/elements/animation/lottie-player.element";
 
 const Test1Page: React.FC = () => {
-    const playerRef = useRef<DualPlayerRef>(null);
-    const [isPaused, setIsPaused] = useState(false);
-    const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null);
-    const [animationList, setAnimationList] = useState<string[]>([]);
-    const [error, setError] = useState<string | null>(null);
+  const playerRef = useRef<DualPlayerRef>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [animations, setAnimations] = useState<string[]>([]);
+  const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null);
+  const [animationType, setAnimationType] = useState<AnimationType | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-    // Initialize animation list
-    useEffect(() => {
-        try {
-            const paths = Object.keys(animations)
-                .map(path => path.replace('/public/animations/', ''))
-                .sort();
+  const getAnimationType = (filename: string): AnimationType => {
+    console.log("Determining animation type for:", filename);
+    if (filename.endsWith(".svg")) return "svg";
+    if (filename.endsWith(".json")) return "lottie";
+    throw new Error(`Unsupported file type: ${filename}`);
+  };
 
-            if (paths.length === 0) {
-                setError('No animations found in the animations directory');
-                return;
-            }
+  useEffect(() => {
+    // Fetch the list of animations from the backend
+    const fetchAnimations = async () => {
+      console.log("Fetching animations from backend...");
+      try {
+        const response = await fetch("/api/animations");
+        console.log("Response received:", response);
 
-            setAnimationList(paths);
-            setSelectedAnimation(paths[0]);
-            setError(null);
-        } catch (err) {
-            console.error('Failed to load animation list:', err);
-            setError('Failed to load animations');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch animations, status: ${response.status}`);
         }
-    }, []);
 
-    // Handle play/pause
-    const handlePlayPause = () => {
-        setIsPaused(prev => {
-            const nextState = !prev;
-            if (nextState) {
-                playerRef.current?.pause();
-            } else {
-                playerRef.current?.play();
-            }
-            return nextState;
-        });
+        const data = await response.json();
+        console.log("Animations fetched successfully:", data);
+
+        setAnimations(data);
+        setSelectedAnimation(data[0] || null);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "An unknown error occurred.";
+        console.error("Error fetching animations:", errorMessage);
+        setError(errorMessage);
+      }
     };
 
-    // Get full path for selected animation
-    const getAnimationPath = (filename: string | null) => {
-        if (!filename) return null;
-        return `/animations/${filename}`;
-    };
+    fetchAnimations();
+  }, []);
 
-    return (
-        <div style={{ padding: '20px' }}>
-            <h1 style={{ marginBottom: '20px' }}>
-                Test 1 - Dynamic Animation Player
-            </h1>
-            
-            {/* Animation selector */}
-            <div style={{ marginBottom: '20px' }}>
-                <label htmlFor="animationSelect" style={{ marginRight: '10px' }}>
-                    Select Animation:
-                </label>
-                <select
-                    id="animationSelect"
-                    value={selectedAnimation || ''}
-                    onChange={(e) => setSelectedAnimation(e.target.value)}
-                    style={{ padding: '5px' }}
-                >
-                    {animationList.map((file) => (
-                        <option key={file} value={file}>
-                            {file}
-                        </option>
-                    ))}
-                </select>
-            </div>
+  useEffect(() => {
+    if (selectedAnimation) {
+      console.log("Selected animation changed:", selectedAnimation);
+      try {
+        const type = getAnimationType(selectedAnimation);
+        setAnimationType(type);
+        console.log("Animation type determined:", type);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "An unknown error occurred.";
+        console.error("Error determining animation type:", errorMessage);
+        setError(errorMessage);
+      }
+    } else {
+      console.log("No animation selected.");
+    }
+  }, [selectedAnimation]);
 
-            {error && (
-                <div style={{ color: 'red', marginBottom: '20px' }}>
-                    {error}
-                </div>
-            )}
+  const handlePlayPause = () => {
+    setIsPaused((prev) => {
+      const nextState = !prev;
+      console.log("Toggling play/pause:", nextState ? "Paused" : "Playing");
+      if (nextState) {
+        playerRef.current?.pause();
+      } else {
+        playerRef.current?.play();
+      }
+      return nextState;
+    });
+  };
 
-            {selectedAnimation && (
-                <div>
-                    <p style={{ marginBottom: '10px' }}>
-                        Current Animation: <strong>{selectedAnimation}</strong>
-                    </p>
+  const handleAnimationChange = (path: string) => {
+    console.log("Changing selected animation to:", path);
+    setSelectedAnimation(path);
+    setError(null);
+  };
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <DualPlayer
-                            ref={playerRef}
-                            animationPath={getAnimationPath(selectedAnimation)}
-                            isPaused={isPaused}
-                        />
-                    </div>
+  return (
+    <div>
+      <h1>Test 1 - Dynamic Animation Player</h1>
 
-                    <button 
-                        onClick={handlePlayPause}
-                        style={{
-                            padding: '8px 16px',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        {isPaused ? "Play" : "Pause"}
-                    </button>
-                </div>
-            )}
-        </div>
-    );
+      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+
+      <div>
+        <label htmlFor="animationSelect">Select Animation:</label>
+        <select
+          id="animationSelect"
+          value={selectedAnimation || ""}
+          onChange={(e) => handleAnimationChange(e.target.value)}
+        >
+          {animations.map((anim) => (
+            <option key={anim} value={`/animation/${anim}`}>
+              {anim}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <p>Current Animation: {selectedAnimation || "None selected"}</p>
+        <p>Animation Type: {animationType || "Unknown"}</p>
+
+        {selectedAnimation ? (
+          <DualPlayer
+            ref={playerRef}
+            animationPath={selectedAnimation}
+            isPaused={isPaused}
+          />
+        ) : (
+          <p>Please select an animation to play.</p>
+        )}
+
+        <button onClick={handlePlayPause} disabled={!selectedAnimation}>
+          {isPaused ? "Play" : "Pause"}
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default Test1Page;

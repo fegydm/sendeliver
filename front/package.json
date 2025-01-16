@@ -11,12 +11,11 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "lottie-react": "^2.4.0",
+    "lottie-web": "^5.12.2", 
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1",
-    "react-router-dom": "^6.10.0",
-    "vite": "^5.1.4"
+    "react-router-dom": "^6.10.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -24,7 +23,8 @@
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.3.0",
     "prettier": "^3.3.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vite": "^5.1.4"
   },
   "engines": {
     "node": ">=18.0.0",

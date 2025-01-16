@@ -1,5 +1,5 @@
 // File: src/pages/test2/index.tsx
-// Last change: Simplified Test2Page to handle only SVG saving functionality.
+// Last change: Adjusted to handle SVG export and use animations from public folder.
 
 import React from 'react';
 import SendDeliverAnimation from '@/lib/SendDeliverAnimation';
@@ -9,11 +9,12 @@ const Test2Page: React.FC = () => {
         console.log("SVG Exported:", svgContent);
 
         try {
+            // Sending the SVG content to be saved on the server
             const response = await fetch('/save-svg', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    fileName: `animation_${Date.now()}`,
+                    fileName: `animation_${Date.now()}.svg`,  // Dynamic file name with timestamp
                     svgContent,
                 }),
             });

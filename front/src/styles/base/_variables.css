@@ -1,0 +1,13 @@
+/* File: front/src/styles/base/_variables.css */
+
+:root {
+    /* Spacing */
+    --spacing-small: 0.5rem;
+    --spacing-medium: 1rem;
+    --spacing-large: 1.5rem;
+
+    /* Font sizes */
+    --font-size-small: 0.875rem;
+    --font-size-medium: 1rem;
+    --font-size-large: 1.125rem;
+}
