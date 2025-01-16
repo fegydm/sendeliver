@@ -33,9 +33,7 @@ const server = http.createServer(app);
 
 // Middleware for logging in development
 app.use((req: Request, _res: Response, next) => {
-  if (process.env.NODE_ENV !== "production") {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  }
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
@@ -69,9 +67,9 @@ staticRoutes.forEach((route) =>
   app.use(route.url, express.static(route.path))
 );
 
-// Logging middleware for animation requests
-app.use("/animation", (req, res, next) => {
-  console.log(`Request received for animation: ${req.method} ${req.url}`);
+// Logging middleware for all requests
+app.use((req, res, next) => {
+  console.log(`[LOG] ${req.method} ${req.url}`);
   next();
 });
 
@@ -92,6 +90,25 @@ app.get("/api/animations", (_req: Request, res: Response) => {
       res.json(animations);
     }
   });
+});
+
+// Static route for serving animation files
+app.use("/animation", (req, res, next) => {
+  console.log(`[STATIC] Request received: ${req.method} ${req.url}`);
+  next();
+}, express.static(path.join(publicPath, "animations")));
+
+// Catch-all route for SPA
+app.get("*", (req: Request, res: Response) => {
+  const possibleStaticFile = path.join(publicPath, req.path);
+
+  if (fs.existsSync(possibleStaticFile)) {
+    console.log(`[STATIC] Serving static file: ${possibleStaticFile}`);
+    return res.sendFile(possibleStaticFile);
+  }
+
+  console.log("[SPA] Serving index.html for:", req.url);
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // WebSocket setup
@@ -146,13 +163,6 @@ app.use("/api", deliveryRouter);
 // Health check route
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
-});
-
-// Catch-all route for SPA
-app.get("*", (req: Request, res: Response) => {
-  if (!req.url.startsWith("/api")) {
-    res.sendFile(path.join(frontendPath, "index.html"));
-  }
 });
 
 // Server setup
