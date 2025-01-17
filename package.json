@@ -12,5 +12,6 @@
     "dev:front": "npm run dev --prefix front",
     "dev:back": "npm run dev --prefix back"
   },
-  "dependencies": {}
+  "dependencies": {
+  }
 }

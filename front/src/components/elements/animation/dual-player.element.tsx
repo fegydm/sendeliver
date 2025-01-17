@@ -2,7 +2,7 @@
 // Last change: Simplified version for basic JSON (Lottie) and SVG handling
 
 import { forwardRef, useImperativeHandle, useEffect, useRef } from "react";
-import lottie, { AnimationItem } from "lottie-web/build/player/lottie_light";
+ import lottie, { AnimationItem } from "lottie-web/build/player/lottie_light";
 
 export type AnimationType = "lottie" | "svg";
 

@@ -1,11 +1,14 @@
 // File: front/src/pages/test3/index.tsx
+// Last change: Updated Test3Page with a simple title and CustomPlayer
+
 import React from "react";
-import LottiePlayer from "@/components/elements/animation/lottie-player.element";
+import CustomPlayer from "@/components/elements/animation/custom-player.element";
 
 const Test3Page: React.FC = () => {
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
-      <LottiePlayer animationPath="/animation/sd11.json" />
+    <div>
+      <h1>Test Custom Player</h1>
+      <CustomPlayer />
     </div>
   );
 };

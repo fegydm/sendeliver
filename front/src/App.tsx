@@ -8,7 +8,7 @@ import HaulerPage from "./pages/hauler.page";
 import SenderPage from "./pages/sender.page";
 import SecretPage1 from "./pages/secret1.page";
 import SecretPage2 from "./pages/secret2.page";
-import NotFoundPage from "./pages/notfound.page";
+import NotFoundPage from "../public/notfound.page";
 import HomePage from "./pages/home.page";
 import TestPage from "./pages/test.page";
 import Test2Page from "./pages/test2";
