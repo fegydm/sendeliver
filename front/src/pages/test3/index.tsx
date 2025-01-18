@@ -1,14 +1,21 @@
-// File: front/src/pages/test3/index.tsx
-// Last change: Updated Test3Page with a simple title and CustomPlayer
-
+// File: src/pages/test3/index.tsx
 import React from "react";
-import CustomPlayer from "@/components/elements/animation/custom-player.element";
+import LottieLightMinPlayer from "@/components/elements/animation/lottie-light-min-player";
+
+// JSON as object not path
+import notfoundAnimation from "@/assets/notfound.json";
 
 const Test3Page: React.FC = () => {
   return (
     <div>
       <h1>Test Custom Player</h1>
-      <CustomPlayer />
+      <LottieLightMinPlayer
+        animationData={notfoundAnimation} // direct JSON
+        width={500}
+        height={500}
+        loop={true}
+        autoplay={true}
+      />
     </div>
   );
 };
