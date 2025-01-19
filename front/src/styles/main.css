@@ -1,4 +1,2 @@
-/* File: front/src/styles/main.css */
+@import './base/_reset.css'; /* Minimal reset */
 
-@import './base/_variables.css';
-@import './base/_typography.css';

@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import "./ai-search-form.component.css";
+// import "./ai-search-form.component.css";
 
 interface AISearchFormProps {
   type: "client" | "carrier";

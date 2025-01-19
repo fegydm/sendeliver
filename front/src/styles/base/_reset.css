@@ -1,11 +1,1 @@
 /* File: front/src/styles/base/_reset.css */
-/* Last change: Limited to player-container height adjustment only */
-
-/* Prevent oversized player container rendering */
-/*
-.player-container {
-    max-height: 150px;
-    width: 100%;
-    overflow: hidden;
-}
-*/

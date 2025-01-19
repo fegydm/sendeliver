@@ -1,19 +1,19 @@
 /* File: front/src/styles/components/navbar.css */
-/* Last change: Optimized for default and testing modes with CSS variables */
+/* Last change: BEM optimization and streamlined structure */
 
-/* Navbar Core */
+/* Navbar Block */
 .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: var(--navbar-height, 50px);
+    height: var(--navbar-height, 50px); /* Controlled via global variables */
     background-color: var(--navbar-bg-color, #f8f8f8);
     border-bottom: 1px solid var(--navbar-border-color, #ccc);
     padding: var(--navbar-padding, 10px);
 }
 
-/* Navbar Item Styling */
-.navbar-item {
+/* Navbar Items */
+.navbar__item {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -22,12 +22,12 @@
     min-height: 40px;
 }
 
-.navbar-item img {
+.navbar__item img {
     height: calc(var(--navbar-height, 50px) - 10px);
 }
 
-/* Navbar Dots Styling */
-.navbar-dots {
+/* Navbar Dots */
+.navbar__dots {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -38,7 +38,7 @@
     cursor: pointer;
 }
 
-.navbar-dots-container {
+.navbar__dots-container {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -48,7 +48,7 @@
     height: var(--navbar-dots-size, 24px);
 }
 
-.navbar-dots-item {
+.navbar__dots-item {
     width: 8px;
     height: 8px;
     background-color: var(--navbar-dot-color, gray);
@@ -56,7 +56,7 @@
 }
 
 /* Navbar Language */
-.navbar-language {
+.navbar__language {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -65,7 +65,7 @@
     height: var(--navbar-icon-size, 40px);
 }
 
-.navbar-language-icon {
+.navbar__language-icon {
     width: 30px;
     height: 20px;
     object-fit: cover;
@@ -73,8 +73,8 @@
     border-radius: 3px;
 }
 
-/* Darkmode Toggle */
-.navbar-darkmode {
+/* Navbar Darkmode */
+.navbar__darkmode {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -85,16 +85,16 @@
     transition: background-color 0.3s;
 }
 
-.navbar-darkmode:hover {
+.navbar__darkmode:hover {
     background-color: rgba(0, 0, 0, 0.1);
 }
 
-.navbar-darkmode-icon {
+.navbar__darkmode-icon {
     font-size: 1.5rem;
     color: var(--text-color, #000);
     transition: color 0.3s ease;
 }
 
-.navbar-darkmode:hover .navbar-darkmode-icon {
+.navbar__darkmode:hover .navbar__darkmode-icon {
     color: var(--text-hover-color, #666);
 }

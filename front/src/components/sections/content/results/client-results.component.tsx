@@ -1,7 +1,7 @@
 // ./front/src/components/results/client-results.component.tsx
 import React from "react";
 import ResultTable, { ClientResultData } from "./result-table.component";
-import "./client-results.component.css"; // Import CSS
+// import "./client-results.component.css"; // Import CSS
 
 const ClientResults: React.FC = () => {
   const clientData: ClientResultData[] = [

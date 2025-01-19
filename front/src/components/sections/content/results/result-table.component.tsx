@@ -1,6 +1,6 @@
 // ./front/src/components/results/result-table.component.tsx
 import React from "react";
-import "./result-table.component.css"; // Import CSS styles
+// import "./result-table.component.css"; // Import CSS styles
 
 export interface ClientResultData {
   distance: string;

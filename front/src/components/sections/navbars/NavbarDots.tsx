@@ -10,6 +10,7 @@ const NavbarDots: FC<NavbarDotsProps> = ({ topDots, bottomDots, onClick }) => {
       aria-label="Open dots menu"
       title="Dot"
     >
+      D {/* Visible text for the button */}
       <div className="navbar-dots-container">
         <div className="navbar-dots-row">
           {topDots.map((color, index) => (

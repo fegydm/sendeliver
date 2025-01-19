@@ -1,6 +1,6 @@
 // ./front/src/components/pin-form.component.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import './pin-form.component.css'; // Importing the CSS file for styling
+// import './pin-form.component.css'; // Importing the CSS file for styling
 
 // Interface defining the props for the component
 interface PinFormProps {

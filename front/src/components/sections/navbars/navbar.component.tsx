@@ -1,5 +1,4 @@
 // File: front/src/components/navbars/navbar.component.tsx
-// Last change: Added ARIA labels for accessibility and reorganized structure
 
 import { useState, FC } from "react";
 import NavbarHamburger from "./NavbarHamburger";
@@ -27,7 +26,7 @@ interface NavigationProps {
   onToggleDarkMode: () => void;
 }
 
-const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
+const Navbar: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
   const [showBreadcrumbs, setShowBreadcrumbs] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [topDots, setTopDots] = useState<DotsArray>(
@@ -67,30 +66,46 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
   };
 
   return (
-    <header className="navbar-container" aria-label="Main Navigation">
-      <nav aria-label="Primary Navigation">
-        <NavbarHamburger
-          onLoginClick={() => handleModalOpen("login")}
-          onRegisterClick={() => handleModalOpen("register")}
-          onShowAbout={() => handleModalOpen("about")}
-        />
-        <NavbarLogo />
-        <NavbarName onShowAbout={() => handleModalOpen("about")} />
-        <NavbarDots
-          topDots={topDots}
-          bottomDots={bottomDots}
-          onClick={() => handleModalOpen("dots")}
-        />
-        <NavbarAvatar onClick={() => handleModalOpen("avatar")} />
-        <NavbarLogin onLoginClick={() => handleModalOpen("login")} />
-        <NavbarRegister onRegisterClick={() => handleModalOpen("register")} />
-        <NavbarLanguage />
-        <NavbarDarkmode
-          isDarkMode={isDarkMode}
-          onToggleDarkMode={onToggleDarkMode}
-        />
+    <header className="navbar">
+      <nav className="navbar__primary" aria-label="Primary Navigation">
+        <div className="navbar__hamburger">
+          <NavbarHamburger
+            onLoginClick={() => handleModalOpen("login")}
+            onRegisterClick={() => handleModalOpen("register")}
+            onShowAbout={() => handleModalOpen("about")}
+          />
+        </div>
+        <div className="navbar__logo">
+          <NavbarLogo />
+        </div>
+        <div className="navbar__name">
+          <NavbarName onShowAbout={() => handleModalOpen("about")} />
+        </div>
+        <div className="navbar__dots">
+          <NavbarDots
+            topDots={topDots}
+            bottomDots={bottomDots}
+            onClick={() => handleModalOpen("dots")}
+          />
+        </div>
+        <div className="navbar__avatar">
+          <NavbarAvatar onClick={() => handleModalOpen("avatar")} />
+        </div>
+        <div className="navbar__auth">
+          <NavbarLogin onLoginClick={() => handleModalOpen("login")} />
+          <NavbarRegister onRegisterClick={() => handleModalOpen("register")} />
+        </div>
+        <div className="navbar__language">
+          <NavbarLanguage />
+        </div>
+        <div className="navbar__darkmode">
+          <NavbarDarkmode
+            isDarkMode={isDarkMode}
+            onToggleDarkMode={onToggleDarkMode}
+          />
+        </div>
       </nav>
-      <nav aria-label="Breadcrumb Navigation">
+      <nav className="navbar__breadcrumbs" aria-label="Breadcrumb Navigation">
         <NavbarBreadcrumb
           onBreadcrumbsToggle={handleBreadcrumbsToggle}
           showBreadcrumbs={showBreadcrumbs}
@@ -119,4 +134,4 @@ const Navigation: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
   );
 };
 
-export default Navigation;
+export default Navbar;

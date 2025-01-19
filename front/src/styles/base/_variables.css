@@ -1,13 +1,13 @@
 /* File: front/src/styles/base/_variables.css */
+/* Global variables */
 
 :root {
-    /* Spacing */
-    --spacing-small: 0.5rem;
-    --spacing-medium: 1rem;
-    --spacing-large: 1.5rem;
+    /* Navbar height */
+    --navbar-height: 60px;
 
-    /* Font sizes */
-    --font-size-small: 0.875rem;
-    --font-size-medium: 1rem;
-    --font-size-large: 1.125rem;
+    /* Breakpoints */
+    --breakpoint-navbar: 600px;
+
+    /* Other variables */
+    --max-content-width: 1200px;
 }

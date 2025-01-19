@@ -2,7 +2,7 @@
 // Last change: Renamed CSS classes to match the "banner-h" convention.
 
 import React, { useState } from "react";
-import "./banner-h.component.css"; // Corrected import for CSS styles
+// import "./banner-h.component.css"; // Corrected import for CSS styles
 
 const BannerH: React.FC = () => {
   const [activeCard, setActiveCard] = useState<string>("dashboard");

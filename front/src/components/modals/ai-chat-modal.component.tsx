@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import AIChat from "../sections/content/chat/ai-chat.component";
 import MapView from "../sections/content/maps/map-view.component";
 import { AIRequest, AIResponse, FormData } from "@/types/ai.types";
-import "./ai-chat-modal.component.css";
+// import "./ai-chat-modal.component.css";
 
 interface AIChatModalProps {
   onClose: () => void;

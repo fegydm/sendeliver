@@ -1,6 +1,6 @@
 // ./front/src/components/maps/map-view.component.tsx
 import React from "react";
-import "./map-view.component.css";
+// import "./map-view.component.css";
 
 interface MapViewProps {
   locations?: {

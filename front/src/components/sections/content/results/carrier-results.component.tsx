@@ -1,7 +1,7 @@
 // ./front/src/components/results/carrier-results.component.tsx
 import React from "react";
 import ResultTable, { CarrierResultData } from "./result-table.component";
-import "./carrier-results.component.css"; // Import CSS
+// import "./carrier-results.component.css"; // Import CSS
 
 const CarrierResults: React.FC = () => {
   const carrierData: CarrierResultData[] = [

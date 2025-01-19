@@ -1,71 +1,77 @@
 // File: src/components/sections/banners/banner.component.tsx
-// Last change: Simplified animation loading using static paths from public folder
 
-import React, { useRef, useState } from 'react';
-import DualPlayer, { type DualPlayerRef, type AnimationType } from "@/components/elements/animation/dual-player.element";
+import React, { useState, useRef } from "react";
+import LottieLightPlayer, {
+  LottieLightPlayerRef,
+} from "@/components/elements/animation/lottie-light-player";
 
-// Define available animations from public/animations folder with their types
+// Import JSON animations
+import animation1 from "@/assets/sd2.json";
+import animation2 from "@/assets/sd11.json";
+
 const ANIMATIONS = [
-  { name: 'sendeliver-text11.json', type: 'lottie' as const },
-  { name: 'other-animation.json', type: 'lottie' as const },
-  { name: 'logo-animation.svg', type: 'svg' as const }
+  { name: "Animation 1", data: animation1 },
+  { name: "Animation 2", data: animation2 },
 ];
 
 const Banner: React.FC = () => {
-  const playerRef = useRef<DualPlayerRef>(null);
+  const playerRef = useRef<LottieLightPlayerRef>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [selectedAnimation, setSelectedAnimation] = useState(ANIMATIONS[0]);
-  const [error, setError] = useState<string | null>(null);
 
   const handlePlayPause = () => {
-    setIsPaused(prev => {
+    setIsPaused((prev) => {
       const nextState = !prev;
       nextState ? playerRef.current?.pause() : playerRef.current?.play();
       return nextState;
     });
   };
 
-  const getAnimationPath = (filename: string): string => `/animations/${filename}`;
-
   return (
-    <div>
-      <h2>Empowering Connections Between Clients and Carriers.</h2>
-
-      {!import.meta.env.PROD && (
-        <div>
-          <label htmlFor="animationSelect">Select Animation:</label>
-          <select
-            id="animationSelect"
-            value={selectedAnimation.name}
-            onChange={(e) => {
-              const selected = ANIMATIONS.find(anim => anim.name === e.target.value);
-              if (selected) setSelectedAnimation(selected);
-            }}
-          >
-            {ANIMATIONS.map((animation) => (
-              <option key={animation.name} value={animation.name}>
-                {animation.name}
-              </option>
-            ))}
-          </select>
+    <div className="banner">
+      <div className="banner__left">
+        <h2 className="banner__slogan">
+          Empowering Connections Between Clients and Carriers.
+        </h2>
+      </div>
+      <div className="banner__right">
+        {!import.meta.env.PROD && (
+          <div className="banner__selector">
+            <label htmlFor="animationSelect">Select Animation:</label>
+            <select
+              id="animationSelect"
+              value={selectedAnimation.name}
+              onChange={(e) => {
+                const selected = ANIMATIONS.find(
+                  (anim) => anim.name === e.target.value
+                );
+                if (selected) setSelectedAnimation(selected);
+              }}
+            >
+              {ANIMATIONS.map((animation) => (
+                <option key={animation.name} value={animation.name}>
+                  {animation.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="banner__animation">
+          <LottieLightPlayer
+            ref={playerRef}
+            animationData={selectedAnimation.data}
+            width={100}
+            height={100}
+            loop={true}
+            autoplay={true}
+            isPaused={isPaused}
+          />
         </div>
-      )}
-
-      {error ? (
-        <div>{error}</div>
-      ) : (
-        <DualPlayer
-          ref={playerRef}
-          animationType={selectedAnimation.type}
-          animationPath={getAnimationPath(selectedAnimation.name)}
-          isPaused={isPaused}
-        />
-      )}
-
-      <div>
-        <button onClick={handlePlayPause}>
-          {isPaused ? "Play" : "Pause"}
-        </button>
+        <div className="banner__controller">
+          <button onClick={handlePlayPause}>
+            {isPaused ? "Play" : "Pause"}
+          </button>
+        </div>
       </div>
     </div>
   );
