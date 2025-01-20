@@ -18,7 +18,7 @@ const FloatingButton: React.FC = () => {
 
   return (
     <button
-      className="floating-button"
+      className="footer__floating"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
     >
       <FaArrowUp size={24} />

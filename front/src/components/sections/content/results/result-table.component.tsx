@@ -1,15 +1,13 @@
-// ./front/src/components/results/result-table.component.tsx
 import React from "react";
-// import "./result-table.component.css"; // Import CSS styles
 
-export interface ClientResultData {
+export interface SenderResultData {
   distance: string;
   vehicleType: string;
   availabilityTime: string;
   eta: string;
 }
 
-export interface CarrierResultData {
+export interface HaulerResultData {
   pickup: string;
   delivery: string;
   pallets: number;
@@ -17,16 +15,18 @@ export interface CarrierResultData {
 }
 
 interface ResultTableProps {
-  type: "client" | "carrier";
-  data: ClientResultData[] | CarrierResultData[];
+  type: "sender" | "hauler";
+  data: SenderResultData[] | HaulerResultData[];
 }
 
 const ResultTable: React.FC<ResultTableProps> = ({ type, data }) => {
+  // Define columns based on type
   const columns =
-    type === "client"
+    type === "sender"
       ? ["Distance", "Vehicle Type", "Availability Time", "ETA"]
       : ["Pickup", "Delivery", "Pallets", "Weight"];
 
+  // Map column names to data keys
   const getKeyForColumn = (column: string): string => {
     const columnMappings: Record<string, string> = {
       Distance: "distance",
@@ -42,21 +42,27 @@ const ResultTable: React.FC<ResultTableProps> = ({ type, data }) => {
   };
 
   return (
-    <div className={`result-table-container ${type === "client" ? "" : "dark"}`}>
-      <table className="result-table">
-        <thead>
-          <tr>
+    <div className={`result-table result-table--${type}`}>
+      <table className="result-table__table">
+        <thead className="result-table__header">
+          <tr className="result-table__header-row">
             {columns.map((col) => (
-              <th key={col}>{col}</th>
+              <th key={col} className="result-table__header-cell">
+                {col}
+              </th>
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="result-table__body">
           {data.map((row, rowIndex) => (
-            <tr key={rowIndex}>
+            <tr key={rowIndex} className="result-table__body-row">
               {columns.map((col) => {
                 const key = getKeyForColumn(col);
-                return <td key={col}>{(row as any)[key]?.toString() || "N/A"}</td>;
+                return (
+                  <td key={col} className="result-table__body-cell">
+                    {(row as any)[key]?.toString() || "N/A"}
+                  </td>
+                );
               })}
             </tr>
           ))}

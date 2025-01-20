@@ -17,11 +17,9 @@ const PinInput: React.FC<PinInputProps> = ({ length, onComplete }) => {
   }, []);
 
   const handleChange = (index: number, value: string) => {
-    // Allow only numbers
     if (!/^\d*$/.test(value)) return;
 
     if (value.length > 1) {
-      // Handle paste events
       const digits = value.split("").slice(0, length - index);
       const newValues = [...values];
       digits.forEach((digit, i) => {
@@ -31,11 +29,9 @@ const PinInput: React.FC<PinInputProps> = ({ length, onComplete }) => {
       });
       setValues(newValues);
 
-      // Focus on appropriate field
       const nextIndex = Math.min(index + digits.length, length - 1);
       inputsRef.current[nextIndex]?.focus();
     } else {
-      // Handle single digit input
       const newValues = [...values];
       newValues[index] = value;
       setValues(newValues);
@@ -45,7 +41,6 @@ const PinInput: React.FC<PinInputProps> = ({ length, onComplete }) => {
       }
     }
 
-    // Check completion
     const updatedValues = [...values];
     updatedValues[index] = value;
     if (updatedValues.every((val) => val.length === 1)) {
@@ -69,7 +64,7 @@ const PinInput: React.FC<PinInputProps> = ({ length, onComplete }) => {
   };
 
   return (
-    <div className="flex space-x-2" role="group" aria-label="PIN input">
+    <div className="pin-input" role="group" aria-label="PIN input">
       {Array.from({ length }, (_, index) => (
         <input
           key={index}
@@ -82,7 +77,7 @@ const PinInput: React.FC<PinInputProps> = ({ length, onComplete }) => {
           onKeyDown={(e) => handleKeyDown(index, e)}
           ref={(el) => (inputsRef.current[index] = el)}
           aria-label={`PIN digit ${index + 1}`}
-          className="w-12 h-12 text-center text-xl font-medium border rounded bg-gray-100 dark:bg-gray-800 dark:text-white focus:ring focus:ring-primary-500"
+          className="pin-input__digit"
         />
       ))}
     </div>

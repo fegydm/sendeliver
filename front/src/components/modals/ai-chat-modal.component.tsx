@@ -10,7 +10,7 @@ import { AIRequest, AIResponse, FormData } from "@/types/ai.types";
 interface AIChatModalProps {
   onClose: () => void;
   initialPrompt: AIRequest;
-  type: "sender" | "carrier";
+  type: "sender" | "hauler";
   onDataReceived?: (data: FormData) => void;
 }
 

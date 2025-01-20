@@ -1,44 +1,46 @@
 // File: front/src/components/elements/theme-switcher.element.tsx
-// Last change: Fixed export issue with themeDefaults import
 
 import React, { useState } from "react";
 import ThemeEditorModal from "@/components/modals/theme-editor.modal";
-import { themeDefaults } from "@/constants/theme-defaults"; // ✅ Import now fixed
+import { themeDefaults } from "@/constants/theme-defaults";
 
-const ThemeSwitcher: React.FC = () => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+interface ThemeSwitcherProps {
+  is3DMode: boolean;
+}
 
-    const switchTheme = (theme: 'none' | 'basic' | 'default' | 'testing') => {
-        const linkElement = document.getElementById('theme-link') as HTMLLinkElement;
-        if (linkElement) {
-            linkElement.href = `/src/styles/themes/${theme}.css`;
-        }
-    };
+const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ is3DMode }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleSave = (data: Record<string, string>) => {
-        Object.entries(data).forEach(([key, value]) => {
-            document.documentElement.style.setProperty(`--${key}`, value);
-        });
-        console.log("Theme variables updated:", data);
-    };
+  const switchTheme = (theme: "none" | "basic" | "default" | "testing") => {
+    const linkElement = document.getElementById("theme-link") as HTMLLinkElement;
+    if (linkElement) {
+      linkElement.href = `/src/styles/themes/${theme}.css`;
+    }
+  };
 
-    return (
-        <div className="theme-switcher">
-            <button onClick={() => switchTheme('none')}>None</button>
-            <button onClick={() => switchTheme('basic')}>Basic</button>
-            <button onClick={() => switchTheme('default')}>Default</button>
-            <button onClick={() => switchTheme('testing')}>Testing</button>
-            <button onClick={() => setIsModalOpen(true)}>Settings...</button>
+  const handleSave = (data: Record<string, string>) => {
+    Object.entries(data).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(`--${key}`, value);
+    });
+    console.log("Theme variables updated:", data);
+  };
 
-            {/* Fixed ThemeEditorModal usage with the corrected import */}
-            <ThemeEditorModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSave={handleSave}
-                editorData={themeDefaults}
-            />
-        </div>
-    );
+  return (
+    <div className="theme-switcher">
+      <button onClick={() => switchTheme("none")}>None</button>
+      <button onClick={() => switchTheme("basic")}>Basic</button>
+      <button onClick={() => switchTheme("default")}>Default</button>
+      <button onClick={() => switchTheme("testing")}>Testing</button>
+      <button onClick={() => setIsModalOpen(true)}>Settings...</button>
+      <div>{is3DMode ? "3D Mode Active" : "2D Mode Active"}</div>
+      <ThemeEditorModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSave}
+        editorData={themeDefaults}
+      />
+    </div>
+  );
 };
 
 export default ThemeSwitcher;

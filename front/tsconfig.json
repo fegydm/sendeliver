@@ -35,7 +35,7 @@
     "skipLibCheck": true,
     "typeRoots": ["node_modules/@types", "src/types"]
   },
-  "include": ["src/**/*", "src/**/*.json", "public/notfound.page.tsx"],
+  "include": ["src/**/*", "src/**/*.json", "src/pages/notfound.page.tsx"],
   "exclude": [
     "**/node_modules",
     "**/dist",

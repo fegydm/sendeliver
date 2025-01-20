@@ -1,25 +1,26 @@
-// src/components/ui/modals/general.modal.tsx
+// File: src/components/ui/modals/general.modal.tsx
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button.ui";
 
-/** Props for GeneralModal component */
 interface GeneralModalProps {
   isOpen: boolean;
   onClose: () => void;
   children?: React.ReactNode;
   actions?: React.ReactNode;
   title?: string;
+  variant?: "default" | "danger" | "info"; // Optional style variants
+  closeOnBackdropClick?: boolean; // Optional backdrop behavior
 }
 
-/** GeneralModal Component */
 const GeneralModal: React.FC<GeneralModalProps> = ({
   isOpen,
   onClose,
   children,
   actions,
   title,
+  variant = "default",
+  closeOnBackdropClick = true,
 }) => {
-  // Handle Escape key to close modal
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -40,34 +41,32 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
 
   return (
     <>
-      {/* Modal Backdrop */}
-      <div className="modal-backdrop" onClick={onClose} />
-
-      {/* Modal Container */}
-      <div className="modal-container">
+      <div
+        className="modal__backdrop"
+        onClick={closeOnBackdropClick ? onClose : undefined}
+      />
+      <div className={`modal__container modal__container--${variant}`}>
         <div
-          className="modal-content"
+          className="modal__content"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
         >
-          {/* Close Button */}
+          {/* Modal Header */}
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="modal-close-button"
+            className="modal__close-button"
           >
             <span>&times;</span>
           </button>
-
-          {/* Modal Title */}
-          {title && <h2 className="modal-title">{title}</h2>}
+          {title && <h2 className="modal__title">{title}</h2>}
 
           {/* Modal Body */}
-          <div className="modal-body">{children}</div>
+          <div className="modal__body">{children}</div>
 
           {/* Modal Actions */}
-          <div className="modal-actions">
+          <div className="modal__actions">
             <Button variant="secondary" onClick={onClose}>
               Cancel
             </Button>

@@ -1,5 +1,5 @@
 // File: src/pages/home.page.tsx
-// Last change: Removed footer and moved to the main layout (app.tsx)
+// Last change: Removed floating button and updated "carrier" references to "hauler."
 
 import { useState } from "react";
 import PageBanner from "@/components/sections/banners/banner.component";
@@ -9,13 +9,12 @@ import ManualSearchForm from "@/components/sections/content/search-forms/manual-
 import ResultTable from "@/components/sections/content/results/result-table.component";
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
 import QuickStats from "@/components/sections/stats/quick-stats.component";
-import FloatingButton from "@/components/elements/floating-button.element";
 import { mockClientData, mockCarrierData } from "@/data/mockData";
 import { AIRequest, FormData } from "@/types/ai.types";
 import "@/styles/main.css";
 
 const HomePage = () => {
-  const [activeSection, setActiveSection] = useState<"sender" | "carrier" | null>(null);
+  const [activeSection, setActiveSection] = useState<"sender" | "hauler" | null>(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState<AIRequest | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -27,7 +26,7 @@ const HomePage = () => {
     palletCount: 0
   });
 
-  const handleAIRequest = (section: "sender" | "carrier", prompt: string) => {
+  const handleAIRequest = (section: "sender" | "hauler", prompt: string) => {
     setActiveSection(section);
     setIsAIChatOpen(true);
     setCurrentPrompt({
@@ -44,7 +43,7 @@ const HomePage = () => {
 
   const handleAIData = (data: FormData) => {
     setFormData(data);
-    console.log('Received AI data:', data);
+    console.log("Received AI data:", data);
   };
 
   return (
@@ -63,37 +62,35 @@ const HomePage = () => {
       <Content
         senderContent={
           <>
-            <AISearchForm 
-              type="client" 
-              onAIRequest={(prompt) => handleAIRequest("sender", prompt)} 
+            <AISearchForm
+              type="sender"
+              onAIRequest={(prompt) => handleAIRequest("sender", prompt)}
             />
-            <ManualSearchForm 
-              type="client" 
-              onSubmit={(data) => handleManualSubmit("Sender", data)} 
+            <ManualSearchForm
+              type="sender"
+              onSubmit={(data) => handleManualSubmit("Sender", data)}
               formData={formData}
             />
-            <ResultTable type="client" data={mockClientData} />
+            <ResultTable type="sender" data={mockClientData} />
           </>
         }
-        carrierContent={
+        haulerContent={
           <>
-            <AISearchForm 
-              type="carrier" 
-              onAIRequest={(prompt) => handleAIRequest("carrier", prompt)} 
+            <AISearchForm
+              type="hauler"
+              onAIRequest={(prompt) => handleAIRequest("hauler", prompt)}
             />
-            <ManualSearchForm 
-              type="carrier" 
-              onSubmit={(data) => handleManualSubmit("Carrier", data)} 
+            <ManualSearchForm
+              type="hauler"
+              onSubmit={(data) => handleManualSubmit("Hauler", data)}
               formData={formData}
             />
-            <ResultTable type="carrier" data={mockCarrierData} />
+            <ResultTable type="hauler" data={mockCarrierData} />
           </>
         }
       />
 
       <QuickStats type="sender" />
-      
-      <FloatingButton />
     </>
   );
 };

@@ -8,7 +8,7 @@ import { AIRequest } from "@/types/ai.types";
 
 interface AIChatProps {
   initialPrompt: string;
-  type: "sender" | "carrier";
+  type: "sender" | "hauler";
   onDataReceived?: (data: any) => void;
 }
 

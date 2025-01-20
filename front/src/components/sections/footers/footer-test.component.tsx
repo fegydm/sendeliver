@@ -1,69 +1,70 @@
-// File: ./front/src/components/sections/footers/footer-test.component.tsx
-// Last change: Added 2D/3D switch and improved state handling for ThemeSwitcher
+// File: front/src/components/sections/footers/footer-test.component.tsx
 
 import React, { useState } from "react";
 import ThemeSwitcher from "@/components/elements/theme-switcher.element";
 import ThemeEditorModal from "@/components/modals/theme-editor.modal";
 import ColorPaletteModal from "@/components/modals/color-palette.modal";
 import { Button } from "@/components/ui";
-import { useTestFooter } from "@/lib/test-footer-context";
+import { themeDefaults } from "@/constants/theme-defaults";
 
-const FooterTest: React.FC = React.memo(() => {
-    const { isTestFooterVisible } = useTestFooter();
-    const [isThemeEditorOpen, setIsThemeEditorOpen] = useState(false);
-    const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
-    const [is3DMode, setIs3DMode] = useState(false); // 2D/3D mode toggle
+interface FooterTestProps {
+  isVisible: boolean; // Visibility prop
+  onClose: () => void; // Callback to close FooterTest
+}
 
-    if (!isTestFooterVisible) return null;
+const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
+  const [isThemeEditorOpen, setIsThemeEditorOpen] = useState(false);
+  const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
+  const [is3DMode, setIs3DMode] = useState(false);
 
-    return (
-        <footer className="test-footer">
-            <div className="footer-container">
-                
-                {/* Left Section: Theme Switcher and 2D/3D Toggle */}
-                <div className="footer-left">
-                    <ThemeSwitcher is3DMode={is3DMode} />
-                    <Button
-                        variant="secondary"
-                        onClick={() => setIs3DMode((prev) => !prev)}
-                    >
-                        {is3DMode ? "Switch to 2D" : "Switch to 3D"}
-                    </Button>
-                </div>
+  if (!isVisible) return null; // Hide if not visible
 
-                {/* Right Section: Modals Control */}
-                <div className="footer-right">
-                    <Button
-                        variant="secondary"
-                        onClick={() => setIsThemeEditorOpen(true)}
-                    >
-                        Theme Editor
-                    </Button>
-                    <Button
-                        variant="secondary"
-                        onClick={() => setIsColorPaletteOpen(true)}
-                    >
-                        Color Palette
-                    </Button>
-                </div>
+  return (
+    <footer className="footer__test">
+      <div className="footer__test-container">
+        {/* Left Section */}
+        <div className="footer__test-left">
+          <ThemeSwitcher is3DMode={is3DMode} />
+          <Button
+            variant="secondary"
+            onClick={() => setIs3DMode((prev) => !prev)}
+          >
+            {is3DMode ? "Switch to 2D" : "Switch to 3D"}
+          </Button>
+        </div>
 
-                {/* Modals */}
-                <ThemeEditorModal
-                    isOpen={isThemeEditorOpen}
-                    onClose={() => setIsThemeEditorOpen(false)}
-                    editorData={{}}
-                    onSave={() => console.log("Theme saved")}
-                />
+        {/* Right Section */}
+        <div className="footer__test-right">
+          <Button variant="secondary" onClick={() => setIsThemeEditorOpen(true)}>
+            Theme Editor
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setIsColorPaletteOpen(true)}
+          >
+            Color Palette
+          </Button>
+        </div>
 
-                <ColorPaletteModal
-                    isOpen={isColorPaletteOpen}
-                    onClose={() => setIsColorPaletteOpen(false)}
-                />
-            </div>
-        </footer>
-    );
-});
+        {/* Modals */}
+        <ThemeEditorModal
+          isOpen={isThemeEditorOpen}
+          onClose={() => setIsThemeEditorOpen(false)}
+          onSave={(data) => console.log("Saved theme data:", data)}
+          editorData={themeDefaults}
+        />
+        <ColorPaletteModal
+          isOpen={isColorPaletteOpen}
+          onClose={() => setIsColorPaletteOpen(false)}
+        />
 
-FooterTest.displayName = 'FooterTest';
+        {/* Close Button */}
+        <Button variant="primary" onClick={onClose} className="footer__test-close">
+          Close
+        </Button>
+      </div>
+    </footer>
+  );
+};
 
 export default FooterTest;

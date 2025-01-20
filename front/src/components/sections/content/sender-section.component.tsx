@@ -2,15 +2,13 @@
 import React from "react";
 
 interface SenderSectionProps {
-  children: React.ReactNode;
+  children: React.ReactNode; // Content passed into the Sender section
 }
 
 const SenderSection: React.FC<SenderSectionProps> = ({ children }) => {
   return (
-    <section className="bg-white dark:bg-gray-700 p-6 rounded-lg shadow-lg">
-      <h2 className="text-xl font-bold mb-4 text-purple-700 text-center">
-        Client Area      
-      </h2>
+    <section className="sender-section">
+      <h2 className="sender-section__title">Client Area</h2>
       {children}
     </section>
   );

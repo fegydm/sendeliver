@@ -1,4 +1,5 @@
 // ./front/src/components/modals/pin-modal.component.tsx
+
 import React, { useState, useEffect } from "react";
 import GeneralModal from "./general.modal";
 import PinInput from "@/components/elements/pin-input.element";
@@ -61,10 +62,12 @@ const PinModal: React.FC<PinModalProps> = ({
 
   return (
     <GeneralModal isOpen={isOpen} onClose={onClose} title="Enter PIN">
-      <div className="space-y-4">
-        <PinInput length={4} onComplete={handlePinComplete} />
+      <div className="pin-modal">
+        <div className="pin-modal__input">
+          <PinInput length={4} onComplete={handlePinComplete} />
+        </div>
         {error && (
-          <p className="text-red-500 text-sm">
+          <p className="pin-modal__error">
             Incorrect PIN. Please try again.
           </p>
         )}

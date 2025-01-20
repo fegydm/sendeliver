@@ -3,7 +3,7 @@
 
 export interface AIRequest {
   message: string;
-  type: "sender" | "carrier";
+  type: "sender" | "hauler";
   lang1?: string;
 }
 

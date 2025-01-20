@@ -1,67 +1,68 @@
 // File: ./front/src/components/sections/footers/footer-page.component.tsx
-// Last change: Optimized footer test rendering
 
 import React, { useState } from "react";
-import FooterSocial from "./FooterSocial";
-import FooterMenu from "./FooterMenu";
-import FooterCopyright from "./FooterCopyright";
+import FooterSocial from "@/components/sections/footers/FooterSocial";
+import FooterMenu from "@/components/sections/footers/FooterMenu";
+import FooterCopyright from "@/components/sections/footers/FooterCopyright";
 import PinModal from "@/components/modals/pin-modal.component";
-import FooterTest from "@/components/sections/footers/footer-test.component";
-import { useTestFooter } from "@/lib/test-footer-context";
 
 interface FooterPageProps {
-    onPinVerified?: (isAccessible: boolean) => void;
+  onAdminToggle: (isVisible: boolean) => void;
+  isTestFooterVisible: boolean; // New prop to track visibility state
 }
 
-const FooterPage: React.FC<FooterPageProps> = ({ onPinVerified }) => {
-    const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-    const { isTestFooterVisible, setTestFooterVisible } = useTestFooter();
-    const isDevMode = process.env.NODE_ENV === "development";
+const FooterPage: React.FC<FooterPageProps> = ({ onAdminToggle, isTestFooterVisible }) => {
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
 
-    const handleButtonClick = () => {
-        if (isTestFooterVisible) {
-            setTestFooterVisible(false);
-            onPinVerified?.(false);
-        } else {
-            setIsPinModalOpen(true);
-        }
-    };
+  const handleAdminAccess = (granted: boolean) => {
+    onAdminToggle(granted); // Update visibility of FooterTest
+    setIsPinModalOpen(false); // Close modal
+    if (granted) {
+      localStorage.setItem("isTestFooterVisible", "true");
+    } else {
+      localStorage.removeItem("isTestFooterVisible");
+    }
+  };
 
-    const handlePinSuccess = () => {
-        setTestFooterVisible(true);
-        onPinVerified?.(true);
-        setIsPinModalOpen(false);
-    };
+  return (
+    <div className="footer__page">
+      {/* Social Section */}
+      <div className="footer__social">
+        <FooterSocial />
+      </div>
 
-    return (
-        <footer className="page-footer">
-            <div className="footer-social">
-                <FooterSocial />
-            </div>
+      {/* Menu and Copyright Section */}
+      <div className="footer__row">
+        <FooterMenu />
+        <FooterCopyright />
+      </div>
 
-            <div className="footer-row">
-                <FooterMenu />
-                <FooterCopyright />
-            </div>
+      {/* Admin Button */}
+      <button
+        className="footer__admin-button"
+        onClick={() => {
+          if (isTestFooterVisible) {
+            handleAdminAccess(false); // Close FooterTest directly
+          } else {
+            setIsPinModalOpen(true); // Open PIN modal
+          }
+        }}
+        aria-label={isTestFooterVisible ? "Close Test Footer" : "Admin Access"}
+      >
+        {isTestFooterVisible ? "Close" : "Administrator"}
+      </button>
 
-            <button
-                onClick={handleButtonClick}
-                aria-label={isTestFooterVisible ? "Close Access" : "Admin Access"}
-                className={`admin-button ${!isTestFooterVisible && process.env.NODE_ENV === "production" ? "transparent-text" : ""}`}
-            >
-                {isTestFooterVisible ? "Close" : "Administrator"}
-            </button>
-
-            <PinModal
-                isOpen={isPinModalOpen}
-                onClose={() => setIsPinModalOpen(false)}
-                requiredPin="4545"
-                onPinSuccess={handlePinSuccess}
-            />
-
-            {isDevMode && <FooterTest />}
-        </footer>
-    );
+      {/* Pin Modal */}
+      {isPinModalOpen && (
+        <PinModal
+          isOpen={isPinModalOpen}
+          onClose={() => setIsPinModalOpen(false)}
+          requiredPin="4545"
+          onPinSuccess={() => handleAdminAccess(true)}
+        />
+      )}
+    </div>
+  );
 };
 
 export default FooterPage;

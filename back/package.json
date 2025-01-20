@@ -6,7 +6,7 @@
     "start": "node dist/server.js",
     "dev": "cross-env NODE_ENV=development tsx watch src/server.ts",
     "clean": "npx rimraf dist node_modules",
-    "build": "npm run clean && npm ci && tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.json",
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",
     "test": "jest",
     "test:watch": "jest --watch",

@@ -1,1 +1,27 @@
 /* File: front/src/styles/base/_reset.css */
+.ai-search-form__editable {
+    display: inline-block;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.ai-search-form__editable:focus {
+    border-color: #66afe9;
+    box-shadow: 0 0 5px rgba(102, 175, 233, 0.5);
+    outline: none;
+}
+
+.ai-search-form__editable:empty::before {
+    content: attr(data-placeholder);
+    color: #aaa;
+    pointer-events: none;
+}

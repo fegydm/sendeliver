@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import http from "http";
-import { WebSocket, WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -9,35 +9,31 @@ import dotenv from "dotenv";
 import aiRouter from "./routes/ai.routes.js";
 import deliveryRouter from "./routes/delivery.routes.js";
 
+// Load environment variables
 dotenv.config();
 
-// Extended WebSocket Interface
-interface ExtendedWebSocket extends WebSocket {
-  isAlive: boolean;
-}
+// Ensure required environment variables are present
+const requiredEnv = ["FRONTEND_PATH", "PUBLIC_PATH", "PORT"];
+requiredEnv.forEach((envVar) => {
+  if (!process.env[envVar]) {
+    console.error(`Missing required environment variable: ${envVar}`);
+    process.exit(1);
+  }
+});
 
 // File and directory paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "../..");
-const frontendPath = process.env.FRONTEND_PATH
-  ? path.join(projectRoot, process.env.FRONTEND_PATH)
-  : path.join(projectRoot, "front/dist");
-const publicPath = process.env.PUBLIC_PATH
-  ? path.join(projectRoot, process.env.PUBLIC_PATH)
-  : path.join(projectRoot, "front/public");
+const frontendPath = path.join(projectRoot, process.env.FRONTEND_PATH!);
+const publicPath = path.join(projectRoot, process.env.PUBLIC_PATH!);
 
-// Express app and server
+// Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
 
-// Middleware for logging in development
-app.use((req: Request, _res: Response, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
-
-// CORS configuration
+// Middleware
+app.use(express.json());
 app.use(
   cors({
     origin: [
@@ -46,59 +42,29 @@ app.use(
       "https://sendeliver.com",
     ],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept-Language"],
   })
 );
-
-// Body parsing and static file serving
-app.use(express.json());
+app.use((req: Request, _res: Response, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 app.use(express.static(frontendPath));
 app.use(express.static(publicPath));
 
-// Static routes for specific directories
+// Static routes
 const staticRoutes = [
   { url: "/pics", path: path.join(publicPath, "pics") },
   { url: "/flags", path: path.join(publicPath, "flags") },
   { url: "/animations", path: path.join(publicPath, "animations") },
   { url: "/assets", path: path.join(frontendPath, "assets") },
 ];
-staticRoutes.forEach((route) =>
-  app.use(route.url, express.static(route.path))
-);
+staticRoutes.forEach((route) => app.use(route.url, express.static(route.path)));
 
-// Logging middleware for all requests
-app.use((req, res, next) => {
-  console.log(`[LOG] ${req.method} ${req.url}`);
-  next();
-});
+// API routes
+app.use("/api/ai", aiRouter);
+app.use("/api", deliveryRouter);
 
-// API route for animations
-app.get("/api/animations", (_req: Request, res: Response) => {
-  const animationsDir = path.join(publicPath, "animations");
-
-  fs.readdir(animationsDir, (err, files) => {
-    if (err) {
-      console.error("Error reading animations directory:", err);
-      res.status(500).json({ error: "Failed to load animations." });
-    } else {
-      console.log("Available animations:", files);
-      const animations = files.filter(
-        (file) => file.endsWith(".json") || file.endsWith(".svg")
-      );
-      console.log("Filtered animations:", animations);
-      res.json(animations);
-    }
-  });
-});
-
-// Static route for serving animation files
-app.use("/animation", (req, res, next) => {
-  console.log(`[STATIC] Request received: ${req.method} ${req.url}`);
-  next();
-}, express.static(path.join(publicPath, "animations")));
-
-// Catch-all route for SPA
+// SPA fallback route
 app.get("*", (req: Request, res: Response) => {
   const possibleStaticFile = path.join(publicPath, req.path);
 
@@ -112,103 +78,63 @@ app.get("*", (req: Request, res: Response) => {
 });
 
 // WebSocket setup
-const wss = new WebSocketServer({ server });
-const setupWebSocket = (ws: ExtendedWebSocket) => {
-  ws.isAlive = true;
+const setupWebSocketServer = (server: http.Server) => {
+  const wss = new WebSocketServer({ server });
+  const heartbeatInterval = 30000;
 
-  ws.on("pong", () => {
-    ws.isAlive = true;
-  });
+  wss.on("connection", (ws) => {
+    (ws as any).isAlive = true;
 
-  ws.on("message", (message: string) => {
-    try {
-      const data = JSON.parse(message);
-      if (data.type === "ping") {
-        ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
+    ws.on("pong", () => {
+      (ws as any).isAlive = true;
+    });
+
+    ws.on("message", (message: string) => {
+      try {
+        const data = JSON.parse(message);
+        if (data.type === "ping") {
+          ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
+        }
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
       }
-    } catch (error) {
-      console.error("Error processing message:", error);
-    }
+    });
+
+    ws.on("error", (error) => {
+      console.error("WebSocket error:", error);
+    });
+
+    ws.on("close", () => {
+      console.log("WebSocket client disconnected");
+    });
   });
 
-  ws.on("error", (error: Error) => {
-    console.error("WebSocket error:", error);
+  // Heartbeat interval
+  const interval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+      if (!(ws as any).isAlive) return ws.terminate();
+      (ws as any).isAlive = false;
+      ws.ping();
+    });
+  }, heartbeatInterval);
+
+  wss.on("close", () => {
+    clearInterval(interval);
   });
 
-  ws.on("close", () => {
-    console.log("Client disconnected");
-  });
+  console.log("WebSocket server set up");
 };
 
-// WebSocket connection and heartbeat
-wss.on("connection", setupWebSocket);
-const heartbeatInterval = setInterval(() => {
-  wss.clients.forEach((ws) => {
-    const extWs = ws as ExtendedWebSocket;
-    if (!extWs.isAlive) return extWs.terminate();
-    extWs.isAlive = false;
-    extWs.ping();
-  });
-}, 30000);
+setupWebSocketServer(server);
 
-// Cleanup interval on WebSocket close
-wss.on("close", () => {
-  clearInterval(heartbeatInterval);
-});
-
-// API routes
-app.use("/api/ai", aiRouter);
-app.use("/api", deliveryRouter);
-
-// Health check route
+// Health check
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
-// Server setup
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
-const startServer = () => {
-  try {
-    // Check paths
-    if (!fs.existsSync(frontendPath)) {
-      console.warn(`Warning: Frontend dist directory not found at ${frontendPath}`);
-    }
-    if (!fs.existsSync(publicPath)) {
-      console.warn(`Warning: Frontend public directory not found at ${publicPath}`);
-    }
+// Server startup
+const PORT = parseInt(process.env.PORT || "5000", 10);
 
-    server.listen({ port: PORT, host: "0.0.0.0" }, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Failed to start server due to error:", error);
-    process.exit(1);
-  }
-};
-
-// Error handling
-process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
-  process.exit(1);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
-});
-
-process.on("SIGTERM", () => {
-  server.close(() => {
-    console.log("Server closed");
-    process.exit(0);
-  });
-});
-
-// Start server
-startServer();
-
-// Debug logging for development
-if (process.env.NODE_ENV !== "production") {
-  console.log("Debug log:", process.env.DELIVERY_API_URL);
-}
-
-export default server;

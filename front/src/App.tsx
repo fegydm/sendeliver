@@ -1,22 +1,22 @@
 // File: ./front/src/App.tsx
-// Last change: Fixed TypeScript error for window.location.pathname and added Test3Page
 
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Navigation from "@/components/sections/navbars/navbar.component";
-import HaulerPage from "./pages/hauler.page";
-import SenderPage from "./pages/sender.page";
-import SecretPage1 from "./pages/secret1.page";
-import SecretPage2 from "./pages/secret2.page";
-import NotFoundPage from "../public/notfound.page";
-import HomePage from "./pages/home.page";
-import TestPage from "./pages/test.page";
-import Test2Page from "./pages/test2";
-import Test1Page from "./pages/test1";
-import Test3Page from "./pages/test3";
+import HaulerPage from "@/pages/hauler.page";
+import SenderPage from "@/pages/sender.page";
+import SecretPage1 from "@/pages/secret1.page";
+import SecretPage2 from "@/pages/secret2.page";
+import NotFoundPage from "@/pages/notfound.page";
+import HomePage from "@/pages/home.page";
+import TestPage from "@/pages/test.page";
+import Test2Page from "@/pages/test2";
+import Test1Page from "@/pages/test1";
+import Test3Page from "@/pages/test3";
 import FooterPage from "@/components/sections/footers/footer-page.component";
-import useScrollBounce from "./hooks/useScrollBounce";
-import { TestFooterProvider } from "./lib/test-footer-context";
+import FooterTest from "@/components/sections/footers/footer-test.component";
+import FloatingButton from "@/components/elements/floating-button.element";
+import useScrollBounce from "@/hooks/useScrollBounce";
 
 const ROUTES = {
   HOME: "/",
@@ -33,11 +33,17 @@ const App: React.FC = () => {
   useScrollBounce();
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
 
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const savedMode = localStorage.getItem("darkMode");
     return savedMode ? JSON.parse(savedMode) : prefersDark;
+  });
+
+  const [isTestFooterVisible, setIsTestFooterVisible] = useState(() => {
+    // Retrieve the visibility state from localStorage or default
+    const savedState = localStorage.getItem("isTestFooterVisible");
+    return savedState ? JSON.parse(savedState) : process.env.NODE_ENV === "development";
   });
 
   useEffect(() => {
@@ -45,16 +51,20 @@ const App: React.FC = () => {
     document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
 
-  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
 
-  // Determine if the current route is Test2Page, Test1Page, or Test3Page for conditional rendering
+  const handleTestFooterClose = () => {
+    setIsTestFooterVisible(false);
+    localStorage.removeItem("isTestFooterVisible");
+  };
+
   const isTestPageWithoutHeaderFooter = [ROUTES.TEST2, ROUTES.TEST1, ROUTES.TEST3].includes(
     window.location.pathname as typeof ROUTES.TEST2
   );
 
   return (
     <>
-      {/* Header Section - hidden for Test2Page, Test1Page, and Test3Page */}
+      {/* Header Section */}
       {!isTestPageWithoutHeaderFooter && (
         <header>
           <Navigation isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
@@ -66,11 +76,11 @@ const App: React.FC = () => {
         <Routes>
           <Route path={ROUTES.HOME} element={<HomePage />} />
 
-          {ROUTES.SENDER.map(path => (
+          {ROUTES.SENDER.map((path) => (
             <Route key={path} path={path} element={<SenderPage />} />
           ))}
 
-          {ROUTES.HAULER.map(path => (
+          {ROUTES.HAULER.map((path) => (
             <Route key={path} path={path} element={<HaulerPage />} />
           ))}
 
@@ -86,14 +96,24 @@ const App: React.FC = () => {
         </Routes>
       </main>
 
-      {/* Footer Section - hidden for Test2Page, Test1Page, and Test3Page */}
-      {!isTestPageWithoutHeaderFooter && (
-        <footer>
-          <TestFooterProvider>
-            <FooterPage onPinVerified={() => {}} />
-          </TestFooterProvider>
-        </footer>
-      )}
+      {/* Footer Section */}
+{!isTestPageWithoutHeaderFooter && (
+  <footer>
+    <FooterPage
+      onAdminToggle={setIsTestFooterVisible}
+      isTestFooterVisible={isTestFooterVisible}
+    />
+    <div className="footer-floating">
+      <FloatingButton />
+    </div>
+    <FooterTest
+      isVisible={isTestFooterVisible} // Pass visibility state
+      onClose={() => setIsTestFooterVisible(false)} // Close logic
+    />
+  </footer>
+)}
+
+
     </>
   );
 };

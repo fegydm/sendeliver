@@ -1,4 +1,3 @@
-// ./front/src/components/sections/content/search-forms/manual-search-form.component.tsx
 import React from "react";
 
 interface TransportData {
@@ -11,7 +10,7 @@ interface TransportData {
 }
 
 interface ManualSearchFormProps {
-  type: "client" | "carrier";
+  type: "sender" | "hauler";
   onSubmit: (data: TransportData) => void;
   formData: TransportData;
 }
@@ -19,66 +18,61 @@ interface ManualSearchFormProps {
 const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
   type,
   onSubmit,
-  formData
+  formData,
 }) => {
+  // Update form data
   const handleUpdate = (newData: Partial<TransportData>) => {
     const updated = { ...formData, ...newData };
     onSubmit(updated);
   };
 
-  const isClient = type === "client";
+  // Determine if the type is sender
+  const isSender = type === "sender";
 
   return (
-    <div className="manual-search-form">
+    <div className={`manual-search-form manual-search-form--${type}`}>
       {/* Locations */}
-      <div className="form-row">
-        <div className="form-group">
-          <label className={!formData.pickupLocation ? "text-red-500" : ""}>
-            {isClient ? "Pickup location *" : "Current location *"}
+      <div className="manual-search-form__row">
+        <div className="manual-search-form__group">
+          <label>
+            {isSender ? "Pickup location *" : "Current location *"}
           </label>
           <input
             type="text"
             value={formData.pickupLocation || ""}
             onChange={(e) => handleUpdate({ pickupLocation: e.target.value })}
-            placeholder={!formData.pickupLocation ? "Please enter pickup location" : "Enter location"}
-            className={`form-input ${!formData.pickupLocation ? "border-red-500" : ""}`}
-            required
+            placeholder={
+              isSender
+                ? "Enter pickup location"
+                : "Enter current location"
+            }
           />
-          {!formData.pickupLocation && (
-            <div className="text-red-500 text-sm mt-1">
-              Please enter pickup location to continue
-            </div>
-          )}
         </div>
-        <div className="form-group">
+        <div className="manual-search-form__group">
           <label>
-            {isClient ? "Delivery location" : "Destination area"}
+            {isSender ? "Delivery location" : "Destination area"}
           </label>
           <input
             type="text"
             value={formData.deliveryLocation || ""}
             onChange={(e) => handleUpdate({ deliveryLocation: e.target.value })}
-            placeholder="Enter location"
+            placeholder="Enter destination location"
           />
         </div>
       </div>
 
       {/* Time details */}
-      <div className="form-row">
-        <div className="form-group">
-          <label>
-            {isClient ? "Pickup time" : "Available from"}
-          </label>
+      <div className="manual-search-form__row">
+        <div className="manual-search-form__group">
+          <label>{isSender ? "Pickup time" : "Available from"}</label>
           <input
             type="datetime-local"
             value={formData.pickupTime || ""}
             onChange={(e) => handleUpdate({ pickupTime: e.target.value })}
           />
         </div>
-        <div className="form-group">
-          <label>
-            {isClient ? "Delivery time" : "Available until"}
-          </label>
+        <div className="manual-search-form__group">
+          <label>{isSender ? "Delivery time" : "Available until"}</label>
           <input
             type="datetime-local"
             value={formData.deliveryTime || ""}
@@ -88,11 +82,9 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
       </div>
 
       {/* Weight and pallet count */}
-      <div className="form-row">
-        <div className="form-group">
-          <label>
-            {isClient ? "Weight (kg)" : "Max load (kg)"}
-          </label>
+      <div className="manual-search-form__row">
+        <div className="manual-search-form__group">
+          <label>{isSender ? "Weight (kg)" : "Max load (kg)"}</label>
           <input
             type="number"
             value={formData.weight || 0}
@@ -102,10 +94,8 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
             placeholder="0"
           />
         </div>
-        <div className="form-group">
-          <label>
-            {isClient ? "Number of pallets" : "Max pallets"}
-          </label>
+        <div className="manual-search-form__group">
+          <label>{isSender ? "Number of pallets" : "Max pallets"}</label>
           <input
             type="number"
             value={formData.palletCount || 0}
