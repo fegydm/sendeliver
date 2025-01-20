@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import dotenv from "dotenv";
 import aiRouter from "./routes/ai.routes.js";
+import geoRouter from "./routes/geo.routes.js";
 import deliveryRouter from "./routes/delivery.routes.js";
 
 // Load environment variables
@@ -63,6 +64,7 @@ staticRoutes.forEach((route) => app.use(route.url, express.static(route.path)));
 // API routes
 app.use("/api/ai", aiRouter);
 app.use("/api", deliveryRouter);
+app.use("/api/geo", geoRouter);
 
 // SPA fallback route
 app.get("*", (req: Request, res: Response) => {

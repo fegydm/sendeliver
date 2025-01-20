@@ -1,20 +1,35 @@
-// ./back/src/services/ai.services.ts
+// File: src/services/ai.services.ts
+// Last change: Added bounding box handling and dual-source geodata storage
+
 import { OpenAI } from "openai";
 import { AIRequest, AIResponse } from "../types/ai.types.js";
 import { AI_CONFIG } from "../configs/openai.config.js";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { GeocodingService } from "./geocoding.services.js";
+import fs from "fs";
 
 interface AIData {
   pickupLocation: string;
-  deliveryLocation: string;
-  pickupTime: string;
-  deliveryTime: string;
-  weight: string;
-  palletCount: number;
+  pickupCoordinates?: { lat: number; lng: number; source: "AI" | "GEO" };
+  deliveryLocation?: string;
+  deliveryCoordinates?: { lat: number; lng: number; source: "AI" | "GEO" };
+  pickupTime?: string;
+  deliveryTime?: string;
+  weight?: string;
+  palletCount?: number;
+  geoData?: {
+    pickup?: Array<{
+      lat: number;
+      lng: number;
+      source: "AI" | "GEO";
+      boundingbox?: string[];
+    }>;
+    delivery?: Array<{
+      lat: number;
+      lng: number;
+      source: "AI" | "GEO";
+      boundingbox?: string[];
+    }>;
+  };
 }
 
 export class AIService {
@@ -31,56 +46,89 @@ export class AIService {
     });
   }
 
-  static getInstance(): AIService {
+  public static getInstance(): AIService {
     if (!this.instance) {
       this.instance = new AIService();
     }
     return this.instance;
   }
 
-  private getDefaultDates() {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    return {
-      today: today.toISOString().split('T')[0],
-      tomorrow: tomorrow.toISOString().split('T')[0]
-    };
+  private logRawResponse(content: string): void {
+    console.log("[AI] Raw response:", content);
+    fs.appendFileSync(
+      "ai_responses.log",
+      `[${new Date().toISOString()}] ${content}\n`
+    );
   }
 
-  async sendMessage(request: AIRequest): Promise<AIResponse> {
+  private extractJSON(content: string): Partial<AIData> | null {
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        console.warn("[AI] No JSON found in response. Raw content:", content);
+        return null;
+      }
+
+      const parsedData = JSON.parse(jsonMatch[0]);
+      console.log("[AI] Extracted JSON data:", parsedData);
+      return parsedData;
+    } catch (error) {
+      console.error("[AI] Failed to parse JSON:", error);
+      return null;
+    }
+  }
+
+  private async fetchCoordinates(
+    location: string,
+    source: "AI" | "GEO"
+  ): Promise<{ lat: number; lng: number; boundingbox?: string[]; source: "AI" | "GEO" } | null> {
+    const geocodingService = GeocodingService.getInstance();
+
+    if (source === "GEO") {
+      try {
+        const geoData = await geocodingService.getCoordinates(location);
+        return { ...geoData, source: "GEO" };
+      } catch (error) {
+        console.error(`[GEO] Failed to fetch coordinates for "${location}"`, error);
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  public async sendMessage(request: AIRequest): Promise<AIResponse> {
     try {
       const language = request.lang1 || "en";
-      const dates = this.getDefaultDates();
 
-      const systemPromptText = `You are a logistics AI assistant. Respond in this exact format:
+      const systemPromptText = `
+      You are a logistics assistant. Based on the user's input, extract the following details:
 
-1. A friendly message that summarizes the request and asks for any additional details.
+      1. Pickup location (required)
+      2. Delivery location (optional)
+      3. Pickup time (optional)
+      4. Delivery time (optional)
+      5. Weight (optional)
+      6. Pallet count (optional)
 
-2. Then on a new line, provide this exact JSON (no additional text, just the JSON):
-{
-  "pickupLocation": "city name only",
-  "deliveryLocation": "city name only",
-  "pickupTime": "YYYY-MM-DD",
-  "deliveryTime": "YYYY-MM-DD",
-  "weight": "string (in kg, e.g., '500kg')",
-  "palletCount": number
-}
+      For the pickup and delivery locations, always provide GPS coordinates (latitude and longitude) and bounding box (if possible).
 
-Important:
-- Use precisely this JSON format with these exact field names
-- Put the JSON on a new line after your message
-- Don't add any text before or after the JSON
-- For locations, use only city names, without country or address
-- Respond in language: ${language}
+      Respond in this format:
+      {
+        "pickupLocation": "<city>",
+        "pickupCoordinates": { "lat": <latitude>, "lng": <longitude>, "boundingbox": [<south>, <north>, <west>, <east>] },
+        "deliveryLocation": "<city>",
+        "deliveryCoordinates": { "lat": <latitude>, "lng": <longitude>, "boundingbox": [<south>, <north>, <west>, <east>] },
+        "pickupTime": "<YYYY-MM-DD>",
+        "deliveryTime": "<YYYY-MM-DD>",
+        "weight": "<number>kg",
+        "palletCount": <number>
+      }
 
-Default values to use if information is not provided:
-- Empty string for locations
-- Today (${dates.today}) for pickup time
-- Tomorrow (${dates.tomorrow}) for delivery time
-- "0kg" for weight
-- 0 for pallet count`;
+      For missing optional details, include them as \`null\` or ask the user for clarification.
+      `;
+
+      console.log("[AI] Prompt sent to OpenAI:", systemPromptText);
 
       const completion = await this.openai.chat.completions.create({
         model: AI_CONFIG.model,
@@ -93,67 +141,62 @@ Default values to use if information is not provided:
       });
 
       const content = completion.choices[0]?.message?.content || "";
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      
-      // Defaultné hodnoty
-      const defaultData: AIData = {
-        pickupLocation: "",
-        deliveryLocation: "",
-        pickupTime: dates.today,
-        deliveryTime: dates.tomorrow,
-        weight: "0kg",
-        palletCount: 0,
-      };
 
-      let messageContent = content;
-      let data = { ...defaultData };
+      this.logRawResponse(content);
 
-      if (jsonMatch) {
-        try {
-          messageContent = content.substring(0, jsonMatch.index).trim();
-          const parsedData = JSON.parse(jsonMatch[0]);
+      const extractedData = this.extractJSON(content);
 
-          // Spracovanie a validácia každého poľa
-          data = {
-            pickupLocation: parsedData.pickupLocation?.trim() || defaultData.pickupLocation,
-            deliveryLocation: parsedData.deliveryLocation?.trim() || defaultData.deliveryLocation,
-            pickupTime: this.validateDate(parsedData.pickupTime) ? parsedData.pickupTime : defaultData.pickupTime,
-            deliveryTime: this.validateDate(parsedData.deliveryTime) ? parsedData.deliveryTime : defaultData.deliveryTime,
-            weight: this.validateWeight(parsedData.weight) ? parsedData.weight : defaultData.weight,
-            palletCount: this.validatePalletCount(parsedData.palletCount) ? parsedData.palletCount : defaultData.palletCount
-          };
-
-          console.log('Extracted data:', data);
-        } catch (error) {
-          console.error("Failed to parse JSON:", error);
-          console.log("Raw JSON string:", jsonMatch[0]);
-        }
-      } else {
-        console.log('No JSON found in response, using defaults:', defaultData);
+      if (!extractedData || !extractedData.pickupLocation) {
+        throw new Error("Failed to extract required data from AI response.");
       }
 
+      const geoData: AIData["geoData"] = {};
+
+      // Fetch AI and GEO coordinates for pickup
+      if (extractedData.pickupCoordinates) {
+        geoData.pickup = geoData.pickup || [];
+        geoData.pickup.push({
+          ...extractedData.pickupCoordinates,
+          source: "AI",
+        });
+      }
+      const geoPickup = await this.fetchCoordinates(
+        extractedData.pickupLocation,
+        "GEO"
+      );
+      if (geoPickup) {
+        geoData.pickup = geoData.pickup || [];
+        geoData.pickup.push(geoPickup);
+      }
+
+      // Fetch AI and GEO coordinates for delivery
+      if (extractedData.deliveryCoordinates) {
+        geoData.delivery = geoData.delivery || [];
+        geoData.delivery.push({
+          ...extractedData.deliveryCoordinates,
+          source: "AI",
+        });
+      }
+      if (extractedData.deliveryLocation) {
+        const geoDelivery = await this.fetchCoordinates(
+          extractedData.deliveryLocation,
+          "GEO"
+        );
+        if (geoDelivery) {
+          geoData.delivery = geoData.delivery || [];
+          geoData.delivery.push(geoDelivery);
+        }
+      }
+
+      extractedData.geoData = geoData;
+
       return {
-        content: messageContent,
-        data: data,
+        content,
+        data: extractedData,
       };
     } catch (error) {
-      console.error("OpenAI API Error:", error);
+      console.error("[AI] OpenAI API Error:", error);
       throw error;
     }
-  }
-
-  private validateDate(date: string): boolean {
-    if (!date) return false;
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    return dateRegex.test(date) && !isNaN(Date.parse(date));
-  }
-
-  private validateWeight(weight: string): boolean {
-    if (!weight) return false;
-    return /^\d+kg$/.test(weight);
-  }
-
-  private validatePalletCount(count: number): boolean {
-    return typeof count === 'number' && count >= 0 && count <= 33;
   }
 }
