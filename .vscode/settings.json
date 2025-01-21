@@ -23,7 +23,7 @@
   "remote.autoForwardPorts": true,
   "remote.forwardOnOpen": true,
   "files.associations": {
-    "*.css": "postcss"
+    "*.css": "css"
   },
   "cSpell.words": [
     "contenteditable",

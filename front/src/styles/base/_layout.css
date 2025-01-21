@@ -1,6 +1,11 @@
 /* File: src/styles/base/_layout.css */
 
-
+.body {
+  margin: 10px 0px;
+}
+.body {
+  padding-left: 10px;
+}
 
 
 /* Zarovnanie prvkov v navbar__primary */

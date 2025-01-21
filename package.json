@@ -5,13 +5,9 @@
   "private": true,
   "scripts": {
     "clean": "node back/src/scripts/clean.js",
-    "install": "npm install --prefix front && npm install --prefix back",
-    "build": "npm run build --prefix front && npm run build --prefix back",
-    "reset": "npm run clean && npm install && npm run build",
-    "dev": "npm run dev:front & npm run dev:back",
-    "dev:front": "npm run dev --prefix front",
-    "dev:back": "npm run dev --prefix back"
-  },
-  "dependencies": {
+    "install": "cd back && npm install & cd front && npm install",
+    "build": "cd back && npm run build & cd front && npm run build",
+    "dev": "cd back && npm run dev & cd front && npm run dev",
+    "start": "cd back && npm start & cd front && npm run preview"
   }
 }

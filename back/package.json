@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "cross-env NODE_ENV=development tsx watch src/server.ts",
+    "start": "PORT=5000 cross-env NODE_ENV=production node dist/server.js",
+    "dev": "PORT=5001 cross-env NODE_ENV=development tsx watch src/server.ts",
     "clean": "npx rimraf dist node_modules",
     "build": "tsc --project tsconfig.json",
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",

@@ -1,5 +1,5 @@
 // File: src/components/AISearchForm.tsx
-// Last change: Fixed API request format and response type
+// Last change: Removed TailwindCSS and all styles, translated to English
 
 import { useState } from "react";
 
@@ -33,14 +33,14 @@ const AISearchForm = () => {
         body: JSON.stringify({ 
           message: prompt,
           type: "sender",
-          lang1: "sk"
+          lang1: "en"
         }),
       });
-  
+
       if (!response.ok) {
         throw new Error(`API responded with status ${response.status}`);
       }
-  
+
       const data = await response.json();
       console.log("AI Response:", data);
       setResult(data);
@@ -50,40 +50,34 @@ const AISearchForm = () => {
   };
 
   return (
-    <div className="p-4">
+    <div>
       <textarea
-        className="w-full p-2 border rounded-lg mb-4"
-        placeholder="Opíšte vaše prepravné potreby (napr. 'Potrebujem odviezť 2 palety z Košíc do Bratislavy budúci pondelok')"
+        placeholder="Describe your transportation needs (e.g., 'I need to transport 2 pallets from Košice to Bratislava next Monday')"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         rows={4}
       />
-      <button 
-        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-        onClick={handleSearch}
-      >
-        Spýtať sa AI
-      </button>
+      <button onClick={handleSearch}>Ask AI</button>
 
       {result && (
-        <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-          <h3 className="font-bold mb-2">Extrahované údaje:</h3>
-          <p><strong>Nakládka:</strong> {result.pickupLocation}</p>
+        <div>
+          <h3>Extracted Data:</h3>
+          <p><strong>Pickup Location:</strong> {result.pickupLocation}</p>
           {result.coordinates?.pickup && (
-            <p className="ml-4 text-sm text-gray-600">
+            <p>
               GPS: {result.coordinates.pickup.lat}, {result.coordinates.pickup.lng}
             </p>
           )}
-          <p><strong>Vykládka:</strong> {result.deliveryLocation}</p>
+          <p><strong>Delivery Location:</strong> {result.deliveryLocation}</p>
           {result.coordinates?.delivery && (
-            <p className="ml-4 text-sm text-gray-600">
+            <p>
               GPS: {result.coordinates.delivery.lat}, {result.coordinates.delivery.lng}
             </p>
           )}
-          <p><strong>Dátum nakládky:</strong> {result.pickupTime}</p>
-          <p><strong>Dátum vykládky:</strong> {result.deliveryTime}</p>
-          <p><strong>Váha:</strong> {result.weight}</p>
-          <p><strong>Počet paliet:</strong> {result.palletCount}</p>
+          <p><strong>Pickup Date:</strong> {result.pickupTime}</p>
+          <p><strong>Delivery Date:</strong> {result.deliveryTime}</p>
+          <p><strong>Weight:</strong> {result.weight}</p>
+          <p><strong>Number of Pallets:</strong> {result.palletCount}</p>
         </div>
       )}
     </div>
