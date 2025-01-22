@@ -5,9 +5,17 @@
   "private": true,
   "scripts": {
     "clean": "node back/src/scripts/clean.js",
-    "install": "cd back && npm install & cd front && npm install",
-    "build": "cd back && npm run build & cd front && npm run build",
-    "dev": "cd back && npm run dev & cd front && npm run dev",
-    "start": "cd back && npm start & cd front && npm run preview"
+    "install": "cd back && npm install && cd ../front && npm install",
+    "build": "cd back && npm run build && cd ../front && npm run build",
+    "dev": "cd back && npm run dev && cd ../front && npm start",
+    "dev:back": "cross-env NODE_ENV=development tsx watch back/src/server.ts",
+    "dev:front": "cd front && npm start",
+    "start": "cd back && npm start && cd ../front && npm run preview"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "concurrently": "^8.0.0",
+    "cross-env": "^7.0.3",
+    "tsx": "^3.12.7"
   }
 }
