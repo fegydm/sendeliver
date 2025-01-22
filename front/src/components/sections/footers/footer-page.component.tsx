@@ -1,9 +1,11 @@
 // File: ./front/src/components/sections/footers/footer-page.component.tsx
 
 import React, { useState } from "react";
+
 import FooterSocial from "@/components/sections/footers/FooterSocial";
-import FooterMenu from "@/components/sections/footers/FooterMenu";
 import FooterCopyright from "@/components/sections/footers/FooterCopyright";
+import FooterMenu from "@/components/sections/footers/FooterMenu";
+
 import PinModal from "@/components/modals/pin-modal.component";
 
 interface FooterPageProps {
@@ -33,8 +35,8 @@ const FooterPage: React.FC<FooterPageProps> = ({ onAdminToggle, isTestFooterVisi
 
       {/* Menu and Copyright Section */}
       <div className="footer__row">
-        <FooterMenu />
         <FooterCopyright />
+        <FooterMenu />
       </div>
 
       {/* Admin Button */}

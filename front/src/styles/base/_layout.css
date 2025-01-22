@@ -1,191 +1,49 @@
 /* File: src/styles/base/_layout.css */
 
-.body {
-  margin: 10px 0px;
-}
-.body {
-  padding-left: 10px;
-}
+.body { margin:10px 0; padding-left:10px; }
+
+/* Navbar Primary */
+.navbar__primary { display:flex; align-items:center; gap:1rem; }
+.navbar { display:flex; justify-content:space-between; align-items:center; background-color:var(--navbar-bg-color, rgb(255,233,233)); padding:0 20px; }
 
 
-/* Zarovnanie prvkov v navbar__primary */
-.navbar__primary {
-    display: flex;
-    align-items: center;
-    gap: 1rem; /* Medzera medzi prvkami */
-}
-.navbar {
-    display: flex; /* Aktivuje Flexbox */
-    justify-content: space-between; /* Rozmiestni podtriedy rovnomerne */
-    align-items: center; /* Vertikálne zarovnanie obsahu */
-    background-color: var(--navbar-bg-color,rgb(255, 233, 233)); /* Nastavenie pozadia */
-    padding: 0 16px; /* Horizontálne odsadenie */
-    }
-.banner__left { flex: 1; /* Occupy half of the wrapper */}  
-.banner__right { flex: 1; /* Occupy half of the wrapper */}  
+/* Banner */
+.banner { display:flex; padding:20px; height:100%; background-color:var(--navbar-bg-color, rgb(255,200,200)); }
+.banner__left, .banner__right { flex:1; }
+.banner__animation { display:flex; justify-content:center; }
+.banner__right { text-align:center; }
 
 
-
-    /* Banner core */
-.banner {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  background-color: var(--navbar-bg-color,rgb(255, 200, 200)); /* Nastavenie pozadia */
-}
-
-
-.banner__animation {
-    display: flex; /* Activate flexbox layout */
-    justify-content: center; /* Horizontally center */
-  }
 /* Content Layout */
+.content { background-color:var(--navbar-bg-color, rgb(255,240,240)); }
+.content__navigation { display:flex; justify-content:center; align-items:center; margin:0 auto; }
+.button--left { color:var(--sender-text-color, rgb(184,36,134)); }
+.button--right { color:var(--hauler-text-color, #28a745); }
+.content__wrapper { display:flex; }
+
+.content__sender { flex:1; padding:20px; }
+.content__sender .content__navigation { text-align:right; }
+.content__hauler { flex:1; padding:20px; }
+.ai-form__textarea { width:100%; max-width:100%; }
+.ai-form { max-width:600px; margin:0 auto; }
+
+/* Quick Stats */
+.quick-stats { display:flex; justify-content:flex-start; align-items:center; gap:30px; background-color:var(--navbar-bg-color, rgb(255,200,200)); padding:20px; }
 
 
-/* Wrapper for two sections */
-.content__wrapper {
-  display: flex;
-  background-color: var(--navbar-bg-color,rgb(255, 240, 240));
-}
-
-/* Sender Section (Left) */
-.content__sender .content__navigation { text-align: right; } /* Align text (and inline elements like buttons) to the right */
-.content__sender { flex: 1; } /* Occupy half of the wrapper */  
-.content__hauler { flex: 1; } /* Occupy half of the wrapper */ 
-
-.button--left { color: var(--sender-text-color,rgb(184, 36, 134));}
-.button--right { color: var(--hauler-text-color, #28a745)}
-
-.banner__right { text-align: center } /* Optional: Centers text inside child elements */
-
-.quick-stats {
-    display: flex; /* Enable flexbox layout */
-    justify-content: flex-start; /* Align items to the start (optional) */
-    align-items: center; /* Center items vertically */
-    gap: 30px; /* Add spacing between items */
-    background-color:var(--navbar-bg-color,rgb(255, 200, 200)); /* Set background color to red */
-    padding: 10px; /* Optional padding for inner spacing */
-}
-
-
-
-/* File: ./front/src/styles/components/footer-test.css */
-
-/* Container styling */
-.footer-test {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    background-color: var(--footer-test-bg, #f4f4f4);
-    padding: 20px;
-}
-
-/* Left section: Theme Switcher */
-.footer-test__left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Right section: Modals Control */
-.footer-test__right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Container inside FooterTest */
-.footer-test__container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-
-
-
-
-
-
+/* Page Footer Section */
+.footer__page { background-color:var(--footer-page-bg-color, rgb(255,233,233)); padding:20px; position:relative; }
+.footer__social { text-align:center; }
+.footer__row { display:flex; justify-content:flex-end; align-items:center; ; position:relative; }
+.footer__copyright { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; }
+.footer__menu { display:flex; gap:16px; margin-left:auto; }
+.footer__menu-list { display:flex; gap:15px; list-style:none; padding:0; margin:0; }
+.footer__menu-link { text-decoration:none; color:var(--text-color, #333); transition:color 0.3s ease; }
+.footer__menu-link:hover { color:var(--text-hover-color, #000); }
 
 
 /* Test Footer Section */
-.footer__test {
-   
-    background-color: var(--footer-test-bg-color, #e0e0e0);
-    
-}
+.footer__test { display:flex; flex-direction:column; gap:16px; background-color:var(--footer-test-bg, rgb(255, 248, 248)); padding:20px; }
+.footer__test__left, .footer-test__right { display:flex; align-items:center; gap:10px; }
+.footer__test__container { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
 
-
-/* Footer Social Section */
-.footer__social {
-    text-align: center;
-   
-}
-
-/* Footer Row Section */
-.footer__row {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    max-width: var(--max-content-width, 1200px);
-}
-
-/* Footer Copyright */
-.footer__copyright {
-    text-align: center;
-    flex: 1; /* Takes available space between menu and social */
-    margin-right: auto;
-}
-
-/* Footer Menu */
-.footer__menu {
-    display: flex;
-    justify-content: flex-end; /* Align menu items to the right */
-    flex: 1;
-}
-
-.footer__menu-list {
-    display: flex;
-    gap: 15px;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.footer__menu-item {}
-
-.footer__menu-link {
-    text-decoration: none;
-    color: var(--text-color, #333);
-    transition: color 0.3s ease;
-}
-
-.footer__menu-link:hover {
-    color: var(--text-hover-color, #000);
-}
-
-
-
-
-
-/* File: ./front/src/styles/components/footer.css */
-
-/* Menu styling */
-.footer__menu {
-    display: flex; /* Flexbox layout for horizontal alignment */
-    justify-content: flex-end; /* Align menu items to the right */
-    gap: 16px; /* Space between menu items */
-}
-
-.footer__menu-item {
-    text-decoration: none; /* Remove underline */
-    color: var(--footer-menu-item-color, #333); /* Default color */
-    font-size: 14px;
-    transition: color 0.3s ease;
-}
-
-.footer__menu-item:hover {
-    color: var(--footer-menu-item-hover-color, #007bff); /* Hover color */
-}

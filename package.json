@@ -5,17 +5,21 @@
   "private": true,
   "scripts": {
     "clean": "node back/src/scripts/clean.js",
-    "install": "cd back && npm install && cd ../front && npm install",
-    "build": "cd back && npm run build && cd ../front && npm run build",
-    "dev": "cd back && npm run dev && cd ../front && npm start",
-    "dev:back": "cross-env NODE_ENV=development tsx watch back/src/server.ts",
-    "dev:front": "cd front && npm start",
-    "start": "cd back && npm start && cd ../front && npm run preview"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "concurrently": "^8.0.0",
-    "cross-env": "^7.0.3",
-    "tsx": "^3.12.7"
+    "install:back": "cd back && npm install",
+    "install:front": "cd front && npm install",
+    "install": "npm run install:parallel",
+    "install:parallel": "npm run install:back & npm run install:front",
+    "build:back": "cd back && npm run build",
+    "build:front": "cd front && npm run build",
+    "build": "npm run build:parallel",
+    "build:parallel": "npm run build:back & npm run build:front",
+    "dev:back": "cd back && npm run dev",
+    "dev:front": "cd front && npm run dev",
+    "dev": "npm run dev:parallel",
+    "dev:parallel": "npm run dev:back & npm run dev:front",
+    "start:back": "cd back && npm start",
+    "start:front": "cd front && npm run preview",
+    "start": "npm run start:parallel",
+    "start:parallel": "npm run start:back & npm run start:front"
   }
 }

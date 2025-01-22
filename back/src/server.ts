@@ -140,3 +140,10 @@ const PORT = parseInt(process.env.PORT || "5000", 10);
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+console.log('NODE_ENV:', process.env.NODE_ENV);
+if (process.env.NODE_ENV === 'development') {
+  console.log('Running in development mode');
+} else {
+  console.log('Running in production mode');
+}

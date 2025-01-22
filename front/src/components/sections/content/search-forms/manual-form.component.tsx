@@ -20,20 +20,18 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
   onSubmit,
   formData,
 }) => {
-  // Update form data
   const handleUpdate = (newData: Partial<TransportData>) => {
     const updated = { ...formData, ...newData };
     onSubmit(updated);
   };
 
-  // Determine if the type is sender
   const isSender = type === "sender";
 
   return (
-    <div className={`manual-search-form manual-search-form--${type}`}>
+    <div className={`manual-form--${type}`}>
       {/* Locations */}
-      <div className="manual-search-form__row">
-        <div className="manual-search-form__group">
+      <div className="manual-form__row">
+        <div className="manual-form__group">
           <label>
             {isSender ? "Pickup location *" : "Current location *"}
           </label>
@@ -42,13 +40,11 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
             value={formData.pickupLocation || ""}
             onChange={(e) => handleUpdate({ pickupLocation: e.target.value })}
             placeholder={
-              isSender
-                ? "Enter pickup location"
-                : "Enter current location"
+              isSender ? "Enter pickup location" : "Enter current location"
             }
           />
         </div>
-        <div className="manual-search-form__group">
+        <div className="manual-form__group">
           <label>
             {isSender ? "Delivery location" : "Destination area"}
           </label>
@@ -62,8 +58,8 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
       </div>
 
       {/* Time details */}
-      <div className="manual-search-form__row">
-        <div className="manual-search-form__group">
+      <div className="manual-form__row">
+        <div className="manual-form__group">
           <label>{isSender ? "Pickup time" : "Available from"}</label>
           <input
             type="datetime-local"
@@ -71,7 +67,7 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
             onChange={(e) => handleUpdate({ pickupTime: e.target.value })}
           />
         </div>
-        <div className="manual-search-form__group">
+        <div className="manual-form__group">
           <label>{isSender ? "Delivery time" : "Available until"}</label>
           <input
             type="datetime-local"
@@ -82,8 +78,8 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
       </div>
 
       {/* Weight and pallet count */}
-      <div className="manual-search-form__row">
-        <div className="manual-search-form__group">
+      <div className="manual-form__row">
+        <div className="manual-form__group">
           <label>{isSender ? "Weight (kg)" : "Max load (kg)"}</label>
           <input
             type="number"
@@ -94,7 +90,7 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
             placeholder="0"
           />
         </div>
-        <div className="manual-search-form__group">
+        <div className="manual-form__group">
           <label>{isSender ? "Number of pallets" : "Max pallets"}</label>
           <input
             type="number"

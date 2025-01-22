@@ -5,10 +5,10 @@ import ThemeEditorModal from "@/components/modals/theme-editor.modal";
 import { themeDefaults } from "@/constants/theme-defaults";
 
 interface ThemeSwitcherProps {
-  is3DMode: boolean;
+  is3DMode?: boolean; // Marked as optional
 }
 
-const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ is3DMode }) => {
+const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ is3DMode = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const switchTheme = (theme: "none" | "basic" | "default" | "testing") => {

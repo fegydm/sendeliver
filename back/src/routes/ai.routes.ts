@@ -1,4 +1,4 @@
-// File: src/routes/ai.routes.ts
+// File: ./back/src/routes/ai.routes.ts
 // Last change: Added /chat endpoint and ensured prompts are explicitly preserved
 
 import { Router, Request, Response } from "express";
@@ -16,7 +16,7 @@ const logRawData = (label: string, data: any) => {
 const createPromptByType = {
   sender: (message: string) => `
     You are a JSON extraction API. Extract logistics details from: "${message}"
-    Rules:
+    Rulez:
     1. ONLY respond with JSON
     2. DO NOT add any other text
     3. DO NOT ask questions

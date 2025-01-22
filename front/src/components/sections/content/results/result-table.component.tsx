@@ -1,3 +1,6 @@
+// File: src/components/ResultTable.tsx
+// Last change: Unified sender and hauler logic into a single component
+
 import React from "react";
 
 export interface SenderResultData {
@@ -20,35 +23,30 @@ interface ResultTableProps {
 }
 
 const ResultTable: React.FC<ResultTableProps> = ({ type, data }) => {
-  // Define columns based on type
+  // Define columns dynamically based on type
   const columns =
     type === "sender"
-      ? ["Distance", "Vehicle Type", "Availability Time", "ETA"]
-      : ["Pickup", "Delivery", "Pallets", "Weight"];
-
-  // Map column names to data keys
-  const getKeyForColumn = (column: string): string => {
-    const columnMappings: Record<string, string> = {
-      Distance: "distance",
-      "Vehicle Type": "vehicleType",
-      "Availability Time": "availabilityTime",
-      ETA: "eta",
-      Pickup: "pickup",
-      Delivery: "delivery",
-      Pallets: "pallets",
-      Weight: "weight",
-    };
-    return columnMappings[column] || column.toLowerCase();
-  };
+      ? [
+          { label: "Distance", key: "distance" },
+          { label: "Vehicle Type", key: "vehicleType" },
+          { label: "Availability Time", key: "availabilityTime" },
+          { label: "ETA", key: "eta" },
+        ]
+      : [
+          { label: "Pickup", key: "pickup" },
+          { label: "Delivery", key: "delivery" },
+          { label: "Pallets", key: "pallets" },
+          { label: "Weight", key: "weight" },
+        ];
 
   return (
-    <div className={`result-table result-table--${type}`}>
+    <div className={`result-table--${type}`}>
       <table className="result-table__table">
         <thead className="result-table__header">
           <tr className="result-table__header-row">
             {columns.map((col) => (
-              <th key={col} className="result-table__header-cell">
-                {col}
+              <th key={col.key} className="result-table__header-cell">
+                {col.label}
               </th>
             ))}
           </tr>
@@ -56,14 +54,11 @@ const ResultTable: React.FC<ResultTableProps> = ({ type, data }) => {
         <tbody className="result-table__body">
           {data.map((row, rowIndex) => (
             <tr key={rowIndex} className="result-table__body-row">
-              {columns.map((col) => {
-                const key = getKeyForColumn(col);
-                return (
-                  <td key={col} className="result-table__body-cell">
-                    {(row as any)[key]?.toString() || "N/A"}
-                  </td>
-                );
-              })}
+              {columns.map((col) => (
+                <td key={col.key} className="result-table__body-cell">
+                  {(row as any)[col.key]?.toString() || "N/A"}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
