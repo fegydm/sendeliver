@@ -4,10 +4,14 @@ node_modules
 .pnp
 .pnp.js
 
+# Data raw
+txt/raw
+txt/processed
+
+
 # Production builds
 /front/build
 /front/dist
-/front/txt
 /back/build
 /back/dist
 dist
