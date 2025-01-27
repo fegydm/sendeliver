@@ -7,6 +7,7 @@ node_modules
 # Production builds
 /front/build
 /front/dist
+/front/txt
 /back/build
 /back/dist
 dist
