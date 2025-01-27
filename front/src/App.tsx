@@ -5,8 +5,8 @@ import { Routes, Route } from "react-router-dom";
 import Navigation from "@/components/sections/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
-import SecretPage1 from "@/pages/secret1.page";
-import SecretPage2 from "@/pages/secret2.page";
+import JozoPage from "@/pages/jozo.page"; // Updated
+import LukyPage from "@/pages/luky.page"; // Updated
 import NotFoundPage from "@/pages/notfound.page";
 import HomePage from "@/pages/home.page";
 import TestPage from "@/pages/test.page";
@@ -26,7 +26,7 @@ const ROUTES = {
   TEST2: "/test2",
   TEST1: "/test1",
   TEST3: "/test3",
-  SECRET: ["/secret1", "/secret2"],
+  SECRET: ["/jozo", "/luky"], // Updated to /jozo and /luky
 } as const;
 
 const App: React.FC = () => {
@@ -41,7 +41,6 @@ const App: React.FC = () => {
   });
 
   const [isTestFooterVisible, setIsTestFooterVisible] = useState(() => {
-    // Retrieve the visibility state from localStorage or default
     const savedState = localStorage.getItem("isTestFooterVisible");
     return savedState ? JSON.parse(savedState) : process.env.NODE_ENV === "development";
   });
@@ -89,31 +88,29 @@ const App: React.FC = () => {
           <Route path={ROUTES.TEST1} element={<Test1Page />} />
           <Route path={ROUTES.TEST3} element={<Test3Page />} />
 
-          <Route path="/secret1" element={<SecretPage1 />} />
-          <Route path="/secret2" element={<SecretPage2 />} />
+          <Route path="/jozo" element={<JozoPage />} /> {/* Updated */}
+          <Route path="/luky" element={<LukyPage />} /> {/* Updated */}
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
 
       {/* Footer Section */}
-{!isTestPageWithoutHeaderFooter && (
-  <footer>
-    <FooterPage
-      onAdminToggle={setIsTestFooterVisible}
-      isTestFooterVisible={isTestFooterVisible}
-    />
-    <div className="footer-floating">
-      <FloatingButton />
-    </div>
-    <FooterTest
-      isVisible={isTestFooterVisible} // Pass visibility state
-      onClose={() => setIsTestFooterVisible(false)} // Close logic
-    />
-  </footer>
-)}
-
-
+      {!isTestPageWithoutHeaderFooter && (
+        <footer>
+          <FooterPage
+            onAdminToggle={setIsTestFooterVisible}
+            isTestFooterVisible={isTestFooterVisible}
+          />
+          <div className="footer-floating">
+            <FloatingButton />
+          </div>
+          <FooterTest
+            isVisible={isTestFooterVisible}
+            onClose={() => setIsTestFooterVisible(false)}
+          />
+        </footer>
+      )}
     </>
   );
 };

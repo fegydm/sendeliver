@@ -1,7 +1,4 @@
-// File: src/components/sections/content/search-forms/ai-form.component.tsx
-// Last change: Restored functionality from AISearchForm
-
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface Coordinates {
   lat: number;
@@ -29,6 +26,26 @@ interface AIFormProps {
 const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState<AIResponse | null>(null);
+  const [maxWidth, setMaxWidth] = useState<number>(600); // Initial max width
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Function to update maxWidth based on container width
+    const updateMaxWidth = () => {
+      if (containerRef.current) {
+        setMaxWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    // Initial update and listener for window resize
+    updateMaxWidth();
+    window.addEventListener("resize", updateMaxWidth);
+
+    // Cleanup listener on unmount
+    return () => {
+      window.removeEventListener("resize", updateMaxWidth);
+    };
+  }, []);
 
   const handleSearch = async () => {
     try {
@@ -56,13 +73,18 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
   };
 
   return (
-    <div className={`ai-form--${type}`}>
+    <div ref={containerRef} className={`ai-form--${type}`} style={{ maxWidth: "600px" }}>
       <textarea
         className="ai-form__textarea"
         placeholder={`Describe your ${type === "sender" ? "transportation" : "carrier"} needs`}
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         rows={4}
+        style={{
+          width: "100%",
+          maxWidth: `${maxWidth}px`, // Dynamically update max width
+          minWidth: "200px",
+        }}
       />
       <button className="ai-form__button" onClick={handleSearch}>
         {type === "sender" ? "Ask AI" : "Find Requests"}

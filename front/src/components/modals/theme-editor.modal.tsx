@@ -6,7 +6,7 @@ import { Input, Button, Tabs } from "@/components/ui";
 import GeneralModal from "@/components/modals/general.modal";
 import ColorPaletteModal from "@/components/modals/color-palette.modal";
 
-type ThemeField =
+export type ThemeField =
     | 'color-page-bg'
     | 'color-navbar-bg'
     | 'color-footer-bg'

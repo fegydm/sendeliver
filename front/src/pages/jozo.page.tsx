@@ -1,27 +1,30 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 import PinForm from "./pin-form.component";
 
-const SecretPage = () => {
+const JozoPage: React.FC = () => {
   const [isPinVerified, setIsPinVerified] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isPinVerified) {
       // Preload video into cache
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'video';
-      link.href = 'https://storage.googleapis.com/sendel/video/vj.mp4';
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "video";
+      link.href = "https://storage.googleapis.com/sendel/video/vj.mp4";
       document.head.appendChild(link);
 
       // Set timeout to revert to PIN form after inactivity
-      const timer = setTimeout(() => {
+      timerRef.current = setTimeout(() => {
         setIsPinVerified(false);
       }, 60000); // 1 minute inactivity
 
       return () => {
-        clearTimeout(timer);
-        document.head.removeChild(link); // Cleanup the preloaded video link
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+        }
+        document.head.removeChild(link); // Cleanup preloaded video link
       };
     }
   }, [isPinVerified]);
@@ -42,10 +45,10 @@ const SecretPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 py-12 px-4 relative">
+    <div className="min-h-screen bg-gray-900 py-12 px-4">
       <div className="max-w-5xl mx-auto">
-        {/* Video Container */}
-        {isPinVerified && (
+        {/* Video Player */}
+        {isPinVerified ? (
           <>
             <div className="relative pt-[56.25%] bg-black rounded-lg overflow-hidden">
               <video
@@ -78,10 +81,8 @@ const SecretPage = () => {
               </button>
             </div>
           </>
-        )}
-
-        {/* PIN Form */}
-        {!isPinVerified && (
+        ) : (
+          // PIN Form Overlay
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <PinForm onCorrectPin={() => setIsPinVerified(true)} />
           </div>
@@ -91,4 +92,4 @@ const SecretPage = () => {
   );
 };
 
-export default SecretPage;
+export default JozoPage;

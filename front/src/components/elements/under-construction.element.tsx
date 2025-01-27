@@ -1,43 +1,34 @@
-// ./front/src/components/under-construction.component.tsx
-import { useEffect, useRef } from "react";
-// import lottie from "lottie-web/build/player/lottie_light";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
-// import "./under-construction.component.css"; // Import CSS styles old version
+// File: src/components/elements/under-construction.element.tsx
+// Last change: Updated to use LottieLightPlayer with light animations
 
-const UnderConstruction = () => {
-  const navigate = useNavigate();
-  const container = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<any>(null);
+import React, { useRef } from "react";
+import LottieLightPlayer, {
+  LottieLightPlayerRef,
+} from "@/components/elements/animation/lottie-light-player";
 
-  useEffect(() => {
-    if (container.current) {
-      animationRef.current = lottie.loadAnimation({
-        container: container.current,
-        renderer: "svg",
-        loop: true,
-        autoplay: true,
-        path: "/animations/under-construction.json",
-      });
-    }
+// Import JSON animation
+import animation from "@/assets/under-construction.json";
 
-    return () => {
-      if (animationRef.current) {
-        animationRef.current.destroy();
-      }
-    };
-  }, []);
+const UnderConstruction: React.FC = () => {
+  const playerRef = useRef<LottieLightPlayerRef>(null);
 
   return (
     <div className="under-construction">
-      <div ref={container} className="animation-container" />
+      <div className="animation-container">
+        <LottieLightPlayer
+          ref={playerRef}
+          animationData={animation}
+          width={200}
+          height={200}
+          loop={true}
+          autoplay={true}
+        />
+      </div>
       <h1 className="title">UNDER CONSTRUCTION</h1>
-      <p className="description">vytrim a idz domu abo nazad</p>
+      <p className="description">Vytrim a idz domu abo nazad.</p>
       <div className="button-container">
-        <Link to="/">
-          <button className="button">HOME</button>
-        </Link>
-        <button onClick={() => navigate(-1)} className="button button-secondary">
+        <button onClick={() => window.location.assign("/")}>HOME</button>
+        <button onClick={() => window.history.back()} className="button-secondary">
           BACK
         </button>
       </div>

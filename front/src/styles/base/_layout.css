@@ -47,3 +47,28 @@
 .footer__test__left, .footer-test__right { display:flex; align-items:center; gap:10px; }
 .footer__test__container { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
 
+/* File: src/styles/components/ai-form.css */
+.ai-form__textarea {
+    width: 100%; /* Textarea bude vyplňovať dostupnú šírku */
+    max-width: 100%; /* Maximálna šírka je obmedzená na šírku rodičovského kontajnera */
+    min-width: 200px; /* Minimálna šírka pri zmenšovaní */
+    box-sizing: border-box; /* Zohľadni padding a border pri nastavovaní šírky */
+    resize: both; /* Povoliť voľné zväčšovanie a zmenšovanie */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    font-family: inherit;
+    overflow: auto; /* Zabezpečiť scrollbar pri nadmernom obsahu */
+  }
+
+  /* File: src/styles/components/content.css */
+.content__sender {
+    display: flex; /* Udržanie správneho rozloženia */
+    flex-direction: column; /* Obsah bude vertikálne zarovnaný */
+    align-items: center; /* Zarovnanie textarea na stred */
+    max-width: 80%; /* Obmedzenie maximálnej šírky na % viewportu */
+    margin: 0 auto; /* Stredové zarovnanie kontajnera */
+    padding: 20px; /* Priestor okolo obsahu */
+    box-sizing: border-box; /* Zohľadni padding a border pri šírke */
+  }

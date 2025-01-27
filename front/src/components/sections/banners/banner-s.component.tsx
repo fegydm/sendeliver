@@ -2,7 +2,7 @@
 // Last change: Renamed CSS classes to ensure isolation.
 
 import React, { useState } from "react";
-// import "./banner-s.component.css"; // Corrected import for CSS styles
+import "@/styles/sections/banner-s.component.css"; // Corrected import for CSS styles
 
 const BannerS: React.FC = () => {
   const [activeCard, setActiveCard] = useState<string>("dashboard");
