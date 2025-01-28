@@ -1,0 +1,77 @@
+/* src/styles/sections/manual-form.component.css */
+
+.combobox {
+    position: relative;
+    width: 100%;
+  }
+  
+  .combobox-input-group {
+    display: flex;
+    width: 100%;
+  }
+  
+  .combobox-input {
+    width: 60px !important; /* Menší input pre 2 znaky */
+    border-right: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  
+  .combobox-toggle {
+    width: 34px;
+    border: 1px solid #ccc;
+    border-left: none;
+    background: white;
+    cursor: pointer;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .combobox-options {
+    min-width: 300px; /* Širší zoznam */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin: 4px 0 0 0;
+    padding: 0;
+    list-style: none;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1000;
+    max-height: 250px; /* Výška pre približne 10 riadkov */
+    overflow-y: auto;
+  }
+  
+  .combobox-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    white-space: nowrap; /* Aby bol text v jednom riadku */
+  }
+  
+  .combobox-option:hover {
+    background-color: #f5f5f5;
+  }
+  
+  /* Základné štýly pre form */
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }

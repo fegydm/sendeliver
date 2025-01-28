@@ -61,10 +61,10 @@ const staticRoutes = [
 ];
 staticRoutes.forEach((route) => app.use(route.url, express.static(route.path)));
 
-// API routes
+// API routes (must come before SPA fallback)
 app.use("/api/ai", aiRouter);
-app.use("/api", deliveryRouter);
 app.use("/api/geo", geoRouter);
+app.use("/api", deliveryRouter);
 
 // SPA fallback route
 app.get("*", (req: Request, res: Response) => {
