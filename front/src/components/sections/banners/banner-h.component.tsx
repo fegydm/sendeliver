@@ -1,12 +1,15 @@
-// File: front/src/components/banner-h.component.tsx
-// Last change: Renamed CSS classes to match the "banner-h" convention.
+// File: front/src/components/sections/banners/banner-h.component.tsx
+// Last change: BannerH now only switches activeTab, fixed styles path
 
-import React, { useState } from "react";
-import "@/styles/sections/banner-h.component.css" 
+import React from "react";
+import "@/styles/sections/banner-h.component.css";
 
-const BannerH: React.FC = () => {
-  const [activeCard, setActiveCard] = useState<string>("dashboard");
+interface BannerHProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
 
+const BannerH: React.FC<BannerHProps> = ({ activeTab, setActiveTab }) => {
   const menuItems = [
     { id: "dashboard", title: "Dashboard", icon: "📊" },
     { id: "fleet", title: "Fleet", icon: "🚛" },
@@ -16,25 +19,21 @@ const BannerH: React.FC = () => {
   ];
 
   return (
-    <div className={`banner-h-container ${activeCard === "dark" ? "banner-h-dark" : ""}`}>
+    <div className="banner-h-container">
       <div className="banner-h-title">carriers.sendeliver.com</div>
 
       <div className="banner-h-menu-container">
-        {menuItems.map((item) => {
-          const isActive = activeCard === item.id;
-
-          return (
-            <div
-              key={item.id}
-              onClick={() => setActiveCard(item.id)}
-              className={`banner-h-menu-item ${isActive ? "banner-h-active" : ""}`}
-            >
-              <div className="banner-h-menu-icon">{item.icon}</div>
-              <div className="banner-h-menu-title">{item.title}</div>
-              <div className={`banner-h-menu-underline ${isActive ? "banner-h-active" : ""}`} />
-            </div>
-          );
-        })}
+        {menuItems.map((item) => (
+          <div
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`banner-h-menu-item ${activeTab === item.id ? "banner-h-active" : ""}`}
+          >
+            <div className="banner-h-menu-icon">{item.icon}</div>
+            <div className="banner-h-menu-title">{item.title}</div>
+            <div className={`banner-h-menu-underline ${activeTab === item.id ? "banner-h-active" : ""}`} />
+          </div>
+        ))}
       </div>
     </div>
   );

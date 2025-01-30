@@ -1,5 +1,5 @@
-/* File: front/src/components/banner-h.component.css */
-/* Last change: Renamed CSS classes to match the "banner-h" convention */
+/* File: front/src/styles/sections/banner-h.component.css */
+/* Last change: Preserved original styling while integrating dynamic DriverCard content */
 
 .banner-h-container {
     background-color: #4a5568;
@@ -86,4 +86,17 @@
 .banner-h-active .banner-h-menu-underline {
     width: 100%;
     background-color: #2d3748;
+}
+
+/* CONTENT SEKCIA POD MENU */
+.banner-h-content {
+    padding: 20px;
+    background-color: #fff;
+}
+
+.banner-h-placeholder {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+    padding: 50px 0;
 }
