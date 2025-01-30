@@ -1,93 +1,78 @@
 // File: src/routes/geo.routes.ts
-// Last change: Fixed return types in handlers
+// Last change: Added support for filtering postal codes by country
 
 import { Router, RequestHandler } from "express";
-import { GeocodingService } from "../services/geocoding.services.js";
 import { pool } from "../configs/db.js";
+import { 
+  GET_COUNTRIES_QUERY, 
+  SEARCH_LOCATION_QUERY, 
+  SEARCH_LOCATION_BY_COUNTRY_QUERY, 
+  SEARCH_PLACE_QUERY, 
+  DEFAULT_SEARCH_QUERY 
+} from "./geo.queries.js";
 
-interface GeoRequestBody {
-  location: string;
-}
-
-interface PostalCodeQuery {
-  country?: string;
+interface LocationQuery {
   postalCode?: string;
   place?: string;
+  countryCode?: string;
 }
 
 const router = Router();
 
-const handleGeocoding: RequestHandler<{}, any, GeoRequestBody> = async (req, res) => {
-  const { location } = req.body;
+// Uchovávame referenciu na posledný request pre zrušenie starých dotazov
+let lastAbortController: AbortController | null = null;
 
-  if (!location) {
-    res.status(400).json({ error: "Location is required." });
-    return;
-  }
-
-  try {
-    const coordinates = await GeocodingService.getInstance().getCoordinates(location);
-    res.json(coordinates);
-  } catch (error) {
-    console.error("Error fetching coordinates:", error);
-    res.status(500).json({ error: "Failed to fetch coordinates." });
-  }
-};
-
+// Načítanie zoznamu krajín
 const handleGetCountries: RequestHandler = async (_req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT 
-        code_2,
-        name_en,
-        name_local,
-        name_sk
-      FROM geo.countries
-      ORDER BY name_en
-    `);
-    
+    const result = await pool.query(GET_COUNTRIES_QUERY);
     res.json(result.rows);
-  } catch (error) {
-    console.error("Error fetching countries:", error);
-    res.status(500).json({ error: "Failed to fetch countries." });
+  } catch (error: unknown) {
+    console.error("❌ Error fetching countries:", error);
+    res.status(500).json({ error: "Failed to fetch countries" });
   }
 };
 
-const handleGetPostalCodes: RequestHandler<{}, any, any, PostalCodeQuery> = async (req, res) => {
-  const { country, postalCode } = req.query;
+// Vyhľadávanie lokalít podľa PSČ alebo názvu miesta
+const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (req, res) => {
+  const { postalCode, place, countryCode } = req.query;
 
-  // Require at least 4 characters for search
-  if (postalCode && postalCode.length < 4) {
-    res.json([]);
-    return;
+  // Ak sa spustí nový request, zrušíme predchádzajúci
+  if (lastAbortController) {
+    lastAbortController.abort();
   }
+  lastAbortController = new AbortController();
+  const { signal } = lastAbortController;
 
   try {
-    const query = `
-      SELECT 
-        country_code,
-        postal_code,
-        place_name
-      FROM geo.postal_codes
-      WHERE postal_code LIKE $1 || '%'
-      ${country ? 'AND country_code = $2' : ''}
-      LIMIT 10
-    `;
+    let result;
 
-    const params = country 
-      ? [postalCode, country]
-      : [postalCode];
+    if (postalCode && typeof postalCode === "string") {
+      if (countryCode && typeof countryCode === "string") {
+        result = await pool.query(SEARCH_LOCATION_BY_COUNTRY_QUERY, [postalCode, countryCode]);
+      } else {
+        result = await pool.query(SEARCH_LOCATION_QUERY, [postalCode]);
+      }
+    } else if (place && typeof place === "string" && place.length >= 3) {
+      result = await pool.query(SEARCH_PLACE_QUERY, [place]);
+    } else {
+      result = await pool.query(DEFAULT_SEARCH_QUERY);
+    }
 
-    const result = await pool.query(query, params);
-    res.json(result.rows);
-  } catch (error) {
-    console.error("Error fetching postal codes:", error);
-    res.status(500).json({ error: "Failed to fetch postal codes." });
+    if (!signal.aborted) {
+      res.json({ results: result.rows });
+    }
+  } catch (error: unknown) {
+    if (signal.aborted) {
+      console.warn("🔄 Request aborted (user typed too fast)");
+    } else {
+      console.error("❌ Error searching locations:", error);
+      res.status(500).json({ error: "Failed to search locations" });
+    }
   }
 };
 
-router.post("/geocode", handleGeocoding);
 router.get("/countries", handleGetCountries);
-router.get("/postal-codes", handleGetPostalCodes);
+router.get("/location", handleGetLocation);
 
 export default router;

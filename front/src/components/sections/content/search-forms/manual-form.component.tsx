@@ -1,11 +1,9 @@
-// File: src/components/sections/content/search-forms/ManualSearchForm.tsx
-// Last change: Integrated modular location search components with CSS styling
+// File: src/components/sections/content/search-forms/manual-form.component.tsx
+// Last change: Updated to match new LocationSelect API and data structure
 
 import React, { useState } from 'react';
-// import { FormData } from "@/types/ai.types";
 import CountrySelect from './CountrySelect';
-import PostalCodeSelect from './PostalCodeSelect';
-import PlaceSelect from './PlaceSelect';
+import LocationSelect from './LocationSelect';
 import "@/styles/sections/manual-form.component.css";
 
 interface CountryInfo {
@@ -17,6 +15,12 @@ interface LocationDetails {
   country: CountryInfo;
   postalCode: string;
   city: string;
+}
+
+interface Location {
+  country_code: string;
+  postal_code: string;
+  place_name: string;
 }
 
 interface TransportRequest {
@@ -88,6 +92,16 @@ const ManualSearchForm: React.FC = () => {
     });
   };
 
+  const handleLocationSelect = (
+    section: 'pickupDetails' | 'deliveryDetails',
+    location: Location
+  ) => {
+    updateTransportRequest(section, {
+      postalCode: location.postal_code,
+      city: location.place_name
+    });
+  };
+
   const handleSubmit = () => {
     console.log(transportRequest);
   };
@@ -115,26 +129,13 @@ const ManualSearchForm: React.FC = () => {
             />
           </div>
 
-          <PostalCodeSelect
+          <LocationSelect
             countryCode={transportRequest.pickupDetails.country.code}
-            onPostalCodeSelect={(postalCode) => 
-              updateTransportRequest('pickupDetails', { 
-                postalCode: postalCode.code,
-                city: postalCode.city || '' 
-              })
+            onLocationSelect={(location) => 
+              handleLocationSelect('pickupDetails', location)
             }
-            initialCode={transportRequest.pickupDetails.postalCode}
-          />
-
-          <PlaceSelect
-            countryCode={transportRequest.pickupDetails.country.code}
-            postalCode={transportRequest.pickupDetails.postalCode}
-            onPlaceSelect={(place) => 
-              updateTransportRequest('pickupDetails', { 
-                city: place.name 
-              })
-            }
-            initialName={transportRequest.pickupDetails.city}
+            initialPostalCode={transportRequest.pickupDetails.postalCode}
+            initialCity={transportRequest.pickupDetails.city}
           />
         </div>
       </div>
@@ -158,26 +159,13 @@ const ManualSearchForm: React.FC = () => {
             />
           </div>
 
-          <PostalCodeSelect
+          <LocationSelect
             countryCode={transportRequest.deliveryDetails.country.code}
-            onPostalCodeSelect={(postalCode) => 
-              updateTransportRequest('deliveryDetails', { 
-                postalCode: postalCode.code,
-                city: postalCode.city || '' 
-              })
+            onLocationSelect={(location) => 
+              handleLocationSelect('deliveryDetails', location)
             }
-            initialCode={transportRequest.deliveryDetails.postalCode}
-          />
-
-          <PlaceSelect
-            countryCode={transportRequest.deliveryDetails.country.code}
-            postalCode={transportRequest.deliveryDetails.postalCode}
-            onPlaceSelect={(place) => 
-              updateTransportRequest('deliveryDetails', { 
-                city: place.name 
-              })
-            }
-            initialName={transportRequest.deliveryDetails.city}
+            initialPostalCode={transportRequest.deliveryDetails.postalCode}
+            initialCity={transportRequest.deliveryDetails.city}
           />
         </div>
       </div>

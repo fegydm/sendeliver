@@ -1,7 +1,7 @@
-// File: src/components/sections/content/search-forms/country-select.component.tsx
-// Last change: Restored original country selection logic
+// File: src/components/sections/content/search-forms/CountrySelect.tsx
+// Last change: Added toggle arrow animation and fixed flag paths
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface Country {
   code_2: string;
@@ -12,28 +12,35 @@ interface Country {
 
 interface CountrySelectProps {
   onCountrySelect: (countryCode: string, flagPath: string) => void;
+  onNextFieldFocus?: () => void;
   initialValue?: string;
 }
 
-const CountrySelect: React.FC<CountrySelectProps> = ({ 
-  onCountrySelect, 
-  initialValue = '' 
+const getFlagPath = (countryCode: string) => 
+  `flags/4x3/optimized/${countryCode.toLowerCase()}.svg`;
+
+const CountrySelect: React.FC<CountrySelectProps> = ({
+  onCountrySelect,
+  onNextFieldFocus,
+  initialValue = ''
 }) => {
   const [countries, setCountries] = useState<Country[]>([]);
-  const [countryCode, setCountryCode] = useState(initialValue);
+  const [countryInput, setCountryInput] = useState(initialValue.toUpperCase());
   const [filteredCountries, setFilteredCountries] = useState<Country[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [validSecondLetters, setValidSecondLetters] = useState<Set<string>>(new Set());
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Load countries on component initialization
   useEffect(() => {
     const fetchCountries = async () => {
       try {
         const response = await fetch("/api/geo/countries");
         if (!response.ok) throw new Error('Failed to fetch countries');
-        
-        const data = await response.json();
-        setCountries(data);
-        setFilteredCountries(data);
+        const data: Country[] = await response.json();
+        const sortedCountries = data.sort((a, b) => a.code_2.localeCompare(b.code_2));
+        setCountries(sortedCountries);
+        setFilteredCountries(sortedCountries);
       } catch (error) {
         console.error('Country loading error:', error);
       }
@@ -42,66 +49,123 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     fetchCountries();
   }, []);
 
-  // Handle country code input changes
-  const handleCountryChange = (value: string) => {
-    const upperValue = value.toUpperCase();
-    setCountryCode(upperValue);
-    
-    if (upperValue.length === 0) {
-      setFilteredCountries(countries);
-      setShowDropdown(true);
-    } else if (upperValue.length === 1) {
-      const filtered = countries.filter(c => c.code_2.startsWith(upperValue));
-      setFilteredCountries(filtered);
-      setShowDropdown(true);
-    } else if (upperValue.length === 2) {
-      const selectedCountry = countries.find(c => c.code_2 === upperValue);
-      if (selectedCountry) {
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
-        onCountrySelect(
-          selectedCountry.code_2, 
-          `/flags/4x3/${selectedCountry.code_2.toLowerCase()}.svg`
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleCountryChange = (input: string) => {
+    const cleanInput = input.replace(/[^A-Za-z]/g, '').toUpperCase();
+    
+    if (cleanInput.length <= 2) {
+      if (cleanInput.length === 1) {
+        const filtered = countries.filter(country =>
+          country.code_2.startsWith(cleanInput)
         );
+        const secondLetters = new Set(
+          filtered.map(country => country.code_2[1])
+        );
+        setValidSecondLetters(secondLetters);
+        setFilteredCountries(filtered);
+        setShowDropdown(true);
+        setCountryInput(cleanInput);
+      }
+      else if (cleanInput.length === 2) {
+        if (validSecondLetters.has(cleanInput[1])) {
+          const filtered = countries.filter(country =>
+            country.code_2 === cleanInput
+          );
+          setFilteredCountries(filtered);
+          setCountryInput(cleanInput);
+          
+          if (filtered.length === 1) {
+            handleCountrySelect(filtered[0]);
+            onNextFieldFocus?.();
+          }
+        }
+      } else {
+        setCountryInput(cleanInput);
+        setFilteredCountries(countries);
+        setValidSecondLetters(new Set());
       }
     }
   };
 
-  // Handle country selection from dropdown
+  const toggleDropdown = () => {    
+    // If dropdown is already shown, just hide it
+    if (showDropdown) {
+      setShowDropdown(false);
+      return;
+    }
+    
+    // Show and filter list based on current input
+    if (countryInput.length > 0) {
+      const filtered = countries.filter(country =>
+        country.code_2.startsWith(countryInput)
+      );
+      setFilteredCountries(filtered);
+    } else {
+      setFilteredCountries(countries);
+    }
+    setShowDropdown(true);
+    inputRef.current?.focus();
+  };
+
   const handleCountrySelect = (country: Country) => {
-    setCountryCode(country.code_2);
+    setCountryInput(country.code_2);
     setShowDropdown(false);
-    onCountrySelect(
-      country.code_2, 
-      `/flags/4x3/${country.code_2.toLowerCase()}.svg`
-    );
+    onCountrySelect(country.code_2, getFlagPath(country.code_2));
   };
 
   return (
-    <div className="country-select">
+    <div className="country-select" ref={dropdownRef}>
       <div className="combobox-input-group">
         <input
+          ref={inputRef}
           type="text"
-          value={countryCode}
+          value={countryInput}
           onChange={(e) => handleCountryChange(e.target.value)}
           onFocus={() => {
-            setFilteredCountries(countries);
-            setShowDropdown(true);
+            if (countryInput.length === 0) {
+              setFilteredCountries(countries);
+              setShowDropdown(true);
+            }
           }}
-          placeholder="Country Code"
+          placeholder="CC"
           maxLength={2}
-          className="form-input"
+          className="country-code-input"
         />
-        {showDropdown && filteredCountries.length > 0 && (
+        <button
+          type="button"
+          className={`dropdown-toggle ${showDropdown ? "active" : ""}`}
+          onClick={toggleDropdown}
+          aria-label="Toggle country list"
+        >
+          ▼
+        </button>
+
+        {showDropdown && (
           <ul className="combobox-options">
             {filteredCountries.map((country) => (
-              <li 
+              <li
                 key={country.code_2}
                 onClick={() => handleCountrySelect(country)}
                 className="combobox-option"
               >
-                <span>{country.code_2}</span>
-                <span> - </span>
-                <span>{country.name_en}</span>
+                <img 
+                  src={getFlagPath(country.code_2)} 
+                  alt={`${country.code_2} flag`}
+                  className="country-flag-small"
+                />
+                <span className="country-code">{country.code_2}</span>
+                <span className="country-separator"> - </span>
+                <span className="country-name">{country.name_en}</span>
                 {country.name_local !== country.name_en && (
                   <span className="name-local">({country.name_local})</span>
                 )}

@@ -1,9 +1,9 @@
 // File: front/src/components/sections/footers/footer-test.component.tsx
-// Last change: Fixed layout with left-right split and restored links to Jozo and Luky
+// Last change: Added manual search trigger to prevent automatic API calls
 
 import React, { useState, useEffect } from "react";
 import ThemeSwitcher from "@/components/elements/theme-switcher.element";
-import ThemeEditorModal, { ThemeField } from "@/components/modals/theme-editor.modal";
+import ThemeEditorModal from "@/components/modals/theme-editor.modal";
 import ColorPaletteModal from "@/components/modals/color-palette.modal";
 import { Button } from "@/components/ui";
 
@@ -13,15 +13,73 @@ interface FooterTestProps {
 }
 
 const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
+  const [postalCode, setPostalCode] = useState("");
   const [logs, setLogs] = useState<string[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<"logs" | "warnings" | "errors">(
-    "logs"
-  );
+  const [activeTab, setActiveTab] = useState<"logs" | "warnings" | "errors">("logs");
   const [isThemeEditorOpen, setIsThemeEditorOpen] = useState(false);
   const [isColorPaletteOpen, setIsColorPaletteOpen] = useState(false);
   const [is3DMode, setIs3DMode] = useState(false);
+  const [shouldSearch, setShouldSearch] = useState(false);
+
+  // Handle search button click
+  const handleSearch = () => {
+    if (postalCode.trim().length >= 3) {
+      setShouldSearch(prev => !prev); // Toggle to trigger useEffect
+    }
+  };
+
+  useEffect(() => {
+    // Only fetch when footer is visible and search is triggered
+    if (!isVisible) return;
+    
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch(`/api/geo/location?postalCode=${postalCode}`);
+  
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+        }
+  
+        const data = await response.json();
+        console.log("Fetched data from API:", JSON.stringify(data, null, 2));
+
+        // Process response data safely
+        let results;
+        let totalCount;
+
+        if (Array.isArray(data)) {
+          // If response is directly an array
+          results = data;
+          totalCount = data.length;
+        } else if (data.results && Array.isArray(data.results)) {
+          // If response has { results: [...] } structure
+          results = data.results;
+          totalCount = data.total_count || results.length;
+        } else {
+          // If response has different structure, try to find array
+          const firstArrayKey = Object.keys(data).find(key => Array.isArray(data[key]));
+          results = firstArrayKey ? data[firstArrayKey] : [];
+          totalCount = results.length;
+        }
+
+        setLogs(prev => [...prev, `Fetched ${results.length} locations (Total: ${totalCount})`]);
+  
+      } catch (error: unknown) {
+        let errorMessage = "Unknown error";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+  
+        console.error("Search error:", errorMessage);
+        setErrors(prev => [...prev, `Search error: ${errorMessage}`]);
+      }
+    };
+  
+    fetchLocations();
+  }, [isVisible, shouldSearch]); // Only run effect when visibility changes or search is triggered
+  
 
   useEffect(() => {
     const originalLog = console.log;
@@ -29,20 +87,25 @@ const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
     const originalError = console.error;
 
     console.log = (...args) => {
-      setLogs((prev) => [...prev, args.join(" ")]);
+      setLogs(prev => [...prev, args.join(" ")]);
       originalLog(...args);
     };
 
     console.warn = (...args) => {
-      setWarnings((prev) => [...prev, args.join(" ")]);
+      setWarnings(prev => [...prev, args.join(" ")]);
       originalWarn(...args);
     };
 
     console.error = (...args) => {
-      setErrors((prev) => [...prev, args.join(" ")]);
+      const formattedError = args
+        .map(arg => (typeof arg === "object" ? JSON.stringify(arg, null, 2) : arg))
+        .join(" ");
+    
+      setErrors(prev => [...prev, formattedError]);
       originalError(...args);
     };
-
+    
+    // Cleanup console overrides
     return () => {
       console.log = originalLog;
       console.warn = originalWarn;
@@ -68,8 +131,24 @@ const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
         <Button variant="secondary" onClick={onClose}>
           Close Footer
         </Button>
+        <div style={{ marginTop: "20px", marginBottom: "20px" }}>
+          <input
+            type="text"
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            placeholder="Enter postal code"
+            className="p-2 border rounded"
+          />
+          <Button 
+            variant="secondary" 
+            onClick={handleSearch}
+            style={{ marginLeft: '10px' }}
+          >
+            Search
+          </Button>
+        </div>
         <ThemeSwitcher is3DMode={is3DMode} />
-        <Button variant="secondary" onClick={() => setIs3DMode((prev) => !prev)}>
+        <Button variant="secondary" onClick={() => setIs3DMode(prev => !prev)}>
           {is3DMode ? "Switch to 2D" : "Switch to 3D"}
         </Button>
         <Button variant="secondary" onClick={() => setIsThemeEditorOpen(true)}>
@@ -109,23 +188,17 @@ const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
           <button onClick={() => setActiveTab("logs")} className={activeTab === "logs" ? "active" : ""}>
             Logs
           </button>
-          <button
-            onClick={() => setActiveTab("warnings")}
-            className={activeTab === "warnings" ? "active" : ""}
-          >
+          <button onClick={() => setActiveTab("warnings")} className={activeTab === "warnings" ? "active" : ""}>
             Warnings
           </button>
-          <button
-            onClick={() => setActiveTab("errors")}
-            className={activeTab === "errors" ? "active" : ""}
-          >
+          <button onClick={() => setActiveTab("errors")} className={activeTab === "errors" ? "active" : ""}>
             Errors
           </button>
         </div>
         <div>
           {activeTab === "logs" && logs.map((log, index) => <p key={index}>{log}</p>)}
-          {activeTab === "warnings" && warnings.map((warn, index) => <p key={index}>{warn}</p>)}
-          {activeTab === "errors" && errors.map((error, index) => <p key={index}>{error}</p>)}
+          {activeTab === "warnings" && warnings.map((warn, index) => <p key={index} style={{ color: "orange" }}>{warn}</p>)}
+          {activeTab === "errors" && errors.map((error, index) => <p key={index} style={{ color: "red" }}>{error}</p>)}
         </div>
       </div>
 
