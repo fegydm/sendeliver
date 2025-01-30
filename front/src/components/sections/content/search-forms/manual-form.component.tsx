@@ -1,238 +1,249 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Updated to match new LocationSelect API and data structure
+// Last change: Added LocationSelect for postal code and city fields
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import CountrySelect from './CountrySelect';
 import LocationSelect from './LocationSelect';
 import "@/styles/sections/manual-form.component.css";
 
-interface CountryInfo {
-  code: string;
-  flag: string;
-}
-
-interface LocationDetails {
-  country: CountryInfo;
-  postalCode: string;
-  city: string;
-}
-
-interface Location {
-  country_code: string;
-  postal_code: string;
-  place_name: string;
-}
-
-interface TransportRequest {
-  pickupDetails: LocationDetails;
-  deliveryDetails: LocationDetails;
-  scheduleDetails: {
-    loadingDateTime: string;
-    deliveryDateTime: string;
+interface FormData {
+  pickup: {
+    country: {
+      code: string;
+      flag: string;
+    };
+    postalCode: string;
+    city: string;
+    loadingTime: string;
   };
-  cargoDetails: {
-    palletCount: number;
-    totalWeight: number;
+  delivery: {
+    country: {
+      code: string;
+      flag: string;
+    };
+    postalCode: string;
+    city: string;
+    deliveryTime: string;
+  };
+  cargo: {
+    pallets: number;
+    weight: number;
   };
 }
 
 const ManualSearchForm: React.FC = () => {
-  const [transportRequest, setTransportRequest] = useState<TransportRequest>({
-    pickupDetails: {
-      country: { 
-        code: '', 
-        flag: '' 
-      },
+  // Refs for postal code inputs
+  const pickupPostalRef = useRef<HTMLInputElement>(null);
+  const deliveryPostalRef = useRef<HTMLInputElement>(null);
+
+  // Form state
+  const [formData, setFormData] = useState<FormData>({
+    pickup: {
+      country: { code: '', flag: '' },
       postalCode: '',
-      city: ''
+      city: '',
+      loadingTime: ''
     },
-    deliveryDetails: {
-      country: { 
-        code: '', 
-        flag: '' 
-      },
+    delivery: {
+      country: { code: '', flag: '' },
       postalCode: '',
-      city: ''
+      city: '',
+      deliveryTime: ''
     },
-    scheduleDetails: {
-      loadingDateTime: '',
-      deliveryDateTime: ''
-    },
-    cargoDetails: {
-      palletCount: 0,
-      totalWeight: 0
+    cargo: {
+      pallets: 0,
+      weight: 0
     }
   });
 
-  const updateTransportRequest = <K extends keyof TransportRequest>(
-    section: K, 
-    updates: Partial<TransportRequest[K]>
-  ) => {
-    setTransportRequest(prev => ({
+  // Handle country selection
+  const handleCountrySelect = (type: 'pickup' | 'delivery', code: string, flag: string) => {
+    setFormData(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        ...updates
+      [type]: {
+        ...prev[type],
+        country: { code, flag },
+        postalCode: '',
+        city: ''
       }
     }));
   };
 
-  const handleCountrySelect = (
-    section: 'pickupDetails' | 'deliveryDetails', 
-    countryCode: string, 
-    flagPath: string
-  ) => {
-    updateTransportRequest(section, {
-      country: { 
-        code: countryCode, 
-        flag: flagPath 
-      },
-      postalCode: '',
-      city: ''
-    });
+  // Handle location selection
+  const handleLocationSelect = (type: 'pickup' | 'delivery', location: { postal_code: string; place_name: string }) => {
+    setFormData(prev => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        postalCode: location.postal_code,
+        city: location.place_name
+      }
+    }));
   };
 
-  const handleLocationSelect = (
-    section: 'pickupDetails' | 'deliveryDetails',
-    location: Location
-  ) => {
-    updateTransportRequest(section, {
-      postalCode: location.postal_code,
-      city: location.place_name
-    });
+  // Focus management for postal code fields
+  const focusPostalCode = (type: 'pickup' | 'delivery') => {
+    if (type === 'pickup') {
+      pickupPostalRef.current?.focus();
+    } else {
+      deliveryPostalRef.current?.focus();
+    }
   };
 
-  const handleSubmit = () => {
-    console.log(transportRequest);
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Submitting form:', formData);
   };
 
   return (
-    <div className="transport-request-form">
-      <h2>Transport Request</h2>
-
-      <div className="pickup-details">
-        <h3>Pickup Details</h3>
-        <div className="location-row">
-          <div className="country-selection">
-            {transportRequest.pickupDetails.country.flag && (
+    <form className="manual-form" onSubmit={handleSubmit}>
+      {/* Pickup section */}
+      <div className="form-section">
+        <h3 className="section-title">Pickup Details</h3>
+        
+        <div className="location-fields">
+          {/* Flag placeholder */}
+          <div className="flag-placeholder">
+            {formData.pickup.country.flag && (
               <img 
-                src={transportRequest.pickupDetails.country.flag} 
+                src={formData.pickup.country.flag} 
                 alt="Pickup Country Flag" 
-                className="country-flag"
+                className="flag-image"
               />
             )}
+          </div>
+          
+          {/* Country select with dropdown */}
+          <div className="field-group">
+            <label className="field-label">Country</label>
             <CountrySelect
-              onCountrySelect={(code, flag) => 
-                handleCountrySelect('pickupDetails', code, flag)
-              }
-              initialValue={transportRequest.pickupDetails.country.code}
+              onCountrySelect={(code, flag) => handleCountrySelect('pickup', code, flag)}
+              onNextFieldFocus={() => focusPostalCode('pickup')}
+              initialValue={formData.pickup.country.code}
             />
           </div>
-
+          
+          {/* Location select for postal code and city */}
           <LocationSelect
-            countryCode={transportRequest.pickupDetails.country.code}
-            onLocationSelect={(location) => 
-              handleLocationSelect('pickupDetails', location)
-            }
-            initialPostalCode={transportRequest.pickupDetails.postalCode}
-            initialCity={transportRequest.pickupDetails.city}
+            countryCode={formData.pickup.country.code}
+            onLocationSelect={(location) => handleLocationSelect('pickup', location)}
+            initialPostalCode={formData.pickup.postalCode}
+            initialCity={formData.pickup.city}
+            postalCodeRef={pickupPostalRef}
+          />
+        </div>
+
+        <div className="datetime-field">
+          <label className="field-label">Loading Time</label>
+          <input
+            type="datetime-local"
+            value={formData.pickup.loadingTime}
+            onChange={(e) => setFormData(prev => ({
+              ...prev,
+              pickup: { ...prev.pickup, loadingTime: e.target.value }
+            }))}
+            className="datetime-input"
           />
         </div>
       </div>
 
-      <div className="delivery-details">
-        <h3>Delivery Details</h3>
-        <div className="location-row">
-          <div className="country-selection">
-            {transportRequest.deliveryDetails.country.flag && (
+      {/* Delivery section */}
+      <div className="form-section">
+        <h3 className="section-title">Delivery Details</h3>
+        
+        <div className="location-fields">
+          <div className="flag-placeholder">
+            {formData.delivery.country.flag && (
               <img 
-                src={transportRequest.deliveryDetails.country.flag} 
+                src={formData.delivery.country.flag} 
                 alt="Delivery Country Flag" 
-                className="country-flag"
+                className="flag-image"
               />
             )}
+          </div>
+          
+          <div className="field-group">
+            <label className="field-label">Country</label>
             <CountrySelect
-              onCountrySelect={(code, flag) => 
-                handleCountrySelect('deliveryDetails', code, flag)
-              }
-              initialValue={transportRequest.deliveryDetails.country.code}
+              onCountrySelect={(code, flag) => handleCountrySelect('delivery', code, flag)}
+              onNextFieldFocus={() => focusPostalCode('delivery')}
+              initialValue={formData.delivery.country.code}
             />
           </div>
-
+          
           <LocationSelect
-            countryCode={transportRequest.deliveryDetails.country.code}
-            onLocationSelect={(location) => 
-              handleLocationSelect('deliveryDetails', location)
-            }
-            initialPostalCode={transportRequest.deliveryDetails.postalCode}
-            initialCity={transportRequest.deliveryDetails.city}
+            countryCode={formData.delivery.country.code}
+            onLocationSelect={(location) => handleLocationSelect('delivery', location)}
+            initialPostalCode={formData.delivery.postalCode}
+            initialCity={formData.delivery.city}
+            postalCodeRef={deliveryPostalRef}
+          />
+        </div>
+
+        <div className="datetime-field">
+          <label className="field-label">Delivery Time</label>
+          <input
+            type="datetime-local"
+            value={formData.delivery.deliveryTime}
+            onChange={(e) => setFormData(prev => ({
+              ...prev,
+              delivery: { ...prev.delivery, deliveryTime: e.target.value }
+            }))}
+            className="datetime-input"
           />
         </div>
       </div>
 
-      <div className="datetime-section">
-        <div className="loading-datetime">
-          <label>Loading Date/Time</label>
-          <input
-            type="datetime-local"
-            value={transportRequest.scheduleDetails.loadingDateTime}
-            onChange={(e) => updateTransportRequest('scheduleDetails', {
-              loadingDateTime: e.target.value
-            })}
-          />
-        </div>
-        <div className="delivery-datetime">
-          <label>Delivery Date/Time</label>
-          <input
-            type="datetime-local"
-            value={transportRequest.scheduleDetails.deliveryDateTime}
-            onChange={(e) => updateTransportRequest('scheduleDetails', {
-              deliveryDateTime: e.target.value
-            })}
-          />
-        </div>
-      </div>
-
-      <div className="cargo-details">
-        <div>
-          <label>Number of Pallets</label>
-          <input
-            type="number"
-            value={transportRequest.cargoDetails.palletCount}
-            onChange={(e) => updateTransportRequest('cargoDetails', {
-              palletCount: Number(e.target.value)
-            })}
-            min="0"
-          />
-        </div>
-        <div>
-          <label>Total Weight (kg)</label>
-          <input
-            type="number"
-            value={transportRequest.cargoDetails.totalWeight}
-            onChange={(e) => updateTransportRequest('cargoDetails', {
-              totalWeight: Number(e.target.value)
-            })}
-            min="0"
-            step="0.1"
-          />
+      {/* Cargo section */}
+      <div className="form-section">
+        <h3 className="section-title">Cargo Details</h3>
+        <div className="cargo-container">
+          <div className="field-group">
+            <label className="field-label">Number of Pallets</label>
+            <input
+              type="number"
+              value={formData.cargo.pallets}
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                cargo: { ...prev.cargo, pallets: Number(e.target.value) }
+              }))}
+              min="0"
+              className="form-input"
+            />
+          </div>
+          <div className="field-group">
+            <label className="field-label">Total Weight (kg)</label>
+            <input
+              type="number"
+              value={formData.cargo.weight}
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                cargo: { ...prev.cargo, weight: Number(e.target.value) }
+              }))}
+              min="0"
+              step="0.1"
+              className="form-input"
+            />
+          </div>
         </div>
       </div>
 
       <button 
-        onClick={handleSubmit}
+        type="submit"
+        className="submit-button"
         disabled={
-          !transportRequest.pickupDetails.country.code ||
-          !transportRequest.pickupDetails.postalCode ||
-          !transportRequest.pickupDetails.city ||
-          !transportRequest.deliveryDetails.country.code ||
-          !transportRequest.deliveryDetails.postalCode ||
-          !transportRequest.deliveryDetails.city
+          !formData.pickup.country.code ||
+          !formData.pickup.postalCode ||
+          !formData.pickup.city ||
+          !formData.delivery.country.code ||
+          !formData.delivery.postalCode ||
+          !formData.delivery.city
         }
       >
         Submit Transport Request
       </button>
-    </div>
+    </form>
   );
 };
 

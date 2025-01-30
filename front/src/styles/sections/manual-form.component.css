@@ -1,4 +1,122 @@
-/* Container styles */
+/* File: src/styles/sections/manual-form.component.css */
+/* Last change: Added styles for lazy loading, loading spinner, and improved scrolling */
+
+/* Main form styling */
+.manual-form {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Section containers */
+.form-section {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 15px;
+}
+
+/* Location fields in one row */
+.location-fields {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+/* Flag placeholder */
+.flag-placeholder {
+  width: 32px;
+  height: 24px;
+  margin-bottom: 6px;
+}
+
+.flag-image {
+  width: 32px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+/* Field groups */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-group:nth-child(3) {
+  width: 120px;
+}
+
+.field-group:nth-child(4) {
+  flex: 1;
+}
+
+/* Labels */
+.field-label {
+  font-size: 12px;
+  color: #666;
+}
+
+/* Input fields */
+.form-input {
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+}
+
+/* Date/time field */
+.datetime-field {
+  margin-top: 15px;
+}
+
+.datetime-input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Cargo section */
+.cargo-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Submit button */
+.submit-button {
+  width: 100%;
+  padding: 8px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.submit-button:hover {
+  background: #1d4ed8;
+}
+
+.submit-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* CountrySelect styles */
 .country-select {
   position: relative;
 }
@@ -9,14 +127,12 @@
   position: relative;
 }
 
-/* Input field styles */
 .country-code-input {
   width: 50px;
   padding: 5px 8px;
   text-align: left;
 }
 
-/* Toggle button styles */
 .dropdown-toggle {
   margin-left: 5px;
   padding: 5px;
@@ -28,7 +144,6 @@
   transform: rotate(180deg);
 }
 
-/* Dropdown list styles */
 .combobox-options {
   position: absolute;
   top: 100%;
@@ -44,70 +159,80 @@
   margin: 0;
 }
 
-/* List item styles */
 .combobox-option {
   display: flex;
   align-items: center;
-  padding: 5px 8px;
+  padding: 4px 8px;
   cursor: pointer;
+  height: 28px;
+  min-height: 28px;
 }
 
 .combobox-option:hover {
   background-color: #f0f0f0;
 }
 
-/* Flag styles */
-.country-flag-small {
-  width: 20px;
-  height: 15px;
-  margin-right: 8px;
+.combobox-option.highlighted {
+  background-color: #e0e0e0;
 }
 
-/* Text content styles */
-.country-code {
-  min-width: 28px;
-}
-
-.country-separator {
-  margin: 0 4px;
-  color: #666;
-}
-
-.name-local {
-  color: #888;
-  margin-left: 5px;
-}
-
+/* LocationSelect styles */
 .location-search {
+  display: flex;
   position: relative;
-  width: 100%;
+  gap: 8px;
+  flex: 1;
 }
 
 .location-inputs {
   display: flex;
   gap: 8px;
+  width: 100%;
 }
 
 .postal-input {
   width: 100px;
   padding: 5px 8px;
   border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .city-input {
-  width: 200px;
+  width: 100%;
   padding: 5px 8px;
   border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
+/* Improved Loading Indicator */
 .loading-indicator {
   position: absolute;
   right: 8px;
   top: 8px;
   font-size: 12px;
   color: #666;
+  display: flex;
+  align-items: center;
 }
 
+.loading-indicator::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  margin-left: 5px;
+  border: 2px solid #ccc;
+  border-top-color: #666;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* Spinner Animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Search Results Dropdown */
 .search-results {
   position: absolute;
   top: 100%;
@@ -128,6 +253,8 @@
   align-items: center;
   padding: 5px 8px;
   cursor: pointer;
+  height: 28px;
+  min-height: 28px;
   gap: 8px;
 }
 
@@ -135,22 +262,72 @@
   background-color: #f0f0f0;
 }
 
+/* Load More Button */
+.load-more-item {
+  text-align: center;
+  padding: 5px;
+  background: #f9f9f9;
+}
+
+.load-more-button {
+  width: 90%;
+  padding: 6px 10px;
+  background: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.load-more-button:hover {
+  background: #e0e0e0;
+}
+
+.load-more-button:active {
+  background: #d6d6d6;
+}
+
+
+/* Smooth Scroll for Results */
+.search-results {
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+.search-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+  background-color: #aaa;
+}
+
+/* Shared flag and item styles */
 .country-flag-small {
-  width: 20px;
-  height: 15px;
+  width: 16px;
+  height: 12px;
+  margin-right: 8px;
+  object-fit: cover;
 }
 
 .country-code {
   min-width: 28px;
 }
 
+.country-separator {
+  margin: 0 4px;
+  color: #666;
+}
+
 .postal-code {
   min-width: 60px;
   font-weight: 500;
-}
-
-.separator {
-  color: #666;
 }
 
 .city-name {

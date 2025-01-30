@@ -1,7 +1,7 @@
 // File: src/components/sections/content/search-forms/LocationSelect.tsx
-// Last change: Fixed countryCode filtering for postal code search, disabled browser autocomplete
+// Last change: Fixed hasMore logic and added "Load More" button for lazy loading
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, RefObject } from "react";
 
 interface PostalCode {
   country_code: string;
@@ -14,22 +14,28 @@ interface LocationSelectProps {
   onLocationSelect: (location: PostalCode) => void;
   initialPostalCode?: string;
   initialCity?: string;
+  postalCodeRef?: RefObject<HTMLInputElement>;
 }
 
 const LocationSelect: React.FC<LocationSelectProps> = ({
   countryCode,
   onLocationSelect,
   initialPostalCode = "",
-  initialCity = ""
+  initialCity = "",
+  postalCodeRef
 }) => {
+  // State management
   const [postalCode, setPostalCode] = useState(initialPostalCode);
   const [city, setCity] = useState(initialCity);
   const [results, setResults] = useState<PostalCode[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [activeField, setActiveField] = useState<"postal" | "city" | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+
   const resultsRef = useRef<HTMLDivElement>(null);
+  const defaultPostalRef = useRef<HTMLInputElement>(null);
 
   // Close results on outside click
   useEffect(() => {
@@ -43,9 +49,9 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // API search function
-  const searchPostalCodes = async (searchValue: string, field: "postal" | "city") => {
-    if (field === "city" && searchValue.length < 3) {
+  // API search function with pagination
+  const searchPostalCodes = async (searchValue: string, newOffset = 0) => {
+    if (!searchValue.trim()) {
       setResults([]);
       setShowResults(false);
       return;
@@ -54,25 +60,29 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({
-        ...(field === "postal" && { postalCode: searchValue }),
-        ...(field === "city" && { place: searchValue }),
+        postalCode: searchValue,
         ...(countryCode && { countryCode }),
-        limit: "10"
+        limit: "20",
+        offset: newOffset.toString()
       });
 
       const response = await fetch(`/api/geo/location?${queryParams}`);
-      
       if (!response.ok) {
         throw new Error("Failed to fetch locations");
       }
 
       const data = await response.json();
-
       if (!data.results || !Array.isArray(data.results)) {
         throw new Error("Invalid data format received");
       }
 
-      setResults(data.results);
+      setHasMore(data.results.length === 20); // ✅ Fix: Ak dostaneme presne 20 výsledkov, môžeme načítať ďalšie
+
+      setResults((prevResults) =>
+        newOffset === 0 ? data.results : [...prevResults, ...data.results]
+      );
+
+      setOffset(newOffset + 20); // ✅ Fix: Zvýšenie offsetu po načítaní ďalšej dávky výsledkov
       setShowResults(data.results.length > 0);
       setError(null);
     } catch (error: any) {
@@ -89,10 +99,9 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
   const handlePostalCodeChange = (value: string) => {
     const cleanValue = value.replace(/[^0-9A-Za-z]/g, "").toUpperCase();
     setPostalCode(cleanValue);
-    setActiveField("postal");
 
     if (cleanValue) {
-      searchPostalCodes(cleanValue, "postal");
+      searchPostalCodes(cleanValue, 0);
     } else {
       setResults([]);
       setShowResults(false);
@@ -103,14 +112,6 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
   const handleCityChange = (value: string) => {
     const cleanValue = value.trim();
     setCity(cleanValue);
-    setActiveField("city");
-
-    if (cleanValue.length >= 3) {
-      searchPostalCodes(cleanValue, "city");
-    } else {
-      setResults([]);
-      setShowResults(false);
-    }
   };
 
   // Handle location selection
@@ -128,17 +129,15 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
           type="text"
           value={postalCode}
           onChange={(e) => handlePostalCodeChange(e.target.value)}
-          onFocus={() => setActiveField("postal")}
           placeholder="Postal code"
           autoComplete="off"
-          inputMode="numeric"
           className="postal-input"
+          ref={postalCodeRef || defaultPostalRef}
         />
         <input
           type="text"
           value={city}
           onChange={(e) => handleCityChange(e.target.value)}
-          onFocus={() => setActiveField("city")}
           placeholder="City/Place"
           autoComplete="off"
           className="city-input"
@@ -167,6 +166,17 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
               <span className="city-name">{location.place_name}</span>
             </li>
           ))}
+
+          {hasMore && (
+            <li className="load-more-item">
+              <button 
+                className="load-more-button"
+                onClick={() => searchPostalCodes(postalCode, offset)}
+              >
+                Načítať ďalšie
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </div>

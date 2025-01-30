@@ -18,12 +18,13 @@ export const SEARCH_LOCATION_QUERY = `
     p.place_name, 
     c.name_en AS country, 
     CONCAT('/flags/3x4/optimized/', LOWER(p.country_code), '.svg') AS flag_url
-  FROM geo.postal_codes p
-  JOIN geo.countries c ON p.country_code = c.code_2
-  WHERE p.postal_code >= $1
-    AND p.postal_code < $1 || '9'
-  ORDER BY p.postal_code
-  LIMIT 10;
+FROM geo.postal_codes p
+JOIN geo.countries c ON p.country_code = c.code_2
+WHERE p.postal_code >= $1
+  AND p.postal_code < $1 || '9'
+ORDER BY p.postal_code
+LIMIT $2 OFFSET $3;
+
 `;
 
 export const SEARCH_LOCATION_BY_COUNTRY_QUERY = `
@@ -33,13 +34,14 @@ export const SEARCH_LOCATION_BY_COUNTRY_QUERY = `
     p.place_name, 
     c.name_en AS country, 
     CONCAT('/flags/3x4/optimized/', LOWER(p.country_code), '.svg') AS flag_url
-  FROM geo.postal_codes p
-  JOIN geo.countries c ON p.country_code = c.code_2
-  WHERE p.postal_code >= $1
-    AND p.postal_code < $1 || '9'
-    AND p.country_code = $2
-  ORDER BY p.postal_code
-  LIMIT 10;
+FROM geo.postal_codes p
+JOIN geo.countries c ON p.country_code = c.code_2
+WHERE p.postal_code >= $1
+  AND p.postal_code < $1 || '9'
+  AND p.country_code = $2
+ORDER BY p.postal_code
+LIMIT $3 OFFSET $4;
+
 `;
 
 export const SEARCH_PLACE_QUERY = `
@@ -49,11 +51,12 @@ export const SEARCH_PLACE_QUERY = `
     p.place_name, 
     c.name_en AS country, 
     CONCAT('/flags/3x4/optimized/', LOWER(p.country_code), '.svg') AS flag_url
-  FROM geo.postal_codes p
-  JOIN geo.countries c ON p.country_code = c.code_2
-  WHERE p.place_name ILIKE $1 || '%'
-  ORDER BY p.place_name
-  LIMIT 10;
+FROM geo.postal_codes p
+JOIN geo.countries c ON p.country_code = c.code_2
+WHERE p.place_name ILIKE $1 || '%'
+ORDER BY p.place_name
+LIMIT $2 OFFSET $3;
+
 `;
 
 export const DEFAULT_SEARCH_QUERY = `
@@ -63,8 +66,8 @@ export const DEFAULT_SEARCH_QUERY = `
     p.place_name, 
     c.name_en AS country, 
     CONCAT('/flags/3x4/optimized/', LOWER(p.country_code), '.svg') AS flag_url
-  FROM geo.postal_codes p
-  JOIN geo.countries c ON p.country_code = c.code_2
-  ORDER BY p.postal_code
-  LIMIT 10;
+FROM geo.postal_codes p
+JOIN geo.countries c ON p.country_code = c.code_2
+ORDER BY p.postal_code
+LIMIT $1 OFFSET $2;
 `;
