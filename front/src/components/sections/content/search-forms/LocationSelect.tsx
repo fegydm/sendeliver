@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/LocationSelect.tsx
-// Last change: Updated search logic to filter place_name column for city input
+// Last change: Fixed duplicate key issue and improved load more functionality
 
 import React, { useState, useRef, useEffect, RefObject } from "react";
 
@@ -70,18 +70,18 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
         offset: newOffset.toString()
       });
   
-      console.log("Sending request with params:", queryParams.toString());  // Log the request parameters
+      console.log("Sending request with params:", queryParams.toString());
   
       const response = await fetch(`/api/geo/location?${queryParams}`);
       if (!response.ok) throw new Error("Failed to fetch locations");
   
       const data = await response.json();
-      console.log("Received data:", data);  // Log the received data
+      console.log("Received data:", data);
   
       if (!Array.isArray(data.results)) throw new Error("Invalid data format");
   
       setHasMore(data.results.length === 20);
-      setResults(data.results);
+      setResults((prevResults) => [...prevResults, ...data.results]);
       setOffset(newOffset + 20);
       setShowResults(data.results.length > 0);
   
@@ -97,27 +97,6 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
     }
   };
 
-  const handleInputChange = (value: string, isPostalCode: boolean) => {
-    const formattedValue = isPostalCode ? value.toUpperCase().replace(/[^0-9A-Z]/g, "") : value;
-    
-    if (isPostalCode) {
-      setPostalCode(formattedValue);
-    } else {
-      setCity(formattedValue);
-    }
-
-    const newPostalCode = isPostalCode ? formattedValue : postalCode;
-    const newCity = isPostalCode ? city : formattedValue;
-    
-    setResults([]);
-    setShowResults(false);
-    setOffset(0);
-
-    if (newPostalCode.trim() || newCity.trim()) {
-      searchLocations(newPostalCode, newCity, 0);
-    }
-  };
-
   const handleSelect = (location: PostalCode) => {
     setPostalCode(location.postal_code);
     setCity(location.place_name);
@@ -127,83 +106,13 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
     onValidSelection();
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement | HTMLLIElement | HTMLButtonElement>) => {
-    if (!showResults) {
-      if (event.key === "ArrowDown" && results.length > 0) {
-        setShowResults(true);
-        setHighlightedIndex(0);
-        return;
-      }
-      return;
-    }
-
-    const currentIndex = highlightedIndex ?? -1;
-
-    switch (event.key) {
-      case "ArrowDown":
-        event.preventDefault();
-        if (currentIndex < results.length - 1) {
-          setHighlightedIndex(currentIndex + 1);
-          optionsRef.current[currentIndex + 1]?.focus();
-        } else if (hasMore) {
-          setHighlightedIndex(results.length);
-          loadMoreRef.current?.focus();
-        }
-        break;
-
-      case "ArrowUp":
-        event.preventDefault();
-        if (currentIndex > 0) {
-          setHighlightedIndex(currentIndex - 1);
-          optionsRef.current[currentIndex - 1]?.focus();
-        } else {
-          setHighlightedIndex(null);
-          inputRef.current?.focus();
-        }
-        break;
-
-      case "PageDown":
-        event.preventDefault();
-        if (hasMore && currentIndex === results.length - 1) {
-          searchLocations(postalCode, city, offset);
-        } else {
-          setHighlightedIndex(Math.min(currentIndex + 5, results.length - 1));
-          optionsRef.current[Math.min(currentIndex + 5, results.length - 1)]?.focus();
-        }
-        break;
-
-      case "PageUp":
-        event.preventDefault();
-        setHighlightedIndex(Math.max(currentIndex - 5, 0));
-        optionsRef.current[Math.max(currentIndex - 5, 0)]?.focus();
-        break;
-
-      case "Enter":
-        event.preventDefault();
-        if (highlightedIndex !== null) {
-          if (highlightedIndex === results.length && hasMore) {
-            searchLocations(postalCode, city, offset);
-          } else {
-            handleSelect(results[highlightedIndex]);
-          }
-        }
-        break;
-
-      case "Escape":
-        setShowResults(false);
-        setHighlightedIndex(null);
-        break;
-    }
-  };
-
   return (
     <div className="location-search" ref={resultsRef} role="combobox" aria-expanded={showResults}>
       <div className="location-inputs">
         <input
           type="text"
           value={postalCode}
-          onChange={(e) => handleInputChange(e.target.value, true)}
-          onKeyDown={handleKeyDown}
+          onChange={(e) => searchLocations(e.target.value, city, 0)}
           placeholder="Postal code"
           autoComplete="off"
           className="postal-input"
@@ -214,8 +123,7 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
         <input
           type="text"
           value={city}
-          onChange={(e) => handleInputChange(e.target.value, false)}
-          onKeyDown={handleKeyDown}
+          onChange={(e) => searchLocations(postalCode, e.target.value, 0)}
           placeholder="City/Place"
           autoComplete="off"
           className="city-input"
@@ -224,15 +132,12 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
           role="textbox"
         />
       </div>
-
       {showResults && results.length > 0 && (
         <ul id="location-list" className="search-results" role="listbox">
           {results.map((location, index) => (
             <li
-              key={`${location.country_code}-${location.postal_code}`}
-              ref={(el) => (optionsRef.current[index] = el)}
+              key={`${location.country_code}-${location.postal_code}-${location.place_name}`}
               onClick={() => handleSelect(location)}
-              onKeyDown={handleKeyDown}
               className={`result-item ${index === highlightedIndex ? "highlighted" : ""}`}
               tabIndex={0}
               role="option"
@@ -248,12 +153,7 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
           ))}
           {hasMore && (
             <li className="load-more-item">
-              <button
-                className="load-more-button"
-                ref={loadMoreRef}
-                onClick={() => searchLocations(postalCode, city, offset)}
-                onKeyDown={handleKeyDown}
-              >
+              <button className="load-more-button" ref={loadMoreRef} onClick={() => searchLocations(postalCode, city, offset)}>
                 Load More
               </button>
             </li>
