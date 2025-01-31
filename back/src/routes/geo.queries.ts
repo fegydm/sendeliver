@@ -1,5 +1,5 @@
 // File: src/queries/geo.queries.ts
-// Last change: Added support for country-based postal code search
+// Last change: Reverted search methods while keeping new names
 
 export const GET_COUNTRIES_QUERY = `
   SELECT 
@@ -24,7 +24,6 @@ WHERE p.postal_code >= $1
   AND p.postal_code < $1 || '9'
 ORDER BY p.postal_code
 LIMIT $2 OFFSET $3;
-
 `;
 
 export const SEARCH_LOCATION_BY_COUNTRY_QUERY = `
@@ -41,22 +40,6 @@ WHERE p.postal_code >= $1
   AND p.country_code = $2
 ORDER BY p.postal_code
 LIMIT $3 OFFSET $4;
-
-`;
-
-export const SEARCH_PLACE_QUERY = `
-  SELECT 
-    p.country_code, 
-    p.postal_code, 
-    p.place_name, 
-    c.name_en AS country, 
-    CONCAT('/flags/3x4/optimized/', LOWER(p.country_code), '.svg') AS flag_url
-FROM geo.postal_codes p
-JOIN geo.countries c ON p.country_code = c.code_2
-WHERE p.place_name ILIKE $1 || '%'
-ORDER BY p.place_name
-LIMIT $2 OFFSET $3;
-
 `;
 
 export const DEFAULT_SEARCH_QUERY = `
@@ -70,4 +53,19 @@ FROM geo.postal_codes p
 JOIN geo.countries c ON p.country_code = c.code_2
 ORDER BY p.postal_code
 LIMIT $1 OFFSET $2;
+`;
+
+export const SEARCH_CITY_QUERY = `
+  SELECT 
+    p.country_code, 
+    p.postal_code, 
+    p.place_name, 
+    c.name_en AS country, 
+    CONCAT('/flags/3x4/optimized/', LOWER(p.country_code), '.svg') AS flag_url
+  FROM geo.postal_codes p
+  JOIN geo.countries c ON p.country_code = c.code_2
+  WHERE p.place_name >= $1
+    AND p.place_name < $1 || 'zzz'
+  ORDER BY p.place_name
+  LIMIT $2 OFFSET $3;
 `;

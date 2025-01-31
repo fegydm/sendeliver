@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/LocationSelect.tsx
-// Last change: Fixed search logic to always start a new search on input change
+// Last change: Updated search logic to filter place_name column for city input
 
 import React, { useState, useRef, useEffect, RefObject } from "react";
 
@@ -60,27 +60,31 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
       setOffset(0);
       return;
     }
-
+  
     try {
       const queryParams = new URLSearchParams({
-        postalCode: postalCodeValue,
-        city: cityValue,
+        ...(postalCodeValue && { postalCode: postalCodeValue }),
+        ...(cityValue && { city: cityValue }),
         ...(countryCode && { countryCode }),
         limit: "20",
         offset: newOffset.toString()
       });
-
+  
+      console.log("Sending request with params:", queryParams.toString());  // Log the request parameters
+  
       const response = await fetch(`/api/geo/location?${queryParams}`);
       if (!response.ok) throw new Error("Failed to fetch locations");
-
+  
       const data = await response.json();
+      console.log("Received data:", data);  // Log the received data
+  
       if (!Array.isArray(data.results)) throw new Error("Invalid data format");
-
+  
       setHasMore(data.results.length === 20);
-      setResults(data.results);  // Always set new results, don't append
+      setResults(data.results);
       setOffset(newOffset + 20);
       setShowResults(data.results.length > 0);
-
+  
       if (data.results.length === 1) {
         handleSelect(data.results[0]);
       }
@@ -101,16 +105,14 @@ const LocationSelect: React.FC<LocationSelectProps> = ({
     } else {
       setCity(formattedValue);
     }
-  
-    // Vždy spustíme nové vyhľadávanie s aktualizovanými hodnotami
+
     const newPostalCode = isPostalCode ? formattedValue : postalCode;
     const newCity = isPostalCode ? city : formattedValue;
     
-    setResults([]); // Vyčistíme existujúce výsledky
-    setShowResults(false); // Skryjeme výsledky počas nového vyhľadávania
-    setOffset(0); // Resetujeme offset
-  
-    // Spustíme nové vyhľadávanie len ak máme nejaký vstup
+    setResults([]);
+    setShowResults(false);
+    setOffset(0);
+
     if (newPostalCode.trim() || newCity.trim()) {
       searchLocations(newPostalCode, newCity, 0);
     }

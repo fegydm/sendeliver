@@ -1,5 +1,5 @@
 // File: src/routes/geo.routes.ts
-// Last change: Fixed TypeScript typing for handleGetLocation
+// Last change: Updated handleGetLocation to improve city search performance
 
 import { Router, RequestHandler } from "express";
 import { ParsedQs } from "qs";
@@ -8,13 +8,13 @@ import {
   GET_COUNTRIES_QUERY, 
   SEARCH_LOCATION_QUERY, 
   SEARCH_LOCATION_BY_COUNTRY_QUERY, 
-  SEARCH_PLACE_QUERY, 
+  SEARCH_CITY_QUERY, 
   DEFAULT_SEARCH_QUERY 
 } from "./geo.queries.js";
 
 interface LocationQuery extends ParsedQs {
   postalCode?: string;
-  place?: string;
+  city?: string;
   countryCode?: string;
   limit?: string;
   offset?: string;
@@ -22,10 +22,6 @@ interface LocationQuery extends ParsedQs {
 
 const router = Router();
 
-// Store reference to last request to cancel previous queries
-let lastAbortController: AbortController | null = null;
-
-// Fetch list of countries
 const handleGetCountries: RequestHandler = async (_req, res) => {
   try {
     const result = await pool.query(GET_COUNTRIES_QUERY);
@@ -36,29 +32,21 @@ const handleGetCountries: RequestHandler = async (_req, res) => {
   }
 };
 
-// Search locations by postal code or place name
 const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (req, res): Promise<void> => {
-  const { postalCode, place, countryCode, limit = "20", offset = "0" } = req.query;
+  const { postalCode, city, countryCode, limit = "20", offset = "0" } = req.query;
 
-  // Cancel previous request if a new one is made
-  if (lastAbortController) {
-    lastAbortController.abort();
-  }
-  lastAbortController = new AbortController();
-  const { signal } = lastAbortController;
+  console.log("Received query:", { postalCode, city, countryCode, limit, offset });
 
   try {
     let result;
     const limitValue = parseInt(limit, 10);
     const offsetValue = parseInt(offset, 10);
 
-    // Validate limit and offset values
     if (isNaN(limitValue) || isNaN(offsetValue) || limitValue <= 0 || offsetValue < 0) {
       res.status(400).json({ error: "Invalid limit or offset values" });
       return;
     }
 
-    // Search by postal code
     if (postalCode && typeof postalCode === "string") {
       if (countryCode && typeof countryCode === "string") {
         result = await pool.query(SEARCH_LOCATION_BY_COUNTRY_QUERY, [postalCode, countryCode, limitValue, offsetValue]);
@@ -66,29 +54,22 @@ const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (re
         result = await pool.query(SEARCH_LOCATION_QUERY, [postalCode, limitValue, offsetValue]);
       }
     }
-    // Search by place name
-    else if (place && typeof place === "string" && place.length >= 3) {
-      result = await pool.query(SEARCH_PLACE_QUERY, [place, limitValue, offsetValue]);
+    else if (city && typeof city === "string") {
+      result = await pool.query(SEARCH_CITY_QUERY, [city, limitValue, offsetValue]);
     }
-    // Default search
     else {
       result = await pool.query(DEFAULT_SEARCH_QUERY, [limitValue, offsetValue]);
     }
 
-    if (!signal.aborted) {
-      res.json({ results: result.rows });
-    }
+    console.log("Query result:", result.rows);
+
+    res.json({ results: result.rows });
   } catch (error: unknown) {
-    if (signal.aborted) {
-      console.warn("🔄 Request aborted (user typed too fast)");
-    } else {
-      console.error("❌ Error searching locations:", error);
-      res.status(500).json({ error: "Failed to search locations" });
-    }
+    console.error("❌ Error searching locations:", error);
+    res.status(500).json({ error: "Failed to search locations" });
   }
 };
 
-// Register routes
 router.get("/countries", handleGetCountries);
 router.get("/location", handleGetLocation);
 
