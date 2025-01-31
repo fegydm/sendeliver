@@ -1,10 +1,16 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Added LocationSelect for postal code and city fields
+// Last change: Added onValidSelection handling and updated LocationSelect usage
 
 import React, { useState, useRef } from 'react';
 import CountrySelect from './CountrySelect';
 import LocationSelect from './LocationSelect';
 import "@/styles/sections/manual-form.component.css";
+
+interface PostalCode {
+  country_code: string;
+  postal_code: string;
+  place_name: string;
+}
 
 interface FormData {
   pickup: {
@@ -32,11 +38,9 @@ interface FormData {
 }
 
 const ManualSearchForm: React.FC = () => {
-  // Refs for postal code inputs
   const pickupPostalRef = useRef<HTMLInputElement>(null);
   const deliveryPostalRef = useRef<HTMLInputElement>(null);
 
-  // Form state
   const [formData, setFormData] = useState<FormData>({
     pickup: {
       country: { code: '', flag: '' },
@@ -56,7 +60,9 @@ const ManualSearchForm: React.FC = () => {
     }
   });
 
-  // Handle country selection
+  const [isPickupValid, setIsPickupValid] = useState(false);
+  const [isDeliveryValid, setIsDeliveryValid] = useState(false);
+
   const handleCountrySelect = (type: 'pickup' | 'delivery', code: string, flag: string) => {
     setFormData(prev => ({
       ...prev,
@@ -67,10 +73,11 @@ const ManualSearchForm: React.FC = () => {
         city: ''
       }
     }));
+    if (type === 'pickup') setIsPickupValid(false);
+    else setIsDeliveryValid(false);
   };
 
-  // Handle location selection
-  const handleLocationSelect = (type: 'pickup' | 'delivery', location: { postal_code: string; place_name: string }) => {
+  const handleLocationSelect = (type: 'pickup' | 'delivery', location: PostalCode) => {
     setFormData(prev => ({
       ...prev,
       [type]: {
@@ -81,7 +88,6 @@ const ManualSearchForm: React.FC = () => {
     }));
   };
 
-  // Focus management for postal code fields
   const focusPostalCode = (type: 'pickup' | 'delivery') => {
     if (type === 'pickup') {
       pickupPostalRef.current?.focus();
@@ -90,20 +96,34 @@ const ManualSearchForm: React.FC = () => {
     }
   };
 
-  // Handle form submission
+  const handleValidSelection = (type: 'pickup' | 'delivery') => {
+    if (type === 'pickup') {
+      setIsPickupValid(true);
+    } else {
+      setIsDeliveryValid(true);
+    }
+    if (isPickupValid && isDeliveryValid) {
+      handleSearch();
+    }
+  };
+
+  const handleSearch = () => {
+    // Implement searching
+    console.log('Searching with form data:', formData);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Submitting form:', formData);
+    handleSearch();
   };
 
   return (
     <form className="manual-form" onSubmit={handleSubmit}>
       {/* Pickup section */}
-      <div className="form-section">
+      <div className={`form-section ${isPickupValid ? 'valid' : 'invalid'}`}>
         <h3 className="section-title">Pickup Details</h3>
         
         <div className="location-fields">
-          {/* Flag placeholder */}
           <div className="flag-placeholder">
             {formData.pickup.country.flag && (
               <img 
@@ -114,7 +134,6 @@ const ManualSearchForm: React.FC = () => {
             )}
           </div>
           
-          {/* Country select with dropdown */}
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
@@ -124,13 +143,13 @@ const ManualSearchForm: React.FC = () => {
             />
           </div>
           
-          {/* Location select for postal code and city */}
           <LocationSelect
             countryCode={formData.pickup.country.code}
             onLocationSelect={(location) => handleLocationSelect('pickup', location)}
             initialPostalCode={formData.pickup.postalCode}
             initialCity={formData.pickup.city}
             postalCodeRef={pickupPostalRef}
+            onValidSelection={() => handleValidSelection('pickup')}
           />
         </div>
 
@@ -149,7 +168,7 @@ const ManualSearchForm: React.FC = () => {
       </div>
 
       {/* Delivery section */}
-      <div className="form-section">
+      <div className={`form-section ${isDeliveryValid ? 'valid' : 'invalid'}`}>
         <h3 className="section-title">Delivery Details</h3>
         
         <div className="location-fields">
@@ -178,6 +197,7 @@ const ManualSearchForm: React.FC = () => {
             initialPostalCode={formData.delivery.postalCode}
             initialCity={formData.delivery.city}
             postalCodeRef={deliveryPostalRef}
+            onValidSelection={() => handleValidSelection('delivery')}
           />
         </div>
 
@@ -232,14 +252,7 @@ const ManualSearchForm: React.FC = () => {
       <button 
         type="submit"
         className="submit-button"
-        disabled={
-          !formData.pickup.country.code ||
-          !formData.pickup.postalCode ||
-          !formData.pickup.city ||
-          !formData.delivery.country.code ||
-          !formData.delivery.postalCode ||
-          !formData.delivery.city
-        }
+        disabled={!isPickupValid || !isDeliveryValid}
       >
         Submit Transport Request
       </button>
