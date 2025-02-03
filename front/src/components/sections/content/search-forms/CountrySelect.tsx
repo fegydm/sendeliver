@@ -1,15 +1,8 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Added useLocationForm integration while preserving existing logic
+// Last change: Simplified to UI component, using LocationContext for logic
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocationForm } from './LocationContext';
-
-interface Country {
- code_2: string;
- name_en: string;
- name_local: string;
- name_sk: string;
-}
+import { useLocationForm, Country } from './LocationContext';
 
 interface CountrySelectProps {
  onCountrySelect: (countryCode: string, flagPath: string) => void;
@@ -17,58 +10,32 @@ interface CountrySelectProps {
  initialValue?: string;
 }
 
-const getFlagPath = (countryCode: string) =>
- `flags/4x3/optimized/${countryCode.toLowerCase()}.svg`;
-
 const CountrySelect: React.FC<CountrySelectProps> = ({
  onCountrySelect,
  onNextFieldFocus,
  initialValue = '',
 }) => {
- const { updateCountry } = useLocationForm();
+ const { 
+   state, 
+   updateCountry, 
+   fetchCountries, 
+   filterCountries,
+   getFlagPath
+ } = useLocationForm();
 
- const [countries, setCountries] = useState<Country[]>([]);
  const [countryInput, setCountryInput] = useState(initialValue.toUpperCase());
- const [filteredCountries, setFilteredCountries] = useState<Country[]>([]);
  const [showDropdown, setShowDropdown] = useState(false);
  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
  const [isInputFocused, setIsInputFocused] = useState(false);
  const [lastValidInput, setLastValidInput] = useState('');
- const [isLoading, setIsLoading] = useState(false);
 
  const inputRef = useRef<HTMLInputElement>(null);
  const dropdownRef = useRef<HTMLDivElement>(null);
  const optionsRef = useRef<(HTMLLIElement | null)[]>([]);
 
  useEffect(() => {
-   let isMounted = true;
-   
-   const fetchCountries = async () => {
-     if (countries.length > 0 || isLoading) return;
-     
-     setIsLoading(true);
-     try {
-       const response = await fetch("/api/geo/countries");
-       if (!response.ok) throw new Error('Failed to fetch countries');
-       const data: Country[] = await response.json();
-       
-       if (isMounted) {
-         const sortedData = data.sort((a, b) => a.code_2.localeCompare(b.code_2));
-         setCountries(sortedData);
-         setFilteredCountries(sortedData);
-       }
-     } catch (error) {
-       console.error('Country loading error:', error);
-     } finally {
-       if (isMounted) {
-         setIsLoading(false);
-       }
-     }
-   };
-
    fetchCountries();
-   return () => { isMounted = false; };
- }, []);
+ }, [fetchCountries]);
 
  useEffect(() => {
    const handleClickOutside = (event: MouseEvent) => {
@@ -82,36 +49,28 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
    return () => document.removeEventListener('mousedown', handleClickOutside);
  }, []);
 
- const filterCountries = (input: string) => {
-   return countries.filter(country => 
-     country.code_2.startsWith(input.toUpperCase())
-   );
- };
-
  const handleCountryChange = (input: string) => {
    const cleanInput = input.replace(/[^A-Za-z]/g, '').toUpperCase();
    
-   const filtered = filterCountries(cleanInput);
-   
-   if (cleanInput.length === 2 && filtered.length === 0) {
+   if (cleanInput.length === 2 && state.countries.filtered.length === 0) {
      setCountryInput(lastValidInput);
      return;
    }
 
    setCountryInput(cleanInput);
-   setFilteredCountries(filtered);
+   filterCountries(cleanInput);
    setShowDropdown(true);
    setHighlightedIndex(null);
 
-   if (filtered.length > 0) {
+   if (state.countries.filtered.length > 0) {
      setLastValidInput(cleanInput);
    }
 
-   if (filtered.length === 1 && cleanInput.length === 2) {
-     handleCountrySelect(filtered[0]);
+   if (state.countries.filtered.length === 1 && cleanInput.length === 2) {
+     handleCountrySelect(state.countries.filtered[0]);
    }
 
-   if (filtered.length !== 1 && cleanInput.length < 2) {
+   if (state.countries.filtered.length !== 1 && cleanInput.length < 2) {
      onCountrySelect('', '');
    }
  };
@@ -122,12 +81,9 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
    setHighlightedIndex(null);
    setIsInputFocused(false);
    setLastValidInput(country.code_2);
-
-   // Add context update
+   
    const flagPath = getFlagPath(country.code_2);
    updateCountry(country.code_2, flagPath, country.name_en);
-   
-   // Keep existing callback
    onCountrySelect(country.code_2, flagPath);
    
    if (onNextFieldFocus) {
@@ -140,8 +96,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
      setShowDropdown(false);
      setHighlightedIndex(null);
    } else {
-     const filtered = countryInput ? filterCountries(countryInput) : countries;
-     setFilteredCountries(filtered);
+     filterCountries(countryInput);
      setShowDropdown(true);
    }
  };
@@ -168,7 +123,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
          setHighlightedIndex(0);
        } else {
          setHighlightedIndex(prev =>
-           prev === null || prev >= filteredCountries.length - 1 ? 0 : prev + 1
+           prev === null || prev >= state.countries.filtered.length - 1 ? 0 : prev + 1
          );
        }
        break;
@@ -180,14 +135,14 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
          setHighlightedIndex(null);
        } else {
          setHighlightedIndex(prev =>
-           prev === null || prev <= 0 ? filteredCountries.length - 1 : prev - 1
+           prev === null || prev <= 0 ? state.countries.filtered.length - 1 : prev - 1
          );
        }
        break;
 
      case 'PageDown':
        event.preventDefault();
-       setHighlightedIndex(Math.min(currentIndex + ITEMS_PER_PAGE, filteredCountries.length - 1));
+       setHighlightedIndex(Math.min(currentIndex + ITEMS_PER_PAGE, state.countries.filtered.length - 1));
        setIsInputFocused(false);
        break;
 
@@ -200,7 +155,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
      case 'Enter':
        event.preventDefault();
        if (highlightedIndex !== null && !isInputFocused) {
-         handleCountrySelect(filteredCountries[highlightedIndex]);
+         handleCountrySelect(state.countries.filtered[highlightedIndex]);
        }
        break;
 
@@ -282,7 +237,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
 
        {showDropdown && (
          <ul className="combobox-options" role="listbox">
-           {filteredCountries.map((country, index) => (
+           {state.countries.filtered.map((country, index) => (
              <li
                key={country.code_2}
                ref={el => optionsRef.current[index] = el}

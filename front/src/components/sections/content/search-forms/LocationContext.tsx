@@ -1,9 +1,16 @@
 // File: src/components/sections/content/search-forms/LocationContext.tsx
-// Last change: Consolidated all business logic into context
+// Last change: Added country management logic
 
 import { createContext, useState, useCallback, useContext, ReactNode } from 'react';
 
 // Types
+export interface Country {
+ code_2: string;
+ name_en: string;
+ name_local: string;
+ name_sk: string;
+}
+
 export interface LocationSuggestion {
  countryCode: string;
  postalCode: string;
@@ -25,6 +32,11 @@ interface LocationState {
    isValid: boolean;
    suggestions?: LocationSuggestion[];
  };
+ countries: {
+   all: Country[];
+   filtered: Country[];
+   isLoading: boolean;
+ };
 }
 
 interface ValidationResponse {
@@ -41,14 +53,14 @@ interface LocationFormContextValue {
  resetForm: () => void;
  clearValidation: () => void;
  handleSuggestionSelect: (suggestion: LocationSuggestion) => Promise<void>;
+ fetchCountries: () => Promise<void>;
+ filterCountries: (input: string) => void;
+ getFlagPath: (countryCode: string) => string;
 }
 
-interface LocationFormProviderProps {
- children: ReactNode;
- type: 'pickup' | 'delivery';
-}
+const getFlagPath = (countryCode: string): string => 
+ `flags/4x3/optimized/${countryCode.toLowerCase()}.svg`;
 
-// Initial state
 const initialState: LocationState = {
  country: {
    code: '',
@@ -63,14 +75,24 @@ const initialState: LocationState = {
    isDirty: false,
    isValid: false,
    suggestions: []
+ },
+ countries: {
+   all: [],
+   filtered: [],
+   isLoading: false
  }
 };
 
 export const LocationFormContext = createContext<LocationFormContextValue | undefined>(undefined);
 
-export function LocationFormProvider({ children, type }: LocationFormProviderProps) {
+interface LocationFormProviderProps {
+ children: ReactNode;
+ type: 'pickup' | 'delivery';
+}
+
+export function LocationFormProvider({ children }: LocationFormProviderProps) {
  const [state, setState] = useState<LocationState>(initialState);
- 
+
  const updateValidation = useCallback((validation: Partial<LocationState['validation']>) => {
    setState(prev => ({
      ...prev,
@@ -103,6 +125,54 @@ export function LocationFormProvider({ children, type }: LocationFormProviderPro
      };
    }
  }, [state.country.code]);
+
+ const fetchCountries = useCallback(async () => {
+   if (state.countries.all.length > 0 || state.countries.isLoading) return;
+
+   setState(prev => ({
+     ...prev,
+     countries: { ...prev.countries, isLoading: true }
+   }));
+
+   try {
+     const response = await fetch("/api/geo/countries");
+     if (!response.ok) throw new Error('Failed to fetch countries');
+     const data: Country[] = await response.json();
+     
+     const sortedData = data.sort((a, b) => a.code_2.localeCompare(b.code_2));
+     setState(prev => ({
+       ...prev,
+       countries: {
+         all: sortedData,
+         filtered: sortedData,
+         isLoading: false
+       }
+     }));
+   } catch (error) {
+     console.error('Country loading error:', error);
+     setState(prev => ({
+       ...prev,
+       countries: {
+         ...prev.countries,
+         isLoading: false
+       }
+     }));
+   }
+ }, []);
+
+ const filterCountries = useCallback((input: string) => {
+   const filtered = state.countries.all.filter(country => 
+     country.code_2.startsWith(input.toUpperCase())
+   );
+   
+   setState(prev => ({
+     ...prev,
+     countries: {
+       ...prev.countries,
+       filtered
+     }
+   }));
+ }, [state.countries.all]);
 
  const updateCountry = useCallback((code: string, flag: string, name?: string) => {
    setState(prev => ({
@@ -209,7 +279,10 @@ export function LocationFormProvider({ children, type }: LocationFormProviderPro
    updateCity,
    resetForm,
    clearValidation,
-   handleSuggestionSelect
+   handleSuggestionSelect,
+   fetchCountries,
+   filterCountries,
+   getFlagPath
  };
 
  return (
