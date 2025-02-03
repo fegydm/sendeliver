@@ -1,5 +1,5 @@
 /* File: src/styles/sections/manual-form.component.css */
-/* Last change: Added styles for lazy loading, loading spinner, and improved scrolling */
+/* Last change: Updated country select styles and improved layout */
 
 /* Main form styling */
 .manual-form {
@@ -128,25 +128,31 @@
 }
 
 .country-code-input {
-  width: 50px;
+  width: 30px;
   padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
   text-align: left;
+  text-transform: uppercase;
 }
 
-.dropdown-toggle {
-  margin-left: 5px;
-  padding: 5px;
+.arrow-icon {
+  font-size: 14px;
+  color: #666;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  margin-left: 5px;
+  padding: 4px;
+  user-select: none;
 }
 
-.dropdown-toggle.active {
-  transform: rotate(180deg);
+.arrow-icon:hover {
+  color: #333;
 }
 
 .combobox-options {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   left: -28px;
   width: 400px;
   max-height: 300px;
@@ -157,23 +163,24 @@
   list-style-type: none;
   padding: 0;
   margin: 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .combobox-option {
   display: flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: 6px 8px;
   cursor: pointer;
-  height: 28px;
-  min-height: 28px;
+  min-height: 32px;
 }
 
 .combobox-option:hover {
-  background-color: #f0f0f0;
+  background-color: #f5f5f5;
 }
 
 .combobox-option.highlighted {
-  background-color: #e0e0e0;
+  background-color: #f0f0f0;
 }
 
 /* LocationSelect styles */
@@ -246,6 +253,8 @@
   list-style-type: none;
   padding: 0;
   margin: 2px 0 0 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .result-item {
@@ -253,13 +262,13 @@
   align-items: center;
   padding: 5px 8px;
   cursor: pointer;
-  height: 28px;
-  min-height: 28px;
+  height: 32px;
+  min-height: 32px;
   gap: 8px;
 }
 
 .result-item:hover {
-  background-color: #f0f0f0;
+  background-color: #f5f5f5;
 }
 
 /* Load More Button */
@@ -267,6 +276,7 @@
   text-align: center;
   padding: 5px;
   background: #f9f9f9;
+  border-top: 1px solid #eee;
 }
 
 .load-more-button {
@@ -287,7 +297,6 @@
 .load-more-button:active {
   background: #d6d6d6;
 }
-
 
 /* Smooth Scroll for Results */
 .search-results {
@@ -310,19 +319,21 @@
 
 /* Shared flag and item styles */
 .country-flag-small {
-  width: 16px;
-  height: 12px;
-  margin-right: 8px;
+  width: 20px;
+  height: 15px;
   object-fit: cover;
+  border-radius: 2px;
+  margin-right: 8px;
 }
 
 .country-code {
-  min-width: 28px;
+  min-width: 32px;
+  font-weight: 500;
 }
 
 .country-separator {
-  margin: 0 4px;
   color: #666;
+  margin: 0 8px;
 }
 
 .postal-code {
@@ -332,4 +343,10 @@
 
 .city-name {
   flex-grow: 1;
+}
+
+.country-local {
+  color: #666;
+  margin-left: 8px;
+  font-size: 0.92em;
 }

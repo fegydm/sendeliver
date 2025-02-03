@@ -5,21 +5,23 @@
   "private": true,
   "scripts": {
     "clean": "node back/src/scripts/clean.js",
-    "install:back": "cd back && npm install",
-    "install:front": "cd front && npm install",
-    "install": "npm run install:parallel",
-    "install:parallel": "npm run install:back & npm run install:front",
-    "build:back": "cd back && npm run build",
-    "build:front": "cd front && npm run build",
-    "build": "npm run build:parallel",
-    "build:parallel": "npm run build:back & npm run build:front",
-    "dev:back": "cd back && npm run dev",
-    "dev:front": "cd front && npm run dev",
-    "dev": "npm run dev:parallel",
-    "dev:parallel": "npm run dev:back & npm run dev:front",
-    "start:back": "cd back && npm start",
-    "start:front": "cd front && npm run preview",
-    "start": "npm run start:parallel",
-    "start:parallel": "npm run start:back & npm run start:front"
+
+    "install": "npm run install:win || npm run install:unix",
+    "install:win": "start /b /wait cmd /c \"(cd back && npm install) & (cd ../front && npm install)\"",
+    "install:unix": "(cd back && npm install &) && (cd front && npm install &)",
+
+    "build": "npm run build:win || npm run build:unix",
+    "build:win": "start /b /wait cmd /c \"cd back && npm run build\" && cd front && set NODE_ENV=production&& .\\node_modules\\.bin\\vite build",
+    "build:unix": "cd back && NODE_ENV=production npm run build && cd ../front && NODE_ENV=production npm run build",
+
+    "dev": "npm run dev:win || npm run dev:unix",
+    "dev:win": "cd back && start /b cmd /c \"npm run dev\" && ping -n 5 127.0.0.1 > nul && cd ../front && npm run dev",
+    "dev:unix": "cd back && npm run dev & cd front && npm run dev",
+
+    "start": "npm run start:win || npm run start:unix",
+    "start:win": "cd back && start /b cmd /c \"npm start\" && cd ../front && npm run preview",
+    "start:unix": "(cd back && npm start &) && cd front && npm run preview",
+
+    "reset": "npm run clean && npm run install && npm run build"
   }
 }

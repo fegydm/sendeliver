@@ -1,12 +1,12 @@
-// File: ./front/src/App.tsx
-
+// File: src/App.tsx
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
+import { CountriesProvider } from '@/context/CountriesContext';
 import Navigation from "@/components/sections/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
-import JozoPage from "@/pages/jozo.page"; // Updated
-import LukyPage from "@/pages/luky.page"; // Updated
+import JozoPage from "@/pages/jozo.page";
+import LukyPage from "@/pages/luky.page";
 import NotFoundPage from "@/pages/notfound.page";
 import HomePage from "@/pages/home.page";
 import TestPage from "@/pages/test.page";
@@ -26,7 +26,7 @@ const ROUTES = {
   TEST2: "/test2",
   TEST1: "/test1",
   TEST3: "/test3",
-  SECRET: ["/jozo", "/luky"], // Updated to /jozo and /luky
+  SECRET: ["/jozo", "/luky"],
 } as const;
 
 const App: React.FC = () => {
@@ -52,25 +52,18 @@ const App: React.FC = () => {
 
   const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
 
-  const handleTestFooterClose = () => {
-    setIsTestFooterVisible(false);
-    localStorage.removeItem("isTestFooterVisible");
-  };
-
   const isTestPageWithoutHeaderFooter = [ROUTES.TEST2, ROUTES.TEST1, ROUTES.TEST3].includes(
     window.location.pathname as typeof ROUTES.TEST2
   );
 
   return (
-    <>
-      {/* Header Section */}
+    <CountriesProvider>
       {!isTestPageWithoutHeaderFooter && (
         <header>
           <Navigation isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
         </header>
       )}
 
-      {/* Main Content Section */}
       <main>
         <Routes>
           <Route path={ROUTES.HOME} element={<HomePage />} />
@@ -88,14 +81,13 @@ const App: React.FC = () => {
           <Route path={ROUTES.TEST1} element={<Test1Page />} />
           <Route path={ROUTES.TEST3} element={<Test3Page />} />
 
-          <Route path="/jozo" element={<JozoPage />} /> {/* Updated */}
-          <Route path="/luky" element={<LukyPage />} /> {/* Updated */}
+          <Route path="/jozo" element={<JozoPage />} />
+          <Route path="/luky" element={<LukyPage />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
 
-      {/* Footer Section */}
       {!isTestPageWithoutHeaderFooter && (
         <footer>
           <FooterPage
@@ -111,7 +103,7 @@ const App: React.FC = () => {
           />
         </footer>
       )}
-    </>
+    </CountriesProvider>
   );
 };
 

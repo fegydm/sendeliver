@@ -3,15 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "cross-env NODE_ENV=production node dist/server.js",
-    "dev": "nodemon --watch src --ext ts --exec \"npm run build && NODE_ENV=development node dist/server.js\"",
+    "start": "node dist/server.js",
+    "dev": "nodemon --exec tsx src/server.ts",
     "clean": "npx rimraf dist node_modules",
     "build": "tsc --project tsconfig.json",
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "dev:back": "cross-env NODE_ENV=development tsx watch src/server.ts"
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@types/pg": "^8.11.0",

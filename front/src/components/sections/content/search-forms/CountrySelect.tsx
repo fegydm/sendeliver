@@ -1,6 +1,3 @@
-// File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Fixed infinite API calls and improved error handling
-
 import React, { useState, useEffect, useRef } from 'react';
 
 interface Country {
@@ -24,7 +21,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
   onNextFieldFocus,
   initialValue = '',
 }) => {
-  // State management
   const [countries, setCountries] = useState<Country[]>([]);
   const [countryInput, setCountryInput] = useState(initialValue.toUpperCase());
   const [filteredCountries, setFilteredCountries] = useState<Country[]>([]);
@@ -34,12 +30,10 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
   const [lastValidInput, setLastValidInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Refs for DOM elements
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const optionsRef = useRef<(HTMLLIElement | null)[]>([]);
 
-  // Fetch countries data
   useEffect(() => {
     let isMounted = true;
     
@@ -70,7 +64,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     return () => { isMounted = false; };
   }, []);
 
-  // Handle clicks outside dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -83,42 +76,40 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle country input changes
+  const filterCountries = (input: string) => {
+    return countries.filter(country => 
+      country.code_2.startsWith(input.toUpperCase())
+    );
+  };
+
   const handleCountryChange = (input: string) => {
     const cleanInput = input.replace(/[^A-Za-z]/g, '').toUpperCase();
     
-    // Filter countries based on input
-    const filtered = countries.filter(country => country.code_2.startsWith(cleanInput));
+    const filtered = filterCountries(cleanInput);
     
-    // Validate second character
     if (cleanInput.length === 2 && filtered.length === 0) {
       setCountryInput(lastValidInput);
       return;
     }
 
-    // Update state
     setCountryInput(cleanInput);
     setFilteredCountries(filtered);
     setShowDropdown(true);
     setHighlightedIndex(null);
 
-    // Store last valid input
     if (filtered.length > 0) {
       setLastValidInput(cleanInput);
     }
 
-    // Auto-select if there's exactly one match
     if (filtered.length === 1 && cleanInput.length === 2) {
       handleCountrySelect(filtered[0]);
     }
 
-    // Clear selection if no exact match
     if (filtered.length !== 1 && cleanInput.length < 2) {
       onCountrySelect('', '');
     }
   };
 
-  // Handle country selection
   const handleCountrySelect = (country: Country) => {
     setCountryInput(country.code_2);
     setShowDropdown(false);
@@ -127,33 +118,31 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     setLastValidInput(country.code_2);
     onCountrySelect(country.code_2, getFlagPath(country.code_2));
     if (onNextFieldFocus) {
-      setTimeout(() => onNextFieldFocus(), 0);
+      setTimeout(onNextFieldFocus, 0);
     }
   };
 
-  // Toggle dropdown visibility
   const toggleDropdown = () => {
     if (showDropdown) {
       setShowDropdown(false);
       setHighlightedIndex(null);
     } else {
+      const filtered = countryInput ? filterCountries(countryInput) : countries;
+      setFilteredCountries(filtered);
       setShowDropdown(true);
-      setFilteredCountries(countries);
     }
   };
 
-  // Handle keyboard navigation
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (!showDropdown) {
-      if (event.key === 'ArrowDown' || event.key === 'Enter') {
-        event.preventDefault();
-        setShowDropdown(true);
-        setHighlightedIndex(0);
-        setIsInputFocused(false);
-        return;
-      }
+    if (!showDropdown && (event.key === 'ArrowDown' || event.key === 'Enter')) {
+      event.preventDefault();
+      setShowDropdown(true);
+      setHighlightedIndex(0);
+      setIsInputFocused(false);
       return;
     }
+
+    if (!showDropdown) return;
 
     const ITEMS_PER_PAGE = 8;
     const currentIndex = highlightedIndex || 0;
@@ -211,7 +200,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     }
   };
 
-  // Handle scroll into view for highlighted items
   useEffect(() => {
     if (highlightedIndex !== null && !isInputFocused && showDropdown) {
       const option = optionsRef.current[highlightedIndex];
@@ -243,11 +231,40 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
         />
         <button
           type="button"
-          className={`dropdown-toggle ${showDropdown ? 'active' : ''}`}
+          className="dropdown-toggle"
           onClick={toggleDropdown}
           aria-label="Toggle country list"
+          aria-expanded={showDropdown}
+          style={{
+            padding: '0.25rem',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            marginLeft: '-1px'
+          }}
         >
-          ▼
+          <svg 
+            width="10" 
+            height="6" 
+            viewBox="0 0 10 6" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ 
+              transform: showDropdown ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.2s ease-in-out"
+            }}
+            aria-hidden="true"
+          >
+            <path 
+              d="M1 1L5 5L9 1" 
+              stroke="currentColor"
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
 
         {showDropdown && (
@@ -269,9 +286,9 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
                   className="country-flag-small"
                 />
                 <span className="country-code">{country.code_2}</span>
-                <span className="country-separator"> - </span>
+                <span className="country-separator">&nbsp;-&nbsp;</span>
                 <span className="country-name">{country.name_en}</span>
-                <span className="name-local">{country.name_local}</span>
+                <span className="country-local text-gray-500">&nbsp;({country.name_local})</span>
               </li>
             ))}
           </ul>
