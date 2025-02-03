@@ -77,3 +77,11 @@ export const SEARCH_CITY_QUERY = `
   ORDER BY p.place_name
   LIMIT $2 OFFSET $3;
 `;
+
+export const GET_VALID_POSTAL_CHARS_QUERY = `
+  SELECT 
+    country_code,
+    array_agg(DISTINCT LEFT(postal_code, 1) ORDER BY LEFT(postal_code, 1)) as valid_chars
+  FROM geo.postal_codes
+  GROUP BY country_code;
+`;
