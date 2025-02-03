@@ -42,11 +42,22 @@ const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
       originalWarn(...args);
     };
 
-    // Capture actual errors
+    // Capture actual errors with safe formatting
     console.error = (...args) => {
-      const formattedError = args
-        .map(arg => (typeof arg === "object" ? JSON.stringify(arg, null, 2) : arg))
-        .join(" ");
+      const formattedError = args.map(arg => {
+        if (typeof arg === "object") {
+          // If error message starts with HTML doctype, return it directly
+          if (arg && typeof arg.message === "string" && arg.message.trim().startsWith("<!doctype")) {
+            return arg.message;
+          }
+          try {
+            return JSON.stringify(arg, null, 2);
+          } catch (err) {
+            return String(arg);
+          }
+        }
+        return arg;
+      }).join(" ");
       
       if (formattedError.includes("Error:") || formattedError.includes("Exception:")) {
         setErrors(prev => [...prev, formattedError]);
