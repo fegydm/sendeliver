@@ -1,5 +1,5 @@
 // File: src/routes/geo.queries.ts
-// Last change: Added existence check query and optimized search conditions
+// Last change: Optimized queries for indexing and LIKE performance
 
 export const GET_COUNTRIES_QUERY = `
   SELECT 
@@ -15,9 +15,9 @@ export const CHECK_LOCATION_EXISTS_QUERY = `
   SELECT EXISTS (
     SELECT 1 
     FROM geo.postal_codes p
-    WHERE ($1::text IS NULL OR p.postal_code LIKE $1 || '%')
+    WHERE ($3::text IS NULL OR p.country_code = $3)
+      AND ($1::text IS NULL OR (p.postal_code >= $1 AND p.postal_code < $1 || '9'))
       AND ($2::text IS NULL OR p.place_name ILIKE $2 || '%')
-      AND ($3::text IS NULL OR p.country_code = $3)
     LIMIT 1
   ) as found;
 `;
@@ -31,9 +31,10 @@ export const SEARCH_LOCATION_QUERY = `
     CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url
   FROM geo.postal_codes p
   JOIN geo.countries c ON p.country_code = c.code_2
-  WHERE p.postal_code LIKE $1 || '%'
-  ORDER BY p.postal_code
-  LIMIT $2 OFFSET $3;
+  WHERE ($2::text IS NULL OR p.country_code = $2)
+    AND ($1::text IS NULL OR (p.postal_code >= $1 AND p.postal_code < $1 || '9'))
+  ORDER BY p.country_code, p.postal_code
+  LIMIT $3 OFFSET $4;
 `;
 
 export const SEARCH_LOCATION_BY_COUNTRY_QUERY = `
@@ -45,8 +46,9 @@ export const SEARCH_LOCATION_BY_COUNTRY_QUERY = `
     CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url
   FROM geo.postal_codes p
   JOIN geo.countries c ON p.country_code = c.code_2
-  WHERE p.postal_code LIKE $1 || '%'
-    AND p.country_code = $2
+  WHERE p.country_code = $2
+    AND ($1::text IS NULL OR 
+         (p.postal_code >= $1 AND p.postal_code < $1 || CHR(ASCII(RIGHT($1, 1)) + 1)))
   ORDER BY p.postal_code
   LIMIT $3 OFFSET $4;
 `;
@@ -60,8 +62,9 @@ export const DEFAULT_SEARCH_QUERY = `
     CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url
   FROM geo.postal_codes p
   JOIN geo.countries c ON p.country_code = c.code_2
+  WHERE ($1::text IS NULL OR p.country_code = $1)
   ORDER BY p.postal_code
-  LIMIT $1 OFFSET $2;
+  LIMIT $2 OFFSET $3;
 `;
 
 export const SEARCH_CITY_QUERY = `
@@ -73,9 +76,10 @@ export const SEARCH_CITY_QUERY = `
     CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url
   FROM geo.postal_codes p
   JOIN geo.countries c ON p.country_code = c.code_2
-  WHERE p.place_name ILIKE $1 || '%'
+  WHERE ($2::text IS NULL OR p.country_code = $2)
+    AND ($1::text IS NULL OR p.place_name ILIKE $1 || '%')
   ORDER BY p.place_name
-  LIMIT $2 OFFSET $3;
+  LIMIT $3 OFFSET $4;
 `;
 
 export const GET_VALID_POSTAL_CHARS_QUERY = `
