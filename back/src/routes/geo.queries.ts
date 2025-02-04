@@ -28,7 +28,7 @@ export const SEARCH_LOCATION_QUERY = `
     p.postal_code, 
     p.place_name, 
     c.name_en AS country, 
-    CONCAT('/flags/3x4/optimized/', LOWER(p.country_code), '.svg') AS flag_url
+    CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url
   FROM geo.postal_codes p
   JOIN geo.countries c ON p.country_code = c.code_2
   WHERE p.postal_code LIKE $1 || '%'
@@ -42,7 +42,7 @@ export const SEARCH_LOCATION_BY_COUNTRY_QUERY = `
     p.postal_code, 
     p.place_name, 
     c.name_en AS country, 
-    CONCAT('/flags/3x4/optimized/', LOWER(p.country_code), '.svg') AS flag_url
+    CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url
   FROM geo.postal_codes p
   JOIN geo.countries c ON p.country_code = c.code_2
   WHERE p.postal_code LIKE $1 || '%'
@@ -57,7 +57,7 @@ export const DEFAULT_SEARCH_QUERY = `
     p.postal_code, 
     p.place_name, 
     c.name_en AS country, 
-    CONCAT('/flags/3x4/optimized/', LOWER(p.country_code), '.svg') AS flag_url
+    CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url
   FROM geo.postal_codes p
   JOIN geo.countries c ON p.country_code = c.code_2
   ORDER BY p.postal_code
@@ -70,7 +70,7 @@ export const SEARCH_CITY_QUERY = `
     p.postal_code, 
     p.place_name, 
     c.name_en AS country, 
-    CONCAT('/flags/3x4/optimized/', LOWER(p.country_code), '.svg') AS flag_url
+    CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url
   FROM geo.postal_codes p
   JOIN geo.countries c ON p.country_code = c.code_2
   WHERE p.place_name ILIKE $1 || '%'

@@ -1,4 +1,6 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
+// Last change: Added logging for flag loading issues and ensured correct flag URL handling
+
 import React, { useRef, useEffect, RefObject } from "react";
 import { useLocationForm, LocationSuggestion } from "./LocationContext";
 
@@ -75,24 +77,35 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
             state.validation.suggestions &&
             state.validation.suggestions.length > 0 && (
               <ul id="location-list" className="search-results" role="listbox">
-                {state.validation.suggestions.map((suggestion: LocationSuggestion, index: number) => (
-                  <li
-                    key={`${suggestion.countryCode}-${suggestion.postalCode}-${suggestion.city}-${index}`}
-                    onClick={() => handleSuggestionSelect(suggestion)}
-                    className="result-item"
-                    tabIndex={0}
-                    role="option"
-                  >
-                    <img
-                      // Use suggestion.flagUrl if available; otherwise fallback to getFlagPath (which uses folder "4x3")
-                      src={suggestion.flagUrl || getFlagPath(suggestion.countryCode)}
-                      alt={`${suggestion.countryCode} flag`}
-                      className="country-flag-small"
-                    />
-                    <span className="postal-code">{suggestion.postalCode}</span>
-                    <span className="city-name">{suggestion.city}</span>
-                  </li>
-                ))}
+                {state.validation.suggestions.map((suggestion: LocationSuggestion, index: number) => {
+                  const flagUrl = suggestion.flagUrl || getFlagPath(suggestion.countryCode);
+
+                  console.log(
+                    `Suggestion: ${suggestion.countryCode} | Flag URL: ${flagUrl}`
+                  );
+
+                  return (
+                    <li
+                      key={`${suggestion.countryCode}-${suggestion.postalCode}-${suggestion.city}-${index}`}
+                      onClick={() => handleSuggestionSelect(suggestion)}
+                      className="result-item"
+                      tabIndex={0}
+                      role="option"
+                    >
+                      <img
+                        src={flagUrl}
+                        alt={`${suggestion.countryCode} flag`}
+                        className="country-flag-small"
+                        onError={(e) => {
+                          console.error("Flag load error:", e.currentTarget.src);
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                      <span className="postal-code">{suggestion.postalCode}</span>
+                      <span className="city-name">{suggestion.city}</span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
         </div>
