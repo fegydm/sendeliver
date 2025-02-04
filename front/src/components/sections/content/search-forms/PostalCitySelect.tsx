@@ -1,8 +1,9 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Applied working patterns from CountrySelect
+// Last change: Ensured dropdown only opens after first input character
 
 import React, { useRef, useEffect, useState, RefObject } from "react";
 import { useLocationForm, LocationSuggestion } from "./LocationContext";
+import useDropdownNavigation from "@/hooks/useDropdownNavigation"; // adjust the path as needed
 
 interface PostalCitySelectProps {
   postalCodeRef?: RefObject<HTMLInputElement>;
@@ -15,19 +16,11 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
   dateInputRef,
   onValidSelection,
 }) => {
-  const {
-    state,
-    updatePostalCode,
-    updateCity,
-    handleSuggestionSelect
-  } = useLocationForm();
+  const { state, updatePostalCode, updateCity, handleSuggestionSelect } = useLocationForm();
 
-  // Local state
-  const [input, setInput] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
-  const [isInputFocused, setIsInputFocused] = useState(true);
+  // Local state for managing dropdown and pagination
   const [page, setPage] = useState(1);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // DOM References
   const inputRef = useRef<HTMLInputElement>(null);
@@ -35,99 +28,71 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const optionsRef = useRef<(HTMLLIElement | null)[]>([]);
 
-  // Constants
+  // Constants for pagination
   const ITEMS_PER_PAGE = 20;
   const suggestions = state.validation.suggestions || [];
   const visibleSuggestions = suggestions.slice(0, page * ITEMS_PER_PAGE);
   const hasMore = suggestions.length > visibleSuggestions.length;
 
-  // Handle input change
+  // Handle input change – open dropdown only when postal code is not empty
   const handleInputChange = (value: string) => {
-    setInput(value);
     updatePostalCode(value);
-    setIsDropdownOpen(true);
+    if (value.trim() !== "") {
+      console.log("Opening dropdown due to input...");
+      setIsDropdownOpen(true);
+    } else {
+      console.log("Closing dropdown (input empty).");
+      setIsDropdownOpen(false);
+    }
     setPage(1);
   };
 
-  // Handle selection
+  // Handle selection of a suggestion
   const handleSelection = async (suggestion: LocationSuggestion) => {
+    console.log("Selected suggestion:", suggestion);
     await handleSuggestionSelect(suggestion);
     setIsDropdownOpen(false);
-    setHighlightedIndex(null);
-    setIsInputFocused(true);
-    
+    // Move focus to next field if available
     if (suggestion && dateInputRef?.current) {
       dateInputRef.current.focus();
       onValidSelection();
     }
   };
 
-  // Handle keyboard navigation
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    // Ak nie je otvorený dropdown a stlačíme šípku dole alebo Enter
-    if (!isDropdownOpen && (event.key === 'ArrowDown' || event.key === 'Enter')) {
-      event.preventDefault();
-      setIsDropdownOpen(true);
-      setHighlightedIndex(0);
-      setIsInputFocused(false);
-      return;
-    }
+  // Use custom hook for dropdown navigation with openDropdown callback
+  const {
+    highlightedIndex,
+    isInputFocused,
+    setIsInputFocused,
+    handleKeyDown: dropdownKeyDown,
+  } = useDropdownNavigation({
+    itemsCount: visibleSuggestions.length,
+    hasMore,
+    onSelectItem: (index: number) => {
+      if (index === visibleSuggestions.length && hasMore) {
+        console.log("Load more triggered.");
+        setPage((p) => p + 1);
+      } else if (visibleSuggestions[index]) {
+        console.log("Navigated to suggestion:", visibleSuggestions[index]);
+        handleSelection(visibleSuggestions[index]);
+      }
+    },
+    onLoadMore: () => setPage((p) => p + 1),
+    inputRef: postalCodeRef || inputRef,
+    itemsPerPage: ITEMS_PER_PAGE,
+    openDropdown: () => {
+      if (state.postalCode.trim() !== "") {
+        console.log("Dropdown manually opened.");
+        setIsDropdownOpen(true);
+      }
+    },
+    isDropdownOpen: isDropdownOpen, // 🔥 FIX: Dropdown only reacts when it is open
+  });
 
-    if (!isDropdownOpen) return;
-
-    const totalItems = visibleSuggestions.length + (hasMore ? 1 : 0);
-    const maxIndex = totalItems - 1;
-
-    switch(event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        if (isInputFocused) {
-          setIsInputFocused(false);
-          setHighlightedIndex(0);
-        } else {
-          setHighlightedIndex(prev => 
-            prev === null || prev >= maxIndex ? 0 : prev + 1
-          );
-        }
-        break;
-
-      case 'ArrowUp':
-        event.preventDefault();
-        if (!isInputFocused && (highlightedIndex === 0 || highlightedIndex === null)) {
-          setIsInputFocused(true);
-          setHighlightedIndex(null);
-          inputRef.current?.focus();
-        } else {
-          setHighlightedIndex(prev =>
-            prev === null || prev <= 0 ? maxIndex : prev - 1
-          );
-        }
-        break;
-
-      case 'Enter':
-        event.preventDefault();
-        if (highlightedIndex !== null && !isInputFocused) {
-          if (highlightedIndex === visibleSuggestions.length && hasMore) {
-            setPage(p => p + 1);
-          } else if (visibleSuggestions[highlightedIndex]) {
-            handleSelection(visibleSuggestions[highlightedIndex]);
-          }
-        }
-        break;
-
-      case 'Escape':
-        event.preventDefault();
-        setIsDropdownOpen(false);
-        setHighlightedIndex(null);
-        setIsInputFocused(true);
-        inputRef.current?.focus();
-        break;
-    }
-  };
-
-  // Handle scroll into view
+  // Scroll the highlighted item into view
   useEffect(() => {
     if (highlightedIndex !== null && !isInputFocused && isDropdownOpen) {
+      console.log("Scrolling to highlighted item:", highlightedIndex);
       optionsRef.current[highlightedIndex]?.scrollIntoView({
         block: 'nearest',
         behavior: 'smooth'
@@ -143,10 +108,13 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
             type="text"
             value={state.postalCode}
             onChange={(e) => handleInputChange(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => {
+              console.log("Key pressed:", e.key, "Dropdown open:", isDropdownOpen);
+              dropdownKeyDown(e);
+            }}
             onFocus={() => {
+              console.log("Input focused, but dropdown does NOT open.");
               setIsInputFocused(true);
-              setIsDropdownOpen(true);
             }}
             placeholder="Postal code"
             autoComplete="off"
@@ -161,7 +129,7 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
                   key={`${suggestion.countryCode}-${suggestion.postalCode}-${suggestion.city}-${index}`}
                   ref={el => optionsRef.current[index] = el}
                   onClick={() => handleSelection(suggestion)}
-                  onKeyDown={handleKeyDown}
+                  onKeyDown={dropdownKeyDown}
                   className={`result-item ${index === highlightedIndex && !isInputFocused ? 'highlighted' : ''}`}
                   tabIndex={index === highlightedIndex && !isInputFocused ? 0 : -1}
                 >
@@ -180,7 +148,8 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
               {hasMore && (
                 <li
                   ref={el => optionsRef.current[visibleSuggestions.length] = el}
-                  onClick={() => setPage(p => p + 1)}
+                  onClick={() => setPage((p) => p + 1)}
+                  onKeyDown={dropdownKeyDown}
                   className={`load-more ${visibleSuggestions.length === highlightedIndex && !isInputFocused ? 'highlighted' : ''}`}
                   tabIndex={visibleSuggestions.length === highlightedIndex && !isInputFocused ? 0 : -1}
                 >
