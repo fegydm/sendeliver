@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Ensured dropdown only opens after first input character
+// Last change: Allowed filtering based on a combination of CC, postal code and city (fields can be empty)
 
 import React, { useRef, useEffect, useState, RefObject } from "react";
 import { useLocationForm, LocationSuggestion } from "./LocationContext";
@@ -30,20 +30,32 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
 
   // Constants for pagination
   const ITEMS_PER_PAGE = 20;
-  const suggestions = state.validation.suggestions || [];
+  // Ensure suggestions is always an array, even if state.validation is undefined
+  const suggestions = state.validation && Array.isArray(state.validation.suggestions)
+    ? state.validation.suggestions
+    : [];
   const visibleSuggestions = suggestions.slice(0, page * ITEMS_PER_PAGE);
   const hasMore = suggestions.length > visibleSuggestions.length;
 
-  // Handle input change – open dropdown only when postal code is not empty
-  const handleInputChange = (value: string) => {
+  // Handle postal code input change – dropdown opens as soon as any input is present
+  const handlePostalCodeChange = (value: string) => {
     updatePostalCode(value);
+    // Open dropdown if there's any input (even if it's empty, filtering might be based on other fields)
     if (value.trim() !== "") {
-      console.log("Opening dropdown due to input...");
+      console.log("Opening dropdown due to postal code input...");
       setIsDropdownOpen(true);
     } else {
-      console.log("Closing dropdown (input empty).");
+      console.log("Closing dropdown because postal code input is empty.");
       setIsDropdownOpen(false);
     }
+    setPage(1);
+  };
+
+  // Handle city input change – filtering based on city is always applied
+  const handleCityChange = (value: string) => {
+    updateCity(value);
+    // Pri zmene mesta môžeme otvoriť dropdown, ak je to žiaduce
+    setIsDropdownOpen(true);
     setPage(1);
   };
 
@@ -59,7 +71,7 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
     }
   };
 
-  // Use custom hook for dropdown navigation with openDropdown callback
+  // Use custom hook for dropdown navigation
   const {
     highlightedIndex,
     isInputFocused,
@@ -80,13 +92,8 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
     onLoadMore: () => setPage((p) => p + 1),
     inputRef: postalCodeRef || inputRef,
     itemsPerPage: ITEMS_PER_PAGE,
-    openDropdown: () => {
-      if (state.postalCode.trim() !== "") {
-        console.log("Dropdown manually opened.");
-        setIsDropdownOpen(true);
-      }
-    },
-    isDropdownOpen: isDropdownOpen, // 🔥 FIX: Dropdown only reacts when it is open
+    // Removed openDropdown property – not part of the hook interface.
+    isDropdownOpen: isDropdownOpen,
   });
 
   // Scroll the highlighted item into view
@@ -94,8 +101,8 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
     if (highlightedIndex !== null && !isInputFocused && isDropdownOpen) {
       console.log("Scrolling to highlighted item:", highlightedIndex);
       optionsRef.current[highlightedIndex]?.scrollIntoView({
-        block: 'nearest',
-        behavior: 'smooth'
+        block: "nearest",
+        behavior: "smooth",
       });
     }
   }, [highlightedIndex, isInputFocused, isDropdownOpen]);
@@ -107,13 +114,13 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
           <input
             type="text"
             value={state.postalCode}
-            onChange={(e) => handleInputChange(e.target.value)}
+            onChange={(e) => handlePostalCodeChange(e.target.value)}
             onKeyDown={(e) => {
               console.log("Key pressed:", e.key, "Dropdown open:", isDropdownOpen);
               dropdownKeyDown(e);
             }}
             onFocus={() => {
-              console.log("Input focused, but dropdown does NOT open.");
+              console.log("Postal code input focused.");
               setIsInputFocused(true);
             }}
             placeholder="Postal code"
@@ -127,10 +134,13 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
               {visibleSuggestions.map((suggestion, index) => (
                 <li
                   key={`${suggestion.countryCode}-${suggestion.postalCode}-${suggestion.city}-${index}`}
-                  ref={el => optionsRef.current[index] = el}
+                  ref={(el) => (optionsRef.current[index] = el)}
                   onClick={() => handleSelection(suggestion)}
                   onKeyDown={dropdownKeyDown}
-                  className={`result-item ${index === highlightedIndex && !isInputFocused ? 'highlighted' : ''}`}
+                  className={`result-item ${
+                    index === highlightedIndex && !isInputFocused ? "highlighted" : ""
+                  }`}
+                  role="option"
                   tabIndex={index === highlightedIndex && !isInputFocused ? 0 : -1}
                 >
                   <img
@@ -147,11 +157,22 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
               ))}
               {hasMore && (
                 <li
-                  ref={el => optionsRef.current[visibleSuggestions.length] = el}
+                  ref={(el) =>
+                    (optionsRef.current[visibleSuggestions.length] = el)
+                  }
                   onClick={() => setPage((p) => p + 1)}
                   onKeyDown={dropdownKeyDown}
-                  className={`load-more ${visibleSuggestions.length === highlightedIndex && !isInputFocused ? 'highlighted' : ''}`}
-                  tabIndex={visibleSuggestions.length === highlightedIndex && !isInputFocused ? 0 : -1}
+                  className={`load-more ${
+                    visibleSuggestions.length === highlightedIndex && !isInputFocused
+                      ? "highlighted"
+                      : ""
+                  }`}
+                  role="option"
+                  tabIndex={
+                    visibleSuggestions.length === highlightedIndex && !isInputFocused
+                      ? 0
+                      : -1
+                  }
                 >
                   Load more results...
                 </li>
@@ -162,7 +183,7 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
         <input
           type="text"
           value={state.city}
-          onChange={(e) => updateCity(e.target.value)}
+          onChange={(e) => handleCityChange(e.target.value)}
           placeholder="City"
           autoComplete="off"
           className="city-input"

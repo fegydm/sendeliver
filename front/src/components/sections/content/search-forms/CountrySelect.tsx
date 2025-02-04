@@ -1,8 +1,9 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Added state cleanup and removed unused state
+// Last change: Auto-select country when only one result remains, using lastValidInput to avoid re-selection
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocationForm, Country } from './LocationContext';
+import useDropdownNavigation from '@/hooks/useDropdownNavigation';
 
 interface CountrySelectProps {
   onCountrySelect: (countryCode: string, flagPath: string) => void;
@@ -10,37 +11,32 @@ interface CountrySelectProps {
   initialValue?: string;
 }
 
-const CountrySelect: React.FC<CountrySelectProps> = ({
+const CountrySelect = ({
   onCountrySelect,
   onNextFieldFocus,
   initialValue = '',
-}) => {
-  // Core state management
+}: CountrySelectProps): JSX.Element => {
   const { state, updateCountry, fetchCountries, filterCountries, getFlagPath } = useLocationForm();
+  
+  // State for the input field (country code) and dropdown open state
   const [input, setInput] = useState(initialValue.toUpperCase());
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
-  const [isInputFocused, setIsInputFocused] = useState(false);
+  // This state tracks the last valid input to prevent re-selection of the same country
+  const [lastValidInput, setLastValidInput] = useState('');
 
-  // DOM References
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const optionsRef = useRef<(HTMLLIElement | null)[]>([]);
 
-  // Initial data fetch
-  useEffect(() => { fetchCountries(); }, [fetchCountries]);
+  // Fetch countries on mount
+  useEffect(() => { 
+    fetchCountries(); 
+  }, [fetchCountries]);
 
-  // Get valid first characters from available countries
-  const getValidFirstChars = (): Set<string> => {
-    return new Set(state.countries.all.map(country => country.code_2[0]));
-  };
-
-  // Handle clicks outside the component
+  // Close dropdown when clicking outside
   useEffect(() => {
     const closeDropdown = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
-        setHighlightedIndex(null);
       }
     };
 
@@ -48,12 +44,43 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     return () => document.removeEventListener('mousedown', closeDropdown);
   }, []);
 
-  // Core input handler with immediate selection for unique matches
+  // Effect for automatic selection when there's exactly one result
+  useEffect(() => {
+    if (
+      state.countries.filtered.length === 1 &&
+      input.length === 2 &&
+      input !== lastValidInput
+    ) {
+      const country = state.countries.filtered[0];
+      selectCountry(country);
+      setLastValidInput(input);
+    }
+  }, [state.countries.filtered, input, lastValidInput]);
+
+  // Dropdown navigation hook with additional onHighlightChange callback
+  const {
+    highlightedIndex,
+    isInputFocused,
+    handleKeyDown,
+    resultItemsRef,
+    setIsInputFocused,
+    setHighlightedIndex,
+  } = useDropdownNavigation({
+    itemsCount: state.countries.filtered.length,
+    isDropdownOpen,
+    onSelectItem: (index) => selectCountry(state.countries.filtered[index]),
+    inputRef,
+    onHighlightChange: (index) => {
+      // Reset the last valid input when highlight changes
+      if (index === null) setLastValidInput('');
+    }
+  });
+
+  // Handle changes in the input field
   const handleInputChange = (newInput: string) => {
-    // Clean and normalize input
+    // Remove non-letter characters and convert to uppercase
     const cleanInput = newInput.replace(/[^A-Za-z]/g, '').toUpperCase();
     
-    // Handle empty input - clear everything
     if (cleanInput.length === 0) {
       setInput('');
       onCountrySelect('', '');
@@ -62,130 +89,40 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
       return;
     }
 
-    // Validate first character
-    if (cleanInput.length === 1) {
-      const validFirstChars = getValidFirstChars();
-      if (!validFirstChars.has(cleanInput)) {
-        return;
-      }
-    }
+    // Validate first character and second character (if exists)
+    const filteredCountries = state.countries.filtered;
+    const isValidFirstChar = state.countries.all.some(c => c.code_2[0] === cleanInput[0]);
+    const isValidSecondChar = cleanInput.length < 2 || filteredCountries.some(c => c.code_2[1] === cleanInput[1]);
 
-    // Update input state and filter countries
-    setInput(cleanInput);
-    filterCountries(cleanInput);
-    
-    // Check filtered results after filtering
-    const filteredCountries = state.countries.all.filter(c => 
-      c.code_2.startsWith(cleanInput)
-    );
-    
-    // Auto-select if only one country matches
-    if (filteredCountries.length === 1) {
-      selectCountry(filteredCountries[0]);
+    if (!isValidFirstChar || !isValidSecondChar) {
       return;
     }
 
-    // Update UI state for multiple matches
+    setInput(cleanInput);
+    filterCountries(cleanInput);
     setIsDropdownOpen(true);
-    setHighlightedIndex(null);
+    
+    // Automatically highlight the first result if available
+    if (filteredCountries.length > 0) {
+      setHighlightedIndex(0);
+    }
   };
 
-  // Country selection handler
+  // Function to select a country
   const selectCountry = (country: Country) => {
     const flagPath = getFlagPath(country.code_2);
-    
-    // Update all states
     setInput(country.code_2);
-    setIsDropdownOpen(false);
-    setHighlightedIndex(null);
     setIsInputFocused(false);
+    setIsDropdownOpen(false);
     
-    // Update context and parent
     updateCountry(country.code_2, flagPath, country.name_en);
     onCountrySelect(country.code_2, flagPath);
     
-    // Move focus to postal code field
+    // Move focus to the next field (e.g., PSC) with a minimal delay
     if (onNextFieldFocus) {
-      setTimeout(onNextFieldFocus, 0);
+      setTimeout(() => onNextFieldFocus(), 0);
     }
   };
-
-  // Keyboard navigation handler
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    // Handle dropdown-closed state
-    if (!isDropdownOpen && (event.key === 'ArrowDown' || event.key === 'Enter')) {
-      event.preventDefault();
-      setIsDropdownOpen(true);
-      setHighlightedIndex(0);
-      setIsInputFocused(false);
-      return;
-    }
-
-    if (!isDropdownOpen) return;
-
-    const ITEMS_PER_PAGE = 8;
-    const maxIndex = state.countries.filtered.length - 1;
-    const currentIndex = highlightedIndex ?? 0;
-
-    switch(event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        if (isInputFocused) {
-          setIsInputFocused(false);
-          setHighlightedIndex(0);
-        } else {
-          setHighlightedIndex(currentIndex >= maxIndex ? 0 : currentIndex + 1);
-        }
-        break;
-
-      case 'ArrowUp':
-        event.preventDefault();
-        if (!isInputFocused && (highlightedIndex === 0 || highlightedIndex === null)) {
-          setIsInputFocused(true);
-          setHighlightedIndex(null);
-        } else {
-          setHighlightedIndex(currentIndex <= 0 ? maxIndex : currentIndex - 1);
-        }
-        break;
-
-      case 'PageDown':
-        event.preventDefault();
-        setHighlightedIndex(Math.min(currentIndex + ITEMS_PER_PAGE, maxIndex));
-        setIsInputFocused(false);
-        break;
-
-      case 'PageUp':
-        event.preventDefault();
-        setHighlightedIndex(Math.max(currentIndex - ITEMS_PER_PAGE, 0));
-        setIsInputFocused(false);
-        break;
-
-      case 'Enter':
-        event.preventDefault();
-        if (highlightedIndex !== null && !isInputFocused) {
-          selectCountry(state.countries.filtered[highlightedIndex]);
-        }
-        break;
-
-      case 'Escape':
-        event.preventDefault();
-        setIsDropdownOpen(false);
-        setHighlightedIndex(null);
-        setIsInputFocused(true);
-        inputRef.current?.focus();
-        break;
-    }
-  };
-
-  // Handle scroll behavior for keyboard navigation
-  useEffect(() => {
-    if (highlightedIndex !== null && !isInputFocused && isDropdownOpen) {
-      optionsRef.current[highlightedIndex]?.scrollIntoView({
-        block: 'nearest',
-        behavior: 'smooth'
-      });
-    }
-  }, [highlightedIndex, isInputFocused, isDropdownOpen]);
 
   return (
     <div className="country-select" ref={dropdownRef}>
@@ -238,10 +175,13 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
             {state.countries.filtered.map((country, index) => (
               <li
                 key={country.code_2}
-                ref={el => optionsRef.current[index] = el}
-                onClick={() => selectCountry(country)}
+                ref={el => resultItemsRef.current[index] = el as HTMLElement}
+                onClick={() => {
+                  selectCountry(country);
+                  onNextFieldFocus?.();
+                }}
                 onKeyDown={handleKeyDown}
-                className={`combobox-option ${
+                className={`combobox-option result-item ${
                   index === highlightedIndex && !isInputFocused ? 'highlighted' : ''
                 }`}
                 role="option"

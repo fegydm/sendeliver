@@ -1,8 +1,7 @@
 // File: src/hooks/useDropdownNavigation.ts
-// Last change: Fixed TS18047 error (highlightedIndex possibly null)
+// Last change: Fixed type safety and added hooks composition support
 
-import { useState, RefObject } from 'react';
-
+import { useState, RefObject, useCallback, useRef, useEffect } from 'react';
 
 interface DropdownNavigationOptions {
   itemsCount: number;
@@ -11,8 +10,15 @@ interface DropdownNavigationOptions {
   onLoadMore?: () => void;
   inputRef?: RefObject<HTMLInputElement>;
   itemsPerPage?: number;
-  openDropdown?: () => void;
   isDropdownOpen: boolean;
+  initialHighlightedIndex?: number | null;
+  onDropdownClose?: () => void;
+  onDropdownOpen?: () => void;
+  onHighlightChange?: (index: number | null) => void;
+  customKeyHandlers?: {
+    [key: string]: (event: React.KeyboardEvent) => boolean;
+  };
+  preventInputBlur?: boolean;
 }
 
 const useDropdownNavigation = ({
@@ -22,139 +28,161 @@ const useDropdownNavigation = ({
   onLoadMore,
   inputRef,
   itemsPerPage = 8,
-  
   isDropdownOpen,
+  initialHighlightedIndex = null,
+  onDropdownClose,
+  onDropdownOpen,
+  onHighlightChange,
+  customKeyHandlers = {},
+  preventInputBlur = false
 }: DropdownNavigationOptions) => {
-  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(initialHighlightedIndex);
   const [isInputFocused, setIsInputFocused] = useState(true);
   
   const totalItems = itemsCount + (hasMore ? 1 : 0);
+  const resultItemsRef = useRef<HTMLElement[]>([]);
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    console.log("Key pressed:", event.key, "Dropdown open:", isDropdownOpen);
+  const updateHighlightedIndex = useCallback((indexOrFn: number | null | ((prev: number | null) => number | null)) => {
+    const newIndex = typeof indexOrFn === 'function' ? indexOrFn(highlightedIndex) : indexOrFn;
+    setHighlightedIndex(newIndex);
+    onHighlightChange?.(newIndex);
+  }, [onHighlightChange, highlightedIndex]);
+
+  useEffect(() => {
+    if (!isDropdownOpen) {
+      updateHighlightedIndex(null);
+      setIsInputFocused(true);
+      onDropdownClose?.();
+    } else {
+      onDropdownOpen?.();
+    }
+  }, [isDropdownOpen, onDropdownClose, onDropdownOpen, updateHighlightedIndex]);
+
+  const focusItem = useCallback((index: number) => {
+    if (!preventInputBlur) {
+      const element = resultItemsRef.current[index];
+      if (element) {
+        element.focus();
+        element.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }, [preventInputBlur]);
+
+  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (customKeyHandlers[event.key] && customKeyHandlers[event.key](event)) {
+      return;
+    }
 
     if (!isDropdownOpen) return;
 
     switch (event.key) {
-      case 'ArrowDown':
+      case 'ArrowDown': {
         event.preventDefault();
         if (totalItems === 0) return;
 
         if (isInputFocused) {
           setIsInputFocused(false);
-          setHighlightedIndex(0);
-          inputRef?.current?.blur(); 
-
-          setTimeout(() => {
-            const firstItem = document.querySelectorAll<HTMLElement>(".result-item")[0];
-            if (firstItem) firstItem.focus(); // ✅ Prevents null reference
-          }, 0);
-
-          console.log("Focus moved to first dropdown item.");
+          updateHighlightedIndex(0);
+          focusItem(0);
         } else {
-          setHighlightedIndex(prev => {
+          updateHighlightedIndex((prev: number | null) => {
             const nextIndex = prev === null ? 0 : (prev + 1) % totalItems;
-            setTimeout(() => {
-              const nextItem = document.querySelectorAll<HTMLElement>(".result-item")[nextIndex];
-              if (nextItem) nextItem.focus(); // ✅ Ensures nextIndex is valid
-            }, 0);
+            focusItem(nextIndex);
             return nextIndex;
           });
         }
         break;
+      }
 
-      case 'ArrowUp':
+      case 'ArrowUp': {
         event.preventDefault();
         if (totalItems === 0) return;
 
         if (!isInputFocused && (highlightedIndex === null || highlightedIndex === 0)) {
           setIsInputFocused(true);
-          setHighlightedIndex(null);
+          updateHighlightedIndex(null);
           inputRef?.current?.focus();
         } else {
-          setHighlightedIndex(prev => {
+          updateHighlightedIndex((prev: number | null) => {
             const prevIndex = prev === null || prev <= 0 ? totalItems - 1 : prev - 1;
-            setTimeout(() => {
-              const prevItem = document.querySelectorAll<HTMLElement>(".result-item")[prevIndex];
-              if (prevItem) prevItem.focus(); // ✅ Prevents null reference
-            }, 0);
+            focusItem(prevIndex);
             return prevIndex;
           });
         }
         break;
-        
-const VISIBLE_ITEMS_COUNT = 8; // 🔥 Adjust this based on actual visible rows
-
-case 'PageDown':
-  event.preventDefault();
-  if (totalItems === 0) return;
-
-  setHighlightedIndex(prev => {
-    const newIndex = prev === null ? 0 : Math.min(prev + VISIBLE_ITEMS_COUNT, totalItems - 1);
-
-    setTimeout(() => {
-      const newItem = document.querySelectorAll<HTMLElement>(".result-item")[newIndex];
-      if (newItem) {
-        newItem.focus();
-        newItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        console.log("PageDown moved focus to:", newIndex);
       }
-    }, 0);
 
-    return newIndex;
-  });
+      case 'PageDown': {
+        event.preventDefault();
+        if (totalItems === 0) return;
 
-  setIsInputFocused(false);
-  break;
+        updateHighlightedIndex((prev: number | null) => {
+          const newIndex = Math.min(prev === null ? 0 : prev + itemsPerPage, totalItems - 1);
+          focusItem(newIndex);
+          return newIndex;
+        });
+        setIsInputFocused(false);
+        break;
+      }
 
-  case 'PageUp':
-    event.preventDefault();
-    if (totalItems === 0) return;
-  
-    setHighlightedIndex(prev => {
-      const newIndex = prev === null ? 0 : Math.max(prev - VISIBLE_ITEMS_COUNT, 0);
-  
-      setTimeout(() => {
-        const newItem = document.querySelectorAll<HTMLElement>(".result-item")[newIndex];
-        if (newItem) {
-          newItem.focus();
-          newItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          console.log("PageUp moved focus to:", newIndex);
-        }
-      }, 0);
-  
-      return newIndex;
-    });
-  
-    setIsInputFocused(false);
-    break;
+      case 'PageUp': {
+        event.preventDefault();
+        if (totalItems === 0) return;
 
+        updateHighlightedIndex((prev: number | null) => {
+          const newIndex = Math.max(prev === null ? 0 : prev - itemsPerPage, 0);
+          focusItem(newIndex);
+          return newIndex;
+        });
+        setIsInputFocused(false);
+        break;
+      }
 
-
-      case 'Enter':
+      case 'Enter': {
         event.preventDefault();
         if (highlightedIndex !== null && !isInputFocused) {
           if (highlightedIndex === itemsCount && hasMore) {
-            onLoadMore && onLoadMore();
+            onLoadMore?.();
           } else {
             onSelectItem(highlightedIndex);
           }
         }
         break;
+      }
 
-      case 'Escape':
+      case 'Escape': {
         event.preventDefault();
-        setHighlightedIndex(null);
+        updateHighlightedIndex(null);
         setIsInputFocused(true);
         inputRef?.current?.focus();
         break;
-
-      default:
-        break;
+      }
     }
-  };
+  }, [
+    isDropdownOpen,
+    totalItems,
+    isInputFocused,
+    highlightedIndex,
+    itemsCount,
+    hasMore,
+    onLoadMore,
+    onSelectItem,
+    inputRef,
+    itemsPerPage,
+    focusItem,
+    updateHighlightedIndex,
+    customKeyHandlers
+  ]);
 
-  return { highlightedIndex, setHighlightedIndex, isInputFocused, setIsInputFocused, handleKeyDown, totalItems };
+  return {
+    highlightedIndex,
+    setHighlightedIndex: updateHighlightedIndex,
+    isInputFocused,
+    setIsInputFocused,
+    handleKeyDown,
+    totalItems,
+    resultItemsRef,
+  };
 };
 
 export default useDropdownNavigation;
