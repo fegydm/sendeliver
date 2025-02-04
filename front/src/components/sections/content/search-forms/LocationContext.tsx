@@ -1,7 +1,8 @@
 // File: src/components/sections/content/search-forms/LocationContext.tsx
+// Last change: Added pagination and enhanced validation logic
+
 import { createContext, useState, useCallback, useContext, ReactNode, useRef } from 'react';
 
-// Types for Country and LocationSuggestion
 export interface Country {
   code_2: string;
   name_en: string;
@@ -16,7 +17,6 @@ export interface LocationSuggestion {
   flagUrl: string;
 }
 
-// Interface for the location form state
 interface LocationState {
   country: {
     code: string;
@@ -37,16 +37,20 @@ interface LocationState {
     filtered: Country[];
     isLoading: boolean;
   };
+  pagination: {
+    offset: number;
+    limit: number;
+    total: number;
+  };
 }
 
-// Response interface from the validation API
 interface ValidationResponse {
   isValid: boolean;
   error?: string;
   suggestions?: LocationSuggestion[];
+  total?: number;
 }
 
-// Context value interface for the location form
 interface LocationFormContextValue {
   state: LocationState;
   updateCountry: (code: string, flag: string, name?: string) => void;
@@ -58,14 +62,12 @@ interface LocationFormContextValue {
   fetchCountries: () => Promise<void>;
   filterCountries: (input: string) => void;
   getFlagPath: (countryCode: string) => string;
+  loadMoreSuggestions: () => Promise<void>;
 }
 
-// Function to generate the flag URL as a fallback if API does not return one.
-// UPDATED: Now using the folder "4x3" as required.
 const getFlagPath = (countryCode: string): string =>
   `/flags/4x3/optimized/${countryCode.toLowerCase()}.svg`;
 
-// Initial state for the location form
 const initialState: LocationState = {
   country: {
     code: '',
@@ -86,6 +88,11 @@ const initialState: LocationState = {
     filtered: [],
     isLoading: false,
   },
+  pagination: {
+    offset: 0,
+    limit: 20,
+    total: 0
+  }
 };
 
 export const LocationFormContext = createContext<LocationFormContextValue | undefined>(undefined);
@@ -97,11 +104,8 @@ interface LocationFormProviderProps {
 
 export function LocationFormProvider({ children }: LocationFormProviderProps) {
   const [state, setState] = useState<LocationState>(initialState);
-
-  // AbortController ref to cancel previous API requests when needed
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Function to update validation state by merging new values
   const updateValidation = useCallback((validation: Partial<LocationState['validation']>) => {
     setState((prev) => ({
       ...prev,
@@ -112,8 +116,6 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
     }));
   }, []);
 
-  // Function to validate the location via an API call.
-  // Accepts an AbortSignal to allow cancellation of the request.
   const validateLocation = useCallback(
     async (postalCode: string, city: string, signal?: AbortSignal): Promise<ValidationResponse> => {
       try {
@@ -123,8 +125,12 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
         if (state.country.code) {
           params.append("countryCode", state.country.code);
         }
+        params.append("offset", state.pagination.offset.toString());
+        params.append("limit", state.pagination.limit.toString());
+
         const response = await fetch(`/api/geo/location?${params.toString()}`, { signal });
         const data = await response.json();
+        
         return {
           isValid: data.results && data.results.length > 0,
           suggestions: data.results.map((result: any) => ({
@@ -133,26 +139,45 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
             city: result.place_name,
             flagUrl: result.flag_url,
           })),
+          total: data.total
         };
       } catch (error) {
         if ((error as any).name === "AbortError") {
-          // Request was aborted; return an empty result.
-          return {
-            isValid: false,
-            suggestions: [],
-          };
+          return { isValid: false, suggestions: [] };
         }
         console.error("Validation error:", error);
-        return {
-          isValid: false,
-          error: "Validation failed",
-        };
+        return { isValid: false, error: "Validation failed" };
       }
     },
-    [state.country.code]
+    [state.country.code, state.pagination.offset, state.pagination.limit]
   );
 
-  // Fetch the list of countries from the API.
+  const loadMoreSuggestions = useCallback(async () => {
+    const newOffset = state.pagination.offset + state.pagination.limit;
+    
+    try {
+      const validationResult = await validateLocation(state.postalCode, state.city);
+      
+      setState(prev => ({
+        ...prev,
+        validation: {
+          ...prev.validation,
+          suggestions: [
+            ...(prev.validation.suggestions || []),
+            ...(validationResult.suggestions || [])
+          ]
+        },
+        pagination: {
+          ...prev.pagination,
+          offset: newOffset,
+          total: validationResult.total || prev.pagination.total
+        }
+      }));
+    } catch (error) {
+      console.error("Load more error:", error);
+    }
+  }, [state.pagination, state.postalCode, state.city, validateLocation]);
+
   const fetchCountries = useCallback(async () => {
     if (state.countries.all.length > 0 || state.countries.isLoading) return;
 
@@ -186,21 +211,18 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
     }
   }, [state.countries.all.length, state.countries.isLoading]);
 
-  // Filter countries based on the input text.
   const filterCountries = useCallback((input: string) => {
-    const filtered = state.countries.all.filter((country) =>
-      country.code_2.startsWith(input.toUpperCase())
-    );
     setState((prev) => ({
       ...prev,
       countries: {
         ...prev.countries,
-        filtered,
+        filtered: prev.countries.all.filter((country) =>
+          country.code_2.startsWith(input.toUpperCase())
+        ),
       },
     }));
-  }, [state.countries.all]);
+  }, []);
 
-  // Update the selected country and reset validation.
   const updateCountry = useCallback((code: string, flag: string, name?: string) => {
     setState((prev) => ({
       ...prev,
@@ -209,20 +231,19 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
         ...initialState.validation,
         isDirty: true,
       },
+      pagination: {
+        ...initialState.pagination
+      }
     }));
   }, []);
 
-  // Update postal code with immediate cancellation of previous validation calls.
   const updatePostalCode = useCallback(async (code: string) => {
-    // Abort previous request if it exists.
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    // Create a new AbortController for the current request.
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    // Update state with the new postal code and reset validation errors and suggestions.
     setState((prev) => ({
       ...prev,
       postalCode: code,
@@ -233,9 +254,11 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
         error: null,
         suggestions: [],
       },
+      pagination: {
+        ...initialState.pagination
+      }
     }));
 
-    // If the postal code is empty, clear validation and exit early.
     if (code.trim() === "") {
       updateValidation({
         isValidating: false,
@@ -246,7 +269,6 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
       return;
     }
 
-    // Call the API to validate the location with the current postal code, city, and abort signal.
     const validationResult = await validateLocation(code, state.city, controller.signal);
     updateValidation({
       isValidating: false,
@@ -254,9 +276,16 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
       isValid: validationResult.isValid,
       suggestions: validationResult.suggestions,
     });
+    
+    setState(prev => ({
+      ...prev,
+      pagination: {
+        ...prev.pagination,
+        total: validationResult.total || 0
+      }
+    }));
   }, [state.city, validateLocation, updateValidation]);
 
-  // Update city and revalidate the location.
   const updateCity = useCallback(async (city: string) => {
     setState((prev) => ({
       ...prev,
@@ -266,7 +295,11 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
         isDirty: true,
         isValidating: true,
       },
+      pagination: {
+        ...initialState.pagination
+      }
     }));
+    
     const validationResult = await validateLocation(state.postalCode, city);
     updateValidation({
       isValidating: false,
@@ -274,9 +307,16 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
       isValid: validationResult.isValid,
       suggestions: validationResult.suggestions,
     });
+    
+    setState(prev => ({
+      ...prev,
+      pagination: {
+        ...prev.pagination,
+        total: validationResult.total || 0
+      }
+    }));
   }, [state.postalCode, validateLocation, updateValidation]);
 
-  // Handle selection from the suggestions list.
   const handleSuggestionSelect = useCallback(async (suggestion: LocationSuggestion) => {
     setState((prev) => ({
       ...prev,
@@ -288,6 +328,7 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
         isValidating: true,
       },
     }));
+    
     const validationResult = await validateLocation(suggestion.postalCode, suggestion.city);
     updateValidation({
       isValidating: false,
@@ -297,12 +338,13 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
     });
   }, [validateLocation, updateValidation]);
 
-  // Reset the entire form to its initial state.
   const resetForm = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     setState(initialState);
   }, []);
 
-  // Clear only the validation state.
   const clearValidation = useCallback(() => {
     updateValidation(initialState.validation);
   }, [updateValidation]);
@@ -318,6 +360,7 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
     fetchCountries,
     filterCountries,
     getFlagPath,
+    loadMoreSuggestions
   };
 
   return (
@@ -327,7 +370,6 @@ export function LocationFormProvider({ children }: LocationFormProviderProps) {
   );
 }
 
-// Hook to use the LocationFormContext.
 export function useLocationForm() {
   const context = useContext(LocationFormContext);
   if (!context) {

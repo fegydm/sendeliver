@@ -1,7 +1,7 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Added logging for flag loading issues and ensured correct flag URL handling
+// Last change: Applied working patterns from CountrySelect
 
-import React, { useRef, useEffect, RefObject } from "react";
+import React, { useRef, useEffect, useState, RefObject } from "react";
 import { useLocationForm, LocationSuggestion } from "./LocationContext";
 
 interface PostalCitySelectProps {
@@ -19,95 +19,176 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
     state,
     updatePostalCode,
     updateCity,
-    clearValidation,
-    handleSuggestionSelect,
-    getFlagPath,
+    handleSuggestionSelect
   } = useLocationForm();
 
+  // Local state
+  const [input, setInput] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
+  const [isInputFocused, setIsInputFocused] = useState(true);
+  const [page, setPage] = useState(1);
+
+  // DOM References
   const inputRef = useRef<HTMLInputElement>(null);
   const cityInputRef = useRef<HTMLInputElement>(null);
-  const resultsRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const optionsRef = useRef<(HTMLLIElement | null)[]>([]);
 
-  // Listen for clicks outside the component to clear validation messages
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (resultsRef.current && !resultsRef.current.contains(event.target as Node)) {
-        clearValidation();
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [clearValidation]);
+  // Constants
+  const ITEMS_PER_PAGE = 20;
+  const suggestions = state.validation.suggestions || [];
+  const visibleSuggestions = suggestions.slice(0, page * ITEMS_PER_PAGE);
+  const hasMore = suggestions.length > visibleSuggestions.length;
 
-  // When a valid selection is made, focus the next field and trigger callback
-  useEffect(() => {
-    if (state.validation.isValid && dateInputRef?.current) {
+  // Handle input change
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    updatePostalCode(value);
+    setIsDropdownOpen(true);
+    setPage(1);
+  };
+
+  // Handle selection
+  const handleSelection = async (suggestion: LocationSuggestion) => {
+    await handleSuggestionSelect(suggestion);
+    setIsDropdownOpen(false);
+    setHighlightedIndex(null);
+    setIsInputFocused(true);
+    
+    if (suggestion && dateInputRef?.current) {
       dateInputRef.current.focus();
       onValidSelection();
     }
-  }, [state.validation.isValid, dateInputRef, onValidSelection]);
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    // Ak nie je otvorený dropdown a stlačíme šípku dole alebo Enter
+    if (!isDropdownOpen && (event.key === 'ArrowDown' || event.key === 'Enter')) {
+      event.preventDefault();
+      setIsDropdownOpen(true);
+      setHighlightedIndex(0);
+      setIsInputFocused(false);
+      return;
+    }
+
+    if (!isDropdownOpen) return;
+
+    const totalItems = visibleSuggestions.length + (hasMore ? 1 : 0);
+    const maxIndex = totalItems - 1;
+
+    switch(event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        if (isInputFocused) {
+          setIsInputFocused(false);
+          setHighlightedIndex(0);
+        } else {
+          setHighlightedIndex(prev => 
+            prev === null || prev >= maxIndex ? 0 : prev + 1
+          );
+        }
+        break;
+
+      case 'ArrowUp':
+        event.preventDefault();
+        if (!isInputFocused && (highlightedIndex === 0 || highlightedIndex === null)) {
+          setIsInputFocused(true);
+          setHighlightedIndex(null);
+          inputRef.current?.focus();
+        } else {
+          setHighlightedIndex(prev =>
+            prev === null || prev <= 0 ? maxIndex : prev - 1
+          );
+        }
+        break;
+
+      case 'Enter':
+        event.preventDefault();
+        if (highlightedIndex !== null && !isInputFocused) {
+          if (highlightedIndex === visibleSuggestions.length && hasMore) {
+            setPage(p => p + 1);
+          } else if (visibleSuggestions[highlightedIndex]) {
+            handleSelection(visibleSuggestions[highlightedIndex]);
+          }
+        }
+        break;
+
+      case 'Escape':
+        event.preventDefault();
+        setIsDropdownOpen(false);
+        setHighlightedIndex(null);
+        setIsInputFocused(true);
+        inputRef.current?.focus();
+        break;
+    }
+  };
+
+  // Handle scroll into view
+  useEffect(() => {
+    if (highlightedIndex !== null && !isInputFocused && isDropdownOpen) {
+      optionsRef.current[highlightedIndex]?.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+      });
+    }
+  }, [highlightedIndex, isInputFocused, isDropdownOpen]);
 
   return (
-    <div className="location-search" ref={resultsRef} role="combobox" aria-expanded={state.validation.isDirty}>
+    <div className="location-search" ref={dropdownRef}>
       <div className="location-inputs">
         <div className="postal-code-wrapper">
           <input
             type="text"
             value={state.postalCode}
-            onChange={(e) => updatePostalCode(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => {
+              setIsInputFocused(true);
+              setIsDropdownOpen(true);
+            }}
             placeholder="Postal code"
             autoComplete="off"
             className="postal-input"
             ref={postalCodeRef || inputRef}
-            aria-controls="location-list"
-            role="textbox"
           />
-          {state.validation.error && (
-            <div className="postal-error" role="alert">
-              {state.validation.error}
-            </div>
+          
+          {isDropdownOpen && visibleSuggestions.length > 0 && (
+            <ul className="search-results">
+              {visibleSuggestions.map((suggestion, index) => (
+                <li
+                  key={`${suggestion.countryCode}-${suggestion.postalCode}-${suggestion.city}-${index}`}
+                  ref={el => optionsRef.current[index] = el}
+                  onClick={() => handleSelection(suggestion)}
+                  onKeyDown={handleKeyDown}
+                  className={`result-item ${index === highlightedIndex && !isInputFocused ? 'highlighted' : ''}`}
+                  tabIndex={index === highlightedIndex && !isInputFocused ? 0 : -1}
+                >
+                  <img
+                    src={suggestion.flagUrl}
+                    alt={`${suggestion.countryCode} flag`}
+                    className="country-flag-small"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                  <span className="postal-code">{suggestion.postalCode}</span>
+                  <span className="city-name">{suggestion.city}</span>
+                </li>
+              ))}
+              {hasMore && (
+                <li
+                  ref={el => optionsRef.current[visibleSuggestions.length] = el}
+                  onClick={() => setPage(p => p + 1)}
+                  className={`load-more ${visibleSuggestions.length === highlightedIndex && !isInputFocused ? 'highlighted' : ''}`}
+                  tabIndex={visibleSuggestions.length === highlightedIndex && !isInputFocused ? 0 : -1}
+                >
+                  Load more results...
+                </li>
+              )}
+            </ul>
           )}
-          {state.validation.isValidating && (
-            <div className="postal-loading">
-              Validating...
-            </div>
-          )}
-          {state.validation.isDirty &&
-            !state.validation.error &&
-            state.validation.suggestions &&
-            state.validation.suggestions.length > 0 && (
-              <ul id="location-list" className="search-results" role="listbox">
-                {state.validation.suggestions.map((suggestion: LocationSuggestion, index: number) => {
-                  const flagUrl = suggestion.flagUrl || getFlagPath(suggestion.countryCode);
-
-                  console.log(
-                    `Suggestion: ${suggestion.countryCode} | Flag URL: ${flagUrl}`
-                  );
-
-                  return (
-                    <li
-                      key={`${suggestion.countryCode}-${suggestion.postalCode}-${suggestion.city}-${index}`}
-                      onClick={() => handleSuggestionSelect(suggestion)}
-                      className="result-item"
-                      tabIndex={0}
-                      role="option"
-                    >
-                      <img
-                        src={flagUrl}
-                        alt={`${suggestion.countryCode} flag`}
-                        className="country-flag-small"
-                        onError={(e) => {
-                          console.error("Flag load error:", e.currentTarget.src);
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                      <span className="postal-code">{suggestion.postalCode}</span>
-                      <span className="city-name">{suggestion.city}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
         </div>
         <input
           type="text"
@@ -117,8 +198,6 @@ const PostalCitySelect: React.FC<PostalCitySelectProps> = ({
           autoComplete="off"
           className="city-input"
           ref={cityInputRef}
-          aria-controls="location-list"
-          role="textbox"
         />
       </div>
     </div>

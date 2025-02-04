@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Enhanced auto-selection logic to trigger on unique filter match
+// Last change: Added state cleanup and removed unused state
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocationForm, Country } from './LocationContext';
@@ -21,7 +21,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [lastValidInput, setLastValidInput] = useState('');
 
   // DOM References
   const inputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +53,15 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     // Clean and normalize input
     const cleanInput = newInput.replace(/[^A-Za-z]/g, '').toUpperCase();
     
+    // Handle empty input - clear everything
+    if (cleanInput.length === 0) {
+      setInput('');
+      onCountrySelect('', '');
+      filterCountries('');
+      setIsDropdownOpen(false);
+      return;
+    }
+
     // Validate first character
     if (cleanInput.length === 1) {
       const validFirstChars = getValidFirstChars();
@@ -67,9 +75,9 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     filterCountries(cleanInput);
     
     // Check filtered results after filtering
-    const filteredCountries = cleanInput.length > 0 
-      ? state.countries.all.filter(c => c.code_2.startsWith(cleanInput))
-      : [];
+    const filteredCountries = state.countries.all.filter(c => 
+      c.code_2.startsWith(cleanInput)
+    );
     
     // Auto-select if only one country matches
     if (filteredCountries.length === 1) {
@@ -80,16 +88,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     // Update UI state for multiple matches
     setIsDropdownOpen(true);
     setHighlightedIndex(null);
-
-    // Handle valid input states
-    if (filteredCountries.length > 0) {
-      setLastValidInput(cleanInput);
-    }
-
-    // Clear selection if no matches
-    if (cleanInput.length === 0 || filteredCountries.length === 0) {
-      onCountrySelect('', '');
-    }
   };
 
   // Country selection handler
@@ -101,7 +99,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     setIsDropdownOpen(false);
     setHighlightedIndex(null);
     setIsInputFocused(false);
-    setLastValidInput(country.code_2);
     
     // Update context and parent
     updateCountry(country.code_2, flagPath, country.name_en);
