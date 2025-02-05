@@ -1,413 +1,169 @@
 // File: src/components/sections/content/search-forms/LocationContext.tsx
-// Last change: Simplified logic, reduced console logs, optimized re-renders with useMemo, and fixed suggestions type error
+// Last change: Complete context implementation with proper typing
 
-import { createContext, useState, useCallback, useContext, ReactNode, useRef, useMemo } from 'react';
+import { createContext, useContext, useCallback, ReactNode } from 'react';
+import { useFormField } from '@/hooks/useFormField';
+import { useAsyncSelect } from '@/hooks/useAsyncSelect';
+import { usePagination } from '@/hooks/usePagination';
+import type { Country, LocationSuggestion, ValidationResult } from '@/types/location.types';
 
-export interface Country {
-  code_2: string;
-  name_en: string;
-  name_local: string;
-  name_sk: string;
-}
+// API helper functions
+const getFlagPath = (countryCode: string): string => 
+  `/flags/4x3/${countryCode.toLowerCase()}.svg`;
 
-export interface LocationSuggestion {
-  countryCode: string;
-  postalCode: string;
-  city: string;
-  flagUrl: string;
-}
-
-interface LocationState {
-  country: {
-    code: string;
-    flag: string;
-    name?: string;
-  };
-  postalCode: string;
-  city: string;
+// Context state definition
+interface LocationContextState {
+  country: ReturnType<typeof useFormField<Country | null>>;
+  postalCode: ReturnType<typeof useFormField<string>>;
+  city: ReturnType<typeof useFormField<string>>;
+  countrySelect: ReturnType<typeof useAsyncSelect<Country>>;
+  suggestions: LocationSuggestion[];
   validation: {
-    isValidating: boolean;
-    error: string | null;
-    isDirty: boolean;
-    isValid: boolean;
-    suggestions: LocationSuggestion[]; // Always an array
-  };
-  countries: {
-    all: Country[];
-    filtered: Country[];
     isLoading: boolean;
+    error: string | null;
   };
-  pagination: {
-    offset: number;
-    limit: number;
-    total: number;
-  };
-}
-
-interface ValidationResponse {
-  isValid: boolean;
-  error?: string;
-  suggestions?: LocationSuggestion[];
-  total?: number;
-}
-
-interface LocationFormContextValue {
-  state: LocationState;
-  updateCountry: (code: string, flag: string, name?: string) => void;
-  updatePostalCode: (code: string) => Promise<void>;
-  updateCity: (city: string) => Promise<void>;
-  resetForm: () => void;
-  clearValidation: () => void;
-  handleSuggestionSelect: (suggestion: LocationSuggestion) => Promise<void>;
-  fetchCountries: () => Promise<void>;
-  filterCountries: (input: string) => void;
+  pagination: ReturnType<typeof usePagination>;
+  validateLocation: (code: string, city: string) => Promise<ValidationResult>;
+  reset: () => void;
   getFlagPath: (countryCode: string) => string;
-  loadMoreSuggestions: () => Promise<void>;
 }
 
-const getFlagPath = (countryCode: string): string =>
-  `/flags/4x3/optimized/${countryCode.toLowerCase()}.svg`;
-
-// Initial state
-const initialState: LocationState = {
-  country: {
-    code: '',
-    flag: '',
-    name: '',
-  },
-  postalCode: '',
-  city: '',
-  validation: {
-    isValidating: false,
-    error: null,
-    isDirty: false,
-    isValid: false,
-    suggestions: [],
-  },
-  countries: {
-    all: [],
-    filtered: [],
-    isLoading: false,
-  },
-  pagination: {
-    offset: 0,
-    limit: 20,
-    total: 0,
-  },
-};
-
-export const LocationFormContext = createContext<LocationFormContextValue | undefined>(undefined);
-
-interface LocationFormProviderProps {
+interface LocationProviderProps {
   children: ReactNode;
-  type: 'pickup' | 'delivery';
+  onValidSelection?: () => void;
 }
 
-export function LocationFormProvider({ children }: LocationFormProviderProps) {
-  const [state, setState] = useState<LocationState>(initialState);
-  const abortControllerRef = useRef<AbortController | null>(null);
+// Create context
+const LocationContext = createContext<LocationContextState | undefined>(undefined);
 
-  // Update validation state
-  const updateValidation = useCallback((validation: Partial<LocationState['validation']>) => {
-    console.log('updateValidation called with:', validation);
-    setState((prev) => ({
-      ...prev,
-      validation: { ...prev.validation, ...validation },
-    }));
-  }, []);
+// Provider component
+export function LocationProvider({ children }: LocationProviderProps) {
+  // Pagination setup
+  const pagination = usePagination({
+    dataPageSize: 20,
+    uiPageSize: 8
+  });
 
-  // Validate location using API
-  const validateLocation = useCallback(
-    async (postalCode: string, city: string, signal?: AbortSignal): Promise<ValidationResponse> => {
-      console.log('validateLocation called with:', { postalCode, city });
-      try {
-        const params = new URLSearchParams();
-        params.append('postalCode', postalCode);
-        params.append('city', city);
-        if (state.country.code) {
-          params.append('countryCode', state.country.code);
-        }
-        params.append('offset', state.pagination.offset.toString());
-        params.append('limit', state.pagination.limit.toString());
-  
-        console.log('Calling API with params:', params.toString());
-        const response = await fetch(`/api/geo/location?${params.toString()}`, { signal });
-        const data = await response.json();
-        console.log('API response:', data);
-  
-        // Check if API returned an error message
-        if (data.error) {
-          console.error('API returned error:', data.error);
-          // Return error in the ValidationResponse
-          return { isValid: false, error: data.error, suggestions: [], total: 0 };
-        }
-  
-        const results: any[] = Array.isArray(data.results) ? data.results : [];
-        return {
-          isValid: results.length > 0,
-          suggestions: results.map((result) => ({
-            countryCode: result.country_code,
-            postalCode: result.postal_code,
-            city: result.place_name,
-            flagUrl: result.flag_url,
-          })),
-          total: data.total,
-        };
-      } catch (error) {
-        if ((error as any).name === 'AbortError') {
-          console.log('validateLocation aborted');
-          return { isValid: false, suggestions: [] };
-        }
-        console.error('Validation error:', error);
-        throw new Error('Failed to validate location');
-      }
+  // Country field with validation
+  const country = useFormField<Country | null>({
+    initialValue: null,
+    validate: async (value) => {
+      return Boolean(value?.code_2);
     },
-    [state.country.code, state.pagination.offset, state.pagination.limit]
-  );
-
-  // Load more suggestions for pagination
-  const loadMoreSuggestions = useCallback(async () => {
-    const newOffset = state.pagination.offset + state.pagination.limit;
-    console.log('loadMoreSuggestions called, newOffset:', newOffset);
-
-    try {
-      const validationResult = await validateLocation(state.postalCode, state.city);
-      console.log('loadMoreSuggestions validationResult:', validationResult);
-      setState((prev) => ({
-        ...prev,
-        validation: {
-          ...prev.validation,
-          // Use nullish coalescing operator to ensure suggestions is always an array
-          suggestions: [
-            ...(prev.validation.suggestions ?? []),
-            ...(validationResult.suggestions ?? []),
-          ],
-        },
-        pagination: {
-          ...prev.pagination,
-          offset: newOffset,
-          total: validationResult.total || prev.pagination.total,
-        },
-      }));
-    } catch (error) {
-      console.error('Load more error:', error);
+    onChange: () => {
+      postalCode.reset();
+      city.reset();
+      pagination.reset();
     }
-  }, [state.pagination, state.postalCode, state.city, validateLocation]);
+  });
 
-  // Fetch countries from API
-  const fetchCountries = useCallback(async () => {
-    if (state.countries.all.length > 0 || state.countries.isLoading) return;
-    console.log('fetchCountries called');
-
-    setState((prev) => ({
-      ...prev,
-      countries: { ...prev.countries, isLoading: true },
-    }));
-
-    try {
-      const response = await fetch('/api/geo/countries');
+  // Country selection with async search
+  const countrySelect = useAsyncSelect<Country>({
+    fetchItems: async (query: string) => {
+      const response = await fetch(`/api/geo/countries?q=${query}`);
       if (!response.ok) throw new Error('Failed to fetch countries');
-      const data: Country[] = await response.json();
-      console.log('Fetched countries:', data);
-      const sortedData = data.sort((a, b) => a.code_2.localeCompare(b.code_2));
-      setState((prev) => ({
-        ...prev,
-        countries: { all: sortedData, filtered: sortedData, isLoading: false },
-      }));
-    } catch (error) {
-      console.error('Country loading error:', error);
-      setState((prev) => ({
-        ...prev,
-        countries: { ...prev.countries, isLoading: false },
-      }));
+      return response.json();
+    },
+    minQueryLength: 1
+  });
+
+  // Location validation logic
+  const validateLocation = useCallback(async (
+    code: string,
+    cityValue: string
+  ): Promise<ValidationResult> => {
+    if (!country.value?.code_2 || !code || !cityValue) {
+      return { isValid: false, suggestions: [] };
     }
-  }, [state.countries.all.length, state.countries.isLoading]);
 
-  // Filter countries based on input
-  const filterCountries = useCallback((input: string) => {
-    console.log('filterCountries called with input:', input);
-    setState((prev) => ({
-      ...prev,
-      countries: {
-        ...prev.countries,
-        filtered: prev.countries.all.filter((country) =>
-          country.code_2.startsWith(input.toUpperCase())
-        ),
-      },
-    }));
-  }, []);
-
-  // Update selected country
-  const updateCountry = useCallback((code: string, flag: string, name?: string) => {
-    console.log('updateCountry called with:', { code, flag, name });
-    setState((prev) => ({
-      ...prev,
-      country: { code, flag, name },
-      validation: { ...initialState.validation, isDirty: true },
-      pagination: { ...initialState.pagination },
-    }));
-  }, []);
-
-  // Update postal code and perform validation
-  const updatePostalCode = useCallback(
-    async (code: string) => {
-      console.log('updatePostalCode called with:', code);
-      if (abortControllerRef.current) {
-        console.log('Aborting previous request');
-        abortControllerRef.current.abort();
-      }
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      setState((prev) => ({
-        ...prev,
+    try {
+      const params = new URLSearchParams({
+        countryCode: country.value.code_2,
         postalCode: code,
-        validation: { ...prev.validation, isDirty: true, isValidating: true, error: null, suggestions: [] },
-        pagination: { ...initialState.pagination },
-      }));
+        city: cityValue,
+        page: String(pagination.dataPage),
+        limit: String(pagination.dataPageSize)
+      });
 
-      if (code.trim() === '') {
-        console.log('Postal code is empty, skipping validation');
-        updateValidation({ isValidating: false, error: null, isValid: false, suggestions: [] });
-        return;
-      }
+      const response = await fetch(`/api/geo/location?${params}`);
+      if (!response.ok) throw new Error('Failed to validate location');
+      
+      const data = await response.json();
+      pagination.updateHasMore(data.total);
 
-      try {
-        const validationResult = await validateLocation(code, state.city, controller.signal);
-        console.log('Validation result for postal code:', validationResult);
-        updateValidation({
-          isValidating: false,
-          error: validationResult.error || null,
-          isValid: validationResult.isValid,
-          suggestions: validationResult.suggestions,
-        });
-        setState((prev) => ({
-          ...prev,
-          pagination: { ...prev.pagination, total: validationResult.total || 0 },
-        }));
-      } catch (error) {
-        console.error('Error in updatePostalCode:', error);
-        updateValidation({ isValidating: false, error: 'Failed to validate location', isValid: false, suggestions: [] });
-      }
-    },
-    [state.city, validateLocation, updateValidation]
-  );
-
-  // Update city and perform validation
-  const updateCity = useCallback(
-    async (city: string) => {
-      console.log('updateCity called with:', city);
-      setState((prev) => ({
-        ...prev,
-        city,
-        validation: { ...prev.validation, isDirty: true, isValidating: true },
-        pagination: { ...initialState.pagination },
-      }));
-
-      try {
-        const validationResult = await validateLocation(state.postalCode, city);
-        console.log('Validation result for city:', validationResult);
-        updateValidation({
-          isValidating: false,
-          error: validationResult.error || null,
-          isValid: validationResult.isValid,
-          suggestions: validationResult.suggestions,
-        });
-        setState((prev) => ({
-          ...prev,
-          pagination: { ...prev.pagination, total: validationResult.total || 0 },
-        }));
-      } catch (error) {
-        console.error('Error in updateCity:', error);
-        updateValidation({ isValidating: false, error: 'Failed to validate location', isValid: false, suggestions: [] });
-      }
-    },
-    [state.postalCode, validateLocation, updateValidation]
-  );
-
-  // Handle suggestion selection
-  const handleSuggestionSelect = useCallback(
-    async (suggestion: LocationSuggestion) => {
-      console.log('handleSuggestionSelect called with:', suggestion);
-      setState((prev) => ({
-        ...prev,
-        postalCode: suggestion.postalCode,
-        city: suggestion.city,
-        validation: { ...prev.validation, isDirty: true, isValidating: true },
-      }));
-
-      try {
-        const validationResult = await validateLocation(suggestion.postalCode, suggestion.city);
-        console.log('Validation result after suggestion select:', validationResult);
-        updateValidation({
-          isValidating: false,
-          error: validationResult.error || null,
-          isValid: validationResult.isValid,
-          suggestions: validationResult.suggestions,
-        });
-      } catch (error) {
-        console.error('Error in handleSuggestionSelect:', error);
-        updateValidation({ isValidating: false, error: 'Failed to validate location', isValid: false, suggestions: [] });
-      }
-    },
-    [validateLocation, updateValidation]
-  );
-
-  // Reset form to initial state
-  const resetForm = useCallback(() => {
-    console.log('resetForm called');
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      return {
+        isValid: data.results.length > 0,
+        suggestions: data.results
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        error: error instanceof Error ? error.message : 'Validation failed',
+        suggestions: []
+      };
     }
-    setState(initialState);
-  }, []);
+  }, [country.value?.code_2, pagination]);
 
-  // Clear validation state
-  const clearValidation = useCallback(() => {
-    console.log('clearValidation called');
-    updateValidation(initialState.validation);
-  }, [updateValidation]);
+  // Postal code field
+  const postalCode = useFormField<string>({
+    initialValue: '',
+    validate: async (value) => {
+      if (!value || !country.value) return false;
+      const result = await validateLocation(value, city.value);
+      return result.isValid;
+    }
+  });
 
-  // Memoize context value to reduce unnecessary re-renders
-  const contextValue = useMemo<LocationFormContextValue>(
-    () => ({
-      state,
-      updateCountry,
-      updatePostalCode,
-      updateCity,
-      resetForm,
-      clearValidation,
-      handleSuggestionSelect,
-      fetchCountries,
-      filterCountries,
-      getFlagPath,
-      loadMoreSuggestions,
-    }),
-    [
-      state,
-      updateCountry,
-      updatePostalCode,
-      updateCity,
-      resetForm,
-      clearValidation,
-      handleSuggestionSelect,
-      fetchCountries,
-      filterCountries,
-      loadMoreSuggestions,
-    ]
-  );
+  // City field
+  const city = useFormField<string>({
+    initialValue: '',
+    validate: async (value) => {
+      if (!value || !country.value) return false;
+      const result = await validateLocation(postalCode.value, value);
+      return result.isValid;
+    }
+  });
+
+  // Reset all form state
+  const reset = useCallback(() => {
+    country.reset();
+    postalCode.reset();
+    city.reset();
+    pagination.reset();
+  }, [country, postalCode, city, pagination]);
+
+  const contextValue: LocationContextState = {
+    country,
+    postalCode,
+    city,
+    countrySelect,
+    suggestions: [],
+    validation: {
+      isLoading: false,
+      error: null
+    },
+    pagination,
+    validateLocation,
+    reset,
+    getFlagPath
+  };
 
   return (
-    <LocationFormContext.Provider value={contextValue}>
+    <LocationContext.Provider value={contextValue}>
       {children}
-    </LocationFormContext.Provider>
+    </LocationContext.Provider>
   );
 }
 
-export function useLocationForm() {
-  const context = useContext(LocationFormContext);
+// Custom hook for accessing context
+export function useLocation() {
+  const context = useContext(LocationContext);
   if (!context) {
-    throw new Error('useLocationForm must be used within LocationFormProvider');
+    throw new Error('useLocation must be used within LocationProvider');
   }
   return context;
 }
+
+// Exports
+export { getFlagPath };
+export type { LocationContextState, LocationProviderProps };

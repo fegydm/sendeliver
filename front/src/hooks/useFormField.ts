@@ -1,0 +1,79 @@
+// File: src/hooks/useFormField.ts
+// Last change: Updated return type to match FieldValue interface
+
+import { useState, useCallback, useRef } from 'react';
+
+interface UseFormFieldConfig<T> {
+  initialValue: T;
+  validate?: (value: T) => Promise<boolean> | boolean;
+  transform?: (value: T) => T;
+  onChange?: (value: T) => void;
+}
+
+export function useFormField<T>({
+  initialValue,
+  validate,
+  transform,
+  onChange
+}: UseFormFieldConfig<T>) {
+  const [value, setValue] = useState<T>(initialValue);
+  const [isValid, setIsValid] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const lastValidValue = useRef<T>(initialValue);
+
+  const handleChange = useCallback(async (newValue: T) => {
+    const transformedValue = transform ? transform(newValue) : newValue;
+    setValue(transformedValue);
+    setIsDirty(true);
+    setIsValidating(true);
+
+    try {
+      if (validate) {
+        const validationResult = await validate(transformedValue);
+        setIsValid(validationResult);
+        setError(validationResult ? null : 'Validation failed');
+        if (validationResult) {
+          lastValidValue.current = transformedValue;
+        }
+      } else {
+        setIsValid(true);
+        setError(null);
+        lastValidValue.current = transformedValue;
+      }
+    } catch (err) {
+      setIsValid(false);
+      setError(err instanceof Error ? err.message : 'Validation failed');
+    } finally {
+      setIsValidating(false);
+    }
+
+    onChange?.(transformedValue);
+  }, [onChange, transform, validate]);
+
+  const handleBlur = useCallback(() => {
+    // Additional blur logic if needed
+  }, []);
+
+  const reset = useCallback(() => {
+    setValue(initialValue);
+    setIsValid(false);
+    setIsDirty(false);
+    setError(null);
+    setIsValidating(false);
+    lastValidValue.current = initialValue;
+  }, [initialValue]);
+
+  return {
+    value,
+    isValid,
+    isDirty,
+    error,
+    isValidating,
+    lastValidValue: lastValidValue.current,
+    handleChange,
+    handleBlur,
+    reset
+  };
+}
