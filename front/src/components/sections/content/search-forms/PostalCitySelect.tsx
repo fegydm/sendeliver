@@ -1,10 +1,11 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Refactored to use new components and hooks
+// Last change: Fixed flag rendering and improved input handling
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import { useLocation } from "./LocationContext";
 import { BaseDropdown } from "./BaseDropdown";
 import type { LocationSuggestion } from '@/types/location.types';
+import { usePagination } from '@/hooks/usePagination';
 
 interface PostalCitySelectProps {
   postalCodeRef?: React.RefObject<HTMLInputElement>;
@@ -17,41 +18,51 @@ export function PostalCitySelect({
   dateInputRef,
   onValidSelection
 }: PostalCitySelectProps) {
-  const { postalCode, city, suggestions, pagination } = useLocation();
+  const { postalCode, city, suggestions } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
 
-  // Input refs
+  const pagination = usePagination({
+    dataPageSize: 20,
+    uiPageSize: 8
+  });
+
   const defaultPostalRef = useRef<HTMLInputElement>(null);
   const cityInputRef = useRef<HTMLInputElement>(null);
   const activePostalRef = postalCodeRef || defaultPostalRef;
 
-  // Handle postal code changes
-  const handlePostalCodeChange = async (value: string) => {
+  const handlePostalCodeChange = useCallback(async (value: string) => {
     await postalCode.handleChange(value);
-    setIsOpen(value.trim() !== "");
+    setIsOpen(true);
+    setHighlightedIndex(null);
     pagination.reset();
-  };
+  }, [postalCode, pagination]);
 
-  // Handle city changes
-  const handleCityChange = async (value: string) => {
+  const handleCityChange = useCallback(async (value: string) => {
     await city.handleChange(value);
     setIsOpen(true);
+    setHighlightedIndex(null);
     pagination.reset();
-  };
+  }, [city, pagination]);
 
-  // Handle suggestion selection
-  const handleSelect = (suggestion: LocationSuggestion) => {
+  const handleSelect = useCallback((suggestion: LocationSuggestion, index: number) => {
     postalCode.handleChange(suggestion.postalCode);
     city.handleChange(suggestion.city);
     setIsOpen(false);
+    setHighlightedIndex(null);
 
     if (dateInputRef?.current) {
       dateInputRef.current.focus();
       onValidSelection();
     }
-  };
+  }, [postalCode, city, dateInputRef, onValidSelection]);
 
-  // Get visible suggestions based on pagination
+  const handleDropdownClose = useCallback(() => {
+    setIsOpen(false);
+    setHighlightedIndex(null);
+  }, []);
+
   const visibleSuggestions = suggestions.slice(0, pagination.getVisibleCount());
 
   return (
@@ -63,7 +74,11 @@ export function PostalCitySelect({
             type="text"
             value={postalCode.value}
             onChange={e => handlePostalCodeChange(e.target.value)}
-            onFocus={() => setIsOpen(true)}
+            onFocus={() => {
+              setIsOpen(true);
+              setIsInputFocused(true);
+            }}
+            onBlur={() => setIsInputFocused(false)}
             placeholder="Postal code"
             className="postal-input"
           />
@@ -83,19 +98,24 @@ export function PostalCitySelect({
         items={visibleSuggestions}
         isOpen={isOpen && visibleSuggestions.length > 0}
         onSelect={handleSelect}
+        onClose={handleDropdownClose}
         inputRef={activePostalRef}
         hasMore={pagination.hasMore}
         onLoadMore={pagination.loadMore}
+        highlightedIndex={highlightedIndex}
+        isInputFocused={isInputFocused}
         renderItem={(suggestion, isHighlighted) => (
           <div className={`suggestion-item ${isHighlighted ? 'highlighted' : ''}`}>
-            <img
-              src={suggestion.flagUrl}
-              alt={`${suggestion.countryCode} flag`}
-              className="country-flag-small"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
+            {suggestion.countryCode && (
+              <img
+                src={`/flags/4x3/${suggestion.countryCode.toLowerCase()}.svg`}
+                alt={`${suggestion.countryCode} flag`}
+                className="country-flag-small"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            )}
             <span className="postal-code">{suggestion.postalCode}</span>
             <span className="city-name">{suggestion.city}</span>
           </div>
@@ -104,4 +124,5 @@ export function PostalCitySelect({
     </div>
   );
 }
+
 export default PostalCitySelect;

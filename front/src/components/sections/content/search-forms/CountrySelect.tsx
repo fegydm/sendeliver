@@ -1,7 +1,7 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Fixed TypeScript error by ensuring selectedCountry properties are defined
+// Last change: Cleaned up unused code and fixed dropdown behavior
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useLocation } from './LocationContext';
 import { BaseDropdown } from './BaseDropdown';
 import type { Country } from '@/types/location.types';
@@ -20,75 +20,166 @@ export function CountrySelect({
   const { country, countrySelect } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [inputValue, setInputValue] = useState(initialValue);
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
 
-  // Handle input change
+  const validFirstChars = useMemo(() => [...new Set(countrySelect.items
+    .map(c => c.code_2?.[0])
+    .filter(Boolean))], [countrySelect.items]);
+
+  const validSecondChars = useMemo(() => inputValue.length === 1 ? 
+    [...new Set(countrySelect.items
+      .filter(c => c.code_2?.startsWith(inputValue))
+      .map(c => c.code_2?.[1])
+      .filter(Boolean))] : [], [inputValue, countrySelect.items]);
+
+  const filteredItems = useMemo(() => !inputValue ? 
+    countrySelect.items : 
+    countrySelect.items.filter(c => c.code_2?.startsWith(inputValue)), 
+    [inputValue, countrySelect.items]);
+
   const handleInputChange = (value: string) => {
-    const cleanValue = value.replace(/[^A-Za-z]/g, '').toUpperCase();
-    country.handleChange(null);
-    countrySelect.search(cleanValue);
-    setIsOpen(true);
+    const upperValue = value.toUpperCase();
+    if (!upperValue) {
+      setInputValue('');
+      setIsOpen(true);
+      countrySelect.search('');
+      onCountrySelect('', '');
+      return;
+    }
+
+    if (upperValue.length === 1 && validFirstChars.includes(upperValue)) {
+      setInputValue(upperValue);
+      setIsOpen(true);
+      countrySelect.search(upperValue);
+      onCountrySelect('', '');
+      return;
+    }
+
+    if (upperValue.length === 2 && validFirstChars.includes(upperValue[0]) && 
+        validSecondChars.includes(upperValue[1])) {
+      setInputValue(upperValue);
+      const exactMatch = filteredItems.find(c => c.code_2 === upperValue);
+      
+      if (exactMatch) {
+        handleSelect(exactMatch);
+      } else {
+        setIsOpen(true);
+        countrySelect.search(upperValue);
+      }
+    }
   };
 
-  // Handle country selection
-  const handleSelect = (selectedCountry: Country) => {
-    const countryCode = selectedCountry.code_2 ?? "";
-    const flagUrl = selectedCountry.flag_url ?? "";
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setIsOpen(true);
+      if (!filteredItems.length && countrySelect.items.length === 0) {
+        countrySelect.search('');
+      }
+      setTimeout(() => {
+        const firstOption = document.querySelector('.combobox-option') as HTMLElement;
+        if (firstOption) {
+          setHighlightedIndex(0);
+          firstOption.focus();
+        }
+      }, 0);
+    }
+  };
 
+  function handleSelect(selectedCountry: Country) {
+    if (!selectedCountry.code_2) return;
+    const countryCode = selectedCountry.code_2;
+    const flagUrl = `/flags/4x3/optimized/${countryCode.toLowerCase()}.svg`;
+    setInputValue(countryCode);
     country.handleChange(selectedCountry);
     setIsOpen(false);
     onCountrySelect(countryCode, flagUrl);
+    onNextFieldFocus?.();
+  }
 
-    if (onNextFieldFocus) {
-      setTimeout(onNextFieldFocus, 0);
+  const handleClose = () => {
+    setIsOpen(false);
+    setHighlightedIndex(null);
+    if (!inputValue) {
+      onCountrySelect('', '');
+    }
+  };
+
+  const toggleDropdown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isOpen) {
+      handleClose();
+    } else {
+      setIsOpen(true);
+      if (countrySelect.items.length === 0) {
+        countrySelect.search('');
+      }
     }
   };
 
   return (
-    <div className="country-select">
-      <div className="input-group">
-        <input
-          ref={inputRef}
-          type="text"
-          value={country.value?.code_2 || initialValue}
-          onChange={e => handleInputChange(e.target.value)}
-          onFocus={() => setIsOpen(true)}
-          placeholder="CC"
-          maxLength={2}
-          className="country-input"
-        />
-        <button
-          type="button"
-          className="dropdown-toggle"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle country list"
-          aria-expanded={isOpen}
+    <div className="combobox-input-group">
+      <input
+        ref={inputRef}
+        type="text"
+        value={inputValue}
+        onChange={e => handleInputChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onClick={() => {
+          if (!isOpen) {
+            setIsOpen(true);
+            if (countrySelect.items.length === 0) countrySelect.search('');
+          }
+        }}
+        placeholder="CC"
+        maxLength={2}
+        className="country-code-input"
+      />
+      <button
+        type="button"
+        className="dropdown-toggle"
+        onClick={toggleDropdown}
+        aria-label="Toggle country list"
+        aria-expanded={isOpen}
+      >
+        <svg 
+          width="10" 
+          height="6" 
+          viewBox="0 0 10 6"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease'
+          }}
         >
-          <svg 
-            width="10" 
-            height="6" 
-            viewBox="0 0 10 6" 
-            fill="none" 
-            className={`transform transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          >
-            <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </button>
-      </div>
+          <path 
+            d="M1 1L5 5L9 1" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
 
       <BaseDropdown
-        items={countrySelect.items}
-        isOpen={isOpen}
+        items={filteredItems}
+        isOpen={isOpen && filteredItems.length > 0}
         onSelect={handleSelect}
+        onClose={handleClose}
         inputRef={inputRef}
+        className="combobox-options"
         renderItem={(country, isHighlighted) => (
-          <div className={`country-item ${isHighlighted ? 'highlighted' : ''}`}>
+          <div className={`combobox-option ${isHighlighted ? 'highlighted' : ''}`}>
             <img
-              src={country.flag_url ?? ""}
-              alt={`${country.code_2 ?? "Unknown"} flag`}
+              src={`/flags/4x3/optimized/${country.code_2?.toLowerCase()}.svg`}
+              alt={`${country.code_2 ?? 'Unknown'} flag`}
               className="country-flag-small"
             />
-            <span className="country-code">{country.code_2 ?? "--"}</span>
-            <span className="country-separator"> - </span>
+            <span className="country-code">{country.code_2 ?? '--'}</span>
             <span className="country-name">{country.name_en}</span>
             <span className="country-local">({country.name_local})</span>
           </div>
@@ -99,4 +190,3 @@ export function CountrySelect({
 }
 
 export default CountrySelect;
-export type { CountrySelectProps };

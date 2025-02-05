@@ -1,12 +1,12 @@
 // File: src/hooks/location/useCountryField.ts
-// Last change: Created country-specific field hook
+// Last change: Fixed hook to match component needs
 
 import { useFormField } from '@/hooks/useFormField';
 import { useAsyncSelect } from '@/hooks/useAsyncSelect';
 import type { Country } from '@/types/location.types';
 
 interface UseCountryFieldProps {
-  onSelect: (country: Country) => void;
+  onSelect?: (code: string) => void;
 }
 
 export function useCountryField({ onSelect }: UseCountryFieldProps) {
@@ -20,15 +20,19 @@ export function useCountryField({ onSelect }: UseCountryFieldProps) {
       const response = await fetch(`/api/geo/countries?query=${query}`);
       return response.json();
     },
-    onSelect: (country) => {
+    onSelect: (country: Country) => {
+      if (!country.code_2) return;
       field.handleChange(country.code_2);
-      onSelect(country);
-    },
-    itemToString: (country) => `${country.code_2} - ${country.name_en}`
+      onSelect?.(country.code_2);
+    }
   });
 
   return {
-    ...field,
-    ...select,
+    value: field.value,
+    isValid: field.isValid,
+    handleChange: field.handleChange,
+    items: select.items,
+    search: select.search,
+    isLoading: select.isLoading
   };
 }

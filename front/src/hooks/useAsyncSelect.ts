@@ -1,21 +1,20 @@
 // File: src/hooks/useAsyncSelect.ts
-// Last change: Added strict typing and fixed query parameter type
+// Last change: Allowed empty query for initial search, maintained minQueryLength for selection
 
 import { useState, useCallback } from 'react';
 
 export interface UseAsyncSelectProps<T> {
-  fetchItems: (query: string) => Promise<T[]>;
-  onSelect?: (item: T) => void;
-  debounceMs?: number;
-  minQueryLength?: number;
+  fetchItems: (query: string) => Promise<T[]>; // Function to fetch items based on query
+  onSelect?: (item: T) => void; // Callback when an item is selected
+  minQueryLength?: number; // Minimum characters required for selection
 }
 
 export interface UseAsyncSelectResult<T> {
-  items: T[];
-  isLoading: boolean;
-  error: string | null;
-  search: (query: string) => Promise<void>;
-  select: (item: T) => void;
+  items: T[]; // List of available items
+  isLoading: boolean; // Indicates if items are being fetched
+  error: string | null; // Error message if fetching fails
+  search: (query: string) => Promise<void>; // Function to perform search
+  select: (item: T) => void; // Function to select an item
 }
 
 export function useAsyncSelect<T>({
@@ -23,15 +22,15 @@ export function useAsyncSelect<T>({
   onSelect,
   minQueryLength = 2
 }: UseAsyncSelectProps<T>): UseAsyncSelectResult<T> {
-  // State management
+  // State for items, loading state, and errors
   const [items, setItems] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Search handler
+  // Function to fetch and update items based on query
   const search = useCallback(async (query: string): Promise<void> => {
-    if (query.length < minQueryLength) {
-      setItems([]);
+    if (query.length < minQueryLength && query.length > 0) {
+      setItems([]); // If query is too short (but not empty), reset items
       return;
     }
 
@@ -39,7 +38,7 @@ export function useAsyncSelect<T>({
     setError(null);
 
     try {
-      const results = await fetchItems(query);
+      const results = await fetchItems(query); // Fetch items with given query
       setItems(results);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -49,10 +48,10 @@ export function useAsyncSelect<T>({
     }
   }, [fetchItems, minQueryLength]);
 
-  // Selection handler
+  // Function to handle item selection
   const select = useCallback((item: T): void => {
     onSelect?.(item);
-    setItems([]);
+    setItems([]); // Clear items after selection
   }, [onSelect]);
 
   return {

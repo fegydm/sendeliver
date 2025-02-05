@@ -1,5 +1,5 @@
 // File: src/hooks/useDropdownNavigation.ts
-// Last change: Simplified dropdown navigation hook for general use
+// Last change: Removed unused maxVisibleItems to fix TS6133 error
 
 import { useState, RefObject, useCallback, useRef, useEffect } from 'react';
 
@@ -11,7 +11,6 @@ interface DropdownNavigationOptions<T> {
   inputRef?: RefObject<HTMLInputElement>;         // Reference to input element
   hasMore?: boolean;                              // Whether more items can be loaded
   onLoadMore?: () => void;                        // Load more items handler
-  maxVisibleItems?: number;                       // Max items visible at once
 }
 
 export function useDropdownNavigation<T>({
@@ -20,8 +19,7 @@ export function useDropdownNavigation<T>({
   onSelect,
   inputRef,
   hasMore = false,
-  onLoadMore,
-  maxVisibleItems = 8
+  onLoadMore
 }: DropdownNavigationOptions<T>) {
   // State management
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
@@ -31,6 +29,13 @@ export function useDropdownNavigation<T>({
   const itemsRef = useRef<HTMLElement[]>([]);
   const totalItems = items.length + (hasMore ? 1 : 0);
 
+  console.log('Dropdown Navigation: Render', {
+    isOpen,
+    totalItems,
+    highlightedIndex,
+    isInputFocused
+  });
+
   // Reset state when dropdown closes
   useEffect(() => {
     if (!isOpen) {
@@ -38,6 +43,14 @@ export function useDropdownNavigation<T>({
       setIsInputFocused(true);
     }
   }, [isOpen]);
+
+  // Ensure highlightedIndex is within range when items change
+  useEffect(() => {
+    if (highlightedIndex !== null && highlightedIndex >= totalItems) {
+      console.log('Dropdown Navigation: Resetting out-of-bounds index');
+      setHighlightedIndex(null);
+    }
+  }, [items, totalItems, highlightedIndex]);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
@@ -57,11 +70,12 @@ export function useDropdownNavigation<T>({
       case 'ArrowUp': {
         event.preventDefault();
         if (highlightedIndex === null || highlightedIndex === 0) {
+          console.log('Dropdown Navigation: Moving focus back to input');
           setIsInputFocused(true);
           setHighlightedIndex(null);
           inputRef?.current?.focus();
         } else {
-          setHighlightedIndex(prev => prev !== null ? prev - 1 : null);
+          setHighlightedIndex(prev => (prev !== null ? prev - 1 : null));
         }
         break;
       }
@@ -69,9 +83,11 @@ export function useDropdownNavigation<T>({
       case 'Enter': {
         event.preventDefault();
         if (highlightedIndex !== null && !isInputFocused) {
-          if (highlightedIndex === items.length && hasMore) {
+          if (hasMore && highlightedIndex === items.length) {
+            console.log('Dropdown Navigation: Loading more items');
             onLoadMore?.();
-          } else {
+          } else if (highlightedIndex < items.length) {
+            console.log('Dropdown Navigation: Selecting item', items[highlightedIndex]);
             onSelect(items[highlightedIndex], highlightedIndex);
           }
         }
@@ -80,11 +96,15 @@ export function useDropdownNavigation<T>({
 
       case 'Escape': {
         event.preventDefault();
+        console.log('Dropdown Navigation: Escape pressed, closing dropdown');
         setHighlightedIndex(null);
         setIsInputFocused(true);
         inputRef?.current?.focus();
         break;
       }
+
+      default:
+        console.log('Dropdown Navigation: Unhandled key', event.key);
     }
   }, [isOpen, totalItems, highlightedIndex, isInputFocused, items, hasMore, onLoadMore, onSelect, inputRef]);
 
