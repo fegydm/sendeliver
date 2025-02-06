@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/LocationContext.tsx
-// Last change: Refactored validateLocation to omit empty city parameter; removed unused variable warnings and minimal logging
+// Last change: Refactored validateLocation to omit empty city parameter; removed unused variable warnings and added minimal debugging logs
 
 import { createContext, useContext, useCallback, ReactNode, useState } from 'react';
 import { useFormField } from '@/hooks/useFormField';
@@ -29,9 +29,9 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Country field validation - renamed unused parameter to _value to avoid warnings
   const country = useFormField<Country | null>({
     initialValue: null,
-    // Rename unused parameter to _value to odstrániť warning
     validate: async (_value) => true,
     onChange: () => {
       postalCode.reset();
@@ -72,9 +72,11 @@ export function LocationProvider({ children }: LocationProviderProps) {
       if (!response.ok) throw new Error('Failed to validate location');
 
       const data = await response.json();
-      // Nevyhnutný log na kontrolu výsledkov z API
+      // Log API response for debugging
       console.log('API Response:', data);
       setSuggestions(data.results || []);
+      // Log updated suggestions for debugging
+      console.log('Updated suggestions:', data.results);
     } catch (error) {
       setSuggestions([]);
       setError(error instanceof Error ? error.message : 'Failed to validate location');

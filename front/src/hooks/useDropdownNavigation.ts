@@ -1,5 +1,5 @@
 // File: src/hooks/useDropdownNavigation.ts
-// Last change: Removed unused maxVisibleItems to fix TS6133 error
+// Last change: Set maxVisibleItems to 10 for UI pagination; load more appears only when applicable
 
 import { useState, RefObject, useCallback, useRef, useEffect } from 'react';
 
@@ -7,10 +7,10 @@ import { useState, RefObject, useCallback, useRef, useEffect } from 'react';
 interface DropdownNavigationOptions<T> {
   items: T[];                                      // Items to display
   isOpen: boolean;                                // Dropdown open state
-  onSelect: (item: T, index: number) => void;     // Item selection handler
-  inputRef?: RefObject<HTMLInputElement>;         // Reference to input element
-  hasMore?: boolean;                              // Whether more items can be loaded
-  onLoadMore?: () => void;                        // Load more items handler
+  onSelect: (item: T, index: number) => void;      // Item selection handler
+  inputRef?: RefObject<HTMLInputElement>;          // Reference to input element
+  hasMore?: boolean;                               // Whether more items can be loaded
+  onLoadMore?: () => void;                         // Load more items handler
 }
 
 export function useDropdownNavigation<T>({
@@ -21,14 +21,19 @@ export function useDropdownNavigation<T>({
   hasMore = false,
   onLoadMore
 }: DropdownNavigationOptions<T>) {
-  // State management
+  // State management for highlighted index and input focus
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [isInputFocused, setIsInputFocused] = useState(true);
-  
-  // References
-  const itemsRef = useRef<HTMLElement[]>([]);
-  const totalItems = items.length + (hasMore ? 1 : 0);
 
+  // Set maximum number of visible items in the dropdown UI to 10
+  const maxVisibleItems = 10;
+  // Calculate total items for navigation: limit to maxVisibleItems and add one extra for "Load more" if applicable
+  const totalItems = Math.min(items.length, maxVisibleItems) + (hasMore ? 1 : 0);
+
+  // Reference to each dropdown item element
+  const itemsRef = useRef<HTMLElement[]>([]);
+
+  // Log key states for debugging
   console.log('Dropdown Navigation: Render', {
     isOpen,
     totalItems,
@@ -36,7 +41,7 @@ export function useDropdownNavigation<T>({
     isInputFocused
   });
 
-  // Reset state when dropdown closes
+  // Reset highlighted index and input focus when dropdown closes
   useEffect(() => {
     if (!isOpen) {
       setHighlightedIndex(null);
@@ -44,7 +49,7 @@ export function useDropdownNavigation<T>({
     }
   }, [isOpen]);
 
-  // Ensure highlightedIndex is within range when items change
+  // Ensure highlightedIndex is within the allowed range when items change
   useEffect(() => {
     if (highlightedIndex !== null && highlightedIndex >= totalItems) {
       console.log('Dropdown Navigation: Resetting out-of-bounds index');
@@ -52,7 +57,7 @@ export function useDropdownNavigation<T>({
     }
   }, [items, totalItems, highlightedIndex]);
 
-  // Handle keyboard navigation
+  // Handle keyboard navigation events
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
     if (!isOpen) return;
 
@@ -66,7 +71,6 @@ export function useDropdownNavigation<T>({
         });
         break;
       }
-
       case 'ArrowUp': {
         event.preventDefault();
         if (highlightedIndex === null || highlightedIndex === 0) {
@@ -79,21 +83,19 @@ export function useDropdownNavigation<T>({
         }
         break;
       }
-
       case 'Enter': {
         event.preventDefault();
         if (highlightedIndex !== null && !isInputFocused) {
-          if (hasMore && highlightedIndex === items.length) {
+          if (hasMore && highlightedIndex === Math.min(items.length, maxVisibleItems)) {
             console.log('Dropdown Navigation: Loading more items');
             onLoadMore?.();
-          } else if (highlightedIndex < items.length) {
+          } else if (highlightedIndex < Math.min(items.length, maxVisibleItems)) {
             console.log('Dropdown Navigation: Selecting item', items[highlightedIndex]);
             onSelect(items[highlightedIndex], highlightedIndex);
           }
         }
         break;
       }
-
       case 'Escape': {
         event.preventDefault();
         console.log('Dropdown Navigation: Escape pressed, closing dropdown');
@@ -102,11 +104,10 @@ export function useDropdownNavigation<T>({
         inputRef?.current?.focus();
         break;
       }
-
       default:
         console.log('Dropdown Navigation: Unhandled key', event.key);
     }
-  }, [isOpen, totalItems, highlightedIndex, isInputFocused, items, hasMore, onLoadMore, onSelect, inputRef]);
+  }, [isOpen, totalItems, highlightedIndex, isInputFocused, items, hasMore, onLoadMore, onSelect, inputRef, maxVisibleItems]);
 
   return {
     highlightedIndex,
