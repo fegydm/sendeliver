@@ -1,11 +1,10 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Fixed flag rendering and improved input handling
+// Last change: Simplified implementation with better debounce handling and added logs
 
 import React, { useRef, useState, useCallback } from "react";
 import { useLocation } from "./LocationContext";
 import { BaseDropdown } from "./BaseDropdown";
 import type { LocationSuggestion } from '@/types/location.types';
-import { usePagination } from '@/hooks/usePagination';
 
 interface PostalCitySelectProps {
   postalCodeRef?: React.RefObject<HTMLInputElement>;
@@ -18,52 +17,118 @@ export function PostalCitySelect({
   dateInputRef,
   onValidSelection
 }: PostalCitySelectProps) {
-  const { postalCode, city, suggestions } = useLocation();
+  // Get context values and functions
+  const { postalCode, city, suggestions, loadMore, validateLocation } = useLocation();
+
+  // Log current suggestions from context
+  console.log("[PostalCitySelect] Current suggestions:", suggestions);
+
+  // UI state
   const [isOpen, setIsOpen] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
-
-  const pagination = usePagination({
-    dataPageSize: 20,
-    uiPageSize: 8
-  });
-
   const defaultPostalRef = useRef<HTMLInputElement>(null);
   const cityInputRef = useRef<HTMLInputElement>(null);
   const activePostalRef = postalCodeRef || defaultPostalRef;
+  const timeoutRef = useRef<number | null>(null);
 
-  const handlePostalCodeChange = useCallback(async (value: string) => {
-    await postalCode.handleChange(value);
+  // Local state for inputs
+  const [localPostal, setLocalPostal] = useState(postalCode.value);
+  const [localCity, setLocalCity] = useState(city.value);
+
+  // Handle validation with debounce
+  const handleValidation = useCallback((postalValue: string, cityValue: string) => {
+    // Log input values before debounce
+    console.log("[PostalCitySelect] Debounced validation - postalValue:", postalValue, "cityValue:", cityValue);
+
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+    }
+
+    // Update local state immediately
+    setLocalPostal(postalValue);
+    setLocalCity(cityValue);
+
+    // Set new timeout for validation
+    timeoutRef.current = window.setTimeout(() => {
+      // Update context
+      console.log("[PostalCitySelect] Updating context values - postalValue:", postalValue, "cityValue:", cityValue);
+      postalCode.setValue(postalValue);
+      city.setValue(cityValue);
+
+      // Validate if we have any input
+      if (postalValue || cityValue) {
+        console.log("[PostalCitySelect] Calling validateLocation with:", postalValue, cityValue);
+        validateLocation(postalValue, cityValue);
+      }
+    }, 300);
+  }, [postalCode, city, validateLocation]);
+
+  // Handle postal code input
+  const handlePostalCodeInput = useCallback((value: string) => {
+    console.log("[PostalCitySelect] Postal code input changed:", value);
+    handleValidation(value, localCity);
     setIsOpen(true);
-    setHighlightedIndex(null);
-    pagination.reset();
-  }, [postalCode, pagination]);
+  }, [handleValidation, localCity]);
 
-  const handleCityChange = useCallback(async (value: string) => {
-    await city.handleChange(value);
+  // Handle city input
+  const handleCityInput = useCallback((value: string) => {
+    console.log("[PostalCitySelect] City input changed:", value);
+    handleValidation(localPostal, value);
     setIsOpen(true);
-    setHighlightedIndex(null);
-    pagination.reset();
-  }, [city, pagination]);
+  }, [handleValidation, localPostal]);
 
-  const handleSelect = useCallback((suggestion: LocationSuggestion, index: number) => {
-    postalCode.handleChange(suggestion.postalCode);
-    city.handleChange(suggestion.city);
+  // Handle suggestion selection
+  const handleSelect = useCallback((suggestion: LocationSuggestion) => {
+    console.log("[PostalCitySelect] Suggestion selected:", suggestion);
+    const newPostal = suggestion.postal_code;
+    const newCity = suggestion.place_name;
+
+    // Clear any pending validation
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+    }
+
+    // Update local state
+    setLocalPostal(newPostal);
+    setLocalCity(newCity);
+
+    // Update context immediately
+    postalCode.setValue(newPostal);
+    city.setValue(newCity);
+    validateLocation(newPostal, newCity);
+
     setIsOpen(false);
-    setHighlightedIndex(null);
 
     if (dateInputRef?.current) {
       dateInputRef.current.focus();
       onValidSelection();
     }
-  }, [postalCode, city, dateInputRef, onValidSelection]);
+  }, [dateInputRef, onValidSelection, postalCode, city, validateLocation]);
 
-  const handleDropdownClose = useCallback(() => {
-    setIsOpen(false);
-    setHighlightedIndex(null);
+  // Cleanup timeouts on unmount
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
   }, []);
 
-  const visibleSuggestions = suggestions.slice(0, pagination.getVisibleCount());
+  // Handle dropdown close
+  const handleDropdownClose = useCallback(() => {
+    console.log("[PostalCitySelect] Dropdown closed");
+    setIsOpen(false);
+  }, []);
+
+  // Prepare suggestions for display
+  const displayedSuggestions = suggestions.length === 21
+    ? suggestions.slice(0, 20)
+    : suggestions;
+
+  const computedTotalItems = suggestions.length === 21 ? 21 : suggestions.length;
+
+  // Log displayed suggestions and dropdown state
+  console.log("[PostalCitySelect] Dropdown isOpen:", isOpen, "Displayed suggestions:", displayedSuggestions);
 
   return (
     <div className="location-search">
@@ -72,52 +137,43 @@ export function PostalCitySelect({
           <input
             ref={activePostalRef}
             type="text"
-            value={postalCode.value}
-            onChange={e => handlePostalCodeChange(e.target.value)}
+            value={localPostal}
+            onChange={e => handlePostalCodeInput(e.target.value)}
             onFocus={() => {
+              console.log("[PostalCitySelect] Postal input focused");
               setIsOpen(true);
-              setIsInputFocused(true);
             }}
-            onBlur={() => setIsInputFocused(false)}
             placeholder="Postal code"
             className="postal-input"
           />
         </div>
-
         <input
           ref={cityInputRef}
           type="text"
-          value={city.value}
-          onChange={e => handleCityChange(e.target.value)}
+          value={localCity}
+          onChange={e => handleCityInput(e.target.value)}
           placeholder="City"
           className="city-input"
         />
       </div>
-
       <BaseDropdown
-        items={visibleSuggestions}
-        isOpen={isOpen && visibleSuggestions.length > 0}
+        items={displayedSuggestions}
+        isOpen={isOpen && displayedSuggestions.length > 0}
         onSelect={handleSelect}
         onClose={handleDropdownClose}
         inputRef={activePostalRef}
-        hasMore={pagination.hasMore}
-        onLoadMore={pagination.loadMore}
-        highlightedIndex={highlightedIndex}
-        isInputFocused={isInputFocused}
-        renderItem={(suggestion, isHighlighted) => (
+        totalItems={computedTotalItems}
+        onLoadMore={loadMore}
+        renderItem={(suggestion, { isHighlighted }) => (
           <div className={`suggestion-item ${isHighlighted ? 'highlighted' : ''}`}>
-            {suggestion.countryCode && (
-              <img
-                src={`/flags/4x3/${suggestion.countryCode.toLowerCase()}.svg`}
-                alt={`${suggestion.countryCode} flag`}
-                className="country-flag-small"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            )}
-            <span className="postal-code">{suggestion.postalCode}</span>
-            <span className="city-name">{suggestion.city}</span>
+            <img
+              src={`/flags/4x3/optimized/${suggestion.country_code.toLowerCase()}.svg`}
+              alt={`${suggestion.country_code} flag`}
+              className="country-flag-small"
+            />
+            <span className="country-code">{suggestion.country_code}</span>
+            <span className="postal-code">{suggestion.postal_code}</span>
+            <span className="city-name">{suggestion.place_name}</span>
           </div>
         )}
       />

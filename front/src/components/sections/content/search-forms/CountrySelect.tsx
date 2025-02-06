@@ -1,6 +1,3 @@
-// File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Cleaned up unused code and fixed dropdown behavior
-
 import { useRef, useState, useMemo } from 'react';
 import { useLocation } from './LocationContext';
 import { BaseDropdown } from './BaseDropdown';
@@ -21,8 +18,7 @@ export function CountrySelect({
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState(initialValue);
-  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
-
+  // Removed highlightedIndex since it is not used
   const validFirstChars = useMemo(() => [...new Set(countrySelect.items
     .map(c => c.code_2?.[0])
     .filter(Boolean))], [countrySelect.items]);
@@ -80,7 +76,6 @@ export function CountrySelect({
       setTimeout(() => {
         const firstOption = document.querySelector('.combobox-option') as HTMLElement;
         if (firstOption) {
-          setHighlightedIndex(0);
           firstOption.focus();
         }
       }, 0);
@@ -100,7 +95,6 @@ export function CountrySelect({
 
   const handleClose = () => {
     setIsOpen(false);
-    setHighlightedIndex(null);
     if (!inputValue) {
       onCountrySelect('', '');
     }

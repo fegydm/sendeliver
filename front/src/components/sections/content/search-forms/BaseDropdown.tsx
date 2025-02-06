@@ -1,8 +1,6 @@
-// File: src/components/sections/content/search-forms/BaseDropdown.tsx
-// Last change: Added highlightedIndex and isInputFocused to props
-
-import React, { useEffect, useRef } from 'react';
-import { useDropdownNavigation } from '@/hooks/useDropdownNavigation';
+import React, { useRef, useEffect } from 'react';
+import { useUINavigation } from '@/hooks/useUINavigation';
+import { useDropdownPagination } from '@/hooks/useDropdownPagination';
 
 interface BaseDropdownProps<T> {
   items: T[];
@@ -10,12 +8,14 @@ interface BaseDropdownProps<T> {
   onSelect: (item: T, index: number) => void;
   onClose: () => void;
   inputRef: React.RefObject<HTMLInputElement>;
-  hasMore?: boolean;
   onLoadMore?: () => void;
-  renderItem: (item: T, isHighlighted: boolean) => React.ReactNode;
+  renderItem: (item: T, meta: { isHighlighted: boolean; isSelected: boolean }) => React.ReactNode;
   className?: string;
-  highlightedIndex?: number | null;
-  isInputFocused?: boolean;
+  getItemKey?: (item: T, index: number) => string | number;
+  selectedItem?: T | null;
+  loadMoreText?: string;
+  totalItems?: number;
+  isSinglePage?: boolean;
 }
 
 export function BaseDropdown<T>({
@@ -24,46 +24,47 @@ export function BaseDropdown<T>({
   onSelect,
   onClose,
   inputRef,
-  hasMore = false,
   onLoadMore,
   renderItem,
   className = '',
-  highlightedIndex: externalHighlightedIndex,
-  isInputFocused: externalIsInputFocused,
+  getItemKey = (_: T, index: number) => index,
+  selectedItem,
+  loadMoreText = 'Load more...',
+  totalItems = 0,
+  isSinglePage = false
 }: BaseDropdownProps<T>) {
   const dropdownRef = useRef<HTMLUListElement>(null);
+
+  // Navigation hook – handles keyboard navigation within the dropdown
   const {
-    highlightedIndex: internalHighlightedIndex,
-    isInputFocused: internalIsInputFocused,
+    highlightedIndex,
+    isInputFocused,
     handleKeyDown,
     itemsRef
-  } = useDropdownNavigation({
+  } = useUINavigation({
     items,
     isOpen,
     onSelect,
-    inputRef,
-    hasMore,
-    onLoadMore
+    inputRef
   });
 
-  const activeHighlightedIndex = externalHighlightedIndex ?? internalHighlightedIndex;
-  const activeIsInputFocused = externalIsInputFocused ?? internalIsInputFocused;
-
-  console.log('BaseDropdown Render:', {
-    isOpen,
-    itemsLength: items.length,
-    highlightedIndex: activeHighlightedIndex,
-    isInputFocused: activeIsInputFocused,
-    hasMore
+  // Pagination hook – determines whether there are more items to load
+  const { hasMore, loadMoreData } = useDropdownPagination({
+    isSinglePage,
+    onLoadMore,
+    totalItems
   });
 
+  // Effect to close the dropdown when clicking outside
   useEffect(() => {
     if (!isOpen) return;
-
+    
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && 
-          !dropdownRef.current.contains(event.target as Node) && 
-          !inputRef?.current?.contains(event.target as Node)) {
+      if (
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node) && 
+        !inputRef?.current?.contains(event.target as Node)
+      ) {
         onClose();
       }
     };
@@ -71,22 +72,6 @@ export function BaseDropdown<T>({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onClose, inputRef]);
-
-  useEffect(() => {
-    if (!isOpen || !dropdownRef.current || activeHighlightedIndex === null) return;
-
-    const highlightedElement = itemsRef.current[activeHighlightedIndex];
-    if (!highlightedElement) return;
-
-    const dropdownRect = dropdownRef.current.getBoundingClientRect();
-    const elementRect = highlightedElement.getBoundingClientRect();
-
-    if (elementRect.bottom > dropdownRect.bottom) {
-      highlightedElement.scrollIntoView({ block: 'end', behavior: 'smooth' });
-    } else if (elementRect.top < dropdownRect.top) {
-      highlightedElement.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    }
-  }, [activeHighlightedIndex, isOpen, itemsRef]);
 
   if (!isOpen) return null;
 
@@ -96,19 +81,26 @@ export function BaseDropdown<T>({
       className={`dropdown-list ${className}`}
       role="listbox"
       onKeyDown={handleKeyDown}
+      aria-expanded={isOpen}
+      aria-activedescendant={highlightedIndex !== null ? `item-${highlightedIndex}` : undefined}
     >
       {items.map((item, index) => (
         <li
-          key={index}
+          key={getItemKey(item, index)}
           ref={(el) => {
             if (el) itemsRef.current[index] = el;
           }}
+          id={`item-${index}`}
           onClick={() => onSelect(item, index)}
-          className={`dropdown-item ${index === activeHighlightedIndex && !activeIsInputFocused ? 'highlighted' : ''}`}
+          className={`dropdown-item ${index === highlightedIndex && !isInputFocused ? 'highlighted' : ''}`}
           role="option"
-          tabIndex={index === activeHighlightedIndex && !activeIsInputFocused ? 0 : -1}
+          aria-selected={selectedItem === item}
+          tabIndex={index === highlightedIndex && !isInputFocused ? 0 : -1}
         >
-          {renderItem(item, index === activeHighlightedIndex)}
+          {renderItem(item, {
+            isHighlighted: index === highlightedIndex,
+            isSelected: selectedItem === item
+          })}
         </li>
       ))}
 
@@ -117,12 +109,13 @@ export function BaseDropdown<T>({
           ref={(el) => {
             if (el) itemsRef.current[items.length] = el;
           }}
-          onClick={onLoadMore}
-          className={`load-more ${items.length === activeHighlightedIndex ? 'highlighted' : ''}`}
+          onClick={loadMoreData}
+          className={`load-more ${highlightedIndex === items.length ? 'highlighted' : ''}`}
           role="option"
-          tabIndex={items.length === activeHighlightedIndex ? 0 : -1}
+          aria-label={loadMoreText}
+          tabIndex={highlightedIndex === items.length ? 0 : -1}
         >
-          Load more...
+          {loadMoreText}
         </li>
       )}
     </ul>

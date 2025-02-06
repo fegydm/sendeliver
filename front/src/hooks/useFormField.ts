@@ -1,5 +1,5 @@
 // File: src/hooks/useFormField.ts
-// Last change: Updated return type to match FieldValue interface
+// Last change: Added silent setValue support and updated return type to match FieldValue interface
 
 import { useState, useCallback, useRef } from 'react';
 
@@ -16,16 +16,24 @@ export function useFormField<T>({
   transform,
   onChange
 }: UseFormFieldConfig<T>) {
-  const [value, setValue] = useState<T>(initialValue);
+  const [value, setValueInternal] = useState<T>(initialValue);
   const [isValid, setIsValid] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const lastValidValue = useRef<T>(initialValue);
 
+  // Silent
+  const setValue = useCallback((newValue: T) => {
+    const transformedValue = transform ? transform(newValue) : newValue;
+    setValueInternal(transformedValue);
+    setIsDirty(true);
+  }, [transform]);
+
+  // Validated
   const handleChange = useCallback(async (newValue: T) => {
     const transformedValue = transform ? transform(newValue) : newValue;
-    setValue(transformedValue);
+    setValueInternal(transformedValue);
     setIsDirty(true);
     setIsValidating(true);
 
@@ -57,7 +65,7 @@ export function useFormField<T>({
   }, []);
 
   const reset = useCallback(() => {
-    setValue(initialValue);
+    setValueInternal(initialValue);
     setIsValid(false);
     setIsDirty(false);
     setError(null);
@@ -72,7 +80,8 @@ export function useFormField<T>({
     error,
     isValidating,
     lastValidValue: lastValidValue.current,
-    handleChange,
+    setValue,           // Silent change
+    handleChange,       // Validated change
     handleBlur,
     reset
   };

@@ -4,6 +4,7 @@ import ThemeSwitcher from "@/components/elements/theme-switcher.element";
 import ThemeEditorModal from "@/components/modals/theme-editor.modal";
 import ColorPaletteModal from "@/components/modals/color-palette.modal";
 import { Button } from "@/components/ui";
+import KeystrokeAndQueryTiming from "@/components/KeystrokeAndQueryTiming"; // Import the timing component
 
 interface FooterTestProps {
   isVisible: boolean;
@@ -136,7 +137,7 @@ const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
           </button>
         </div>
         
-        <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="max-h-[calc(100vh-300px)] overflow-y-auto mb-4">
           {activeTab === "warnings" && warnings.map((warning, index) => (
             <p key={index} className="text-yellow-600 mb-2 p-2 bg-yellow-50 rounded">
               {warning}
@@ -157,6 +158,12 @@ const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
               {log}
             </p>
           ))}
+        </div>
+
+        {/* Insert the Keystroke and SQL Query Timing component for testing */}
+        <div className="mb-4">
+          <h2 className="text-xl font-bold mb-2">Keystroke & Query Timing Test</h2>
+          <KeystrokeAndQueryTiming />
         </div>
       </div>
 
