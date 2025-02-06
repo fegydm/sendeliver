@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Simplified implementation with better debounce handling and added logs
+// Last change: Simplified implementation with better debounce handling, added logs and load more computedTotalItems
 
 import React, { useRef, useState, useCallback } from "react";
 import { useLocation } from "./LocationContext";
@@ -18,12 +18,16 @@ export function PostalCitySelect({
   onValidSelection
 }: PostalCitySelectProps) {
   // Get context values and functions
-  const { postalCode, city, suggestions, loadMore, validateLocation } = useLocation();
+  const { postalCode, city, suggestions, loadMore, validateLocation, apiHasMore } = useLocation();
 
-  // Log current suggestions from context
+  // Compute total items as suggestions length plus one if API indicates more items are available
+  const computedTotalItems = suggestions.length + (apiHasMore ? 1 : 0);
+
   console.log("[PostalCitySelect] Current suggestions:", suggestions);
+  console.log("[PostalCitySelect] apiHasMore:", apiHasMore);
+  console.log("[PostalCitySelect] Computed total items:", computedTotalItems);
 
-  // UI state
+  // UI state and refs
   const [isOpen, setIsOpen] = useState(false);
   const defaultPostalRef = useRef<HTMLInputElement>(null);
   const cityInputRef = useRef<HTMLInputElement>(null);
@@ -36,26 +40,16 @@ export function PostalCitySelect({
 
   // Handle validation with debounce
   const handleValidation = useCallback((postalValue: string, cityValue: string) => {
-    // Log input values before debounce
     console.log("[PostalCitySelect] Debounced validation - postalValue:", postalValue, "cityValue:", cityValue);
-
-    // Clear any existing timeout
     if (timeoutRef.current) {
       window.clearTimeout(timeoutRef.current);
     }
-
-    // Update local state immediately
     setLocalPostal(postalValue);
     setLocalCity(cityValue);
-
-    // Set new timeout for validation
     timeoutRef.current = window.setTimeout(() => {
-      // Update context
       console.log("[PostalCitySelect] Updating context values - postalValue:", postalValue, "cityValue:", cityValue);
       postalCode.setValue(postalValue);
       city.setValue(cityValue);
-
-      // Validate if we have any input
       if (postalValue || cityValue) {
         console.log("[PostalCitySelect] Calling validateLocation with:", postalValue, cityValue);
         validateLocation(postalValue, cityValue);
@@ -82,30 +76,22 @@ export function PostalCitySelect({
     console.log("[PostalCitySelect] Suggestion selected:", suggestion);
     const newPostal = suggestion.postal_code;
     const newCity = suggestion.place_name;
-
-    // Clear any pending validation
     if (timeoutRef.current) {
       window.clearTimeout(timeoutRef.current);
     }
-
-    // Update local state
     setLocalPostal(newPostal);
     setLocalCity(newCity);
-
-    // Update context immediately
     postalCode.setValue(newPostal);
     city.setValue(newCity);
     validateLocation(newPostal, newCity);
-
     setIsOpen(false);
-
     if (dateInputRef?.current) {
       dateInputRef.current.focus();
       onValidSelection();
     }
   }, [dateInputRef, onValidSelection, postalCode, city, validateLocation]);
 
-  // Cleanup timeouts on unmount
+  // Cleanup timeout on unmount
   React.useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -120,14 +106,11 @@ export function PostalCitySelect({
     setIsOpen(false);
   }, []);
 
-  // Prepare suggestions for display
+  // Prepare suggestions for display; if there are 21 suggestions, display only the first 20.
   const displayedSuggestions = suggestions.length === 21
     ? suggestions.slice(0, 20)
     : suggestions;
 
-  const computedTotalItems = suggestions.length === 21 ? 21 : suggestions.length;
-
-  // Log displayed suggestions and dropdown state
   console.log("[PostalCitySelect] Dropdown isOpen:", isOpen, "Displayed suggestions:", displayedSuggestions);
 
   return (

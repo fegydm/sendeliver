@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/LocationContext.tsx
-// Last change: Updated to use silent updates for better performance and added logs
+// Last change: Updated to use silent updates for better performance and added logs, with API hasMore flag
 
 import { createContext, useContext, useCallback, ReactNode, useState } from 'react';
 import { useFormField } from '@/hooks/useFormField';
@@ -17,6 +17,7 @@ interface LocationContextState {
   validateLocation: (code: string, city: string) => Promise<void>;
   reset: () => void;
   loadMore: () => Promise<void>;
+  apiHasMore: boolean; // Pridaná vlastnosť pre príznak, či sú ďalšie položky
 }
 
 interface LocationProviderProps {
@@ -29,6 +30,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [apiHasMore, setApiHasMore] = useState(false);
 
   // Postal code field without automatic validation
   const postalCode = useFormField<string>({
@@ -110,7 +112,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
       const data = await response.json();
       console.log("[LocationContext] API Response:", data);
       
-      // Skontroluj, či odpoveď obsahuje pole "results"
+      // Check if API response contains "results"
       if (data.results && Array.isArray(data.results)) {
         setSuggestions(data.results);
         console.log("[LocationContext] Suggestions updated:", data.results);
@@ -118,10 +120,13 @@ export function LocationProvider({ children }: LocationProviderProps) {
         console.warn("[LocationContext] Unexpected API response format:", data);
         setSuggestions([]);
       }
+      // Save API flag for more items
+      setApiHasMore(!!data.hasMore);
     } catch (error) {
       console.error("[LocationContext] Error in validateLocation:", error);
       setSuggestions([]);
       setError(error instanceof Error ? error.message : 'Failed to validate location');
+      setApiHasMore(false);
     } finally {
       setIsLoading(false);
       console.log("[LocationContext] validateLocation completed. isLoading set to false.");
@@ -170,6 +175,8 @@ export function LocationProvider({ children }: LocationProviderProps) {
       console.log("[LocationContext] Load more API response:", data);
       
       setSuggestions(prev => [...prev, ...(data.results || [])]);
+      // Update API flag after loading more
+      setApiHasMore(!!data.hasMore);
       console.log("[LocationContext] Suggestions updated after loadMore:", suggestions);
     } catch (error) {
       console.error("[LocationContext] Error in loadMore:", error);
@@ -201,7 +208,8 @@ export function LocationProvider({ children }: LocationProviderProps) {
       error,
       validateLocation,
       reset,
-      loadMore
+      loadMore,
+      apiHasMore
     }}>
       {children}
     </LocationContext.Provider>

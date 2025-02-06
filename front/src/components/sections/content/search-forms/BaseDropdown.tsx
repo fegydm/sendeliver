@@ -1,3 +1,4 @@
+// File: src/components/sections/content/search-forms/BaseDropdown.tsx
 import React, { useRef, useEffect } from 'react';
 import { useUINavigation } from '@/hooks/useUINavigation';
 import { useDropdownPagination } from '@/hooks/useDropdownPagination';
@@ -55,10 +56,8 @@ export function BaseDropdown<T>({
     totalItems
   });
 
-  // Effect to close the dropdown when clicking outside
   useEffect(() => {
     if (!isOpen) return;
-    
     const handleClickOutside = (event: MouseEvent) => {
       if (
         dropdownRef.current && 
@@ -68,7 +67,6 @@ export function BaseDropdown<T>({
         onClose();
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onClose, inputRef]);
