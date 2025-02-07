@@ -1,5 +1,5 @@
 // File: src/routes/geo.routes.ts
-// Last change: Load more mechanism extracted and fixed parameter count for SQL queries
+// Last change: Replaced OFFSET with Keyset Pagination for faster search queries
 
 import { Router, RequestHandler } from "express";
 import { ParsedQs } from "qs";
@@ -17,31 +17,19 @@ interface LocationQuery extends ParsedQs {
   city?: string;
   countryCode?: string;
   limit?: string;
-  offset?: string;
+  lastPriority?: string;
+  lastPostalCode?: string;
+  lastCountryCode?: string;
   checkExists?: string;
 }
 
 const router = Router();
 
-// Extracted load more mechanism helper
-const applyLoadMoreMechanism = (
-  rows: any[],
-  queryLimit: number
-): { rows: any[]; hasMore: boolean } => {
-  let hasMore = false;
-  if (rows.length === queryLimit) {
-    hasMore = true;
-    // Remove the extra row used for detection
-    rows.pop();
-  }
-  return { rows, hasMore };
-};
-
-// ✅ Get list of countries
+// Get countries list with logistics priority
 const handleGetCountries: RequestHandler = async (_req, res) => {
   try {
     const result = await pool.query(GET_COUNTRIES_QUERY);
-    console.log("✅ Countries query result:", result.rows.length, "rows");
+    console.log("✅ Countries fetched:", result.rows.length);
     res.json(result.rows);
   } catch (error: unknown) {
     console.error("❌ Error fetching countries:", error);
@@ -49,7 +37,7 @@ const handleGetCountries: RequestHandler = async (_req, res) => {
   }
 };
 
-// ✅ Check if a location exists
+// Check if a location exists in the database
 const checkLocationExists = async (
   postalCode?: string,
   city?: string,
@@ -63,26 +51,25 @@ const checkLocationExists = async (
     ]);
     return result.rows[0].found;
   } catch (error) {
-    console.error("❌ Error checking location existence:", error);
+    console.error("❌ Location check failed:", error);
     return false;
   }
 };
 
-// ✅ Get location data (Main API route) with load more mechanism
+// Main location search endpoint
 const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (req, res): Promise<void> => {
   const { 
     postalCode, 
     city, 
     countryCode, 
     limit = "20", 
-    offset = "0",
+    lastPriority,
+    lastPostalCode,
+    lastCountryCode,
     checkExists 
   } = req.query;
 
-  console.log("🔍 Received query parameters:", { postalCode, city, countryCode, limit, offset, checkExists });
-
   try {
-    // If checking existence only
     if (checkExists === 'true') {
       const exists = await checkLocationExists(postalCode, city, countryCode);
       res.json({ exists });
@@ -90,69 +77,55 @@ const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (re
     }
 
     const limitValue = parseInt(limit, 10);
-    const offsetValue = parseInt(offset, 10);
-
-    // Validate query parameters
-    if (isNaN(limitValue) || isNaN(offsetValue) || limitValue <= 0 || offsetValue < 0) {
-      console.error("❌ Invalid limit or offset values");
-      res.status(400).json({ error: "Invalid limit or offset values" });
+    if (isNaN(limitValue) || limitValue <= 0) {
+      console.error("❌ Invalid limit value");
+      res.status(400).json({ error: "Invalid limit value" });
       return;
     }
 
-    // For load more, use an extra row: queryLimit = limitValue + 1
-    const queryLimit = limitValue + 1;
-
-    // Check if location exists before searching
-    const exists = await checkLocationExists(postalCode, city, countryCode);
-    if (!exists) {
-      res.json({ results: [], hasMore: false });
-      return;
-    }
+    // Validate pagination parameters
+    const paginationValues = lastPriority && lastPostalCode && lastCountryCode 
+      ? [lastPriority, lastPostalCode, lastCountryCode] 
+      : [null, null, null];
 
     let result;
-    // Search by Postal Code
     if (postalCode && typeof postalCode === "string") {
-      // If countryCode je zadaný a nie je prázdny, použijeme príslušný dotaz
-      if (countryCode && typeof countryCode === "string" && countryCode.trim() !== "") {
-        console.log(`🔍 Searching by postalCode=${postalCode} and countryCode=${countryCode}`);
-        // Pôvodné poradie parametrov: [countryCode, postalCode, limit, offset]
+      if (countryCode?.trim()) {
         result = await pool.query(SEARCH_LOCATION_BY_COUNTRY_QUERY, [
-          countryCode, 
           postalCode, 
-          queryLimit, 
-          offsetValue
+          countryCode, 
+          ...paginationValues,
+          limitValue
         ]);
       } else {
-        console.log(`🔍 Searching by postalCode=${postalCode} (without countryCode)`);
-        // Pre tento dotaz odovzdáme štyri parametre: postalCode, null, queryLimit, offsetValue
         result = await pool.query(SEARCH_LOCATION_QUERY, [
           postalCode, 
           null, 
-          queryLimit, 
-          offsetValue
+          ...paginationValues,
+          limitValue
         ]);
       }
-    } 
-    // Search by City Name
-    else if (city && typeof city === "string") {
-      console.log(`🔍 Searching by city=${city}`);
-      result = await pool.query(SEARCH_CITY_QUERY, [city, queryLimit, offsetValue, null]); 
-      // Ak tvoj dotaz na mesto vyžaduje štyri parametre, prípadne uprav túto časť.
-    } 
-    // No valid query parameters provided
-    else {
+    } else if (city?.trim()) {
+      result = await pool.query(SEARCH_CITY_QUERY, [
+        city, 
+        countryCode?.trim() || null, 
+        ...paginationValues,
+        limitValue
+      ]);
+    } else {
       res.json({ results: [], hasMore: false });
       return;
     }
 
-    // Apply load more mechanism
-    const { rows, hasMore } = applyLoadMoreMechanism(result.rows, queryLimit);
+    const rows = result.rows;
+    const hasMore = rows.length === limitValue;
+    if (hasMore) rows.pop(); // Remove the extra row used for pagination check
 
-    console.log(`✅ SQL Query returned ${rows.length} rows (hasMore: ${hasMore}) with queryLimit=${queryLimit} and offset=${offsetValue}`);
+    console.log(`✅ Found ${rows.length} results`);
     res.json({ results: rows, hasMore });
 
   } catch (error: unknown) {
-    console.error("❌ Error searching locations:", error);
+    console.error("❌ Search failed:", error);
     res.status(500).json({ error: "Failed to search locations" });
   }
 };

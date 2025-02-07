@@ -1,227 +1,288 @@
 // File: src/components/sections/content/search-forms/LocationContext.tsx
-// Last change: Updated to use silent updates for better performance and added logs, with API hasMore flag
+// Last change: Added response validation and error handling
 
 import { createContext, useContext, useCallback, ReactNode, useState } from 'react';
 import { useFormField } from '@/hooks/useFormField';
 import { useAsyncSelect } from '@/hooks/useAsyncSelect';
 import type { Country, LocationSuggestion } from '@/types/location.types';
 
+interface EnhancedLocationSuggestion extends LocationSuggestion {
+ matchType: 'postal' | 'city' | 'both';
+ matchScore: number;
+}
+
 interface LocationContextState {
-  country: ReturnType<typeof useFormField<Country | null>>;
-  postalCode: ReturnType<typeof useFormField<string>>;
-  city: ReturnType<typeof useFormField<string>>;
-  countrySelect: ReturnType<typeof useAsyncSelect<Country>>;
-  suggestions: LocationSuggestion[];
-  isLoading: boolean;
-  error: string | null;
-  validateLocation: (code: string, city: string) => Promise<void>;
-  reset: () => void;
-  loadMore: () => Promise<void>;
-  apiHasMore: boolean; // Added flag to indicate if more items are available
+ country: ReturnType<typeof useFormField<Country | null>>;
+ postalCode: ReturnType<typeof useFormField<string>>;
+ city: ReturnType<typeof useFormField<string>>;
+ countrySelect: ReturnType<typeof useAsyncSelect<Country>>;
+ suggestions: EnhancedLocationSuggestion[];
+ isLoading: boolean;
+ error: string | null;
+ validateLocation: (code: string, city: string) => Promise<void>;
+ reset: () => void;
+ loadMore: () => Promise<void>;
+ apiHasMore: boolean;
+ activeField: 'postal' | 'city' | null;
+ setActiveField: (field: 'postal' | 'city' | null) => void;
+ dropdownOpen: boolean;
+ setDropdownOpen: (open: boolean) => void;
 }
 
 interface LocationProviderProps {
-  children: ReactNode;
+ children: ReactNode;
 }
 
 const LocationContext = createContext<LocationContextState | undefined>(undefined);
 
 export function LocationProvider({ children }: LocationProviderProps) {
-  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [apiHasMore, setApiHasMore] = useState(false);
+ const [suggestions, setSuggestions] = useState<EnhancedLocationSuggestion[]>([]);
+ const [isLoading, setIsLoading] = useState(false);
+ const [error, setError] = useState<string | null>(null);
+ const [apiHasMore, setApiHasMore] = useState(false);
+ const [activeField, setActiveField] = useState<'postal' | 'city' | null>(null);
+ const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Postal code field without automatic validation
-  const postalCode = useFormField<string>({
-    initialValue: '',
-    transform: (value) => value.trim()
-  });
+ const handleFieldChange = useCallback(async (code: string, cityValue: string) => {
+   console.log("[LocationContext] Field change:", { code, cityValue });
+   if (!code && !cityValue) {
+     setSuggestions([]);
+     setDropdownOpen(false);
+     return;
+   }
+   setDropdownOpen(true);
+   await validateLocation(code, cityValue);
+ }, []);
 
-  // City field without automatic validation
-  const city = useFormField<string>({
-    initialValue: '',
-    transform: (value) => value.trim()
-  });
+ const postalCode = useFormField<string>({
+   initialValue: '',
+   transform: (value) => value.trim(),
+   onChange: (value) => {
+     if (activeField === 'postal') {
+       handleFieldChange(value, city.value);
+     }
+   }
+ });
 
-  // Country field - no initial validation, only updates when needed
-  const country = useFormField<Country | null>({
-    initialValue: null,
-    transform: (value) => value,
-    onChange: (newCountry) => {
-      console.log("[LocationContext] Country changed:", newCountry);
-      // If there are active filters, revalidate with the new country
-      if (postalCode.value || city.value) {
-        console.log("[LocationContext] Revalidating due to country change.");
-        validateLocation(postalCode.value, city.value);
-      }
-    }
-  });
+ const city = useFormField<string>({
+   initialValue: '',
+   transform: (value) => value.trim(),
+   onChange: (value) => {
+     if (activeField === 'city') {
+       handleFieldChange(postalCode.value, value);
+     }
+   }
+ });
 
-  // Async select for countries list
-  const countrySelect = useAsyncSelect<Country>({
-    fetchItems: async (query: string) => {
-      console.log("[LocationContext] Fetching countries with query:", query);
-      const response = await fetch(`/api/geo/countries?q=${query}`);
-      if (!response.ok) {
-        console.error("[LocationContext] Failed to fetch countries");
-        throw new Error('Failed to fetch countries');
-      }
-      const countries = await response.json();
-      console.log("[LocationContext] Countries fetched:", countries);
-      return countries;
-    },
-    minQueryLength: 1
-  });
+ const country = useFormField<Country | null>({
+   initialValue: null,
+   transform: (value) => value,
+   onChange: (newCountry) => {
+     if (postalCode.value || city.value) {
+       validateLocation(postalCode.value, city.value);
+     }
+   }
+ });
 
-  // Main validation function - fetches locations based on current filters
-  const validateLocation = useCallback(async (code: string, cityValue: string) => {
-    console.log("[LocationContext] validateLocation called with:", { code, cityValue });
-    // Clear suggestions if no filters are provided
-    if (!code && !cityValue) {
-      console.log("[LocationContext] No filters provided, clearing suggestions.");
-      setSuggestions([]);
-      return;
-    }
+ const countrySelect = useAsyncSelect<Country>({
+   fetchItems: async (query: string) => {
+     const response = await fetch(`/api/geo/countries?q=${query}&sort=logistics_priority`);
+     if (!response.ok) throw new Error('Failed to fetch countries');
+     
+     const countries: Country[] = await response.json();
+     return countries.sort((a: Country, b: Country) =>
+       (b.logistics_priority || 0) - (a.logistics_priority || 0)
+     );
+   },
+   minQueryLength: 0
+ });
 
-    setIsLoading(true);
-    setError(null);
+ const validateLocation = useCallback(async (code: string, cityValue: string) => {
+   if (!code && !cityValue) {
+     setSuggestions([]);
+     return;
+   }
 
-    try {
-      // Build query parameters
-      const params = new URLSearchParams({
-        countryCode: country.value?.code_2 || '',
-        postalCode: code,
-        offset: '0',
-        limit: '20'
-      });
+   setIsLoading(true);
+   setError(null);
 
-      if (cityValue) {
-        params.append('city', cityValue);
-      }
+   try {
+     const params = new URLSearchParams({
+       offset: '0',
+       limit: '20'
+     });
 
-      console.log("[LocationContext] Fetching locations with params:", params.toString());
-      
-      // Execute the query
-      const response = await fetch(`/api/geo/location?${params.toString()}`);
-      if (!response.ok) {
-        console.error("[LocationContext] Failed to validate location, response not ok.");
-        throw new Error('Failed to validate location');
-      }
-      
-      const data = await response.json();
-      console.log("[LocationContext] API Response:", data);
-      
-      // Check if API response contains "results"
-      if (data.results && Array.isArray(data.results)) {
-        setSuggestions(data.results);
-        console.log("[LocationContext] Suggestions updated:", data.results);
-      } else {
-        console.warn("[LocationContext] Unexpected API response format:", data);
-        setSuggestions([]);
-      }
-      // Update API flag indicating if more items are available
-      setApiHasMore(!!data.hasMore);
-    } catch (error) {
-      console.error("[LocationContext] Error in validateLocation:", error);
-      setSuggestions([]);
-      setError(error instanceof Error ? error.message : 'Failed to validate location');
-      setApiHasMore(false);
-    } finally {
-      setIsLoading(false);
-      console.log("[LocationContext] validateLocation completed. isLoading set to false.");
-    }
-  }, [country.value?.code_2, postalCode.value, city.value]);
+     if (country.value?.code_2) params.append('countryCode', country.value.code_2);
+     if (code) params.append('postalCode', code);
+     if (cityValue) params.append('city', cityValue);
 
-  // Load more results with pagination
-  const loadMore = useCallback(async () => {
-    console.log("[LocationContext] loadMore called.");
-    // Return if no active filters or incomplete page
-    if (!postalCode.value && !city.value) {
-      console.log("[LocationContext] No filters provided, not loading more.");
-      return;
-    }
-    if (suggestions.length > 0 && suggestions.length % 20 !== 0) {
-      console.log("[LocationContext] Current suggestions do not form a complete page, not loading more.");
-      return;
-    }
+     console.log("[LocationContext] Fetching with params:", params.toString());
+     const response = await fetch(`/api/geo/location?${params}`);
+     
+     if (!response.ok) {
+       console.error(`API error: ${response.status}`);
+       throw new Error(`Failed to validate location: ${response.status}`);
+     }
 
-    const offset = suggestions.length.toString();
-    
-    setIsLoading(true);
-    setError(null);
+     const text = await response.text();
+     let data;
+     
+     try {
+       data = JSON.parse(text);
+     } catch (e) {
+       console.error('Invalid JSON response:', text.substring(0, 100));
+       throw new Error('Invalid server response format');
+     }
 
-    try {
-      const params = new URLSearchParams({
-        countryCode: country.value?.code_2 || '',
-        postalCode: postalCode.value,
-        offset,
-        limit: '20'
-      });
+     const enhancedSuggestions = data.results.map((suggestion: LocationSuggestion) => ({
+       ...suggestion,
+       matchType: (() => {
+         const postalMatch = code && suggestion.postal_code.startsWith(code);
+         const cityMatch = cityValue && suggestion.city.toLowerCase().includes(cityValue.toLowerCase());
+         return postalMatch && cityMatch ? 'both' : postalMatch ? 'postal' : 'city';
+       })(),
+       matchScore: (() => {
+         let score = suggestion.country.logistics_priority || 0;
+         if (code) {
+           if (suggestion.postal_code === code) score += 5;
+           else if (suggestion.postal_code.startsWith(code)) score += 3;
+         }
+         if (cityValue) {
+           const normalizedCity = suggestion.city.toLowerCase();
+           const normalizedQuery = cityValue.toLowerCase();
+           if (normalizedCity === normalizedQuery) score += 3;
+           else if (normalizedCity.startsWith(normalizedQuery)) score += 2;
+           else if (normalizedCity.includes(normalizedQuery)) score += 1;
+         }
+         return score;
+       })()
+     }));
 
-      if (city.value) {
-        params.append('city', city.value);
-      }
+     setSuggestions(enhancedSuggestions.sort(
+       (a: EnhancedLocationSuggestion, b: EnhancedLocationSuggestion) => 
+         b.matchScore - a.matchScore
+     ));
+     setApiHasMore(!!data.hasMore);
+   } catch (error) {
+     console.error("[LocationContext] Validation error:", error);
+     setError(error instanceof Error ? error.message : 'Failed to validate location');
+     setSuggestions([]);
+     setApiHasMore(false);
+   } finally {
+     setIsLoading(false);
+     console.log("[LocationContext] validateLocation completed. isLoading set to false.");
+   }
+ }, [country.value]);
 
-      console.log("[LocationContext] Loading more locations with params:", params.toString());
-      
-      const response = await fetch(`/api/geo/location?${params.toString()}`);
-      if (!response.ok) {
-        console.error("[LocationContext] Failed to load more locations, response not ok.");
-        throw new Error('Failed to load more locations');
-      }
-      
-      const data = await response.json();
-      console.log("[LocationContext] Load more API response:", data);
-      
-      setSuggestions(prev => [...prev, ...(data.results || [])]);
-      // Update API flag after loading more results
-      setApiHasMore(!!data.hasMore);
-      console.log("[LocationContext] Suggestions updated after loadMore:", suggestions);
-    } catch (error) {
-      console.error("[LocationContext] Error in loadMore:", error);
-      setError(error instanceof Error ? error.message : 'Failed to load more locations');
-    } finally {
-      setIsLoading(false);
-      console.log("[LocationContext] loadMore completed. isLoading set to false.");
-    }
-  }, [country.value?.code_2, postalCode.value, city.value, suggestions.length]);
+ const loadMore = useCallback(async () => {
+   if (!suggestions.length || !apiHasMore) return;
+   
+   setIsLoading(true);
+   setError(null);
 
-  // Reset all fields and state
-  const reset = useCallback(() => {
-    console.log("[LocationContext] Reset called.");
-    country.reset();
-    postalCode.reset();
-    city.reset();
-    setSuggestions([]);
-    setError(null);
-  }, [country, postalCode, city]);
+   try {
+     const params = new URLSearchParams({
+       offset: suggestions.length.toString(),
+       limit: '20'
+     });
 
-  return (
-    <LocationContext.Provider value={{
-      country,
-      postalCode,
-      city,
-      countrySelect,
-      suggestions,
-      isLoading,
-      error,
-      validateLocation,
-      reset,
-      loadMore,
-      apiHasMore
-    }}>
-      {children}
-    </LocationContext.Provider>
-  );
+     if (country.value?.code_2) params.append('countryCode', country.value.code_2);
+     if (postalCode.value) params.append('postalCode', postalCode.value);
+     if (city.value) params.append('city', city.value);
+
+     const response = await fetch(`/api/geo/location?${params}`);
+     
+     if (!response.ok) {
+       console.error(`API error: ${response.status}`);
+       throw new Error(`Failed to load more locations: ${response.status}`);
+     }
+
+     const text = await response.text();
+     let data;
+     
+     try {
+       data = JSON.parse(text);
+     } catch (e) {
+       console.error('Invalid JSON response:', text.substring(0, 100));
+       throw new Error('Invalid server response format');
+     }
+
+     const newSuggestions = data.results.map((suggestion: LocationSuggestion) => ({
+       ...suggestion,
+       matchType: (() => {
+         const postalMatch = postalCode.value && suggestion.postal_code.startsWith(postalCode.value);
+         const cityMatch = city.value && suggestion.city.toLowerCase().includes(city.value.toLowerCase());
+         return postalMatch && cityMatch ? 'both' : postalMatch ? 'postal' : 'city';
+       })(),
+       matchScore: (() => {
+         let score = suggestion.country.logistics_priority || 0;
+         if (postalCode.value) {
+           if (suggestion.postal_code === postalCode.value) score += 5;
+           else if (suggestion.postal_code.startsWith(postalCode.value)) score += 3;
+         }
+         if (city.value) {
+           const normalizedCity = suggestion.city.toLowerCase();
+           const normalizedQuery = city.value.toLowerCase();
+           if (normalizedCity === normalizedQuery) score += 3;
+           else if (normalizedCity.startsWith(normalizedQuery)) score += 2;
+           else if (normalizedCity.includes(normalizedQuery)) score += 1;
+         }
+         return score;
+       })()
+     }));
+
+     setSuggestions(prev => [...prev, ...newSuggestions.sort(
+       (a: EnhancedLocationSuggestion, b: EnhancedLocationSuggestion) => 
+         b.matchScore - a.matchScore
+     )]);
+     setApiHasMore(!!data.hasMore);
+   } catch (error) {
+     console.error("[LocationContext] Load more error:", error);
+     setError(error instanceof Error ? error.message : 'Failed to load more locations');
+   } finally {
+     setIsLoading(false);
+   }
+ }, [country.value, postalCode.value, city.value, suggestions.length, apiHasMore]);
+
+ const reset = useCallback(() => {
+   country.reset();
+   postalCode.reset();
+   city.reset();
+   setSuggestions([]);
+   setError(null);
+   setActiveField(null);
+   setDropdownOpen(false);
+ }, [country, postalCode, city]);
+
+ return (
+   <LocationContext.Provider value={{
+     country,
+     postalCode,
+     city,
+     countrySelect,
+     suggestions,
+     isLoading,
+     error,
+     validateLocation,
+     reset,
+     loadMore,
+     apiHasMore,
+     activeField,
+     setActiveField,
+     dropdownOpen,
+     setDropdownOpen
+   }}>
+     {children}
+   </LocationContext.Provider>
+ );
 }
 
 export function useLocation() {
-  const context = useContext(LocationContext);
-  if (!context) {
-    throw new Error('useLocation must be used within LocationProvider');
-  }
-  return context;
+ const context = useContext(LocationContext);
+ if (!context) {
+   throw new Error('useLocation must be used within LocationProvider');
+ }
+ return context;
 }
 
-export type { LocationContextState, LocationProviderProps };
+export type { LocationContextState, LocationProviderProps, EnhancedLocationSuggestion };

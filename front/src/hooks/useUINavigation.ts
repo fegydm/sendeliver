@@ -1,97 +1,97 @@
 // File: src/hooks/useUINavigation.ts
-// Last change: Fixed UI navigation to always show 10 items for PageUp/PageDown
+// Last change: Removed unused navigationIndex to eliminate TypeScript warning
 
-import { useState, RefObject, useCallback, useRef, useEffect } from 'react';
+import { useState, RefObject, useCallback, useRef, useEffect } from "react";
 
 interface UINavigationOptions<T> {
- items: T[];
- isOpen: boolean;
- onSelect: (item: T, index: number) => void;
- inputRef?: RefObject<HTMLInputElement>;
+  items: T[];
+  isOpen: boolean;
+  onSelect: (item: T, index: number) => void;
+  inputRef?: RefObject<HTMLInputElement>;
+  pageSize?: number;
 }
 
 export function useUINavigation<T>({
- items,
- isOpen,
- onSelect,
- inputRef
+  items,
+  isOpen,
+  onSelect,
+  inputRef,
+  pageSize = 10,
 }: UINavigationOptions<T>) {
- const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
- const [isInputFocused, setIsInputFocused] = useState(true);
- const [navigationIndex, setNavigationIndex] = useState(0);
- const itemsRef = useRef<HTMLElement[]>([]);
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
+  const [isInputFocused, setIsInputFocused] = useState(true);
+  const itemsRef = useRef<HTMLElement[]>([]);
 
- const UI_PAGE_SIZE = 10;
+  useEffect(() => {
+    if (!isOpen) {
+      setHighlightedIndex(null);
+      setIsInputFocused(true);
+    }
+  }, [isOpen]);
 
- useEffect(() => {
-   if (!isOpen) {
-     setHighlightedIndex(null);
-     setIsInputFocused(true);
-     setNavigationIndex(0);
-   }
- }, [isOpen]);
+  useEffect(() => {
+    if (highlightedIndex !== null && highlightedIndex >= items.length) {
+      setHighlightedIndex(null);
+    }
+  }, [items.length, highlightedIndex]);
 
- const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-   if (!isOpen) return;
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (!isOpen) return;
 
-   switch (event.key) {
-     case 'ArrowDown': {
-       event.preventDefault();
-       setIsInputFocused(false);
-       setHighlightedIndex(prev => {
-         if (prev === null) return 0;
-         return prev < items.length - 1 ? prev + 1 : prev;
-       });
-       break;
-     }
-     case 'ArrowUp': {
-       event.preventDefault();
-       if (highlightedIndex === null || highlightedIndex === 0) {
-         setIsInputFocused(true);
-         setHighlightedIndex(null);
-         inputRef?.current?.focus();
-       } else {
-         setHighlightedIndex(prev => (prev !== null ? prev - 1 : null));
-       }
-       break;
-     }
-     case 'PageDown': {
-       event.preventDefault();
-       const newNavIndex = Math.min(navigationIndex + UI_PAGE_SIZE, Math.max(0, items.length - UI_PAGE_SIZE));
-       setNavigationIndex(newNavIndex);
-       setHighlightedIndex(newNavIndex);
-       break;
-     }
-     case 'PageUp': {
-       event.preventDefault();
-       const newNavIndex = Math.max(0, navigationIndex - UI_PAGE_SIZE);
-       setNavigationIndex(newNavIndex);
-       setHighlightedIndex(newNavIndex);
-       break;
-     }
-     case 'Enter': {
-       event.preventDefault();
-       if (highlightedIndex !== null && !isInputFocused) {
-         onSelect(items[highlightedIndex], highlightedIndex);
-       }
-       break;
-     }
-     case 'Escape': {
-       event.preventDefault();
-       setHighlightedIndex(null);
-       setIsInputFocused(true);
-       setNavigationIndex(0);
-       inputRef?.current?.focus();
-       break;
-     }
-   }
- }, [isOpen, items, highlightedIndex, isInputFocused, navigationIndex, onSelect, inputRef]);
+      switch (event.key) {
+        case "ArrowDown":
+          event.preventDefault();
+          setIsInputFocused(false);
+          setHighlightedIndex((prev) => (prev === null ? 0 : Math.min(prev + 1, items.length - 1)));
+          break;
 
- return {
-   highlightedIndex,
-   isInputFocused,
-   setIsInputFocused,
-   handleKeyDown,
-   itemsRef
- };
+        case "ArrowUp":
+          event.preventDefault();
+          if (highlightedIndex === null || highlightedIndex === 0) {
+            setIsInputFocused(true);
+            setHighlightedIndex(null);
+            inputRef?.current?.focus();
+          } else {
+            setHighlightedIndex((prev) => (prev !== null ? prev - 1 : null));
+          }
+          break;
+
+        case "PageDown":
+          event.preventDefault();
+          setHighlightedIndex((prev) => Math.min((prev ?? 0) + pageSize, items.length - 1));
+          break;
+
+        case "PageUp":
+          event.preventDefault();
+          setHighlightedIndex((prev) => Math.max((prev ?? 0) - pageSize, 0));
+          break;
+
+        case "Enter":
+          event.preventDefault();
+          if (highlightedIndex !== null && !isInputFocused) {
+            onSelect(items[highlightedIndex], highlightedIndex);
+            setHighlightedIndex(null);
+            setIsInputFocused(true);
+          }
+          break;
+
+        case "Escape":
+          event.preventDefault();
+          setHighlightedIndex(null);
+          setIsInputFocused(true);
+          inputRef?.current?.focus();
+          break;
+      }
+    },
+    [isOpen, items, highlightedIndex, onSelect, inputRef, pageSize]
+  );
+
+  return {
+    highlightedIndex,
+    isInputFocused,
+    setIsInputFocused,
+    handleKeyDown,
+    itemsRef,
+  };
 }

@@ -1,8 +1,12 @@
 // File: src/components/sections/content/search-forms/BaseDropdown.tsx
+// Last change: Centralized useUINavigation inside BaseDropdown
 
-import React, { useRef, useEffect } from 'react';
-import { useUINavigation } from '@/hooks/useUINavigation';
-import { useDropdownPagination } from '@/hooks/useDropdownPagination';
+import React, { useRef, useEffect } from "react";
+import { useUINavigation } from "@/hooks/useUINavigation";
+import { useDropdownPagination } from "@/hooks/useDropdownPagination";
+
+export type DropdownType = "country" | "location";
+export type LocationType = "pickup" | "delivery";
 
 interface BaseDropdownProps<T> {
   items: T[];
@@ -10,14 +14,15 @@ interface BaseDropdownProps<T> {
   onSelect: (item: T, index: number) => void;
   onClose: () => void;
   inputRef: React.RefObject<HTMLInputElement>;
-  onLoadMore?: () => void;
+  onLoadMore?: (lastItem: T | null) => void;
   renderItem: (item: T, meta: { isHighlighted: boolean; isSelected: boolean }) => React.ReactNode;
-  className?: string;
+  dropdownType: DropdownType;
+  locationType: LocationType;
   getItemKey?: (item: T, index: number) => string | number;
   selectedItem?: T | null;
   loadMoreText?: string;
   totalItems?: number;
-  isSinglePage?: boolean;
+  pageSize?: number;
 }
 
 export function BaseDropdown<T>({
@@ -28,88 +33,75 @@ export function BaseDropdown<T>({
   inputRef,
   onLoadMore,
   renderItem,
-  className = '',
+  dropdownType,
+  locationType,
   getItemKey = (_: T, index: number) => index,
   selectedItem,
-  loadMoreText = 'Load more...',
+  loadMoreText = "Load more...",
   totalItems = 0,
-  isSinglePage = false
+  pageSize = 10, // Now receives pageSize dynamically
 }: BaseDropdownProps<T>) {
   const dropdownRef = useRef<HTMLUListElement>(null);
 
-  // Navigation hook – handles keyboard navigation within the dropdown
-  const {
-    highlightedIndex,
-    isInputFocused,
-    handleKeyDown,
-    itemsRef
-  } = useUINavigation({
+  // Centralized useUINavigation here
+  const { highlightedIndex, handleKeyDown } = useUINavigation({
     items,
     isOpen,
     onSelect,
-    inputRef
+    inputRef,
+    pageSize, // Receives page size from the parent
   });
 
-  // Pagination hook – determines whether there are more items to load
   const { hasMore, loadMoreData } = useDropdownPagination({
-    isSinglePage,
+    totalItems,
+    items,
     onLoadMore,
-    totalItems
   });
 
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        dropdownRef.current && 
-        !dropdownRef.current.contains(event.target as Node) && 
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
         !inputRef?.current?.contains(event.target as Node)
       ) {
         onClose();
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen, onClose, inputRef]);
 
   if (!isOpen) return null;
 
   return (
-    <ul 
-      ref={dropdownRef}
-      className={`dropdown-list ${className}`}
-      role="listbox"
-      onKeyDown={handleKeyDown}
-      aria-expanded={isOpen}
-      aria-activedescendant={highlightedIndex !== null ? `item-${highlightedIndex}` : undefined}
-    >
-      {items.map((item, index) => (
-        <li
-          key={getItemKey(item, index)}
-          ref={(el) => {
-            if (el) itemsRef.current[index] = el;
-          }}
-          id={`item-${index}`}
-          onClick={() => onSelect(item, index)}
-          className={`dropdown-item ${index === highlightedIndex && !isInputFocused ? 'highlighted' : ''}`}
-          role="option"
-          aria-selected={selectedItem === item}
-          tabIndex={index === highlightedIndex && !isInputFocused ? 0 : -1}
-        >
-          {renderItem(item, {
-            isHighlighted: index === highlightedIndex,
-            isSelected: selectedItem === item
-          })}
-        </li>
-      ))}
+    <ul ref={dropdownRef} className={`dd-list dd-list-${locationType}-${dropdownType}`} role="listbox" onKeyDown={handleKeyDown}>
+      {items.length === 0 ? (
+        <li className="item-suggestion no-results">No results found</li>
+      ) : (
+        items.map((item, index) => (
+          <li
+            key={getItemKey(item, index)}
+            id={`item-${index}`}
+            onClick={() => onSelect(item, index)}
+            className={`item-suggestion ${index === highlightedIndex ? "highlighted" : ""}`}
+            role="option"
+            aria-selected={selectedItem === item}
+            tabIndex={index === highlightedIndex ? 0 : -1}
+          >
+            {renderItem(item, {
+              isHighlighted: index === highlightedIndex,
+              isSelected: selectedItem === item,
+            })}
+          </li>
+        ))
+      )}
 
       {hasMore && (
         <li
-          ref={(el) => {
-            if (el) itemsRef.current[items.length] = el;
-          }}
           onClick={loadMoreData}
-          className={`load-more ${highlightedIndex === items.length ? 'highlighted' : ''}`}
+          className={`dd-load-more ${highlightedIndex === items.length ? "highlighted" : ""}`}
           role="option"
           aria-label={loadMoreText}
           tabIndex={highlightedIndex === items.length ? 0 : -1}

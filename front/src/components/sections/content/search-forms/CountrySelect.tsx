@@ -1,192 +1,75 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
+// Last change: Removed useUINavigation (now handled in BaseDropdown)
 
-import { useRef, useState, useMemo } from 'react';
-import { useLocation } from './LocationContext';
-import { BaseDropdown } from './BaseDropdown';
-import type { Country } from '@/types/location.types';
+import { useRef, useState, useMemo, useEffect } from "react";
+import { useLocation } from "./LocationContext";
+import { BaseDropdown, type LocationType } from "./BaseDropdown";
+import { COUNTRY_PAGE_SIZE, MAX_COUNTRIES, UI_PAGE_SIZE } from "@/constants/pagination.constants";
+import type { Country } from "@/types/location.types";
 
 interface CountrySelectProps {
   onCountrySelect: (code: string, flag: string) => void;
   onNextFieldFocus?: () => void;
   initialValue?: string;
+  locationType: LocationType;
+  pageSize?: number;
 }
 
 export function CountrySelect({
   onCountrySelect,
   onNextFieldFocus,
-  initialValue = ''
+  initialValue = "",
+  locationType,
+  pageSize = COUNTRY_PAGE_SIZE,
 }: CountrySelectProps) {
   const { country, countrySelect } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState(initialValue);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Compute valid first and second characters based on available countries
-  const validFirstChars = useMemo(() => [
-    ...new Set(countrySelect.items.map(c => c.code_2?.[0]).filter(Boolean))
-  ], [countrySelect.items]);
-
-  const validSecondChars = useMemo(() => {
-    if (inputValue.length === 1) {
-      return [
-        ...new Set(countrySelect.items
-          .filter(c => c.code_2?.startsWith(inputValue))
-          .map(c => c.code_2?.[1])
-          .filter(Boolean))
-      ];
+  useEffect(() => {
+    if (countrySelect.items.length === 0) {
+      countrySelect.search("", pageSize);
     }
-    return [];
-  }, [inputValue, countrySelect.items]);
+  }, [pageSize]);
 
-  const filteredItems = useMemo(() => {
-    if (!inputValue) return countrySelect.items;
-    return countrySelect.items.filter(c => c.code_2?.toUpperCase().startsWith(inputValue));
-  }, [inputValue, countrySelect.items]);
-
-  const handleInputChange = (value: string) => {
-    const upperValue = value.toUpperCase();
-    if (!upperValue) {
-      setInputValue('');
-      setIsOpen(true);
-      countrySelect.search('');
-      onCountrySelect('', '');
-      return;
-    }
-
-    if (upperValue.length === 1 && validFirstChars.includes(upperValue)) {
-      setInputValue(upperValue);
-      setIsOpen(true);
-      countrySelect.search(upperValue);
-      onCountrySelect('', '');
-      return;
-    }
-
-    if (upperValue.length === 2 && validFirstChars.includes(upperValue[0]) && validSecondChars.includes(upperValue[1])) {
-      setInputValue(upperValue);
-      const exactMatch = filteredItems.find(c => c.code_2?.toUpperCase() === upperValue);
-      if (exactMatch) {
-        handleSelect(exactMatch);
-      } else {
-        setIsOpen(true);
-        countrySelect.search(upperValue);
-      }
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setIsOpen(true);
-      if (!filteredItems.length && countrySelect.items.length === 0) {
-        countrySelect.search('');
-      }
-      setTimeout(() => {
-        const firstOption = document.querySelector('.combobox-option') as HTMLElement;
-        if (firstOption) {
-          firstOption.focus();
-        }
-      }, 0);
-    }
-  };
-
-  function handleSelect(selectedCountry: Country) {
-    if (!selectedCountry.code_2) return;
-    const countryCode = selectedCountry.code_2;
-    const flagUrl = `/flags/4x3/optimized/${countryCode.toLowerCase()}.svg`;
-    setInputValue(countryCode);
-    country.handleChange(selectedCountry);
-    setIsOpen(false);
-    onCountrySelect(countryCode, flagUrl);
-    onNextFieldFocus?.();
-  }
-
-  const handleClose = () => {
-    setIsOpen(false);
-    if (!inputValue) {
-      onCountrySelect('', '');
-    }
-  };
-
-  const toggleDropdown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isOpen) {
-      handleClose();
-    } else {
-      setIsOpen(true);
-      if (countrySelect.items.length === 0) {
-        countrySelect.search('');
-      }
+  const loadMoreCountries = (lastItem: Country | null) => {
+    if (lastItem) {
+      countrySelect.loadMore(lastItem.code_2, pageSize);
     }
   };
 
   return (
-    <div className="combobox-input-group">
-      <input
-        ref={inputRef}
-        type="text"
-        value={inputValue}
-        onChange={e => handleInputChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onClick={() => {
-          if (!isOpen) {
-            setIsOpen(true);
-            if (countrySelect.items.length === 0) countrySelect.search('');
-          }
-        }}
-        placeholder="CC"
-        maxLength={2}
-        className="country-code-input"
-      />
-      <button
-        type="button"
-        className="dropdown-toggle"
-        onClick={toggleDropdown}
-        aria-label="Toggle country list"
-        aria-expanded={isOpen}
-      >
-        <svg 
-          width="10" 
-          height="6" 
-          viewBox="0 0 10 6"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.2s ease'
-          }}
-        >
-          <path 
-            d="M1 1L5 5L9 1" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-
-      <BaseDropdown
-        items={filteredItems}
-        isOpen={isOpen && filteredItems.length > 0}
-        onSelect={(item, _index) => handleSelect(item)}
-        onClose={handleClose}
-        inputRef={inputRef}
-        className="combobox-options"
-        renderItem={(country, isHighlighted) => (
-          <div className={`combobox-option ${isHighlighted ? 'highlighted' : ''}`}>
-            <img
-              src={`/flags/4x3/optimized/${country.code_2?.toLowerCase()}.svg`}
-              alt={`${country.code_2 ?? 'Unknown'} flag`}
-              className="country-flag-small"
-            />
-            <span className="country-code">{country.code_2 ?? '--'}</span>
-            <span className="country-name">{country.name_en}</span>
-            <span className="country-local">({country.name_local})</span>
-          </div>
-        )}
-      />
-    </div>
+    <BaseDropdown<Country>
+      items={countrySelect.items}
+      isOpen={isOpen && countrySelect.items.length > 0}
+      onSelect={(selectedCountry) => {
+        if (!selectedCountry.code_2) return;
+        const countryCode = selectedCountry.code_2;
+        const flagUrl = `/flags/4x3/optimized/${countryCode.toLowerCase()}.svg`;
+        setInputValue(countryCode);
+        country.setValue(selectedCountry);
+        setIsOpen(false);
+        onCountrySelect(countryCode, flagUrl);
+        onNextFieldFocus?.();
+      }}
+      onClose={() => setIsOpen(false)}
+      inputRef={inputRef}
+      dropdownType="country"
+      locationType={locationType}
+      pageSize={UI_PAGE_SIZE} // Now passing page size
+      onLoadMore={pageSize >= MAX_COUNTRIES ? undefined : loadMoreCountries}
+      totalItems={MAX_COUNTRIES}
+      isSinglePage={pageSize >= MAX_COUNTRIES}
+      renderItem={(country: Country, { isHighlighted }) => (
+        <div className={`item-suggestion ${isHighlighted ? "highlighted" : ""}`}>
+          <img src={`/flags/4x3/optimized/${country.code_2?.toLowerCase()}.svg`} alt={`${country.code_2 ?? "Unknown"} flag`} className="country-flag" />
+          <span className="country-code">{country.code_2 ?? "--"}</span>
+          <span className="country-name">{country.name_en}</span>
+          <span className="country-local">({country.name_local})</span>
+        </div>
+      )}
+    />
   );
 }
 

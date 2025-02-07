@@ -37,6 +37,20 @@ export interface City {
 // Form and Field Types
 // ============================================================================
 
+export interface LocationSuggestion {
+  country_code: string;
+  postal_code: string;
+  place_name: string;
+  city: string;
+  country: Country;
+}
+
+export interface EnhancedLocationSuggestion extends LocationSuggestion {
+  matchType: 'postal' | 'city' | 'both';
+  matchScore: number;
+}
+
+
 export interface FieldValue<T> {
   value: T;                  // Current field value
   isValid: boolean;          // Validation status
