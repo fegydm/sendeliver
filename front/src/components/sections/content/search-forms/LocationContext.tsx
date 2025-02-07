@@ -17,7 +17,7 @@ interface LocationContextState {
   validateLocation: (code: string, city: string) => Promise<void>;
   reset: () => void;
   loadMore: () => Promise<void>;
-  apiHasMore: boolean; // Pridaná vlastnosť pre príznak, či sú ďalšie položky
+  apiHasMore: boolean; // Added flag to indicate if more items are available
 }
 
 interface LocationProviderProps {
@@ -50,7 +50,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
     transform: (value) => value,
     onChange: (newCountry) => {
       console.log("[LocationContext] Country changed:", newCountry);
-      // If we have active filters, revalidate with the new country
+      // If there are active filters, revalidate with the new country
       if (postalCode.value || city.value) {
         console.log("[LocationContext] Revalidating due to country change.");
         validateLocation(postalCode.value, city.value);
@@ -120,7 +120,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
         console.warn("[LocationContext] Unexpected API response format:", data);
         setSuggestions([]);
       }
-      // Save API flag for more items
+      // Update API flag indicating if more items are available
       setApiHasMore(!!data.hasMore);
     } catch (error) {
       console.error("[LocationContext] Error in validateLocation:", error);
@@ -175,7 +175,7 @@ export function LocationProvider({ children }: LocationProviderProps) {
       console.log("[LocationContext] Load more API response:", data);
       
       setSuggestions(prev => [...prev, ...(data.results || [])]);
-      // Update API flag after loading more
+      // Update API flag after loading more results
       setApiHasMore(!!data.hasMore);
       console.log("[LocationContext] Suggestions updated after loadMore:", suggestions);
     } catch (error) {

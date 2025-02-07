@@ -1,4 +1,5 @@
 // File: src/components/sections/content/search-forms/BaseDropdown.tsx
+
 import React, { useRef, useEffect } from 'react';
 import { useUINavigation } from '@/hooks/useUINavigation';
 import { useDropdownPagination } from '@/hooks/useDropdownPagination';

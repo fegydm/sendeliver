@@ -1,5 +1,4 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Simplified implementation with better debounce handling, added logs and load more computedTotalItems
 
 import React, { useRef, useState, useCallback } from "react";
 import { useLocation } from "./LocationContext";

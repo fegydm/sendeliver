@@ -1,22 +1,36 @@
 // File: src/types/location.types.ts
-// Last change: Reorganized types into logical blocks with inline comments and updated API output types
+// Last change: Updated Country interface to match database structure and added logistics priority
 
 // ============================================================================
 // Base Entity Types
 // ============================================================================
 
 export interface Country {
-  code_2: string;      // ISO 3166-1 alpha-2 country code (e.g., 'SK', 'DE')
-  name_en: string;     // English name (e.g., 'Slovakia')
-  name_local: string;  // Name in local language (e.g., 'Slovensko')
-  name_sk: string;     // Slovak name
-  flag_url?: string;   // URL to country flag image
+  id: number;                  // Primary key
+  name_en: string;            // English name (e.g., 'Slovakia')
+  name_sk: string;            // Slovak name (e.g., 'Slovensko')
+  name_local: string;         // Name in local language
+  code_2: string;             // ISO 3166-1 alpha-2 country code (e.g., 'SK')
+  code_3: string;             // ISO 3166-1 alpha-3 country code (e.g., 'SVK')
+  numeric_code: string;       // ISO 3166-1 numeric code
+  phone_code: string;         // International calling code
+  continent_id: number;       // Reference to continents table
+  is_eu: boolean;            // European Union membership
+  capital_en: string;        // Capital city name in English
+  currency_code: string;     // ISO 4217 currency code
+  driving_side: string;      // 'left' or 'right'
+  created_at: Date;          // Record creation timestamp
+  updated_at: Date;          // Record update timestamp
+  is_schengen: boolean;      // Schengen Area membership
+  area_km2: number;          // Country area in square kilometers
+  logistics_priority: number; // Priority for logistics operations (0-100)
+  flag_url?: string;         // Optional URL to country flag image
 }
 
 export interface City {
-  name: string;        // City name
-  postal_code: string; // Postal/ZIP code in country format
-  country_code: string;// Reference to Country.code_2
+  name: string;              // City name
+  postal_code: string;       // Postal/ZIP code in country format
+  country_code: string;      // Reference to Country.code_2
 }
 
 // ============================================================================
@@ -24,11 +38,11 @@ export interface City {
 // ============================================================================
 
 export interface FieldValue<T> {
-  value: T;             // Current field value
-  isValid: boolean;     // Validation status
-  isDirty: boolean;     // Whether field was modified
-  error: string | null; // Validation error message
-  lastModified?: number;// Timestamp of last change
+  value: T;                  // Current field value
+  isValid: boolean;          // Validation status
+  isDirty: boolean;          // Whether field was modified
+  error: string | null;      // Validation error message
+  lastModified?: number;     // Timestamp of last change
 }
 
 export interface LocationFormState {
@@ -49,11 +63,11 @@ export interface LocationFormState {
 // ============================================================================
 
 export interface LocationSuggestion {
-  country_code: string; // ISO country code (snake_case as returned by API)
-  postal_code: string;  // Postal/ZIP code (snake_case)
-  place_name: string;   // City name (API returns 'place_name' instead of 'city')
-  country: string;      // Full country name
-  flag_url: string;     // URL to flag image (snake_case)
+  country_code: string;      // ISO country code
+  postal_code: string;       // Postal/ZIP code
+  place_name: string;        // City name (API returns 'place_name' instead of 'city')
+  city: string;             // City name
+  country: Country;         // Full country object with all properties
 }
 
 export interface ValidationResult {
@@ -70,6 +84,7 @@ export interface ValidationResult {
 export interface LocationApiResponse {
   results: LocationSuggestion[]; // Search results
   total: number;                 // Total available results
+  hasMore: boolean;              // Whether more results are available
   error?: string;                // Error message if any
   meta?: {
     page?: number;               // Current page number
@@ -93,8 +108,8 @@ export interface CountryApiResponse {
 // ============================================================================
 
 export enum LocationType {
-  PICKUP = 'pickup',    // Origin location
-  DELIVERY = 'delivery' // Destination location
+  PICKUP = 'pickup',            // Origin location
+  DELIVERY = 'delivery'         // Destination location
 }
 
 export interface LocationConfig {
@@ -120,22 +135,22 @@ export interface LocationConfig {
 
 export interface LocationSelectProps {
   onSelect?: (location: LocationSuggestion) => void; // Selection handler
-  onValidChange?: (isValid: boolean) => void;          // Validation change handler
-  initialValue?: Partial<LocationFormState>;           // Initial form state
-  config?: LocationConfig;                             // Component configuration
+  onValidChange?: (isValid: boolean) => void;        // Validation change handler
+  initialValue?: Partial<LocationFormState>;         // Initial form state
+  config?: LocationConfig;                           // Component configuration
 }
 
 export interface ValidationRules {
-  required?: boolean;                                  // Field is required
-  minLength?: number;                                  // Minimum value length
-  maxLength?: number;                                  // Maximum value length
-  pattern?: RegExp;                                    // RegExp pattern to match
+  required?: boolean;                                // Field is required
+  minLength?: number;                               // Minimum value length
+  maxLength?: number;                               // Maximum value length
+  pattern?: RegExp;                                 // RegExp pattern to match
   validate?: (value: any) => boolean | Promise<boolean>; // Custom validator
   messages?: {
-    required?: string;                                 // Required field message
-    minLength?: string;                                // Min length error message
-    maxLength?: string;                                // Max length error message
-    pattern?: string;                                  // Pattern mismatch message
-    custom?: string;                                   // Custom validation message
+    required?: string;                              // Required field message
+    minLength?: string;                             // Min length error message
+    maxLength?: string;                             // Max length error message
+    pattern?: string;                               // Pattern mismatch message
+    custom?: string;                                // Custom validation message
   };
 }

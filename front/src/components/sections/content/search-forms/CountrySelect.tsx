@@ -1,3 +1,5 @@
+// File: src/components/sections/content/search-forms/CountrySelect.tsx
+
 import { useRef, useState, useMemo } from 'react';
 import { useLocation } from './LocationContext';
 import { BaseDropdown } from './BaseDropdown';
@@ -18,21 +20,28 @@ export function CountrySelect({
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState(initialValue);
-  // Removed highlightedIndex since it is not used
-  const validFirstChars = useMemo(() => [...new Set(countrySelect.items
-    .map(c => c.code_2?.[0])
-    .filter(Boolean))], [countrySelect.items]);
 
-  const validSecondChars = useMemo(() => inputValue.length === 1 ? 
-    [...new Set(countrySelect.items
-      .filter(c => c.code_2?.startsWith(inputValue))
-      .map(c => c.code_2?.[1])
-      .filter(Boolean))] : [], [inputValue, countrySelect.items]);
+  // Compute valid first and second characters based on available countries
+  const validFirstChars = useMemo(() => [
+    ...new Set(countrySelect.items.map(c => c.code_2?.[0]).filter(Boolean))
+  ], [countrySelect.items]);
 
-  const filteredItems = useMemo(() => !inputValue ? 
-    countrySelect.items : 
-    countrySelect.items.filter(c => c.code_2?.startsWith(inputValue)), 
-    [inputValue, countrySelect.items]);
+  const validSecondChars = useMemo(() => {
+    if (inputValue.length === 1) {
+      return [
+        ...new Set(countrySelect.items
+          .filter(c => c.code_2?.startsWith(inputValue))
+          .map(c => c.code_2?.[1])
+          .filter(Boolean))
+      ];
+    }
+    return [];
+  }, [inputValue, countrySelect.items]);
+
+  const filteredItems = useMemo(() => {
+    if (!inputValue) return countrySelect.items;
+    return countrySelect.items.filter(c => c.code_2?.toUpperCase().startsWith(inputValue));
+  }, [inputValue, countrySelect.items]);
 
   const handleInputChange = (value: string) => {
     const upperValue = value.toUpperCase();
@@ -52,11 +61,9 @@ export function CountrySelect({
       return;
     }
 
-    if (upperValue.length === 2 && validFirstChars.includes(upperValue[0]) && 
-        validSecondChars.includes(upperValue[1])) {
+    if (upperValue.length === 2 && validFirstChars.includes(upperValue[0]) && validSecondChars.includes(upperValue[1])) {
       setInputValue(upperValue);
-      const exactMatch = filteredItems.find(c => c.code_2 === upperValue);
-      
+      const exactMatch = filteredItems.find(c => c.code_2?.toUpperCase() === upperValue);
       if (exactMatch) {
         handleSelect(exactMatch);
       } else {
@@ -162,7 +169,7 @@ export function CountrySelect({
       <BaseDropdown
         items={filteredItems}
         isOpen={isOpen && filteredItems.length > 0}
-        onSelect={handleSelect}
+        onSelect={(item, _index) => handleSelect(item)}
         onClose={handleClose}
         inputRef={inputRef}
         className="combobox-options"
