@@ -1,5 +1,5 @@
 // File: src/hooks/useUINavigation.ts
-// Last change: Removed unused navigationIndex to eliminate TypeScript warning
+// Last change: Improved handling of focus, added support for mouse navigation, and better handling of edge cases.
 
 import { useState, RefObject, useCallback, useRef, useEffect } from "react";
 
@@ -26,28 +26,28 @@ export function useUINavigation<T>({
     if (!isOpen) {
       setHighlightedIndex(null);
       setIsInputFocused(true);
+      return;
     }
-  }, [isOpen]);
 
-  useEffect(() => {
     if (highlightedIndex !== null && highlightedIndex >= items.length) {
-      setHighlightedIndex(null);
+        setHighlightedIndex(items.length > 0 ? 0 : null);
     }
-  }, [items.length, highlightedIndex]);
+    
+  }, [isOpen, items.length]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       if (!isOpen) return;
 
+      event.preventDefault();
+
       switch (event.key) {
         case "ArrowDown":
-          event.preventDefault();
           setIsInputFocused(false);
           setHighlightedIndex((prev) => (prev === null ? 0 : Math.min(prev + 1, items.length - 1)));
           break;
 
         case "ArrowUp":
-          event.preventDefault();
           if (highlightedIndex === null || highlightedIndex === 0) {
             setIsInputFocused(true);
             setHighlightedIndex(null);
@@ -58,17 +58,16 @@ export function useUINavigation<T>({
           break;
 
         case "PageDown":
-          event.preventDefault();
+          setIsInputFocused(false);
           setHighlightedIndex((prev) => Math.min((prev ?? 0) + pageSize, items.length - 1));
           break;
 
         case "PageUp":
-          event.preventDefault();
+           setIsInputFocused(false);
           setHighlightedIndex((prev) => Math.max((prev ?? 0) - pageSize, 0));
           break;
 
         case "Enter":
-          event.preventDefault();
           if (highlightedIndex !== null && !isInputFocused) {
             onSelect(items[highlightedIndex], highlightedIndex);
             setHighlightedIndex(null);
@@ -77,7 +76,6 @@ export function useUINavigation<T>({
           break;
 
         case "Escape":
-          event.preventDefault();
           setHighlightedIndex(null);
           setIsInputFocused(true);
           inputRef?.current?.focus();
@@ -87,11 +85,25 @@ export function useUINavigation<T>({
     [isOpen, items, highlightedIndex, onSelect, inputRef, pageSize]
   );
 
+  const handleItemMouseEnter = useCallback((index: number) => {
+    setHighlightedIndex(index);
+    setIsInputFocused(false);
+  }, []);
+
+  const handleItemClick = useCallback((index: number) => {
+    onSelect(items[index], index);
+    setHighlightedIndex(null);
+    setIsInputFocused(true);
+  }, [onSelect, items]);
+
+
   return {
     highlightedIndex,
     isInputFocused,
     setIsInputFocused,
     handleKeyDown,
     itemsRef,
+    handleItemMouseEnter,
+    handleItemClick,
   };
 }

@@ -1,4 +1,4 @@
-// .front/src/services/api.service.ts
+// .front/src/services/api.services.ts
 const apiUrl = 'https://dminvest.onrender.com';
 
 // Typ for product

@@ -1,133 +1,139 @@
-// File: src/routes/geo.routes.ts
-// Last change: Replaced OFFSET with Keyset Pagination for faster search queries
+// File: .back/src/routes/geo.routes.ts
+// Last change: Updated load more logic and filtering
 
 import { Router, RequestHandler } from "express";
 import { ParsedQs } from "qs";
-import { pool } from "../configs/db.js";
-import { 
-  GET_COUNTRIES_QUERY,
-  CHECK_LOCATION_EXISTS_QUERY,
-  SEARCH_LOCATION_QUERY,
-  SEARCH_LOCATION_BY_COUNTRY_QUERY,
-  SEARCH_CITY_QUERY
-} from "./geo.queries.js";
+import { GeoService } from "../services/geo.services.js";
+import { DEFAULT_FETCH_SIZE, MAX_QUERY_SIZE } from "../constants/geo.constants.js";
 
 interface LocationQuery extends ParsedQs {
-  postalCode?: string;
-  city?: string;
-  countryCode?: string;
-  limit?: string;
-  lastPriority?: string;
-  lastPostalCode?: string;
-  lastCountryCode?: string;
-  checkExists?: string;
+   postalCode?: string;
+   city?: string;
+   countryCode?: string;
+   limit?: string;
+   lastPriority?: string;
+   lastPostalCode?: string;
+   lastCountryCode?: string;
+   checkExists?: string;
 }
 
 const router = Router();
+const geoService = GeoService.getInstance();
 
-// Get countries list with logistics priority
-const handleGetCountries: RequestHandler = async (_req, res) => {
-  try {
-    const result = await pool.query(GET_COUNTRIES_QUERY);
-    console.log("✅ Countries fetched:", result.rows.length);
-    res.json(result.rows);
-  } catch (error: unknown) {
-    console.error("❌ Error fetching countries:", error);
-    res.status(500).json({ error: "Failed to fetch countries" });
-  }
+// Get countries list
+const handleGetCountries: RequestHandler = async (req, res): Promise<void> => {
+    try {
+        const { q } = req.query;
+        const countries = await geoService.getCountries();
+
+        if (!countries) {
+            console.error("❌ No countries data received");
+            res.status(500).json({ error: "Failed to fetch countries" });
+            return;
+        }
+
+        let result = countries;
+
+        // Filter countries if query exists
+        if (q && typeof q === 'string') {
+            const searchTerm = q.toLowerCase();
+            result = countries.filter(country =>
+                country.name_en.toLowerCase().includes(searchTerm) ||
+                country.name_sk.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        // Sort by English name
+        result.sort((a, b) => a.name_en.localeCompare(b.name_en));
+
+        console.log("✅ Countries fetched:", result.length);
+        res.json(result);
+    } catch (error: unknown) {
+        console.error("❌ Error fetching countries:", error);
+        res.status(500).json({ error: "Failed to fetch countries" });
+    }
 };
 
-// Check if a location exists in the database
-const checkLocationExists = async (
-  postalCode?: string,
-  city?: string,
-  countryCode?: string
-): Promise<boolean> => {
-  try {
-    const result = await pool.query(CHECK_LOCATION_EXISTS_QUERY, [
-      postalCode || null, 
-      city || null, 
-      countryCode || null
-    ]);
-    return result.rows[0].found;
-  } catch (error) {
-    console.error("❌ Location check failed:", error);
-    return false;
-  }
-};
-
-// Main location search endpoint
+// Handle location search with various parameters and pagination
 const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (req, res): Promise<void> => {
-  const { 
-    postalCode, 
-    city, 
-    countryCode, 
-    limit = "20", 
-    lastPriority,
-    lastPostalCode,
-    lastCountryCode,
-    checkExists 
-  } = req.query;
+   const {
+       postalCode,
+       city,
+       countryCode,
+       limit = DEFAULT_FETCH_SIZE.toString(),
+       lastPriority,
+       lastPostalCode,
+       lastCountryCode,
+       checkExists
+   } = req.query;
 
-  try {
-    if (checkExists === 'true') {
-      const exists = await checkLocationExists(postalCode, city, countryCode);
-      res.json({ exists });
-      return;
-    }
+   try {
+       // Validate checkExists parameter
+       const checkExistsBoolean = checkExists === 'true';
+       if (checkExists !== undefined && !checkExistsBoolean && checkExists !== 'false') {
+           res.status(400).json({ error: "Invalid checkExists value" });
+           return;
+       }
 
-    const limitValue = parseInt(limit, 10);
-    if (isNaN(limitValue) || limitValue <= 0) {
-      console.error("❌ Invalid limit value");
-      res.status(400).json({ error: "Invalid limit value" });
-      return;
-    }
+       // Handle existence check if requested
+       if (checkExistsBoolean) {
+           const exists = await geoService.checkLocationExists(postalCode, city, countryCode);
+           res.json({ exists });
+           return;
+       }
 
-    // Validate pagination parameters
-    const paginationValues = lastPriority && lastPostalCode && lastCountryCode 
-      ? [lastPriority, lastPostalCode, lastCountryCode] 
-      : [null, null, null];
+       // Validate and parse limit parameter
+       const limitValue = parseInt(limit, 10);
+       if (isNaN(limitValue) || limitValue <= 0 || limitValue > MAX_QUERY_SIZE) {
+           res.status(400).json({ 
+               error: `Invalid limit value (must be between 1 and ${MAX_QUERY_SIZE})`
+           });
+           return;
+       }
 
-    let result;
-    if (postalCode && typeof postalCode === "string") {
-      if (countryCode?.trim()) {
-        result = await pool.query(SEARCH_LOCATION_BY_COUNTRY_QUERY, [
-          postalCode, 
-          countryCode, 
-          ...paginationValues,
-          limitValue
-        ]);
-      } else {
-        result = await pool.query(SEARCH_LOCATION_QUERY, [
-          postalCode, 
-          null, 
-          ...paginationValues,
-          limitValue
-        ]);
-      }
-    } else if (city?.trim()) {
-      result = await pool.query(SEARCH_CITY_QUERY, [
-        city, 
-        countryCode?.trim() || null, 
-        ...paginationValues,
-        limitValue
-      ]);
-    } else {
-      res.json({ results: [], hasMore: false });
-      return;
-    }
+       // Validate input parameters
+       if (postalCode && typeof postalCode !== 'string') {
+           res.status(400).json({ error: "Invalid postalCode value" });
+           return;
+       }
+       if (city && typeof city !== 'string') {
+           res.status(400).json({ error: "Invalid city value" });
+           return;
+       }
+       if (countryCode && typeof countryCode !== 'string') {
+           res.status(400).json({ error: "Invalid countryCode value" });
+           return;
+       }
 
-    const rows = result.rows;
-    const hasMore = rows.length === limitValue;
-    if (hasMore) rows.pop(); // Remove the extra row used for pagination check
+       // Search locations using service
+       const searchParams = {
+           postalCode,
+           city,
+           countryCode,
+           limit: limitValue,
+           pagination: {
+               lastPriority,
+               lastPostalCode,
+               lastCountryCode
+           }
+       };
 
-    console.log(`✅ Found ${rows.length} results`);
-    res.json({ results: rows, hasMore });
+       const searchResults = await geoService.searchLocations(searchParams);
 
-  } catch (error: unknown) {
-    console.error("❌ Search failed:", error);
-    res.status(500).json({ error: "Failed to search locations" });
-  }
+       // Load more only for empty search
+       const hasMore = !postalCode && !city 
+           ? searchResults.results.length === limitValue
+           : false;
+
+       res.json({ 
+           results: searchResults.results,
+           hasMore
+       });
+
+   } catch (error: unknown) {
+       console.error("❌ Search failed:", error);
+       res.status(500).json({ error: "Failed to search locations" });
+   }
 };
 
 router.get("/countries", handleGetCountries);

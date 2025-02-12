@@ -1,7 +1,8 @@
 // File: src/App.tsx
+// Last change: Removed unused CountriesProvider
+
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import { CountriesProvider } from '@/context/CountriesContext';
 import Navigation from "@/components/sections/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
@@ -57,7 +58,7 @@ const App: React.FC = () => {
   );
 
   return (
-    <CountriesProvider>
+    <>
       {!isTestPageWithoutHeaderFooter && (
         <header>
           <Navigation isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
@@ -103,7 +104,7 @@ const App: React.FC = () => {
           />
         </footer>
       )}
-    </CountriesProvider>
+    </>
   );
 };
 

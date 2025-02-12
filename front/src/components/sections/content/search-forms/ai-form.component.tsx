@@ -1,47 +1,51 @@
+// File: src/components/sections/content/search-forms/ai-form.component.tsx
+// Last change: Fixed type compatibility with main AI types
+
 import { useState, useEffect, useRef } from "react";
+import { AIResponse } from "@/types/ai.types";
 
 interface Coordinates {
   lat: number;
   lng: number;
 }
 
-interface AIResponse {
-  pickupLocation: string;
-  deliveryLocation: string;
-  pickupTime: string;
-  deliveryTime: string;
-  weight: string;
-  palletCount: number;
-  coordinates?: {
-    pickup?: Coordinates;
-    delivery?: Coordinates;
+interface ExtractedAIResponse extends AIResponse {
+  content: string;
+  data: {
+    pickupLocation: string;
+    deliveryLocation: string;
+    pickupTime: string;
+    deliveryTime: string;
+    weight: string;
+    palletCount: number;
+    coordinates?: {
+      pickup?: Coordinates;
+      delivery?: Coordinates;
+    };
   };
 }
 
 interface AIFormProps {
   type: "sender" | "hauler";
-  onAIRequest: (response: AIResponse) => void;
+  onAIRequest: (response: ExtractedAIResponse) => void;
 }
 
 const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
   const [prompt, setPrompt] = useState("");
-  const [result, setResult] = useState<AIResponse | null>(null);
-  const [maxWidth, setMaxWidth] = useState<number>(600); // Initial max width
+  const [result, setResult] = useState<ExtractedAIResponse | null>(null);
+  const [maxWidth, setMaxWidth] = useState<number>(600);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Function to update maxWidth based on container width
     const updateMaxWidth = () => {
       if (containerRef.current) {
         setMaxWidth(containerRef.current.offsetWidth);
       }
     };
 
-    // Initial update and listener for window resize
     updateMaxWidth();
     window.addEventListener("resize", updateMaxWidth);
 
-    // Cleanup listener on unmount
     return () => {
       window.removeEventListener("resize", updateMaxWidth);
     };
@@ -55,7 +59,7 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
         body: JSON.stringify({
           message: prompt,
           type,
-          lang1: "en", // Hardcoded language for now
+          lang1: "en",
         }),
       });
 
@@ -63,10 +67,25 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
         throw new Error(`API responded with status ${response.status}`);
       }
 
-      const data = await response.json();
+      const rawData = await response.json();
+      
+      // Transform the response to match ExtractedAIResponse format
+      const data: ExtractedAIResponse = {
+        content: rawData.content || "",
+        data: {
+          pickupLocation: rawData.pickupLocation || "",
+          deliveryLocation: rawData.deliveryLocation || "",
+          pickupTime: rawData.pickupTime || "",
+          deliveryTime: rawData.deliveryTime || "",
+          weight: rawData.weight || "0",
+          palletCount: rawData.palletCount || 0,
+          coordinates: rawData.coordinates
+        }
+      };
+
       console.log("AI Response:", data);
       setResult(data);
-      onAIRequest(data); // Pass response to parent
+      onAIRequest(data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -82,7 +101,7 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
         rows={4}
         style={{
           width: "100%",
-          maxWidth: `${maxWidth}px`, // Dynamically update max width
+          maxWidth: `${maxWidth}px`,
           minWidth: "200px",
         }}
       />
@@ -94,32 +113,32 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
         <div className="ai-form__result">
           <h3>Extracted Data:</h3>
           <p>
-            <strong>Pickup Location:</strong> {result.pickupLocation}
+            <strong>Pickup Location:</strong> {result.data.pickupLocation}
           </p>
-          {result.coordinates?.pickup && (
+          {result.data.coordinates?.pickup && (
             <p>
-              GPS: {result.coordinates.pickup.lat}, {result.coordinates.pickup.lng}
+              GPS: {result.data.coordinates.pickup.lat}, {result.data.coordinates.pickup.lng}
             </p>
           )}
           <p>
-            <strong>Delivery Location:</strong> {result.deliveryLocation}
+            <strong>Delivery Location:</strong> {result.data.deliveryLocation}
           </p>
-          {result.coordinates?.delivery && (
+          {result.data.coordinates?.delivery && (
             <p>
-              GPS: {result.coordinates.delivery.lat}, {result.coordinates.delivery.lng}
+              GPS: {result.data.coordinates.delivery.lat}, {result.data.coordinates.delivery.lng}
             </p>
           )}
           <p>
-            <strong>Pickup Date:</strong> {result.pickupTime}
+            <strong>Pickup Date:</strong> {result.data.pickupTime}
           </p>
           <p>
-            <strong>Delivery Date:</strong> {result.deliveryTime}
+            <strong>Delivery Date:</strong> {result.data.deliveryTime}
           </p>
           <p>
-            <strong>Weight:</strong> {result.weight}
+            <strong>Weight:</strong> {result.data.weight}
           </p>
           <p>
-            <strong>Number of Pallets:</strong> {result.palletCount}
+            <strong>Number of Pallets:</strong> {result.data.palletCount}
           </p>
         </div>
       )}

@@ -1,7 +1,7 @@
 // File: src/components/sections/content/search-forms/BaseDropdown.tsx
-// Last change: Centralized useUINavigation inside BaseDropdown
+// Last change: Improved accessibility, performance, and code structure
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import { useUINavigation } from "@/hooks/useUINavigation";
 import { useDropdownPagination } from "@/hooks/useDropdownPagination";
 
@@ -23,6 +23,8 @@ interface BaseDropdownProps<T> {
   loadMoreText?: string;
   totalItems?: number;
   pageSize?: number;
+  onNoResults?: () => React.ReactNode;
+  ariaLabel?: string; // Added aria-label for accessibility
 }
 
 export function BaseDropdown<T>({
@@ -39,17 +41,18 @@ export function BaseDropdown<T>({
   selectedItem,
   loadMoreText = "Load more...",
   totalItems = 0,
-  pageSize = 10, // Now receives pageSize dynamically
+  pageSize = 10,
+  onNoResults,
+  ariaLabel = "Dropdown Options", // Default aria-label
 }: BaseDropdownProps<T>) {
   const dropdownRef = useRef<HTMLUListElement>(null);
 
-  // Centralized useUINavigation here
   const { highlightedIndex, handleKeyDown } = useUINavigation({
     items,
     isOpen,
     onSelect,
     inputRef,
-    pageSize, // Receives page size from the parent
+    pageSize,
   });
 
   const { hasMore, loadMoreData } = useDropdownPagination({
@@ -58,33 +61,48 @@ export function BaseDropdown<T>({
     onLoadMore,
   });
 
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target as Node) &&
+      !inputRef?.current?.contains(event.target as Node)
+    ) {
+      onClose();
+    }
+  }, [onClose, inputRef]); // useCallback for performance
+
   useEffect(() => {
     if (!isOpen) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        !inputRef?.current?.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen, onClose, inputRef]);
+  }, [isOpen, handleClickOutside]); // Use useCallback function
+
+  const handleItemClick = useCallback((item: T, index: number) => {
+    onSelect(item, index);
+    onClose(); // Close dropdown after selection for better UX
+  }, [onSelect, onClose]);
 
   if (!isOpen) return null;
 
   return (
-    <ul ref={dropdownRef} className={`dd-list dd-list-${locationType}-${dropdownType}`} role="listbox" onKeyDown={handleKeyDown}>
-      {items.length === 0 ? (
-        <li className="item-suggestion no-results">No results found</li>
+    <ul
+      ref={dropdownRef}
+      className={`dd-list dd-list-${locationType}-${dropdownType}`}
+      role="listbox"
+      onKeyDown={handleKeyDown}
+      aria-label={ariaLabel} // Added aria-label to the list
+    >
+      {items.length === 0 && onNoResults ? (
+        <li className="item-suggestion no-results" role="option">
+          {onNoResults()}
+        </li>
       ) : (
         items.map((item, index) => (
           <li
             key={getItemKey(item, index)}
             id={`item-${index}`}
-            onClick={() => onSelect(item, index)}
+            onClick={() => handleItemClick(item, index)} // Use memoized callback
             className={`item-suggestion ${index === highlightedIndex ? "highlighted" : ""}`}
             role="option"
             aria-selected={selectedItem === item}

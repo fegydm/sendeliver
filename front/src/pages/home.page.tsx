@@ -1,5 +1,5 @@
 // File: src/pages/home.page.tsx
-// Last change: Fixed AIResponse type and handling
+// Last change: Fixed type compatibility issues
 
 import { useState } from "react";
 import PageBanner from "@/components/sections/banners/banner.component";
@@ -10,56 +10,51 @@ import ResultTable from "@/components/sections/content/results/result-table.comp
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
 import QuickStats from "@/components/sections/stats/quick-stats.component";
 import { mockClientData, mockCarrierData } from "@/data/mockData";
-import { AIRequest, FormData } from "@/types/ai.types";
+import { 
+  AIRequest, 
+  AIResponse,
+  FormData,
+  AIFormData,
+  convertToFormData,
+  convertAIResponseToFormData
+} from "@/types/ai.types";
 
-// Define local interfaces to match AIForm
-interface Coordinates {
-  lat: number;
-  lng: number;
-}
-
-interface AIResponse {
-  pickupLocation: string;
-  deliveryLocation: string;
-  pickupTime: string;
-  deliveryTime: string;
-  weight: string;
-  palletCount: number;
-  coordinates?: {
-    pickup?: Coordinates;
-    delivery?: Coordinates;
-  };
-}
+const DEFAULT_FORM_DATA: FormData = {
+  pickup: {
+    country: { code: '', flag: '' },
+    postalCode: '',
+    city: '',
+    time: ''
+  },
+  delivery: {
+    country: { code: '', flag: '' },
+    postalCode: '',
+    city: '',
+    time: ''
+  },
+  cargo: {
+    pallets: 0,
+    weight: 0
+  }
+};
 
 const HomePage = () => {
   const [activeSection, setActiveSection] = useState<"sender" | "hauler" | null>(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState<AIRequest | null>(null);
-  const [formData, setFormData] = useState<FormData>({
-    pickupLocation: "",
-    deliveryLocation: "",
-    pickupTime: "",
-    deliveryTime: "",
-    weight: 0,
-    palletCount: 0,
-  });
+  const [formData, setFormData] = useState<FormData>(DEFAULT_FORM_DATA);
 
-  const handleAIResponse = (type: "sender" | "hauler", aiResponse: AIResponse) => {
-    console.log('Received AI Response:', aiResponse);
+  const handleAIResponse = (type: "sender" | "hauler", response: AIResponse & { content: string }) => {
+    console.log('Received AI Response:', response);
     
-    // Update form data
-    setFormData({
-      pickupLocation: aiResponse.pickupLocation,
-      deliveryLocation: aiResponse.deliveryLocation,
-      pickupTime: aiResponse.pickupTime,
-      deliveryTime: aiResponse.deliveryTime,
-      weight: parseFloat(aiResponse.weight) || 0,
-      palletCount: aiResponse.palletCount,
-    });
+    if (response.data) {
+      const aiFormData = convertAIResponseToFormData(response);
+      const newFormData = convertToFormData(aiFormData);
+      setFormData(newFormData);
+    }
 
-    // Set current prompt for chat modal
     setCurrentPrompt({
-      message: `From ${aiResponse.pickupLocation} to ${aiResponse.deliveryLocation}`,
+      message: `From ${response.data?.pickupLocation || ''} to ${response.data?.deliveryLocation || ''}`,
       type,
       lang1: type === "sender" ? "en" : "sk",
     });
@@ -73,9 +68,12 @@ const HomePage = () => {
     setFormData(data);
   };
 
-  const handleAIData = (data: FormData) => {
-    setFormData(data);
-    console.log("Received AI data:", data);
+  const handleAIModalData = (aiFormData: FormData) => {
+    // Convert FormData from modal to our internal format if needed
+    const modalData = aiFormData as unknown as AIFormData;
+    const newFormData = convertToFormData(modalData);
+    console.log("Received AI form data:", modalData);
+    setFormData(newFormData);
   };
 
   const renderContent = (type: "sender" | "hauler") => (
@@ -89,7 +87,10 @@ const HomePage = () => {
         onSubmit={(data) => handleManualSubmit(type, data)}
         formData={formData}
       />
-      <ResultTable type={type} data={type === "sender" ? mockClientData : mockCarrierData} />
+      <ResultTable 
+        type={type} 
+        data={type === "sender" ? mockClientData : mockCarrierData} 
+      />
     </>
   );
 
@@ -102,7 +103,7 @@ const HomePage = () => {
           onClose={() => setIsAIChatOpen(false)}
           initialPrompt={currentPrompt}
           type={activeSection || "sender"}
-          onDataReceived={handleAIData}
+          onDataReceived={handleAIModalData}
         />
       )}
 

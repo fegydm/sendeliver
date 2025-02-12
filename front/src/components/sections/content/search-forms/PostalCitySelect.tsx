@@ -1,143 +1,241 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Added console logs and fixed validation calls
+// Last change: Added debounced search and improved field interactions
 
-import React, { useRef, useCallback } from "react";
-import { useLocation } from "./LocationContext";
+import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
 import { BaseDropdown, type LocationType } from "./BaseDropdown";
-import type { LocationSuggestion } from '@/types/location.types';
+import { LOCATION_PAGE_SIZE, UI_PAGE_SIZE, DEBOUNCE_LOCATION_SEARCH } from "@/constants/pagination.constants";
+import type { LocationSuggestion } from "@/types/location.types";
 
 interface PostalCitySelectProps {
- postalCodeRef?: React.RefObject<HTMLInputElement>;
- dateInputRef?: React.RefObject<HTMLInputElement>;
- onValidSelection: () => void;
- locationType: LocationType;
+  postalCodeRef?: React.RefObject<HTMLInputElement>;
+  dateInputRef?: React.RefObject<HTMLInputElement>;
+  onValidSelection: () => void;
+  locationType: LocationType;
+  countryCode?: string;
 }
 
 export function PostalCitySelect({
- postalCodeRef,
- dateInputRef,
- onValidSelection,
- locationType
+  postalCodeRef,
+  dateInputRef,
+  onValidSelection,
+  locationType,
+  countryCode,
 }: PostalCitySelectProps) {
- const {
-   postalCode,
-   city,
-   suggestions,
-   loadMore,
-   validateLocation,
-   apiHasMore,
-   activeField,
-   setActiveField,
-   dropdownOpen,
-   setDropdownOpen,
-   isLoading
- } = useLocation();
+  const [postalCode, setPostalCode] = useState("");
+  const [city, setCity] = useState("");
+  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeField, setActiveField] = useState<"postal" | "city" | null>(null);
+  const [visibleCount, setVisibleCount] = useState(LOCATION_PAGE_SIZE);
 
- const defaultPostalRef = useRef<HTMLInputElement>(null);
- const cityInputRef = useRef<HTMLInputElement>(null);
- const activePostalRef = postalCodeRef || defaultPostalRef;
+  const defaultPostalRef = useRef<HTMLInputElement>(null);
+  const cityInputRef = useRef<HTMLInputElement>(null);
+  const searchTimer = useRef<NodeJS.Timeout>();
+  const activePostalRef = postalCodeRef || defaultPostalRef;
 
- const handlePostalCodeInput = useCallback((value: string) => {
-   console.log("[PostalCitySelect] handlePostalCodeInput called with:", value);
-   setActiveField('postal');
-   postalCode.setValue(value);
-   validateLocation(value, city.value);  // Added back
-   setDropdownOpen(true);
- }, [validateLocation, city.value, setActiveField, postalCode, setDropdownOpen]);
+  // Get visible suggestions based on current visibleCount
+  const visibleSuggestions = useMemo(() => {
+    const visible = suggestions.slice(0, visibleCount);
+    console.log('📑 Visible suggestions:', {
+      total: suggestions.length,
+      visible: visible.length,
+      visibleCount,
+      showLoadMore: suggestions.length > visibleCount
+    });
+    return visible;
+  }, [suggestions, visibleCount]);
 
- const handleCityInput = useCallback((value: string) => {
-   console.log("[PostalCitySelect] handleCityInput called with:", value);
-   setActiveField('city');
-   city.setValue(value);
-   validateLocation(postalCode.value, value);  // Added back
-   setDropdownOpen(true);
- }, [validateLocation, postalCode.value, setActiveField, city, setDropdownOpen]);
+  // Show load more button if we have more suggestions than visible
+  const showLoadMore = useMemo(() => {
+    const show = suggestions.length > visibleCount;
+    console.log('🔄 Load more state:', {
+      total: suggestions.length,
+      visible: visibleCount,
+      show
+    });
+    return show;
+  }, [suggestions.length, visibleCount]);
 
- const handleSelect = useCallback((suggestion: LocationSuggestion) => {
-   console.log("[PostalCitySelect] handleSelect called with:", suggestion);
-   postalCode.setValue(suggestion.postal_code);
-   city.setValue(suggestion.place_name);
-   validateLocation(suggestion.postal_code, suggestion.place_name);  // Added back
-   setDropdownOpen(false);
-   
-   if (dateInputRef?.current) {
-     dateInputRef.current.focus();
-     onValidSelection();
-   }
- }, [dateInputRef, onValidSelection, postalCode, city, validateLocation]);
+  // Load suggestions from backend
+  const loadSuggestions = useCallback(async (postalValue: string, cityValue: string) => {
+    console.log('🔍 Loading suggestions:', { postalValue, cityValue, countryCode });
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (countryCode) {
+        params.append('countryCode', countryCode);
+      }
+      if (postalValue) {
+        params.append('postalCode', postalValue);
+      }
+      if (cityValue) {
+        params.append('city', cityValue);
+      }
 
- const handleDropdownClose = useCallback(() => {
-   console.log("[PostalCitySelect] handleDropdownClose called");
-   setDropdownOpen(false);
-   setActiveField(null);
- }, [setDropdownOpen, setActiveField]);
+      const response = await fetch(`/api/geo/location?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error(`Failed to validate location: ${response.status}`);
+      }
 
- const renderNoResults = useCallback(() => {
-   console.log("[PostalCitySelect] renderNoResults - postalCode:", postalCode.value, "city:", city.value, "isLoading:", isLoading);
-   console.log("[PostalCitySelect] suggestions:", suggestions);
-   if (isLoading) return <span>Loading...</span>;
-   if (!postalCode.value && !city.value) return <span>Enter a value in any field</span>;
-   return <span>No results found</span>;
- }, [postalCode.value, city.value, isLoading, suggestions]);
+      const data = await response.json();
+      console.log('📥 Received suggestions:', {
+        count: data.results.length,
+        hasMore: data.hasMore
+      });
+      
+      setSuggestions(data.results);
+      setVisibleCount(LOCATION_PAGE_SIZE);
+    } catch (error) {
+      console.error('❌ Failed to load suggestions:', error);
+      setSuggestions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [countryCode]);
 
- console.log("[PostalCitySelect] Render - dropdownOpen:", dropdownOpen, "suggestions:", suggestions.length);
+  // Debounced search function
+  const debouncedSearch = useCallback((postalValue: string, cityValue: string) => {
+    if (searchTimer.current) {
+      clearTimeout(searchTimer.current);
+    }
 
- return (
-   <div className="dd-wrapper">
-     <div className="dd-inputs">
-       <input
-         ref={activePostalRef}
-         type="text"
-         value={postalCode.value}
-         onChange={e => handlePostalCodeInput(e.target.value)}
-         onFocus={() => {
-           console.log("[PostalCitySelect] Postal input focus");
-           setActiveField('postal');
-           setDropdownOpen(true);
-         }}
-         placeholder="Postal code"
-         className={`inp-postal inp-postal-${locationType}`}
-       />
-       <input
-         ref={cityInputRef}
-         type="text"
-         value={city.value}
-         onChange={e => handleCityInput(e.target.value)}
-         onFocus={() => {
-           console.log("[PostalCitySelect] City input focus");
-           setActiveField('city');
-           setDropdownOpen(true);
-         }}
-         placeholder="City"
-         className={`inp-city inp-city-${locationType}`}
-       />
-     </div>
-     <BaseDropdown<LocationSuggestion>
-       items={suggestions.slice(0, 20)}
-       isOpen={dropdownOpen}
-       onSelect={handleSelect}
-       onClose={handleDropdownClose}
-       inputRef={activeField === 'postal' ? activePostalRef : cityInputRef}
-       totalItems={suggestions.length + (apiHasMore ? 1 : 0)}
-       onLoadMore={loadMore}
-       onNoResults={renderNoResults}
-       dropdownType="location"
-       locationType={locationType}
-       renderItem={(suggestion, { isHighlighted }) => (
-         <div className={`item-suggestion ${isHighlighted ? 'highlighted' : ''}`}>
-           <img
-             src={`/flags/4x3/optimized/${suggestion.country_code.toLowerCase()}.svg`}
-             alt={`${suggestion.country_code} flag`}
-             className="country-flag"
-           />
-           <span className="country-code">{suggestion.country_code}</span>
-           <span className="postal-code">{suggestion.postal_code}</span>
-           <span className="city-name">{suggestion.place_name}</span>
-         </div>
-       )}
-     />
-   </div>
- );
+    // If no search criteria, clear suggestions
+    if (!postalValue && !cityValue && !countryCode) {
+      setSuggestions([]);
+      return;
+    }
+
+    searchTimer.current = setTimeout(() => {
+      loadSuggestions(postalValue, cityValue);
+    }, DEBOUNCE_LOCATION_SEARCH);
+  }, [loadSuggestions, countryCode]);
+
+  // Handle loading more results
+  const handleLoadMore = useCallback(() => {
+    console.log('👆 Loading more:', {
+      currentVisible: visibleCount,
+      newVisible: visibleCount + LOCATION_PAGE_SIZE,
+      total: suggestions.length
+    });
+    setVisibleCount(prev => prev + LOCATION_PAGE_SIZE);
+  }, [visibleCount, suggestions.length]);
+
+  // Handle postal code input
+  const handlePostalCodeInput = useCallback((value: string) => {
+    setPostalCode(value);
+    setActiveField("postal");
+    setIsOpen(true);
+    debouncedSearch(value, city);
+  }, [city, debouncedSearch]);
+
+  // Handle city input
+  const handleCityInput = useCallback((value: string) => {
+    setCity(value);
+    setActiveField("city");
+    setIsOpen(true);
+    debouncedSearch(postalCode, value);
+  }, [postalCode, debouncedSearch]);
+
+  // Effect for countryCode changes
+  useEffect(() => {
+    if (countryCode && (postalCode || city)) {
+      debouncedSearch(postalCode, city);
+    }
+  }, [countryCode, postalCode, city, debouncedSearch]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimer.current) {
+        clearTimeout(searchTimer.current);
+      }
+    };
+  }, []);
+
+  // Handle selection
+  const handleSelect = useCallback((suggestion: LocationSuggestion) => {
+    setPostalCode(suggestion.postal_code);
+    setCity(suggestion.place_name);
+    setIsOpen(false);
+
+    if (dateInputRef?.current) {
+      dateInputRef.current.focus();
+      onValidSelection();
+    }
+  }, [dateInputRef, onValidSelection]);
+
+  // Render no results
+  const renderNoResults = useCallback(() => {
+    if (isLoading) return <span>Loading...</span>;
+    if (!postalCode && !city && !countryCode) return <span>Enter value in any field</span>;
+    return <span>No results found</span>;
+  }, [postalCode, city, countryCode, isLoading]);
+
+  return (
+    <div className="dd-wrapper">
+      <div className="dd-inputs">
+        <input
+          ref={activePostalRef}
+          type="text"
+          value={postalCode}
+          onChange={(e) => handlePostalCodeInput(e.target.value)}
+          onFocus={() => {
+            setActiveField("postal");
+            setIsOpen(true);
+          }}
+          placeholder="Postal code"
+          className={`inp-postal inp-postal-${locationType}`}
+          aria-autocomplete="list"
+          aria-controls="location-dropdown"
+        />
+        <input
+          ref={cityInputRef}
+          type="text"
+          value={city}
+          onChange={(e) => handleCityInput(e.target.value)}
+          onFocus={() => {
+            setActiveField("city");
+            setIsOpen(true);
+          }}
+          placeholder="City"
+          className={`inp-city inp-city-${locationType}`}
+          aria-autocomplete="list"
+          aria-controls="location-dropdown"
+        />
+      </div>
+      {isOpen && (
+        <BaseDropdown<LocationSuggestion>
+          items={visibleSuggestions}
+          isOpen={isOpen}
+          onSelect={handleSelect}
+          onClose={() => setIsOpen(false)}
+          onLoadMore={showLoadMore ? handleLoadMore : undefined}
+          inputRef={activeField === "postal" ? activePostalRef : cityInputRef}
+          totalItems={suggestions.length}
+          pageSize={UI_PAGE_SIZE}
+          onNoResults={renderNoResults}
+          dropdownType="location"
+          locationType={locationType}
+          renderItem={(suggestion, { isHighlighted }) => (
+            <div className={`item-suggestion ${isHighlighted ? "highlighted" : ""}`}>
+              <img
+                src={`/flags/4x3/optimized/${suggestion.country_code.toLowerCase()}.svg`}
+                alt={`${suggestion.country_code} flag`}
+                className="country-flag"
+                aria-hidden={true}
+              />
+              <span className="country-code">{suggestion.country_code}</span>
+              <span className="postal-code">{suggestion.postal_code}</span>
+              <span className="city-name">{suggestion.place_name}</span>
+            </div>
+          )}
+          ariaLabel="Location suggestions"
+          loadMoreText="Load more locations..."
+        />
+      )}
+    </div>
+  );
 }
 
 export default PostalCitySelect;

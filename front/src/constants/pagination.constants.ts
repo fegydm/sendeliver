@@ -1,8 +1,13 @@
-// File: src/constants/pagination.constants.ts
-// Last change: Moved UI_PAGE_SIZE from useUINavigation to constants
+// File: front/src/constants/pagination.constants.ts
+// Last change: Added location search debounce constant
 
-export const COUNTRY_PAGE_SIZE = 84; // Default for country dropdown
-export const PSC_PAGE_SIZE = 20; // Default pagination for postal codes
-export const MAX_COUNTRIES = 84; // Total number of available countries
+// Frontend pagination (client-side)
+export const COUNTRY_PAGE_SIZE = 5;       // How many countries to show initially
+export const LOCATION_PAGE_SIZE = 20;     // How many locations to show per page
 
-export const UI_PAGE_SIZE = 10; // Controls UI navigation page jumps
+// UI constants
+export const UI_PAGE_SIZE = 10;           // Controls dropdown navigation
+export const MAX_COUNTRIES = 84;          // Total number of available countries
+
+// Search timing constants (in milliseconds)
+export const DEBOUNCE_LOCATION_SEARCH = 250;   // Location search input debounce
