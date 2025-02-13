@@ -1,5 +1,5 @@
 // File: .back/src/services/geo.services.ts
-// Last change: Updated search logic with location and country handling
+// Last change: Added equal handling of postal_code and place_name fields
 
 import { pool } from "../configs/db.js";
 import {
@@ -11,7 +11,7 @@ import {
 
 interface SearchParams {
     postalCode?: string;
-    city?: string;
+    placeName?: string;  // Premenované z city na placeName pre konzistenciu
     countryCode?: string;
     limit: number;
     pagination: {
@@ -68,6 +68,77 @@ export class GeoService {
         }
     }
 
+    private shouldUseExactCountryMatch(countryCode?: string): boolean {
+        return countryCode?.length === 2;
+    }
+
+    private hasSearchInput(params: SearchParams): boolean {
+        return !!(params.postalCode || params.placeName);
+    }
+
+    private getCountryCodeFilter(countryCode?: string): string | null {
+        if (!countryCode) return null;
+        if (countryCode.length === 2) return countryCode;
+        if (countryCode.length === 1) return countryCode;
+        return null;
+    }
+
+    public async searchLocations(params: SearchParams): Promise<SearchResult> {
+        try {
+            if (!this.isHealthy) {
+                await this.checkHealth();
+            }
+
+            // Kontrolujeme všetky 3 polia
+            console.log('🔍 Search params:', {
+                countryCode: params.countryCode || 'empty',
+                postalCode: params.postalCode || 'empty',
+                placeName: params.placeName || 'empty'
+            });
+
+            // Pri prázdnych kritériách vrátime prázdne výsledky
+            if (!this.hasSearchInput(params) && !this.shouldUseExactCountryMatch(params.countryCode)) {
+                return { results: [], hasMore: false };
+            }
+
+            let result;
+            const countryFilter = this.getCountryCodeFilter(params.countryCode);
+
+            // Exact country match (2 chars) - použije špecifické query
+            if (this.shouldUseExactCountryMatch(params.countryCode)) {
+                result = await pool.query(SEARCH_LOCATION_BY_COUNTRY_QUERY, [
+                    params.countryCode,
+                    params.postalCode || null,           // Postal filter
+                    params.pagination.lastPostalCode || null,
+                    params.pagination.lastPlaceName || null,
+                    params.limit
+                ]);
+            } 
+            // General search - používa sa pre všetky ostatné prípady
+            else {
+                result = await pool.query(SEARCH_LOCATION_QUERY, [
+                    params.postalCode || null,           // Postal filter
+                    params.placeName || null,            // Place name filter
+                    countryFilter,                       // Country filter (null/1-char)
+                    params.pagination.lastPostalCode || null,
+                    params.pagination.lastPlaceName || null,
+                    params.limit
+                ]);
+            }
+
+            console.log(`📊 Found ${result.rows.length} locations`);
+
+            return { 
+                results: result.rows,
+                hasMore: result.rows.length >= params.limit
+            };
+
+        } catch (error) {
+            console.error('Failed to search locations:', error);
+            throw error;
+        }
+    }
+
     public async getCountries() {
         try {
             if (!this.isHealthy) {
@@ -91,61 +162,9 @@ export class GeoService {
         }
     }
 
-    private shouldUseExactCountryMatch(params: SearchParams): boolean {
-        return params.countryCode?.length === 2;
-    }
-
-    private hasSearchCriteria(params: SearchParams): boolean {
-        return !!(params.postalCode || params.city);
-    }
-
-    public async searchLocations(params: SearchParams): Promise<SearchResult> {
-        try {
-            if (!this.isHealthy) {
-                await this.checkHealth();
-            }
-
-            // If no search criteria and countryCode is 0-1 chars, return empty results
-            if (!this.hasSearchCriteria(params) && !this.shouldUseExactCountryMatch(params)) {
-                return { results: [], hasMore: false };
-            }
-
-            let result;
-            // Exact country match (2 characters)
-            if (this.shouldUseExactCountryMatch(params)) {
-                result = await pool.query(SEARCH_LOCATION_BY_COUNTRY_QUERY, [
-                    params.countryCode,
-                    params.postalCode || null,
-                    params.pagination.lastPostalCode || null,
-                    params.pagination.lastPlaceName || null,
-                    params.limit
-                ]);
-            } 
-            // General search with optional country prefix (0 or 1 character)
-            else {
-                result = await pool.query(SEARCH_LOCATION_QUERY, [
-                    params.postalCode || null,
-                    params.countryCode || null, // Will filter by prefix if 1 char
-                    params.pagination.lastPostalCode || null,
-                    params.pagination.lastPlaceName || null,
-                    params.limit
-                ]);
-            }
-
-            return { 
-                results: result.rows,
-                hasMore: result.rows.length >= params.limit
-            };
-
-        } catch (error) {
-            console.error('Failed to search locations:', error);
-            throw error;
-        }
-    }
-
     public async checkLocationExists(
         postalCode?: string,
-        city?: string,
+        placeName?: string,
         countryCode?: string
     ): Promise<boolean> {
         try {
@@ -155,7 +174,7 @@ export class GeoService {
 
             const result = await pool.query(CHECK_LOCATION_EXISTS_QUERY, [
                 postalCode || null,
-                city || null,
+                placeName || null,
                 countryCode || null
             ]);
             return result.rows[0].found;
