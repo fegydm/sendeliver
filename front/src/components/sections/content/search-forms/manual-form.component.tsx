@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Fixed TypeScript types and form data handling
+// Last change: Updated component props to match PostalCitySelect interface
 
 import React, { useState, useRef } from 'react';
 import CountrySelect from './CountrySelect';
@@ -8,7 +8,7 @@ import { FormData } from '@/types/ai.types';
 import "@/styles/sections/manual-form.component.css";
 
 interface ManualSearchFormProps {
-  type: "sender" | "hauler";
+  userType: "sender" | "hauler"; // Renamed from 'type' to avoid confusion
   onSubmit: (data: FormData) => void;
   formData?: FormData;
 }
@@ -16,13 +16,13 @@ interface ManualSearchFormProps {
 const DEFAULT_FORM_DATA: FormData = {
   pickup: {
     country: { code: '', flag: '' },
-    postalCode: '',
+    psc: '',           // Updated from postalCode
     city: '',
     time: ''
   },
   delivery: {
     country: { code: '', flag: '' },
-    postalCode: '',
+    psc: '',           // Updated from postalCode
     city: '',
     time: ''
   },
@@ -33,24 +33,24 @@ const DEFAULT_FORM_DATA: FormData = {
 };
 
 const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
-  type,
   onSubmit,
   formData = DEFAULT_FORM_DATA
 }) => {
-  const pickupPostalRef = useRef<HTMLInputElement>(null);
-  const deliveryPostalRef = useRef<HTMLInputElement>(null);
+  const pickupPscRef = useRef<HTMLInputElement>(null);      // Updated ref name for pickup psc
+  const deliveryPscRef = useRef<HTMLInputElement>(null);    // Updated ref name for delivery psc
 
   const [localFormData, setLocalFormData] = useState<FormData>(formData);
   const [isPickupValid, setIsPickupValid] = useState(false);
   const [isDeliveryValid, setIsDeliveryValid] = useState(false);
 
+  // Handle country selection for pickup/delivery
   const handleCountrySelect = (locationType: 'pickup' | 'delivery', code: string, flag: string) => {
     setLocalFormData(prev => ({
       ...prev,
       [locationType]: {
         ...prev[locationType],
         country: { code, flag },
-        postalCode: '',
+        psc: '',       // Reset psc
         city: ''
       }
     }));
@@ -58,14 +58,16 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
     else setIsDeliveryValid(false);
   };
 
+  // Focus on the postal code input based on location type
   const focusPostalCode = (locationType: 'pickup' | 'delivery') => {
     if (locationType === 'pickup') {
-      pickupPostalRef.current?.focus();
+      pickupPscRef.current?.focus();
     } else {
-      deliveryPostalRef.current?.focus();
+      deliveryPscRef.current?.focus();
     }
   };
 
+  // Handle valid selection for pickup/delivery
   const handleValidSelection = (locationType: 'pickup' | 'delivery') => {
     if (locationType === 'pickup') {
       setIsPickupValid(true);
@@ -74,10 +76,12 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
     }
   };
 
+  // Trigger search submission
   const handleSearch = () => {
     onSubmit(localFormData);
   };
 
+  // Handle form submit event
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSearch();
@@ -109,10 +113,10 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
           </div>
 
           <PostalCitySelect
-            postalCodeRef={pickupPostalRef}
+            pscRef={pickupPscRef}             // Updated prop name for postal code ref
             onValidSelection={() => handleValidSelection('pickup')}
             locationType="pickup"
-            countryCode={localFormData.pickup.country.code}
+            cc={localFormData.pickup.country.code} // Updated prop name for country code
           />
         </div>
 
@@ -121,10 +125,12 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
           <input
             type="datetime-local"
             value={localFormData.pickup.time}
-            onChange={(e) => setLocalFormData(prev => ({
-              ...prev,
-              pickup: { ...prev.pickup, time: e.target.value }
-            }))}
+            onChange={(e) =>
+              setLocalFormData(prev => ({
+                ...prev,
+                pickup: { ...prev.pickup, time: e.target.value }
+              }))
+            }
             className="datetime-input"
           />
         </div>
@@ -154,10 +160,10 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
           </div>
 
           <PostalCitySelect
-            postalCodeRef={deliveryPostalRef}
+            pscRef={deliveryPscRef}           // Updated prop name for postal code ref
             onValidSelection={() => handleValidSelection('delivery')}
             locationType="delivery"
-            countryCode={localFormData.delivery.country.code}
+            cc={localFormData.delivery.country.code} // Updated prop name for country code
           />
         </div>
 
@@ -166,10 +172,12 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
           <input
             type="datetime-local"
             value={localFormData.delivery.time}
-            onChange={(e) => setLocalFormData(prev => ({
-              ...prev,
-              delivery: { ...prev.delivery, time: e.target.value }
-            }))}
+            onChange={(e) =>
+              setLocalFormData(prev => ({
+                ...prev,
+                delivery: { ...prev.delivery, time: e.target.value }
+              }))
+            }
             className="datetime-input"
           />
         </div>
@@ -183,10 +191,12 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
             <input
               type="number"
               value={localFormData.cargo.pallets}
-              onChange={(e) => setLocalFormData(prev => ({
-                ...prev,
-                cargo: { ...prev.cargo, pallets: Number(e.target.value) }
-              }))}
+              onChange={(e) =>
+                setLocalFormData(prev => ({
+                  ...prev,
+                  cargo: { ...prev.cargo, pallets: Number(e.target.value) }
+                }))
+              }
               min="0"
               className="form-input"
             />
@@ -196,10 +206,12 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
             <input
               type="number"
               value={localFormData.cargo.weight}
-              onChange={(e) => setLocalFormData(prev => ({
-                ...prev,
-                cargo: { ...prev.cargo, weight: Number(e.target.value) }
-              }))}
+              onChange={(e) =>
+                setLocalFormData(prev => ({
+                  ...prev,
+                  cargo: { ...prev.cargo, weight: Number(e.target.value) }
+                }))
+              }
               min="0"
               step="0.1"
               className="form-input"
@@ -208,7 +220,7 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
         </div>
       </div>
 
-      <button 
+      <button
         type="submit"
         className="submit-button"
         disabled={!isPickupValid || !isDeliveryValid}

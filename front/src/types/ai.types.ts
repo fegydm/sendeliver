@@ -32,7 +32,7 @@ export interface LocationData {
     code: string;
     flag: string;
   };
-  postalCode: string;
+  psc: string;
   city: string;
   time: string;
 }
@@ -55,8 +55,8 @@ export interface AIFormData {
 
 // Conversion utilities
 export const convertToAIFormData = (data: FormData): AIFormData => ({
-  pickupLocation: `${data.pickup.postalCode} ${data.pickup.city}, ${data.pickup.country.code}`,
-  deliveryLocation: `${data.delivery.postalCode} ${data.delivery.city}, ${data.delivery.country.code}`,
+  pickupLocation: `${data.pickup.psc} ${data.pickup.city}, ${data.pickup.country.code}`,
+  deliveryLocation: `${data.delivery.psc} ${data.delivery.city}, ${data.delivery.country.code}`,
   pickupTime: data.pickup.time,
   deliveryTime: data.delivery.time,
   weight: data.cargo.weight,
@@ -66,13 +66,13 @@ export const convertToAIFormData = (data: FormData): AIFormData => ({
 export const convertToFormData = (data: AIFormData): FormData => ({
   pickup: {
     country: { code: '', flag: '' }, // These need to be set separately
-    postalCode: '',
+    psc: '',
     city: data.pickupLocation,
     time: data.pickupTime
   },
   delivery: {
     country: { code: '', flag: '' }, // These need to be set separately
-    postalCode: '',
+    psc: '',
     city: data.deliveryLocation,
     time: data.deliveryTime
   },

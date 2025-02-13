@@ -27,6 +27,7 @@ export function CountrySelect({
 
   const { items: allCountries, isLoading } = useCountries();
 
+  // Compute valid first characters from all countries' code_2
   const validFirstChars = useMemo(() => {
     const chars = new Set(
       allCountries
@@ -36,6 +37,7 @@ export function CountrySelect({
     return chars;
   }, [allCountries]);
 
+  // Compute valid second characters based on the current input
   const validSecondChars = useMemo(() => {
     if (!inputValue) return new Set();
     return new Set(
@@ -46,6 +48,7 @@ export function CountrySelect({
     );
   }, [inputValue, allCountries]);
 
+  // Filter countries whose code_2 starts with the input value
   const filteredItems = useMemo(() => {
     if (!inputValue) return allCountries;
     return allCountries.filter(c => 
@@ -53,14 +56,17 @@ export function CountrySelect({
     );
   }, [inputValue, allCountries]);
 
+  // Get only the visible items (pagination)
   const visibleItems = useMemo(() => {
     return filteredItems.slice(0, visibleCount);
   }, [filteredItems, visibleCount]);
 
+  // Determine if "Load more" should be shown
   const showLoadMore = useMemo(() => {
     return filteredItems.length > visibleCount;
   }, [filteredItems.length, visibleCount]);
 
+  // Handle country selection
   const handleSelect = useCallback((selected: Country) => {
     if (!selected.code_2) return;
     
@@ -73,21 +79,22 @@ export function CountrySelect({
     onNextFieldFocus?.();
   }, [onCountrySelect, onNextFieldFocus]);
 
+  // Handle input change in the country field
   const handleInputChange = useCallback((value: string) => {
     const upperValue = value.toUpperCase();
     
-    // Vždy nastavíme hodnotu inputu
+    // Always update the input value
     setInputValue(upperValue);
     setVisibleCount(COUNTRY_PAGE_SIZE);
     setIsOpen(true);
     
-    // Pri prázdnej hodnote resetujeme výber
+    // If the input is empty, reset the selection
     if (!upperValue) {
       onCountrySelect("", "");
       return;
     }
     
-    // Pri presnej zhode vyberieme krajinu
+    // If the input length is exactly 2, select the country with an exact match
     if (upperValue.length === 2) {
       const exactMatch = filteredItems.find(c => c.code_2 === upperValue);
       if (exactMatch) {
@@ -96,15 +103,17 @@ export function CountrySelect({
         onCountrySelect("", "");
       }
     } else {
-      // Pri jednom znaku len resetujeme výber
+      // If only one character is entered, reset the selection
       onCountrySelect("", "");
     }
   }, [filteredItems, handleSelect, onCountrySelect]);
 
+  // Handle "Load more" action to show additional countries
   const handleLoadMore = useCallback(() => {
     setVisibleCount(prev => prev + COUNTRY_PAGE_SIZE);
   }, []);
 
+  // Handle key down events to restrict invalid characters
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key.length !== 1) return;
     const upperKey = e.key.toUpperCase();
@@ -122,6 +131,7 @@ export function CountrySelect({
     }
   }, [inputValue, validFirstChars, validSecondChars]);
 
+  // Render a single country item for the dropdown
   const renderCountryItem = useCallback((country: Country, { isHighlighted }: { isHighlighted: boolean }) => (
     <div 
       className={`item-suggestion ${isHighlighted ? "highlighted" : ""}`}

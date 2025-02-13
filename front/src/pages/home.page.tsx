@@ -22,13 +22,13 @@ import {
 const DEFAULT_FORM_DATA: FormData = {
   pickup: {
     country: { code: '', flag: '' },
-    postalCode: '',
+    psc: '',
     city: '',
     time: ''
   },
   delivery: {
     country: { code: '', flag: '' },
-    postalCode: '',
+    psc: '',
     city: '',
     time: ''
   },
@@ -83,7 +83,7 @@ const HomePage = () => {
         onAIRequest={(response) => handleAIResponse(type, response)}
       />
       <ManualSearchForm
-        type={type}
+        userType={type}
         onSubmit={(data) => handleManualSubmit(type, data)}
         formData={formData}
       />
