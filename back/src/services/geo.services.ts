@@ -1,5 +1,5 @@
 // File: ./back/src/services/geo.service.ts
-// Last change: Updated parameter handling to use undefined instead of null and standardized error handling
+// Last change: Enhanced debugging and country code handling
 
 import { pool } from "../configs/db.js";
 import {
@@ -72,6 +72,10 @@ export class GeoService {
 
   // Check if we should use exact country matching
   private shouldUseExactCountryMatch(countryCode?: string): boolean {
+    console.log('🕵️ Checking exact country match:', {
+      countryCode,
+      isExactMatch: countryCode?.length === 2
+    });
     return countryCode?.length === 2;
   }
 
@@ -83,8 +87,16 @@ export class GeoService {
   // Get appropriate country code filter
   private getCountryCodeFilter(countryCode?: string): string | undefined {
     if (!countryCode) return undefined;
-    if (countryCode.length === 2) return countryCode;
-    if (countryCode.length === 1) return countryCode;
+    
+    // Normalizácia vstupu
+    const normalizedCode = countryCode.trim().toUpperCase();
+    
+    // Presná zhoda pre 2-znakový kód
+    if (normalizedCode.length === 2) return normalizedCode;
+    
+    // Čiastočná zhoda pre 1-znakový kód
+    if (normalizedCode.length === 1) return normalizedCode;
+    
     return undefined;
   }
 
@@ -121,31 +133,37 @@ export class GeoService {
         await this.checkHealth();
       }
 
-      console.log('🔍 Search params:', {
-        cc: params.cc || 'empty',
-        psc: params.psc || 'empty',
-        city: params.city || 'empty'
+      console.log('🔍 Detailed Search Params:', {
+        cc: params.cc,
+        psc: params.psc,
+        city: params.city,
+        shouldUseExactCountryMatch: this.shouldUseExactCountryMatch(params.cc),
+        countryFilter: this.getCountryCodeFilter(params.cc)
       });
 
-      // Return empty result if no meaningful search criteria
-      if (!this.hasSearchInput(params.psc, params.city) && !this.shouldUseExactCountryMatch(params.cc)) {
+      // Pridaná explicitná kontrola
+      const countryFilter = this.getCountryCodeFilter(params.cc);
+      
+      console.log('🌍 Country Filter:', countryFilter);
+
+      // Upravená podmienka pre spustenie query
+      if (!this.hasSearchInput(params.psc, params.city) && !countryFilter) {
         return { results: [], hasMore: false };
       }
 
       let result;
-      const countryFilter = this.getCountryCodeFilter(params.cc);
-
-      // Execute appropriate query based on search criteria
       if (this.shouldUseExactCountryMatch(params.cc)) {
+        console.log('🎯 Using Exact Country Match Query');
         result = await pool.query(SEARCH_LOCATION_BY_COUNTRY_QUERY, [
-          params.cc,
           params.psc || null,
           params.city || null,
+          params.cc,
           params.pagination.lastPsc || null,
           params.pagination.lastCity || null,
           params.limit
         ]);
       } else {
+        console.log('🔎 Using General Location Query');
         result = await pool.query(SEARCH_LOCATION_QUERY, [
           params.psc || null,
           params.city || null,
@@ -164,7 +182,7 @@ export class GeoService {
           cc: row.country_code,
           psc: row.postal_code,
           city: row.place_name,
-          country: row.country_name,
+          country: row.country,
           flag_url: row.flag_url,
           logistics_priority: row.logistics_priority
         })),

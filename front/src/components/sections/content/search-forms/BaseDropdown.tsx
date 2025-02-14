@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/BaseDropdown.tsx
-// Last change: Fixed dropdown rendering and styles
+// Last change: Improved focus handling and translation of comments
 
 import React, { useRef, useEffect, useCallback } from "react";
 import { useUINavigation } from "@/hooks/useUINavigation";
@@ -14,6 +14,7 @@ interface BaseDropdownProps<T> {
  onSelect: (item: T, index: number) => void;
  onClose: () => void;
  inputRef: React.RefObject<HTMLInputElement>;
+ onNextFieldFocus?: () => void;  // Callback to focus next input field
  onLoadMore?: (lastItem: T | null) => void;
  renderItem: (item: T, meta: { isHighlighted: boolean; isSelected: boolean }) => React.ReactNode;
  dropdownType: DropdownType;
@@ -33,6 +34,7 @@ export function BaseDropdown<T>({
  onSelect,
  onClose,
  inputRef,
+ onNextFieldFocus,  // Callback to move focus to next input
  onLoadMore,
  renderItem,
  dropdownType,
@@ -45,22 +47,49 @@ export function BaseDropdown<T>({
  onNoResults,
  ariaLabel = "Dropdown Options",
 }: BaseDropdownProps<T>) {
+ // Reference to dropdown container
  const dropdownRef = useRef<HTMLDivElement>(null);
 
- const { highlightedIndex, handleKeyDown } = useUINavigation({
+ // Use custom navigation hook for dropdown interactions
+ const { 
+   highlightedIndex, 
+   handleKeyDown: originalHandleKeyDown, 
+   handleItemMouseEnter,
+   handleItemClick
+ } = useUINavigation({
    items,
    isOpen,
-   onSelect,
+   onSelect: (item, index) => {
+     onSelect(item, index);
+     onClose();
+     // Trigger focus on next field after selection
+     onNextFieldFocus?.();
+   },
    inputRef,
    pageSize,
  });
 
+ // Custom key down handler to manage TAB and focus
+ const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+   // Intercept TAB key to move focus to next input
+   if (e.key === 'Tab') {
+     e.preventDefault();
+     onNextFieldFocus?.();
+     return;
+   }
+
+   // Use original key down handler for other interactions
+   originalHandleKeyDown(e);
+ }, [originalHandleKeyDown, onNextFieldFocus]);
+
+ // Pagination hook for loading more items
  const { hasMore, loadMoreData } = useDropdownPagination({
    totalItems,
    items,
    onLoadMore,
  });
 
+ // Handle clicks outside the dropdown
  const handleClickOutside = useCallback((event: MouseEvent) => {
    if (
      dropdownRef.current &&
@@ -71,6 +100,7 @@ export function BaseDropdown<T>({
    }
  }, [onClose, inputRef]);
 
+ // Add/remove click outside listener
  useEffect(() => {
    if (!isOpen) return;
 
@@ -78,13 +108,10 @@ export function BaseDropdown<T>({
    return () => document.removeEventListener("mousedown", handleClickOutside);
  }, [isOpen, handleClickOutside]);
 
- const handleItemClick = useCallback((item: T, index: number) => {
-   onSelect(item, index);
-   onClose();
- }, [onSelect, onClose]);
-
+ // Do not render if dropdown is closed
  if (!isOpen) return null;
 
+ // Debug logging for dropdown rendering
  console.log('Rendering dropdown:', {
    items: items.length,
    hasMore,
@@ -100,8 +127,10 @@ export function BaseDropdown<T>({
      role="listbox"
      onKeyDown={handleKeyDown}
      aria-label={ariaLabel}
+     tabIndex={-1}
    >
      {items.length === 0 ? (
+       // Render no results state if no items
        onNoResults && (
          <div className="item-suggestion no-results" role="option">
            {onNoResults()}
@@ -113,11 +142,15 @@ export function BaseDropdown<T>({
            <div
              key={getItemKey(item, index)}
              id={`item-${index}`}
-             onClick={() => handleItemClick(item, index)}
+             onClick={() => {
+               handleItemClick(index);
+               onNextFieldFocus?.();
+             }}
+             onMouseEnter={() => handleItemMouseEnter(index)}
              className={`item-suggestion ${index === highlightedIndex ? "highlighted" : ""}`}
              role="option"
              aria-selected={selectedItem === item}
-             tabIndex={index === highlightedIndex ? 0 : -1}
+             tabIndex={-1}
            >
              {renderItem(item, {
                isHighlighted: index === highlightedIndex,
@@ -132,7 +165,7 @@ export function BaseDropdown<T>({
              className={`dd-load-more ${highlightedIndex === items.length ? "highlighted" : ""}`}
              role="option"
              aria-label={loadMoreText}
-             tabIndex={highlightedIndex === items.length ? 0 : -1}
+             tabIndex={-1}
            >
              {loadMoreText}
            </div>

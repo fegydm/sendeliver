@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Focus (onNextFieldFocus) and onCountrySelect are triggered only on exactly 2 valid characters
+// Last change: Improved focus handling and added English comments
 
 import { useRef, useState, useMemo, useCallback } from "react";
 import { BaseDropdown, type LocationType } from "./BaseDropdown";
@@ -71,20 +71,20 @@ export function CountrySelect({
     onCountrySelect(code, flagUrl);
   }, [onCountrySelect]);
 
-  // Handle input changes and validate country code
+  // Handle input changes with improved focus logic
   const handleInputChange = useCallback((value: string) => {
     const upperValue = value.toUpperCase();
     setInputValue(upperValue);
     setVisibleCount(COUNTRY_PAGE_SIZE);
-
-    // Open dropdown if less than 2 characters are entered
+  
+    // Open dropdown and reset flag for less than 2 characters
     if (upperValue.length < 2) {
       setIsOpen(true);
-      // Do nothing else for 0 or 1 character
+      onCountrySelect("", "");
       return;
     }
-
-    // When exactly 2 characters are entered, attempt to match the country code
+  
+    // Move focus only when exactly 2 characters and match found
     if (upperValue.length === 2) {
       const exactMatch = allCountries.find(c => c.code_2 === upperValue);
       if (exactMatch) {
@@ -93,14 +93,28 @@ export function CountrySelect({
         
         setIsOpen(false);
         onCountrySelect(code, flagUrl);
-        // Move focus only when a valid 2-character code is entered
+        
+        // Trigger next field focus only with valid 2-character code
         onNextFieldFocus?.();
       }
     }
   }, [allCountries, onCountrySelect, onNextFieldFocus]);
 
-  // Validate keystrokes for country code input
+  // Validate keystrokes and handle navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Open dropdown and focus first item on ArrowDown
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (isOpen && dropdownRef.current) {
+        const firstItem = dropdownRef.current.querySelector('.item-content');
+        if (firstItem instanceof HTMLElement) {
+          firstItem.focus();
+        }
+      }
+      return;
+    }
+    
+    // Validate input characters
     if (e.key.length === 1) {
       const upperKey = e.key.toUpperCase();
 
@@ -116,24 +130,27 @@ export function CountrySelect({
           e.preventDefault();
         }
       } 
-      // Prevent more than 2 characters from being entered
+      // Prevent more than 2 characters
       else {
         e.preventDefault();
       }
     }
-  }, [inputValue, validFirstChars, validSecondChars]);
+  }, [inputValue, isOpen, validFirstChars, validSecondChars]);
 
-  // Handle pagination (load more items)
+  // Handle pagination for loading more items
   const handleLoadMore = useCallback(() => {
     setVisibleCount(prev => prev + COUNTRY_PAGE_SIZE);
   }, []);
 
-  // Render country item in the dropdown
+  // Render individual country item in dropdown
   const renderCountryItem = useCallback((
     country: Country,
     { isHighlighted }: { isHighlighted: boolean }
   ) => (
-    <div className={`item-content ${isHighlighted ? 'highlighted' : ''}`}>
+    <div
+      className={`item-content ${isHighlighted ? 'highlighted' : ''}`}
+      tabIndex={0} // make item focusable
+    >
       <img
         src={`/flags/4x3/optimized/${country.code_2?.toLowerCase()}.svg`}
         alt={`${country.code_2 ?? "Unknown"} flag`}
@@ -178,6 +195,7 @@ export function CountrySelect({
         onClose={() => setIsOpen(false)}
         onLoadMore={handleLoadMore}
         inputRef={inputRef}
+        onNextFieldFocus={onNextFieldFocus}
         dropdownType="country"
         locationType={locationType}
         totalItems={filteredItems.length}

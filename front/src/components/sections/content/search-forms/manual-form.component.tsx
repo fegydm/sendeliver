@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Fixed country code handling and form state management
+// Last change: Optimized focus handling and removed duplicate focus mechanisms
 
 import React, { useState, useRef } from 'react';
 import CountrySelect from './CountrySelect';
@@ -46,8 +46,6 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
 
  // Handle country selection
  const handleCountrySelect = (locationType: 'pickup' | 'delivery', code: string, flag: string) => {
-   console.log('Country selected:', { locationType, code, flag });
-   
    setLocalFormData(prev => {
      const newData = {
        ...prev,
@@ -58,20 +56,14 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
          city: ''
        }
      };
-     console.log('Form data updated:', {
-       previous: prev[locationType].country,
-       new: newData[locationType].country
-     });
      return newData;
    });
 
-   // Reset validation and focus postal code input
+   // Reset validation
    if (locationType === 'pickup') {
      setIsPickupValid(false);
-     setTimeout(() => pickupPscRef.current?.focus(), 0);
    } else {
      setIsDeliveryValid(false);
-     setTimeout(() => deliveryPscRef.current?.focus(), 0);
    }
  };
 
