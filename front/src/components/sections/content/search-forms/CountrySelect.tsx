@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Updated input handling logic for better country search
+// Last change: Focus (onNextFieldFocus) and onCountrySelect are triggered only on exactly 2 valid characters
 
 import { useRef, useState, useMemo, useCallback } from "react";
 import { BaseDropdown, type LocationType } from "./BaseDropdown";
@@ -24,20 +24,18 @@ export function CountrySelect({
   const [inputValue, setInputValue] = useState(initialValue);
   const [visibleCount, setVisibleCount] = useState(COUNTRY_PAGE_SIZE);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { items: allCountries, isLoading } = useCountries();
 
-  // Compute valid first characters from all countries' code_2
+  // Compute valid first characters from country codes
   const validFirstChars = useMemo(() => {
-    const chars = new Set(
-      allCountries
-        .map(c => c.code_2?.[0])
-        .filter(Boolean)
+    return new Set(
+      allCountries.map(c => c.code_2?.[0]).filter(Boolean)
     );
-    return chars;
   }, [allCountries]);
 
-  // Compute valid second characters based on the current input
+  // Compute valid second characters based on the first character
   const validSecondChars = useMemo(() => {
     if (!inputValue) return new Set();
     return new Set(
@@ -48,25 +46,20 @@ export function CountrySelect({
     );
   }, [inputValue, allCountries]);
 
-  // Filter countries whose code_2 starts with the input value
+  // Filter countries list based on input value
   const filteredItems = useMemo(() => {
     if (!inputValue) return allCountries;
-    return allCountries.filter(c => 
+    return allCountries.filter(c =>
       c.code_2?.startsWith(inputValue.toUpperCase())
     );
   }, [inputValue, allCountries]);
 
-  // Get only the visible items (pagination)
+  // Get visible items based on pagination
   const visibleItems = useMemo(() => {
     return filteredItems.slice(0, visibleCount);
   }, [filteredItems, visibleCount]);
 
-  // Determine if "Load more" should be shown
-  const showLoadMore = useMemo(() => {
-    return filteredItems.length > visibleCount;
-  }, [filteredItems.length, visibleCount]);
-
-  // Handle country selection
+  // Handle country selection from dropdown
   const handleSelect = useCallback((selected: Country) => {
     if (!selected.code_2) return;
     
@@ -76,67 +69,71 @@ export function CountrySelect({
     setInputValue(code);
     setIsOpen(false);
     onCountrySelect(code, flagUrl);
-    onNextFieldFocus?.();
-  }, [onCountrySelect, onNextFieldFocus]);
+  }, [onCountrySelect]);
 
-  // Handle input change in the country field
+  // Handle input changes and validate country code
   const handleInputChange = useCallback((value: string) => {
     const upperValue = value.toUpperCase();
-    
-    // Always update the input value
     setInputValue(upperValue);
     setVisibleCount(COUNTRY_PAGE_SIZE);
-    setIsOpen(true);
-    
-    // If the input is empty, reset the selection
-    if (!upperValue) {
-      onCountrySelect("", "");
+
+    // Open dropdown if less than 2 characters are entered
+    if (upperValue.length < 2) {
+      setIsOpen(true);
+      // Do nothing else for 0 or 1 character
       return;
     }
-    
-    // If the input length is exactly 2, select the country with an exact match
-    if (upperValue.length === 2) {
-      const exactMatch = filteredItems.find(c => c.code_2 === upperValue);
-      if (exactMatch) {
-        handleSelect(exactMatch);
-      } else {
-        onCountrySelect("", "");
-      }
-    } else {
-      // If only one character is entered, reset the selection
-      onCountrySelect("", "");
-    }
-  }, [filteredItems, handleSelect, onCountrySelect]);
 
-  // Handle "Load more" action to show additional countries
+    // When exactly 2 characters are entered, attempt to match the country code
+    if (upperValue.length === 2) {
+      const exactMatch = allCountries.find(c => c.code_2 === upperValue);
+      if (exactMatch) {
+        const code = exactMatch.code_2;
+        const flagUrl = `/flags/4x3/optimized/${code.toLowerCase()}.svg`;
+        
+        setIsOpen(false);
+        onCountrySelect(code, flagUrl);
+        // Move focus only when a valid 2-character code is entered
+        onNextFieldFocus?.();
+      }
+    }
+  }, [allCountries, onCountrySelect, onNextFieldFocus]);
+
+  // Validate keystrokes for country code input
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key.length === 1) {
+      const upperKey = e.key.toUpperCase();
+
+      // Validate first character
+      if (inputValue.length === 0) {
+        if (!validFirstChars.has(upperKey)) {
+          e.preventDefault();
+        }
+      } 
+      // Validate second character
+      else if (inputValue.length === 1) {
+        if (!validSecondChars.has(upperKey)) {
+          e.preventDefault();
+        }
+      } 
+      // Prevent more than 2 characters from being entered
+      else {
+        e.preventDefault();
+      }
+    }
+  }, [inputValue, validFirstChars, validSecondChars]);
+
+  // Handle pagination (load more items)
   const handleLoadMore = useCallback(() => {
     setVisibleCount(prev => prev + COUNTRY_PAGE_SIZE);
   }, []);
 
-  // Handle key down events to restrict invalid characters
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key.length !== 1) return;
-    const upperKey = e.key.toUpperCase();
-
-    if (inputValue.length === 0) {
-      if (!validFirstChars.has(upperKey)) {
-        e.preventDefault();
-      }
-    } else if (inputValue.length === 1) {
-      if (!validSecondChars.has(upperKey)) {
-        e.preventDefault();
-      }
-    } else {
-      e.preventDefault();
-    }
-  }, [inputValue, validFirstChars, validSecondChars]);
-
-  // Render a single country item for the dropdown
-  const renderCountryItem = useCallback((country: Country, { isHighlighted }: { isHighlighted: boolean }) => (
-    <div 
-      className={`item-suggestion ${isHighlighted ? "highlighted" : ""}`}
-      id={`country-item-${country.code_2}`}
-    >
+  // Render country item in the dropdown
+  const renderCountryItem = useCallback((
+    country: Country,
+    { isHighlighted }: { isHighlighted: boolean }
+  ) => (
+    <div className={`item-content ${isHighlighted ? 'highlighted' : ''}`}>
       <img
         src={`/flags/4x3/optimized/${country.code_2?.toLowerCase()}.svg`}
         alt={`${country.code_2 ?? "Unknown"} flag`}
@@ -149,12 +146,17 @@ export function CountrySelect({
     </div>
   ), []);
 
+  // Generate unique key for list items
+  const getItemKey = useCallback((item: Country, index: number) => {
+    return item.code_2 || index.toString();
+  }, []);
+
   if (isLoading) {
     return <div>Loading countries...</div>;
   }
 
   return (
-    <div className="country-select">
+    <div className="country-select" ref={dropdownRef}>
       <input
         ref={inputRef}
         type="text"
@@ -167,25 +169,25 @@ export function CountrySelect({
         className={`inp-country inp-country-${locationType}`}
         aria-autocomplete="list"
         aria-controls="country-dropdown"
+        aria-expanded={isOpen}
       />
-      {isOpen && (
-        <BaseDropdown<Country>
-          items={visibleItems}
-          isOpen={isOpen}
-          onSelect={handleSelect}
-          onClose={() => setIsOpen(false)}
-          onLoadMore={showLoadMore ? handleLoadMore : undefined}
-          inputRef={inputRef}
-          dropdownType="country"
-          locationType={locationType}
-          totalItems={filteredItems.length}
-          pageSize={UI_PAGE_SIZE}
-          renderItem={renderCountryItem}
-          getItemKey={(item) => item.code_2 || ""}
-          ariaLabel="Country options"
-          loadMoreText="Load more countries..."
-        />
-      )}
+      <BaseDropdown<Country>
+        items={visibleItems}
+        isOpen={isOpen}
+        onSelect={handleSelect}
+        onClose={() => setIsOpen(false)}
+        onLoadMore={handleLoadMore}
+        inputRef={inputRef}
+        dropdownType="country"
+        locationType={locationType}
+        totalItems={filteredItems.length}
+        pageSize={UI_PAGE_SIZE}
+        renderItem={renderCountryItem}
+        getItemKey={getItemKey}
+        selectedItem={null}
+        ariaLabel="Country options"
+        loadMoreText="Load more countries..."
+      />
     </div>
   );
 }

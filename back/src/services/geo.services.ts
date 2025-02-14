@@ -1,5 +1,5 @@
 // File: ./back/src/services/geo.service.ts
-// Last change: Changed to use FE parameter names externally and DB names internally
+// Last change: Updated parameter handling to use undefined instead of null and standardized error handling
 
 import { pool } from "../configs/db.js";
 import {
@@ -9,7 +9,7 @@ import {
   SEARCH_LOCATION_BY_COUNTRY_QUERY
 } from "./geo.queries.js";
 
-// FE interfaces
+// Frontend interfaces
 interface SearchParams {
   psc?: string;
   city?: string;
@@ -28,7 +28,7 @@ interface SearchResult {
 
 export class GeoService {
   private static instance: GeoService;
-  private readonly CACHE_DURATION = 5 * 60 * 1000;
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
   private isHealthy = true;
   private static countriesCache: any[] | null = null;
   private static lastCacheTime: number = 0;
@@ -58,6 +58,7 @@ export class GeoService {
     return isValid;
   }
 
+  // Health check for database connection
   private async checkHealth(): Promise<void> {
     try {
       await pool.query('SELECT 1');
@@ -69,21 +70,25 @@ export class GeoService {
     }
   }
 
+  // Check if we should use exact country matching
   private shouldUseExactCountryMatch(countryCode?: string): boolean {
     return countryCode?.length === 2;
   }
 
+  // Check if there's any search input
   private hasSearchInput(psc?: string, city?: string): boolean {
     return !!(psc || city);
   }
 
-  private getCountryCodeFilter(countryCode?: string): string | null {
-    if (!countryCode) return null;
+  // Get appropriate country code filter
+  private getCountryCodeFilter(countryCode?: string): string | undefined {
+    if (!countryCode) return undefined;
     if (countryCode.length === 2) return countryCode;
     if (countryCode.length === 1) return countryCode;
-    return null;
+    return undefined;
   }
 
+  // Get list of all countries
   public async getCountries() {
     try {
       if (!this.isHealthy) {
@@ -109,6 +114,7 @@ export class GeoService {
     }
   }
 
+  // Search locations with given parameters
   public async searchLocations(params: SearchParams): Promise<SearchResult> {
     try {
       if (!this.isHealthy) {
@@ -121,6 +127,7 @@ export class GeoService {
         city: params.city || 'empty'
       });
 
+      // Return empty result if no meaningful search criteria
       if (!this.hasSearchInput(params.psc, params.city) && !this.shouldUseExactCountryMatch(params.cc)) {
         return { results: [], hasMore: false };
       }
@@ -128,6 +135,7 @@ export class GeoService {
       let result;
       const countryFilter = this.getCountryCodeFilter(params.cc);
 
+      // Execute appropriate query based on search criteria
       if (this.shouldUseExactCountryMatch(params.cc)) {
         result = await pool.query(SEARCH_LOCATION_BY_COUNTRY_QUERY, [
           params.cc,
@@ -141,7 +149,7 @@ export class GeoService {
         result = await pool.query(SEARCH_LOCATION_QUERY, [
           params.psc || null,
           params.city || null,
-          countryFilter,
+          countryFilter || null,
           params.pagination.lastPsc || null,
           params.pagination.lastCity || null,
           params.limit
@@ -150,6 +158,7 @@ export class GeoService {
 
       console.log(`📊 Found ${result.rows.length} locations`);
 
+      // Transform database results to frontend format
       return { 
         results: result.rows.map(row => ({
           cc: row.country_code,
@@ -168,6 +177,7 @@ export class GeoService {
     }
   }
 
+  // Check if location exists
   public async checkLocationExists(
     psc?: string,
     city?: string,

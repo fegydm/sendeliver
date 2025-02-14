@@ -1,6 +1,5 @@
 // File: .back/src/routes/geo.routes.ts
-// Last change: Use only FE parameter names (cc, psc, city) and map them to DB field names.
-// Comments are in English.
+// Last change: Fixed TypeScript type issues with undefined vs null handling
 
 import { Router, RequestHandler } from "express";
 import { ParsedQs } from "qs";
@@ -20,7 +19,6 @@ interface LocationQuery extends ParsedQs {
 const router = Router();
 const geoService = GeoService.getInstance();
 
-// Handler to get countries list
 const handleGetCountries: RequestHandler = async (req, res): Promise<void> => {
   try {
     const { q } = req.query;
@@ -34,7 +32,6 @@ const handleGetCountries: RequestHandler = async (req, res): Promise<void> => {
 
     let result = countries;
 
-    // Filter countries if query exists
     if (q && typeof q === 'string') {
       const searchTerm = q.toLowerCase();
       result = countries.filter(country =>
@@ -43,7 +40,6 @@ const handleGetCountries: RequestHandler = async (req, res): Promise<void> => {
       );
     }
 
-    // Sort by English name
     result.sort((a, b) => a.name_en.localeCompare(b.name_en));
 
     console.log("✅ Countries fetched:", result.length);
@@ -54,20 +50,25 @@ const handleGetCountries: RequestHandler = async (req, res): Promise<void> => {
   }
 };
 
-// Handler for location search with various parameters and pagination
 const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (req, res): Promise<void> => {
-  // Use only FE parameter names: psc, city, cc
-  const {
-    psc,
-    city,
-    cc,
-    limit = DEFAULT_FETCH_SIZE.toString(),
-    lastPsc,
-    lastCity,
-    checkExists
-  } = req.query;
-
   try {
+    const {
+      psc,
+      city,
+      cc,
+      limit = DEFAULT_FETCH_SIZE.toString(),
+      lastPsc,
+      lastCity,
+      checkExists
+    } = req.query;
+
+    // Log incoming parameters for debugging
+    console.log('🔍 Search params:', {
+      psc: psc === 'empty' ? undefined : psc,
+      city: city === 'empty' ? undefined : city,
+      cc: cc === 'empty' ? undefined : cc
+    });
+
     // Validate checkExists parameter
     const checkExistsBoolean = checkExists === 'true';
     if (checkExists !== undefined && checkExists !== 'true' && checkExists !== 'false') {
@@ -77,7 +78,11 @@ const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (re
 
     // Handle existence check if requested
     if (checkExistsBoolean) {
-      const exists = await geoService.checkLocationExists(psc, city, cc);
+      const exists = await geoService.checkLocationExists(
+        psc === 'empty' ? undefined : psc,
+        city === 'empty' ? undefined : city,
+        cc === 'empty' ? undefined : cc
+      );
       res.json({ exists });
       return;
     }
@@ -91,7 +96,7 @@ const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (re
       return;
     }
 
-    // Validate input parameters (if provided, must be string)
+    // Validate input parameters
     if (psc && typeof psc !== 'string') {
       res.status(400).json({ error: "Invalid postal code (psc) value" });
       return;
@@ -105,24 +110,27 @@ const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (re
       return;
     }
 
-    // Create search parameters object using FE parameter names
+    // Create normalized search parameters
     const searchParams = {
-      psc,
-      city,
-      cc,
+      psc: psc === 'empty' ? undefined : psc,
+      city: city === 'empty' ? undefined : city,
+      cc: cc === 'empty' ? undefined : cc,
       limit: limitValue,
       pagination: {
-        lastPsc: lastPsc ? lastPsc : undefined,
-        lastCity: lastCity ? lastCity : undefined
+        lastPsc: lastPsc === 'empty' ? undefined : lastPsc,
+        lastCity: lastCity === 'empty' ? undefined : lastCity
       }
     };
 
+    // Execute search
     const searchResults = await geoService.searchLocations(searchParams);
 
-    // "Load more" is enabled only for an empty search (if psc or city is provided, disable load more)
-    const hasMore = !psc && !city 
+    // Calculate hasMore flag - only for empty search
+    const hasMore = (!searchParams.psc && !searchParams.city) 
       ? searchResults.results.length === limitValue
       : false;
+
+    console.log(`📊 Found ${searchResults.results.length} locations`);
 
     res.json({ 
       results: searchResults.results,

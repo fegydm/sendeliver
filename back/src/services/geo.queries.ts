@@ -25,6 +25,15 @@ SELECT EXISTS (
 
 // Main search query - handles both psc and city filtering
 export const SEARCH_LOCATION_QUERY = `
+WITH filtered_countries AS (
+  SELECT code_2
+  FROM geo.countries
+  WHERE CASE 
+    WHEN $3::TEXT IS NOT NULL 
+      THEN code_2 LIKE $3 || '%'
+    ELSE true 
+  END
+)
 SELECT 
   p.country_code, 
   p.postal_code, 
@@ -33,8 +42,8 @@ SELECT
   c.logistics_priority,
   CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url
 FROM geo.postal_codes p 
-JOIN geo.countries c 
-  ON c.code_2 = p.country_code
+JOIN geo.countries c ON c.code_2 = p.country_code
+JOIN filtered_countries fc ON fc.code_2 = p.country_code
 WHERE 
   CASE 
     WHEN $1::TEXT IS NOT NULL 
@@ -44,13 +53,7 @@ WHERE
   END
   AND CASE 
     WHEN $2::TEXT IS NOT NULL 
-      THEN lower(p.place_name) >= lower($2) 
-        AND lower(p.place_name) < lower($2 || 'z')
-    ELSE true 
-  END
-  AND CASE 
-    WHEN $3::TEXT IS NOT NULL 
-      THEN p.country_code = $3
+      THEN lower(p.place_name) LIKE '%' || lower($2) || '%'
     ELSE true 
   END
   AND CASE 
@@ -61,11 +64,10 @@ WHERE
     ELSE true 
   END
 ORDER BY 
+  c.logistics_priority DESC,
   p.postal_code,
   p.place_name
-LIMIT $6;
-
-`;
+LIMIT $6;`;
 
 // Specific country search - optimized query when country_code is exactly 2 characters
 export const SEARCH_LOCATION_BY_COUNTRY_QUERY = `
