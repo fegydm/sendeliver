@@ -158,3 +158,35 @@ export interface ValidationRules {
     custom?: string;
   };
 }
+
+
+
+// File: src/types/form-manual.types.ts
+// Last change: Created manual form types from form-ai types with a simplified Country
+
+// Define a simplified country type for the manual form
+export interface ManualCountry {
+  code: string;
+  flag: string;
+}
+
+// Location data for pickup/delivery in manual form
+export interface Location {
+  country: ManualCountry;
+  psc: string;
+  city: string;
+  time: string;
+}
+
+// Cargo details
+export interface Cargo {
+  pallets: number;
+  weight: number;
+}
+
+// Combined form data type for manual form
+export interface FormData {
+  pickup: Location;
+  delivery: Location;
+  cargo: Cargo;
+}

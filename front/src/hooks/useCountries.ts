@@ -2,7 +2,7 @@
 // Last change: Added strict single-fetch pattern
 
 import { useState, useEffect } from 'react';
-import type { Country } from '@/types/location.types';
+import type { Country } from '@/types/form-manual.types';
 
 class CountriesManager {
   private static instance: CountriesManager;

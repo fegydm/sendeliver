@@ -21,7 +21,6 @@ export interface AIResponse {
     cargoType?: string;
   };
 }
-
 export interface CargoData {
   pallets: number;
   weight: number;

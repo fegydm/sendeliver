@@ -1,6 +1,3 @@
-// File: front/vite.config.ts
-// Last change: Added proper cleanup on exit
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -81,6 +78,16 @@ export default defineConfig({
           });
         },
       },
+      "/api/geo/country_formats": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => {
+          // postal code format
+          const match = path.match(/\/api\/geo\/country_formats\/(.*)$/);
+          return match ? `/api/geo/country_formats?cc=${match[1]}` : path;
+        }
+      }
     },
   },
 

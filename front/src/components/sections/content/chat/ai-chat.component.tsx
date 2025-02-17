@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { AIService } from "@/services/ai.services";
-import { AIRequest } from "@/types/ai.types";
+import { AIRequest } from "@/types/form-ai.types";
 // import "./ai-chat.component.css";
 
 interface AIChatProps {

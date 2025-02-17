@@ -1,150 +1,139 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Added debug logs
+// Last change: Fixed infinite loop by removing duplicate useEffect and using functional updater
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import PostalCodeInput from "@/components/PostalCodeInput";
-import { BaseDropdown, type LocationType } from "./BaseDropdown";
+import { BaseDropdown } from "./BaseDropdown";
 import { LOCATION_PAGE_SIZE, DEBOUNCE_LOCATION_SEARCH } from "@/constants/pagination.constants";
 
 export interface LocationSuggestion {
-  cc: string;
+  code: string; // standardized (was previously 'cc')
   psc: string;
   city: string;
   postal_code_format?: string;
 }
 
-interface PostalCitySelectProps {
+export interface PostalCitySelectProps {
   pscRef?: React.RefObject<HTMLInputElement>;
   dateInputRef?: React.RefObject<HTMLInputElement>;
   onValidSelection: () => void;
-  locationType: LocationType;
-  cc?: string;
+  // onSelectionChange passes standardized data (psc, city, and a record with code and flag)
+  onSelectionChange?: (psc: string, city: string, record?: { code: string; flag: string }) => void;
+  locationType: "pickup" | "delivery";
+  code?: string; // standardized (was previously 'cc')
   postalCodeRegex?: string;
-  // Mask from the database, e.g. "### ##" for CZ or "#####"" for DE
+  // Mask loaded from DB, e.g. "### ##" for CZ or "#####" for DE
   dbPostalCodeMask: string;
+  // Controlled values from parent
+  value?: string; // controlled raw PSC value (digits only)
+  initialCity?: string;
 }
 
 export function PostalCitySelect({
   pscRef,
   dateInputRef,
   onValidSelection,
+  onSelectionChange,
   locationType,
-  cc,
+  code,
   postalCodeRegex,
   dbPostalCodeMask,
+  value,
+  initialCity = "",
 }: PostalCitySelectProps) {
-  console.log('PostalCitySelect render:', { 
-    locationType, 
-    cc, 
-    postalCodeRegex, 
-    dbPostalCodeMask 
-  });
+  console.log("PostalCitySelect render:", { locationType, code, postalCodeRegex, dbPostalCodeMask });
 
-  // Local state for city and postal code (psc)
-  const [psc, setPsc] = useState("");
-  const [city, setCity] = useState("");
+  // For PSC, if controlled value is provided, use it; else use internal state.
+  const [internalPsc, setInternalPsc] = useState("");
+  const pscValue = value !== undefined ? value : internalPsc;
+  
+  // Local state for city (we assume uncontrolled here)
+  const [city, setCity] = useState(initialCity);
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [activeField, setActiveField] = useState<"psc" | "city" | null>(null);
-  const [error, setError] = useState<string>("");
-
   const cityInputRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<NodeJS.Timeout>();
   const activePscRef = pscRef || useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Validate postal code using provided regex (if any)
-  const validatePostalCode = useCallback(
-    (input: string) => {
-      console.log('Validating postal code:', { input, regex: postalCodeRegex });
-      if (!postalCodeRegex) return true;
-      const regex = new RegExp(postalCodeRegex);
-      const isValid = regex.test(input);
-      console.log('Validation result:', isValid);
-      return isValid;
-    },
-    [postalCodeRegex]
-  );
-
-  // Load location suggestions from API
+  // Load location suggestions from the API and map 'cc' to standardized 'code'
   const loadSuggestions = useCallback(
-    async (pscValue: string, cityValue: string, pagination?: { lastPsc?: string; lastCity?: string }) => {
-      setIsLoading(true);
+    async (pscVal: string, cityVal: string, pagination?: { lastPsc?: string; lastCity?: string }) => {
       try {
         const params = new URLSearchParams();
-        if (cc && cc.trim()) params.append("cc", cc);
-        if (pscValue.trim()) params.append("psc", pscValue.trim());
-        if (cityValue.trim()) params.append("city", cityValue.trim());
+        // API parameter still expects 'cc'
+        if (code?.trim()) params.append("cc", code);
+        if (pscVal.trim()) params.append("psc", pscVal.trim());
+        if (cityVal.trim()) params.append("city", cityVal.trim());
         if (pagination?.lastPsc) params.append("lastPsc", pagination.lastPsc);
         if (pagination?.lastCity) params.append("lastCity", pagination.lastCity);
         params.append("limit", LOCATION_PAGE_SIZE.toString());
 
-        console.log("Making request with params:", Object.fromEntries(params.entries()));
+        console.log("Requesting suggestions with params:", Object.fromEntries(params.entries()));
         const response = await fetch(`/api/geo/location?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error(`Failed to load locations: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Failed to load locations: ${response.status}`);
         const data = await response.json();
-        setSuggestions(prev => (pagination ? [...prev, ...data.results] : data.results));
+
+        const results: LocationSuggestion[] = data.results.map((item: any) => ({
+          code: item.cc || item.code,
+          psc: item.psc,
+          city: item.city,
+          postal_code_format: item.postal_code_format,
+        }));
+
+        setSuggestions(prev => (pagination ? [...prev, ...results] : results));
         return data.hasMore;
       } catch (error) {
         console.error("Failed to load suggestions:", error);
         setSuggestions([]);
         return false;
-      } finally {
-        setIsLoading(false);
       }
     },
-    [cc]
+    [code]
   );
 
-  // Debounced search to limit API calls
+  // Debounce search to limit API calls
   const debouncedSearch = useCallback(
-    (pscValue: string, cityValue: string) => {
+    (pscVal: string, cityVal: string) => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
-      if (!pscValue.trim() && !cityValue.trim()) {
+      if (!pscVal.trim() && !cityVal.trim()) {
         setSuggestions([]);
         return;
       }
       searchTimer.current = setTimeout(() => {
-        loadSuggestions(pscValue, cityValue);
+        loadSuggestions(pscVal, cityVal);
       }, DEBOUNCE_LOCATION_SEARCH);
     },
     [loadSuggestions]
   );
 
-  // Handle postal code input change from PostalCodeInput component
+  // Handle change from PostalCodeInput component
   const handlePscInputChange = useCallback(
-    (newValue: string) => {
-      console.log('PSC input change:', { 
-        newValue, 
-        currentPsc: psc,
-        isValid: !postalCodeRegex || validatePostalCode(newValue)
-      });
-
-      setPsc(newValue);
-      if (newValue && postalCodeRegex && !validatePostalCode(newValue)) {
-        setError("Invalid postal code format");
-      } else {
-        setError("");
+    (newVal: string) => {
+      if (value === undefined) {
+        setInternalPsc(newVal);
+      }
+      // Trigger parent callback if exists (only updating PSC)
+      if (onSelectionChange) {
+        onSelectionChange(newVal, city, undefined);
       }
       setActiveField("psc");
       setIsOpen(true);
-      debouncedSearch(newValue, city);
+      debouncedSearch(newVal, city);
     },
-    [city, debouncedSearch, postalCodeRegex, validatePostalCode]
+    [value, city, debouncedSearch, onSelectionChange]
   );
 
-  // Handle city input change
+  // Handle change in the city input field
   const handleCityInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setCity(e.target.value);
       setActiveField("city");
       setIsOpen(true);
-      debouncedSearch(psc, e.target.value);
+      debouncedSearch(pscValue, e.target.value);
     },
-    [psc, debouncedSearch]
+    [pscValue, debouncedSearch]
   );
 
   useEffect(() => {
@@ -153,36 +142,28 @@ export function PostalCitySelect({
     };
   }, []);
 
+  // Re-run search only if code is defined and non-empty, and PSC or city have value.
   useEffect(() => {
-    const ccLength = (cc || "").trim().length;
-    const hasSearchValue = psc.trim() || city.trim();
-    console.log("Effect - Search criteria:", { 
-      ccLength, 
-      hasSearchValue, 
-      psc: psc.trim(), 
-      city: city.trim() 
-    });
-    
-    if ((ccLength === 0 || ccLength === 1 || ccLength === 2) && hasSearchValue) {
-      debouncedSearch(psc, city);
+    if (code && (pscValue.trim() || city.trim())) {
+      debouncedSearch(pscValue, city);
     } else {
       setSuggestions([]);
     }
-  }, [cc, psc, city, debouncedSearch]);
+  }, [code, pscValue, city, debouncedSearch]);
 
   // Render a location item in the dropdown
   const renderLocationItem = useCallback(
     (item: LocationSuggestion, { isHighlighted }: { isHighlighted: boolean }) => (
       <div className={`item-suggestion ${isHighlighted ? "highlighted" : ""}`}>
-        {item.cc && (
+        {item.code && (
           <img
-            src={`/flags/4x3/optimized/${item.cc.toLowerCase()}.svg`}
-            alt={`${item.cc} flag`}
+            src={`/flags/4x3/optimized/${item.code.toLowerCase()}.svg`}
+            alt={`${item.code} flag`}
             className="country-flag"
           />
         )}
         <div className="location-details">
-          <span className="country-code">{item.cc}</span>
+          <span className="country-code">{item.code}</span>
           <span className="psc">{item.psc}</span>
           <span className="city-name">{item.city}</span>
         </div>
@@ -192,42 +173,54 @@ export function PostalCitySelect({
   );
 
   const renderNoResults = useCallback(() => {
-    if (isLoading) return <div className="no-results">Loading...</div>;
-    if (!psc.trim() && !city.trim()) return <div className="no-results">Enter value in PSC or City</div>;
+    if (!pscValue.trim() && !city.trim())
+      return <div className="no-results">Enter a value in any field</div>;
     return <div className="no-results">No results found</div>;
-  }, [psc, city, isLoading]);
+  }, [pscValue, city]);
 
-  // Handle selection of a location
+  // Handle selection from dropdown – fills all fields and moves focus
   const handleSelect = useCallback(
     (item: LocationSuggestion) => {
-      setPsc(item.psc);
+      console.log("handleSelect called with item:", item);
+      if (value === undefined) {
+        setInternalPsc(item.psc);
+      }
       setCity(item.city);
       setIsOpen(false);
+      if (onSelectionChange) {
+        console.log("Calling onSelectionChange with:", {
+          psc: item.psc,
+          city: item.city,
+          record: { code: item.code, flag: `/flags/4x3/optimized/${item.code.toLowerCase()}.svg` }
+        });
+        onSelectionChange(item.psc, item.city, {
+          code: item.code,
+          flag: `/flags/4x3/optimized/${item.code.toLowerCase()}.svg`,
+        });
+      }
       if (dateInputRef?.current) {
         dateInputRef.current.focus();
-        onValidSelection();
       }
+      onValidSelection();
     },
-    [dateInputRef, onValidSelection]
+    [dateInputRef, onValidSelection, onSelectionChange, value]
   );
 
-  // Handle loading more items for pagination
+  // Handle loading more results for pagination
   const handleLoadMore = useCallback(
     (lastItem: LocationSuggestion | null) => {
       if (lastItem) {
-        loadSuggestions(psc, city, { lastPsc: lastItem.psc, lastCity: lastItem.city });
+        loadSuggestions(pscValue, city, { lastPsc: lastItem.psc, lastCity: lastItem.city });
       }
     },
-    [psc, city, loadSuggestions]
+    [pscValue, city, loadSuggestions]
   );
 
-  const getItemKey = useCallback((item: LocationSuggestion) => `${item.cc}-${item.psc}-${item.city}`, []);
-
+  const getItemKey = useCallback((item: LocationSuggestion) => `${item.code}-${item.psc}-${item.city}`, []);
   const handleInputFocus = useCallback((fieldType: "psc" | "city") => {
     setActiveField(fieldType);
     setIsOpen(true);
   }, []);
-
   const handleDropdownClose = useCallback(() => {
     setIsOpen(false);
     setActiveField(null);
@@ -237,10 +230,11 @@ export function PostalCitySelect({
     <div className="dd-wrapper" ref={dropdownRef}>
       <div className="dd-inputs">
         <PostalCodeInput
-          dbMask={dbPostalCodeMask}
-          initialValue={psc}
+          dbMask={dbPostalCodeMask || "#####"}
+          value={pscValue}
           onChange={handlePscInputChange}
           placeholder="PSC"
+          className={`inp-psc inp-psc-${locationType}`}
         />
         <input
           ref={cityInputRef}
@@ -255,7 +249,6 @@ export function PostalCitySelect({
           aria-expanded={isOpen}
         />
       </div>
-      {error && <div className="error-message">{error}</div>}
       <BaseDropdown<LocationSuggestion>
         items={suggestions}
         isOpen={isOpen}

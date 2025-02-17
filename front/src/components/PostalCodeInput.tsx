@@ -1,86 +1,117 @@
-// File: src/components/PostalCodeInput.tsx
-// Last change: Reimplemented postal code input with proper mask handling
-
-import React, { useState, useCallback, forwardRef, useEffect } from "react";
+import React, { useState, useCallback, forwardRef, useRef, useEffect } from "react";
 
 export interface PostalCodeInputProps {
+  value?: string; // controlled raw value (digits only)
   initialValue?: string;
-  dbMask?: string;
+  dbMask?: string; // mask loaded from DB, e.g. "####" or "### ##"
   placeholder?: string;
-  onChange?: (value: string) => void;
+  onChange?: (value: string) => void; // returns raw value (digits only)
+  className?: string;
 }
 
+// Formats the raw value according to the given mask.
+// For each character in the mask: if it is '#' and digits are available, insert a digit,
+// otherwise insert the formatting character (e.g. a space).
+const formatValueForDisplay = (raw: string, mask?: string): string => {
+  if (!mask) return raw;
+  let formatted = "";
+  let digitIndex = 0;
+  for (let i = 0; i < mask.length; i++) {
+    if (mask[i] === "#") {
+      if (digitIndex < raw.length) {
+        formatted += raw[digitIndex++];
+      } else {
+        break;
+      }
+    } else {
+      formatted += mask[i];
+    }
+  }
+  return formatted;
+};
+
+// For a given rawIndex (number of digits) in the mask, returns the corresponding position in the display string.
+const getDisplayIndex = (rawIndex: number, mask: string): number => {
+  let digitCount = 0;
+  for (let i = 0; i < mask.length; i++) {
+    if (mask[i] === "#") {
+      if (digitCount === rawIndex) {
+        return i;
+      }
+      digitCount++;
+    }
+  }
+  return mask.length;
+};
+
 const PostalCodeInput = forwardRef<HTMLInputElement, PostalCodeInputProps>(({
+  value,
   initialValue = "",
-  dbMask = "",
+  dbMask,
   placeholder,
   onChange,
+  className
 }, ref) => {
-  // Store only numeric value internally
-  const [numericValue, setNumericValue] = useState(() => 
-    initialValue.replace(/\D/g, '')
+  // The maximum number of digits is determined by the number of '#' in the mask.
+  const maxDigits = dbMask ? (dbMask.match(/#/g) || []).length : Infinity;
+  
+  // If controlled value is provided, use it, otherwise use internal state.
+  const [internalRawValue, setInternalRawValue] = useState(
+    initialValue.replace(/\D/g, '').slice(0, maxDigits)
   );
-
-  // Format display value with mask
-  const formatDisplayValue = useCallback((value: string): string => {
-    if (!dbMask || !value) return value;
-
-    const digits = value.replace(/\D/g, '');
-    let maskIndex = 0;
-    let digitIndex = 0;
-    let result = '';
-
-    while (maskIndex < dbMask.length && digitIndex < digits.length) {
-      if (dbMask[maskIndex] === '#') {
-        result += digits[digitIndex];
-        digitIndex++;
-      } else {
-        result += dbMask[maskIndex];
-      }
-      maskIndex++;
-    }
-
-    return result;
-  }, [dbMask]);
-
-  // Handle input changes
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const newInput = e.target.value;
-    const newNumericValue = newInput.replace(/\D/g, '');
-    const maxDigits = (dbMask.match(/#/g) || []).length;
-
-    if (newNumericValue.length <= maxDigits) {
-      setNumericValue(newNumericValue);
-      
-      if (onChange) {
-        const formattedValue = formatDisplayValue(newNumericValue);
-        onChange(formattedValue);
-      }
-    }
-  }, [dbMask, onChange, formatDisplayValue]);
-
-  // Format initial value on mount and when it changes
+  
+  const rawValue = value !== undefined
+    ? value.replace(/\D/g, '').slice(0, maxDigits)
+    : internalRawValue;
+  
+  // Update internal state when initialValue changes (only if uncontrolled).
   useEffect(() => {
-    const cleanInitialValue = initialValue.replace(/\D/g, '');
-    if (cleanInitialValue !== numericValue) {
-      setNumericValue(cleanInitialValue);
+    if (value === undefined) {
+      setInternalRawValue(initialValue.replace(/\D/g, '').slice(0, maxDigits));
     }
-  }, [initialValue]);
+  }, [initialValue, maxDigits, value]);
 
-  // Get display value for input
-  const displayValue = formatDisplayValue(numericValue);
-
+  // If no ref is provided, create a local reference.
+  const localRef = useRef<HTMLInputElement>(null);
+  const inputRef = (ref as React.MutableRefObject<HTMLInputElement>) || localRef;
+  
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputEl = e.target;
+    // Remove everything except digits from the current value.
+    const newRawValue = inputEl.value.replace(/\D/g, '').slice(0, maxDigits);
+    if (value === undefined) {
+      setInternalRawValue(newRawValue);
+    }
+    if (onChange) {
+      onChange(newRawValue);
+    }
+    
+    if (dbMask && inputRef.current) {
+      // Get the current cursor position in the displayed value.
+      const caretPos = inputEl.selectionStart || 0;
+      // Count how many digits are before the cursor.
+      const rawBeforeCaret = inputEl.value.slice(0, caretPos).replace(/\D/g, '').length;
+      // Calculate the new cursor position using the mapping from rawIndex -> display index.
+      const newCaretPos = getDisplayIndex(rawBeforeCaret, dbMask);
+      
+      // Set the cursor position asynchronously after the next render.
+      setTimeout(() => {
+        inputRef.current?.setSelectionRange(newCaretPos, newCaretPos);
+      }, 0);
+    }
+    
+  }, [maxDigits, dbMask, onChange, inputRef, value]);
+  
+  const displayValue = dbMask ? formatValueForDisplay(rawValue, dbMask) : rawValue;
+  
   return (
     <input
-      ref={ref}
+      ref={inputRef}
       type="text"
-      inputMode="numeric"
-      pattern="[0-9]*"
       value={displayValue}
       onChange={handleChange}
       placeholder={placeholder}
-      className="postal-code-input"
-      autoComplete="postal-code"
+      className={className || "inp-psc"}
     />
   );
 });

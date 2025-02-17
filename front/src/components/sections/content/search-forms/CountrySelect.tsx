@@ -3,7 +3,7 @@
 
 import { useRef, useState, useMemo, useCallback } from "react";
 import { BaseDropdown, type LocationType } from "./BaseDropdown";
-import type { Country } from "@/types/location.types";
+import type { Country } from "@/types/form-manual.types";
 import { COUNTRY_PAGE_SIZE, UI_PAGE_SIZE } from "@/constants/pagination.constants";
 import { useCountries } from "@/hooks/useCountries";
 

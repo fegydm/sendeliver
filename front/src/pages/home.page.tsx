@@ -17,7 +17,7 @@ import {
   AIFormData,
   convertToFormData,
   convertAIResponseToFormData
-} from "@/types/ai.types";
+} from "@/types/form-ai.types";
 
 const DEFAULT_FORM_DATA: FormData = {
   pickup: {

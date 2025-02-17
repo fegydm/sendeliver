@@ -2,7 +2,7 @@
 // Last change: Created city field hook
 
 import { useFormField } from '@/hooks/useFormField';
-import type { LocationSuggestion } from '@/types/location.types';
+import type { LocationSuggestion } from '@/types/form-manual.types';
 
 interface UseCityFieldProps {
   countryCode: string;

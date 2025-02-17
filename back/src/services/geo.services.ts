@@ -1,12 +1,10 @@
-// File: ./back/src/services/geo.service.ts
-// Last change: Enhanced debugging and country code handling
-
 import { pool } from "../configs/db.js";
 import {
   GET_COUNTRIES_QUERY,
   CHECK_LOCATION_EXISTS_QUERY,
   SEARCH_LOCATION_QUERY,
-  SEARCH_LOCATION_BY_COUNTRY_QUERY
+  SEARCH_LOCATION_BY_COUNTRY_QUERY,
+  GET_COUNTRY_POSTAL_FORMAT_QUERY
 } from "./geo.queries.js";
 
 // Frontend interfaces
@@ -122,6 +120,33 @@ export class GeoService {
       console.error('Failed to fetch countries:', error);
       GeoService.countriesCache = null;
       GeoService.lastCacheTime = 0;
+      throw error;
+    }
+  }
+
+  // Nová metóda pre získanie formátu poštového smerového čísla
+  public async getCountryPostalFormat(cc: string) {
+    try {
+      if (!this.isHealthy) {
+        await this.checkHealth();
+      }
+
+      const normalizedCC = cc.trim().toUpperCase();
+
+      const result = await pool.query(GET_COUNTRY_POSTAL_FORMAT_QUERY, [normalizedCC]);
+
+      if (result.rows.length === 0) {
+        console.warn(`No postal format found for country code: ${normalizedCC}`);
+        return null;
+      }
+
+      return {
+        postal_code_format: result.rows[0].postal_code_format,
+        postal_code_regex: result.rows[0].postal_code_regex
+      };
+
+    } catch (error) {
+      console.error(`Failed to get postal format for ${cc}:`, error);
       throw error;
     }
   }

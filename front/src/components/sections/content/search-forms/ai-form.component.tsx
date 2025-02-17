@@ -2,7 +2,7 @@
 // Last change: Fixed type compatibility with main AI types
 
 import { useState, useEffect, useRef } from "react";
-import { AIResponse } from "@/types/ai.types";
+import { AIResponse } from "@/types/form-ai.types";
 
 interface Coordinates {
   lat: number;

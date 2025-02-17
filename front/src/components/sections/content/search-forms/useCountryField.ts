@@ -3,7 +3,7 @@
 
 import { useFormField } from '@/hooks/useFormField';
 import { useAsyncSelect } from '@/hooks/useAsyncSelect';
-import type { Country } from '@/types/location.types';
+import type { Country } from '@/types/form-manual.types';
 
 interface UseCountryFieldProps {
   onSelect?: (code: string) => void;

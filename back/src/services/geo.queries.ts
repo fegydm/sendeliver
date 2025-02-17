@@ -12,6 +12,15 @@ FROM geo.countries
 ORDER BY logistics_priority DESC NULLS LAST, code_2;
 `;
 
+export const GET_COUNTRY_POSTAL_FORMAT_QUERY = `
+SELECT 
+  country_code,
+  postal_code_format,
+  postal_code_regex
+FROM geo.country_formats
+WHERE country_code = $1;
+`;
+
 export const CHECK_LOCATION_EXISTS_QUERY = `
 SELECT EXISTS (
   SELECT 1 

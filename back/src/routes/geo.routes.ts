@@ -1,5 +1,5 @@
 // File: .back/src/routes/geo.routes.ts
-// Last change: Fixed TypeScript type issues with undefined vs null handling
+// Last change: Added route for country postal format retrieval
 
 import { Router, RequestHandler } from "express";
 import { ParsedQs } from "qs";
@@ -19,6 +19,7 @@ interface LocationQuery extends ParsedQs {
 const router = Router();
 const geoService = GeoService.getInstance();
 
+// Handler for getting countries list
 const handleGetCountries: RequestHandler = async (req, res): Promise<void> => {
   try {
     const { q } = req.query;
@@ -50,6 +51,7 @@ const handleGetCountries: RequestHandler = async (req, res): Promise<void> => {
   }
 };
 
+// Handler for getting locations
 const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (req, res): Promise<void> => {
   try {
     const {
@@ -142,7 +144,32 @@ const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (re
   }
 };
 
+// Handler for getting postal format for a country
+const handleGetCountryPostalFormat: RequestHandler = async (req, res): Promise<void> => {
+  try {
+    const { cc } = req.query;
+
+    if (!cc || typeof cc !== 'string') {
+      res.status(400).json({ error: "Invalid or missing country code" });
+      return;
+    }
+
+    const postalFormat = await geoService.getCountryPostalFormat(cc);
+
+    if (!postalFormat) {
+      res.status(404).json({ error: "Postal format not found for given country code" });
+      return;
+    }
+
+    res.json(postalFormat);
+  } catch (error: unknown) {
+    console.error("❌ Failed to get country postal format:", error);
+    res.status(500).json({ error: "Failed to retrieve postal format" });
+  }
+};
+
 router.get("/countries", handleGetCountries);
 router.get("/location", handleGetLocation);
+router.get("/country_formats", handleGetCountryPostalFormat); // New route
 
 export default router;

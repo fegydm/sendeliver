@@ -2,7 +2,7 @@
 // Last change: Created postal code field hook
 
 import { useFormField } from '@/hooks/useFormField';
-import type { LocationSuggestion } from '@/types/location.types';
+import type { LocationSuggestion } from '@/types/form-manual.types';
 
 interface UsePostalCodeFieldProps {
   countryCode: string;
