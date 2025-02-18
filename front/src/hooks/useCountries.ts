@@ -1,5 +1,5 @@
 // File: src/hooks/useCountries.ts
-// Last change: Updated types and improved single-fetch pattern
+// Last change: Replaced code_2 with cc while maintaining original structure
 
 import { useState, useEffect } from 'react';
 import type { Country } from '@/types/location.types';
@@ -29,33 +29,17 @@ class CountriesManager {
       if (!response.ok) throw new Error('Failed to fetch countries');
       
       const data = await response.json();
-      const duration = Math.round(performance.now() - this.fetchStartTime);
       
-      // Transform API response to match our unified types
-      const transformedCountries: Country[] = data.results.map((country: any) => ({
-        cc: country.code_2, // Map old code_2 to new cc
-        name_en: country.name_en,
-        name_sk: country.name_sk,
-        name_local: country.name_local,
-        logistics_priority: country.logistics_priority,
-        flag: `/flags/4x3/optimized/${country.code_2.toLowerCase()}.svg`,
-        code_3: country.code_3,
-        numeric_code: country.numeric_code,
-        phone_code: country.phone_code,
-        continent_id: country.continent_id,
-        is_eu: country.is_eu,
-        capital_en: country.capital_en,
-        currency_code: country.currency_code,
-        driving_side: country.driving_side,
-        created_at: new Date(country.created_at),
-        updated_at: new Date(country.updated_at),
-        is_schengen: country.is_schengen,
-        area_km2: country.area_km2,
+      // Map code_2 na cc
+      const transformedData = data.map((country: any) => ({
+        ...country,
+        cc: country.code_2  // Changed code_2 to cc
       }));
 
-      console.log(`✅ Countries fetched and transformed: ${transformedCountries.length} items in ${duration}ms`);
+      const duration = Math.round(performance.now() - this.fetchStartTime);
+      console.log(`✅ Countries fetched: ${transformedData.length} items in ${duration}ms`);
       
-      return transformedCountries;
+      return transformedData;
     } catch (error) {
       const duration = Math.round(performance.now() - this.fetchStartTime);
       console.error(`❌ Countries fetch failed after ${duration}ms:`, error);
@@ -137,11 +121,10 @@ export function useCountries() {
       setLoading(false);
     });
 
-    // Trigger fetch
-    countriesManager.getCountries().catch(error => {
-      console.error('Failed to fetch countries:', error);
+    // Trigger fetch only if needed
+    if (!countriesManager.getCountries()) {
       setLoading(false);
-    });
+    }
 
     return unsubscribe;
   }, []);
@@ -149,9 +132,7 @@ export function useCountries() {
   const filterCountries = (query: string): Country[] => {
     if (!query) return items;
     const upperQuery = query.toUpperCase();
-    return items.filter(country => 
-      country.cc.startsWith(upperQuery)
-    );
+    return items.filter(country => country.cc?.startsWith(upperQuery));
   };
 
   return {

@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Updated component with unified types and naming
+// Last change: Updated query logic and translation for loading states
 
 import React, { useRef, useState, useMemo, useCallback } from "react";
 import { BaseDropdown } from "./BaseDropdown";
@@ -12,6 +12,8 @@ interface CountrySelectProps {
   onNextFieldFocus?: () => void;
   value?: string;
   locationType: LocationType;
+  psc?: string;
+  city?: string;
 }
 
 export function CountrySelect({
@@ -19,6 +21,8 @@ export function CountrySelect({
   onNextFieldFocus,
   value = "",
   locationType,
+  psc = "",
+  city = "",
 }: CountrySelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(COUNTRY_PAGE_SIZE);
@@ -72,21 +76,27 @@ export function CountrySelect({
     if (upperValue.length === 2) {
       const exactMatch = allCountries.find(c => c.cc === upperValue);
       if (exactMatch?.cc) {
-        onCountrySelect(exactMatch.cc, exactMatch.flag);
-        setIsOpen(false);
-        onNextFieldFocus?.();
+        // If PSC or city are not empty, select country and trigger query
+        if (psc.trim() !== "" || city.trim() !== "") {
+          onCountrySelect(exactMatch.cc, exactMatch.flag);
+          setIsOpen(false);
+          onNextFieldFocus?.();
+        }
       }
     }
-  }, [allCountries, onCountrySelect, onNextFieldFocus]);
+  }, [allCountries, onCountrySelect, onNextFieldFocus, psc, city]);
 
   // Handle country selection from dropdown
   const handleSelect = useCallback((selected: Country) => {
     if (!selected.cc) return;
     
-    onCountrySelect(selected.cc, selected.flag);
-    setIsOpen(false);
-    onNextFieldFocus?.();
-  }, [onCountrySelect, onNextFieldFocus]);
+    // If PSC or city are not empty, select country and trigger query
+    if (psc.trim() !== "" || city.trim() !== "") {
+      onCountrySelect(selected.cc, selected.flag);
+      setIsOpen(false);
+      onNextFieldFocus?.();
+    }
+  }, [onCountrySelect, onNextFieldFocus, psc, city]);
 
   // Validate keystrokes and handle navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -135,7 +145,7 @@ export function CountrySelect({
       tabIndex={0}
     >
       <img
-        src={country.flag}
+        src={`/flags/4x3/optimized/${country.cc.toLowerCase()}.svg`}
         alt={`${country.cc} flag`}
         className={`${locationType}-flag`}
         aria-hidden={true}
@@ -157,7 +167,7 @@ export function CountrySelect({
   }, []);
 
   if (isLoading) {
-    return <div>Loading countries...</div>;
+    return <div>Loading...</div>;
   }
 
   return (

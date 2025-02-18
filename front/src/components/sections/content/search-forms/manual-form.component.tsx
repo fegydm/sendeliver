@@ -86,10 +86,15 @@ export function ManualSearchForm({
       }
     }));
     
-    if (cc && !postalFormats[cc]) {
+    const locationData = locationType === LocationType.PICKUP ? localFormData.pickup : localFormData.delivery;
+    
+    // Trigger query if postal code or city is not empty
+    if (locationData.psc.trim() !== '' || locationData.city.trim() !== '') {
+      // Use first query (all countries) for 0-1 character
+      // Use second query (specific country) for 2 characters
       fetchPostalFormat(cc);
     }
-  }, [postalFormats, fetchPostalFormat]);
+  }, [postalFormats, fetchPostalFormat, localFormData]);
 
   // Handle location selection from PostalCitySelect
   const handleLocationSelect = useCallback((
