@@ -1,28 +1,33 @@
-// File: src/components/sections/content/search-forms/manual-form-component.tsx
-// Last change: Simplified ManualSearchForm by moving postal/city logic to PostalCitySelect and using controlled values
+// File: src/components/sections/content/search-forms/manual-form.component.tsx
+// Last change: Updated to use unified location types
 
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import CountrySelect from './CountrySelect';
 import PostalCitySelect from './PostalCitySelect';
-import { FormData } from '@/types/form-manual.types';
+import { LocationFormData, LocationType, LocationSuggestion } from '@/types/location.types';
 import "@/styles/sections/manual-form.component.css";
-
 interface ManualSearchFormProps {
-  onSubmit: (data: FormData) => void;
-  formData?: FormData;
+  onSubmit: (data: LocationFormData) => void;
+  formData?: LocationFormData;
 }
 
-const DEFAULT_FORM_DATA: FormData = {
+const DEFAULT_FORM_DATA: LocationFormData = {
   pickup: {
-    country: { code: '', flag: '' },
+    cc: '',
     psc: '',
     city: '',
+    flag: '',
+    lat: 0,
+    lng: 0,
     time: ''
   },
   delivery: {
-    country: { code: '', flag: '' },
+    cc: '',
     psc: '',
     city: '',
+    flag: '',
+    lat: 0,
+    lng: 0,
     time: ''
   },
   cargo: {
@@ -31,20 +36,21 @@ const DEFAULT_FORM_DATA: FormData = {
   }
 };
 
-const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
+export function ManualSearchForm({
   onSubmit,
   formData = DEFAULT_FORM_DATA
-}) => {
+}: ManualSearchFormProps) {
   // Refs for postal code inputs
   const pickupPscRef = useRef<HTMLInputElement>(null);
   const deliveryPscRef = useRef<HTMLInputElement>(null);
 
-  // State for the entire form data
-  const [localFormData, setLocalFormData] = useState<FormData>(formData);
-  // State for storing postal code formats fetched from the API
+  // State for the form data
+  const [localFormData, setLocalFormData] = useState<LocationFormData>(formData);
+  
+  // State for storing postal code formats
   const [postalFormats, setPostalFormats] = useState<Record<string, { format: string; regex: string }>>({});
 
-  // Form validity is determined by whether both postal code and city are filled
+  // Form validity
   const isPickupValid = localFormData.pickup.psc.trim() !== '' && localFormData.pickup.city.trim() !== '';
   const isDeliveryValid = localFormData.delivery.psc.trim() !== '' && localFormData.delivery.city.trim() !== '';
 
@@ -52,7 +58,13 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
   const fetchPostalFormat = useCallback(async (code: string) => {
     try {
       const response = await fetch(`/api/geo/country_formats?cc=${code}`);
-      if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn(`No postal format found for ${code}`);
+          return;
+        }
+        throw new Error(`HTTP error: ${response.status}`);
+      }
       const data = await response.json();
       setPostalFormats(prev => ({
         ...prev,
@@ -63,126 +75,104 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
     }
   }, []);
 
-  // Handle country selection – update only the country and reset postal code and city
-  const handleCountrySelect = useCallback((locationType: 'pickup' | 'delivery', code: string, flag: string) => {
+  // Handle country selection for pickup/delivery
+  const handleCountrySelect = useCallback((locationType: LocationType, cc: string, flag: string) => {
     setLocalFormData(prev => ({
       ...prev,
       [locationType]: {
         ...prev[locationType],
-        country: { code, flag },
-        // Only reset PSC and city if they are currently empty.
-        psc: prev[locationType].psc ? prev[locationType].psc : '',
-        city: prev[locationType].city ? prev[locationType].city : '',
+        cc,
+        flag
       }
     }));
-    if (code && !postalFormats[code]) {
-      fetchPostalFormat(code);
+    
+    if (cc && !postalFormats[cc]) {
+      fetchPostalFormat(cc);
     }
-  }, [fetchPostalFormat, postalFormats]);
+  }, [postalFormats, fetchPostalFormat]);
 
-  // Callback to receive result from PostalCitySelect – always update psc, city, and country
-  const handlePostalCityChange = useCallback(
-    (
-      locationType: 'pickup' | 'delivery', 
-      newPsc: string, 
-      newCity: string, 
-      record?: { code: string; flag: string }
-    ) => {
-      setLocalFormData(prev => ({
-        ...prev,
-        [locationType]: {
-          ...prev[locationType],
-          psc: newPsc,
-          city: newCity,
-          country: record ? { code: record.code, flag: record.flag } : prev[locationType].country,
-        }
-      }));
-    },
-    []
-  );
-
-  // Handle time change for pickup/delivery
-  const handleTimeChange = (locationType: 'pickup' | 'delivery', time: string) => {
+  // Handle location selection from PostalCitySelect
+  const handleLocationSelect = useCallback((
+    locationType: LocationType,
+    location: Omit<LocationSuggestion, 'priority'>
+  ) => {
     setLocalFormData(prev => ({
       ...prev,
       [locationType]: {
         ...prev[locationType],
-        time,
+        ...location
       }
     }));
-  };
+  }, []);
 
-  // Handle changes in the cargo section
-  const handleCargoChange = (field: 'pallets' | 'weight', value: number) => {
+  // Handle time change
+  const handleTimeChange = useCallback((
+    locationType: LocationType,
+    time: string
+  ) => {
+    setLocalFormData(prev => ({
+      ...prev,
+      [locationType]: {
+        ...prev[locationType],
+        time
+      }
+    }));
+  }, []);
+
+  // Handle cargo changes
+  const handleCargoChange = useCallback((field: 'pallets' | 'weight', value: number) => {
     setLocalFormData(prev => ({
       ...prev,
       cargo: {
         ...prev.cargo,
-        [field]: value,
+        [field]: value
       }
     }));
-  };
-
-  // Form submission handler
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Submitting form data:', localFormData);
-    onSubmit(localFormData);
-  };
+  }, []);
 
   return (
-    <form className="manual-form" onSubmit={handleSubmit}>
+    <form className="manual-form" onSubmit={(e) => {
+      e.preventDefault();
+      onSubmit(localFormData);
+    }}>
       {/* Pickup Section */}
       <div className={`form-section ${isPickupValid ? 'valid' : 'invalid'}`}>
         <h3 className="section-title">Pickup Details</h3>
         <div className="location-fields">
           <div className="flag-placeholder">
-            {localFormData.pickup.country.flag && (
+            {localFormData.pickup.flag && (
               <img
-                src={localFormData.pickup.country.flag}
+                src={localFormData.pickup.flag}
                 alt="Pickup Country Flag"
-                className="flag-image"
+                className="pickup-flag"
               />
             )}
           </div>
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
-  onCountrySelect={(code, flag) => handleCountrySelect('pickup', code, flag)}
-  onNextFieldFocus={() => pickupPscRef.current?.focus()}
-  value={localFormData.pickup.country.code}
-  locationType="pickup"
-/>
+              onCountrySelect={(cc, flag) => handleCountrySelect(LocationType.PICKUP, cc, flag)}
+              onNextFieldFocus={() => pickupPscRef.current?.focus()}
+              value={localFormData.pickup.cc}
+              locationType={LocationType.PICKUP}
+            />
           </div>
           <PostalCitySelect
-  pscRef={pickupPscRef}
-  onValidSelection={() => {}}
-  onSelectionChange={(psc, city, record) =>
-    handlePostalCityChange('pickup', psc, city, record)
-  }
-  locationType="pickup"
-  // If no country was selected, pass undefined so that PostalCitySelect doesn't filter by country
-  code={localFormData.pickup.country.code || undefined}
-  dbPostalCodeMask={
-    postalFormats[localFormData.pickup.country.code]
-      ? postalFormats[localFormData.pickup.country.code].format
-      : ""
-  }
-  postalCodeRegex={
-    postalFormats[localFormData.pickup.country.code]
-      ? postalFormats[localFormData.pickup.country.code].regex
-      : undefined
-  }
-  value={localFormData.pickup.psc} // controlled value for PSC
-  initialCity={localFormData.pickup.city}
-/>
+            pscRef={pickupPscRef}
+            onValidSelection={() => {}}
+            onSelectionChange={(location) => handleLocationSelect(LocationType.PICKUP, location)}
+            locationType={LocationType.PICKUP}
+            cc={localFormData.pickup.cc}
+            dbPostalCodeMask={postalFormats[localFormData.pickup.cc]?.format || ''}
+            postalCodeRegex={postalFormats[localFormData.pickup.cc]?.regex}
+          />
         </div>
         <div className="datetime-field">
           <label className="field-label">Loading Time</label>
           <input
             type="datetime-local"
             value={localFormData.pickup.time}
-            onChange={(e) => handleTimeChange('pickup', e.target.value)}
+            onChange={(e) => handleTimeChange(LocationType.PICKUP, e.target.value)}
             className="datetime-input"
           />
         </div>
@@ -193,34 +183,31 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
         <h3 className="section-title">Delivery Details</h3>
         <div className="location-fields">
           <div className="flag-placeholder">
-            {localFormData.delivery.country.flag && (
+            {localFormData.delivery.flag && (
               <img
-                src={localFormData.delivery.country.flag}
+                src={localFormData.delivery.flag}
                 alt="Delivery Country Flag"
-                className="flag-image"
+                className="delivery-flag"
               />
             )}
           </div>
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
-  onCountrySelect={(code, flag) => handleCountrySelect('pickup', code, flag)}
-  onNextFieldFocus={() => pickupPscRef.current?.focus()}
-  value={localFormData.pickup.country.code}
-  locationType="pickup"
-/>
-
+              onCountrySelect={(cc, flag) => handleCountrySelect(LocationType.DELIVERY, cc, flag)}
+              onNextFieldFocus={() => deliveryPscRef.current?.focus()}
+              value={localFormData.delivery.cc}
+              locationType={LocationType.DELIVERY}
+            />
           </div>
           <PostalCitySelect
             pscRef={deliveryPscRef}
             onValidSelection={() => {}}
-            onSelectionChange={(psc, city, record) => handlePostalCityChange('delivery', psc, city, record)}
-            locationType="delivery"
-            code={localFormData.delivery.country.code}
-            dbPostalCodeMask={postalFormats[localFormData.delivery.country.code]?.format || ''}
-            postalCodeRegex={postalFormats[localFormData.delivery.country.code]?.regex}
-            value={localFormData.delivery.psc} // controlled value for PSC
-            initialCity={localFormData.delivery.city}
+            onSelectionChange={(location) => handleLocationSelect(LocationType.DELIVERY, location)}
+            locationType={LocationType.DELIVERY}
+            cc={localFormData.delivery.cc}
+            dbPostalCodeMask={postalFormats[localFormData.delivery.cc]?.format || ''}
+            postalCodeRegex={postalFormats[localFormData.delivery.cc]?.regex}
           />
         </div>
         <div className="datetime-field">
@@ -228,7 +215,7 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
           <input
             type="datetime-local"
             value={localFormData.delivery.time}
-            onChange={(e) => handleTimeChange('delivery', e.target.value)}
+            onChange={(e) => handleTimeChange(LocationType.DELIVERY, e.target.value)}
             className="datetime-input"
           />
         </div>
@@ -262,11 +249,15 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
         </div>
       </div>
 
-      <button type="submit" className="submit-button" disabled={!isPickupValid || !isDeliveryValid}>
+      <button 
+        type="submit" 
+        className="submit-button" 
+        disabled={!isPickupValid || !isDeliveryValid}
+      >
         Submit Transport Request
       </button>
     </form>
   );
-};
+}
 
 export default ManualSearchForm;

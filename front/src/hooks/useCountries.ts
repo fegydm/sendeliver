@@ -1,8 +1,8 @@
 // File: src/hooks/useCountries.ts
-// Last change: Added strict single-fetch pattern
+// Last change: Updated types and improved single-fetch pattern
 
 import { useState, useEffect } from 'react';
-import type { Country } from '@/types/form-manual.types';
+import type { Country } from '@/types/location.types';
 
 class CountriesManager {
   private static instance: CountriesManager;
@@ -30,9 +30,32 @@ class CountriesManager {
       
       const data = await response.json();
       const duration = Math.round(performance.now() - this.fetchStartTime);
-      console.log(`✅ Countries fetched: ${data.length} items in ${duration}ms`);
       
-      return data;
+      // Transform API response to match our unified types
+      const transformedCountries: Country[] = data.results.map((country: any) => ({
+        cc: country.code_2, // Map old code_2 to new cc
+        name_en: country.name_en,
+        name_sk: country.name_sk,
+        name_local: country.name_local,
+        logistics_priority: country.logistics_priority,
+        flag: `/flags/4x3/optimized/${country.code_2.toLowerCase()}.svg`,
+        code_3: country.code_3,
+        numeric_code: country.numeric_code,
+        phone_code: country.phone_code,
+        continent_id: country.continent_id,
+        is_eu: country.is_eu,
+        capital_en: country.capital_en,
+        currency_code: country.currency_code,
+        driving_side: country.driving_side,
+        created_at: new Date(country.created_at),
+        updated_at: new Date(country.updated_at),
+        is_schengen: country.is_schengen,
+        area_km2: country.area_km2,
+      }));
+
+      console.log(`✅ Countries fetched and transformed: ${transformedCountries.length} items in ${duration}ms`);
+      
+      return transformedCountries;
     } catch (error) {
       const duration = Math.round(performance.now() - this.fetchStartTime);
       console.error(`❌ Countries fetch failed after ${duration}ms:`, error);
@@ -85,9 +108,9 @@ class CountriesManager {
 
         // Preload flags in background
         data.forEach(country => {
-          if (country.code_2) {
+          if (country.cc) {
             const img = new Image();
-            img.src = `/flags/4x3/optimized/${country.code_2.toLowerCase()}.svg`;
+            img.src = `/flags/4x3/optimized/${country.cc.toLowerCase()}.svg`;
           }
         });
 
@@ -114,10 +137,11 @@ export function useCountries() {
       setLoading(false);
     });
 
-    // Trigger fetch only if needed
-    if (!countriesManager.getCountries()) {
+    // Trigger fetch
+    countriesManager.getCountries().catch(error => {
+      console.error('Failed to fetch countries:', error);
       setLoading(false);
-    }
+    });
 
     return unsubscribe;
   }, []);
@@ -126,7 +150,7 @@ export function useCountries() {
     if (!query) return items;
     const upperQuery = query.toUpperCase();
     return items.filter(country => 
-      country.code_2?.startsWith(upperQuery)
+      country.cc.startsWith(upperQuery)
     );
   };
 
@@ -136,3 +160,5 @@ export function useCountries() {
     filterCountries
   };
 }
+
+export default useCountries;

@@ -1,33 +1,25 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Improved controlled input handling and removed unused useEffect
+// Last change: Updated component with unified types and naming
 
-import { useRef, useState, useMemo, useCallback } from "react";
-import { BaseDropdown, type LocationType } from "./BaseDropdown";
-import type { Country } from "@/types/form-manual.types";
+import React, { useRef, useState, useMemo, useCallback } from "react";
+import { BaseDropdown } from "./BaseDropdown";
+import { Country, LocationType } from "@/types/location.types";
 import { COUNTRY_PAGE_SIZE, UI_PAGE_SIZE } from "@/constants/pagination.constants";
 import { useCountries } from "@/hooks/useCountries";
 
 interface CountrySelectProps {
-  onCountrySelect: (code: string, flag: string) => void;
+  onCountrySelect: (cc: string, flag: string) => void;
   onNextFieldFocus?: () => void;
-  /** Controlled value for country code */
   value?: string;
-  /** Initial value if not controlled */
-  initialValue?: string;
   locationType: LocationType;
 }
 
 export function CountrySelect({
   onCountrySelect,
   onNextFieldFocus,
-  value,
-  initialValue = "",
+  value = "",
   locationType,
 }: CountrySelectProps) {
-  // Use controlled value if provided, otherwise use internal state
-  const [internalValue, setInternalValue] = useState(initialValue);
-  const inputValue = value !== undefined ? value : internalValue;
-
   const [isOpen, setIsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(COUNTRY_PAGE_SIZE);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,84 +30,66 @@ export function CountrySelect({
   // Compute valid first characters from country codes
   const validFirstChars = useMemo(() => {
     return new Set(
-      allCountries.map(c => c.code_2?.[0]).filter(Boolean)
+      allCountries.map(c => c.cc?.[0]).filter(Boolean)
     );
   }, [allCountries]);
 
   // Compute valid second characters based on the first character
   const validSecondChars = useMemo(() => {
-    if (!inputValue) return new Set();
+    if (!value) return new Set();
     return new Set(
       allCountries
-        .filter(c => c.code_2?.startsWith(inputValue[0]))
-        .map(c => c.code_2?.[1])
+        .filter(c => c.cc?.startsWith(value[0]))
+        .map(c => c.cc?.[1])
         .filter(Boolean)
     );
-  }, [inputValue, allCountries]);
+  }, [value, allCountries]);
 
   // Filter countries list based on input value
   const filteredItems = useMemo(() => {
-    if (!inputValue) return allCountries;
+    if (!value) return allCountries;
     return allCountries.filter(c =>
-      c.code_2?.startsWith(inputValue.toUpperCase())
+      c.cc?.startsWith(value.toUpperCase())
     );
-  }, [inputValue, allCountries]);
+  }, [value, allCountries]);
 
   // Get visible items based on pagination
   const visibleItems = useMemo(() => {
     return filteredItems.slice(0, visibleCount);
   }, [filteredItems, visibleCount]);
 
-  // Handle country selection from dropdown
-  const handleSelect = useCallback((selected: Country) => {
-    if (!selected.code_2) return;
+  // Handle input changes and propagate them to parent
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const upperValue = e.target.value.toUpperCase();
     
-    const code = selected.code_2;
-    const flagUrl = `/flags/4x3/optimized/${code.toLowerCase()}.svg`;
+    // Always propagate changes to parent
+    onCountrySelect(upperValue, "");
     
-    if (value === undefined) {
-      setInternalValue(code);
-    }
-    setIsOpen(false);
-    onCountrySelect(code, flagUrl);
-  }, [onCountrySelect, value]);
-
-  // Handle input changes with improved focus logic
-  const handleInputChange = useCallback((val: string) => {
-    const upperValue = val.toUpperCase();
-    if (value === undefined) {
-      setInternalValue(upperValue);
-    }
     setVisibleCount(COUNTRY_PAGE_SIZE);
-  
-    // Open dropdown and reset country only if the input is completely empty
-    if (upperValue.length < 2) {
-      setIsOpen(true);
-      if (upperValue === "") {
-        onCountrySelect("", "");
-      }
-      return;
-    }
-  
-    // When exactly 2 characters and a match is found, select the country
+    setIsOpen(true);
+
+    // If we have exactly 2 characters, try to find and select country
     if (upperValue.length === 2) {
-      const exactMatch = allCountries.find(c => c.code_2 === upperValue);
-      if (exactMatch) {
-        const code = exactMatch.code_2;
-        const flagUrl = `/flags/4x3/optimized/${code.toLowerCase()}.svg`;
-        
+      const exactMatch = allCountries.find(c => c.cc === upperValue);
+      if (exactMatch?.cc) {
+        onCountrySelect(exactMatch.cc, exactMatch.flag);
         setIsOpen(false);
-        onCountrySelect(code, flagUrl);
-        
-        // Trigger next field focus only with valid 2-character code
         onNextFieldFocus?.();
       }
     }
-  }, [allCountries, onCountrySelect, onNextFieldFocus, value]);
+  }, [allCountries, onCountrySelect, onNextFieldFocus]);
+
+  // Handle country selection from dropdown
+  const handleSelect = useCallback((selected: Country) => {
+    if (!selected.cc) return;
+    
+    onCountrySelect(selected.cc, selected.flag);
+    setIsOpen(false);
+    onNextFieldFocus?.();
+  }, [onCountrySelect, onNextFieldFocus]);
 
   // Validate keystrokes and handle navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Open dropdown and focus first item on ArrowDown
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (isOpen && dropdownRef.current) {
@@ -127,28 +101,24 @@ export function CountrySelect({
       return;
     }
     
-    // Validate input characters
     if (e.key.length === 1) {
       const upperKey = e.key.toUpperCase();
-
-      // Validate first character
-      if (inputValue.length === 0) {
+  
+      if (!value && validFirstChars.size > 0) {
         if (!validFirstChars.has(upperKey)) {
           e.preventDefault();
         }
       } 
-      // Validate second character
-      else if (inputValue.length === 1) {
+      else if (value.length === 1 && validSecondChars.size > 0) {
         if (!validSecondChars.has(upperKey)) {
           e.preventDefault();
         }
       } 
-      // Prevent more than 2 characters
-      else {
+      else if (value.length >= 2) {
         e.preventDefault();
       }
     }
-  }, [inputValue, isOpen, validFirstChars, validSecondChars]);
+  }, [value, isOpen, validFirstChars, validSecondChars]);
 
   // Handle pagination for loading more items
   const handleLoadMore = useCallback(() => {
@@ -162,23 +132,28 @@ export function CountrySelect({
   ) => (
     <div
       className={`item-content ${isHighlighted ? 'highlighted' : ''}`}
-      tabIndex={0} // make item focusable
+      tabIndex={0}
     >
       <img
-        src={`/flags/4x3/optimized/${country.code_2?.toLowerCase()}.svg`}
-        alt={`${country.code_2 ?? "Unknown"} flag`}
-        className="country-flag"
+        src={country.flag}
+        alt={`${country.cc} flag`}
+        className={`${locationType}-flag`}
         aria-hidden={true}
       />
-      <span className="country-code">{country.code_2 ?? "--"}</span>
+      <span className={`${locationType}-cc`}>{country.cc}</span>
       <span className="country-name">{country.name_en}</span>
       <span className="country-local">({country.name_local})</span>
     </div>
-  ), []);
+  ), [locationType]);
 
   // Generate unique key for list items
-  const getItemKey = useCallback((item: Country, index: number) => {
-    return item.code_2 || index.toString();
+  const getItemKey = useCallback((item: Country) => {
+    return item.cc || `country-${item.name_en}`;
+  }, []);
+
+  // Handle dropdown close
+  const handleDropdownClose = useCallback(() => {
+    setIsOpen(false);
   }, []);
 
   if (isLoading) {
@@ -190,13 +165,13 @@ export function CountrySelect({
       <input
         ref={inputRef}
         type="text"
-        value={inputValue}
+        value={value}
         placeholder="CC"
         maxLength={2}
-        onChange={(e) => handleInputChange(e.target.value)}
+        onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        onClick={() => setIsOpen(true)}
-        className={`inp-country inp-country-${locationType}`}
+        onFocus={() => setIsOpen(true)}
+        className={`${locationType}-cc`}
         aria-autocomplete="list"
         aria-controls="country-dropdown"
         aria-expanded={isOpen}
@@ -205,11 +180,10 @@ export function CountrySelect({
         items={visibleItems}
         isOpen={isOpen}
         onSelect={handleSelect}
-        onClose={() => setIsOpen(false)}
+        onClose={handleDropdownClose}
         onLoadMore={handleLoadMore}
         inputRef={inputRef}
-        onNextFieldFocus={onNextFieldFocus}
-        dropdownType="country"
+        variant="country"
         locationType={locationType}
         totalItems={filteredItems.length}
         pageSize={UI_PAGE_SIZE}
