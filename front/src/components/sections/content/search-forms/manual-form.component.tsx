@@ -1,11 +1,12 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Updated to use unified location types
+// Last change: Updated to use location types and improved focus handling
 
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import CountrySelect from './CountrySelect';
 import PostalCitySelect from './PostalCitySelect';
 import { LocationFormData, LocationType, LocationSuggestion } from '@/types/location.types';
 import "@/styles/sections/manual-form.component.css";
+
 interface ManualSearchFormProps {
   onSubmit: (data: LocationFormData) => void;
   formData?: LocationFormData;
@@ -36,7 +37,7 @@ const DEFAULT_FORM_DATA: LocationFormData = {
   }
 };
 
-export function ManualSearchForm({
+export function ManualForm({
   onSubmit,
   formData = DEFAULT_FORM_DATA
 }: ManualSearchFormProps) {
@@ -44,15 +45,11 @@ export function ManualSearchForm({
   const pickupPscRef = useRef<HTMLInputElement>(null);
   const deliveryPscRef = useRef<HTMLInputElement>(null);
 
-  // State for the form data
+  // Form data state
   const [localFormData, setLocalFormData] = useState<LocationFormData>(formData);
-  
-  // State for storing postal code formats
+  const [isPickupValid, setIsPickupValid] = useState(false);
+  const [isDeliveryValid, setIsDeliveryValid] = useState(false);
   const [postalFormats, setPostalFormats] = useState<Record<string, { format: string; regex: string }>>({});
-
-  // Form validity
-  const isPickupValid = localFormData.pickup.psc.trim() !== '' && localFormData.pickup.city.trim() !== '';
-  const isDeliveryValid = localFormData.delivery.psc.trim() !== '' && localFormData.delivery.city.trim() !== '';
 
   // Fetch postal code format from the API
   const fetchPostalFormat = useCallback(async (code: string) => {
@@ -75,39 +72,87 @@ export function ManualSearchForm({
     }
   }, []);
 
-  // Handle country selection for pickup/delivery
+  // Handle country selection
   const handleCountrySelect = useCallback((locationType: LocationType, cc: string, flag: string) => {
-    setLocalFormData(prev => ({
-      ...prev,
-      [locationType]: {
-        ...prev[locationType],
-        cc,
-        flag
+    console.log('Country selected:', { locationType, cc, flag });
+    
+    // Update form data
+    setLocalFormData(prev => {
+      const locationData = locationType === LocationType.PICKUP ? prev.pickup : prev.delivery;
+      
+      // Only reset validation if we have PSC or city
+      if (locationData.psc.trim() !== '' || locationData.city.trim() !== '') {
+        if (locationType === LocationType.PICKUP) {
+          setIsPickupValid(false);
+        } else {
+          setIsDeliveryValid(false);
+        }
       }
-    }));
-    
-    const locationData = locationType === LocationType.PICKUP ? localFormData.pickup : localFormData.delivery;
-    
-    // Trigger query if postal code or city is not empty
-    if (locationData.psc.trim() !== '' || locationData.city.trim() !== '') {
-      // Use first query (all countries) for 0-1 character
-      // Use second query (specific country) for 2 characters
+
+      return {
+        ...prev,
+        [locationType]: {
+          ...prev[locationType],
+          cc,
+          flag
+        }
+      };
+    });
+
+    // If we have a complete country code, fetch its postal format
+    if (cc.length === 2) {
       fetchPostalFormat(cc);
     }
-  }, [postalFormats, fetchPostalFormat, localFormData]);
+  }, [fetchPostalFormat]);
+
+  // Focus handlers
+  const focusPostalCode = useCallback((locationType: LocationType) => {
+    console.log(`[DEBUG] Focusing PSC field for ${locationType}`, {
+      pickupRef: pickupPscRef.current,
+      deliveryRef: deliveryPscRef.current
+    });
+    
+    if (locationType === LocationType.PICKUP) {
+      if (pickupPscRef.current) {
+        pickupPscRef.current.focus();
+      } else {
+        console.warn('Pickup PSC ref is null');
+      }
+    } else {
+      if (deliveryPscRef.current) {
+        deliveryPscRef.current.focus();
+      } else {
+        console.warn('Delivery PSC ref is null');
+      }
+    }
+  }, []);
 
   // Handle location selection from PostalCitySelect
   const handleLocationSelect = useCallback((
     locationType: LocationType,
-    location: Omit<LocationSuggestion, 'priority'>
+    location: Omit<LocationSuggestion, "priority">
   ) => {
+    console.log('Location selected:', { locationType, location });
+    
     setLocalFormData(prev => ({
       ...prev,
       [locationType]: {
         ...prev[locationType],
-        ...location
+        psc: location.psc,
+        city: location.city,
+        lat: location.lat || 0,
+        lng: location.lng || 0
       }
     }));
+
+    // Update validation state
+    if (location.psc && location.city) {
+      if (locationType === LocationType.PICKUP) {
+        setIsPickupValid(true);
+      } else {
+        setIsDeliveryValid(true);
+      }
+    }
   }, []);
 
   // Handle time change
@@ -135,12 +180,16 @@ export function ManualSearchForm({
     }));
   }, []);
 
+  // Form submission
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Submitting form data:', localFormData);
+    onSubmit(localFormData);
+  }, [localFormData, onSubmit]);
+
   return (
-    <form className="manual-form" onSubmit={(e) => {
-      e.preventDefault();
-      onSubmit(localFormData);
-    }}>
-      {/* Pickup Section */}
+    <form className="manual-form" onSubmit={handleSubmit}>
+      {/* Pickup section */}
       <div className={`form-section ${isPickupValid ? 'valid' : 'invalid'}`}>
         <h3 className="section-title">Pickup Details</h3>
         <div className="location-fields">
@@ -153,25 +202,29 @@ export function ManualSearchForm({
               />
             )}
           </div>
+
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
               onCountrySelect={(cc, flag) => handleCountrySelect(LocationType.PICKUP, cc, flag)}
-              onNextFieldFocus={() => pickupPscRef.current?.focus()}
-              value={localFormData.pickup.cc}
+              onNextFieldFocus={() => focusPostalCode(LocationType.PICKUP)}
+              initialValue={localFormData.pickup.cc}
               locationType={LocationType.PICKUP}
             />
           </div>
+
           <PostalCitySelect
             pscRef={pickupPscRef}
             onValidSelection={() => {}}
-            onSelectionChange={(location) => handleLocationSelect(LocationType.PICKUP, location)}
+            onSelectionChange={(location) => 
+              handleLocationSelect(LocationType.PICKUP, location)}
             locationType={LocationType.PICKUP}
             cc={localFormData.pickup.cc}
             dbPostalCodeMask={postalFormats[localFormData.pickup.cc]?.format || ''}
             postalCodeRegex={postalFormats[localFormData.pickup.cc]?.regex}
           />
         </div>
+
         <div className="datetime-field">
           <label className="field-label">Loading Time</label>
           <input
@@ -183,7 +236,7 @@ export function ManualSearchForm({
         </div>
       </div>
 
-      {/* Delivery Section */}
+      {/* Delivery section */}
       <div className={`form-section ${isDeliveryValid ? 'valid' : 'invalid'}`}>
         <h3 className="section-title">Delivery Details</h3>
         <div className="location-fields">
@@ -196,25 +249,29 @@ export function ManualSearchForm({
               />
             )}
           </div>
+
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
               onCountrySelect={(cc, flag) => handleCountrySelect(LocationType.DELIVERY, cc, flag)}
-              onNextFieldFocus={() => deliveryPscRef.current?.focus()}
-              value={localFormData.delivery.cc}
+              onNextFieldFocus={() => focusPostalCode(LocationType.DELIVERY)}
+              initialValue={localFormData.delivery.cc}
               locationType={LocationType.DELIVERY}
             />
           </div>
+
           <PostalCitySelect
             pscRef={deliveryPscRef}
             onValidSelection={() => {}}
-            onSelectionChange={(location) => handleLocationSelect(LocationType.DELIVERY, location)}
+            onSelectionChange={(location) => 
+              handleLocationSelect(LocationType.DELIVERY, location)}
             locationType={LocationType.DELIVERY}
             cc={localFormData.delivery.cc}
             dbPostalCodeMask={postalFormats[localFormData.delivery.cc]?.format || ''}
             postalCodeRegex={postalFormats[localFormData.delivery.cc]?.regex}
           />
         </div>
+
         <div className="datetime-field">
           <label className="field-label">Delivery Time</label>
           <input
@@ -226,7 +283,7 @@ export function ManualSearchForm({
         </div>
       </div>
 
-      {/* Cargo Section */}
+      {/* Cargo section */}
       <div className="form-section">
         <h3 className="section-title">Cargo Details</h3>
         <div className="cargo-container">
@@ -254,9 +311,9 @@ export function ManualSearchForm({
         </div>
       </div>
 
-      <button 
-        type="submit" 
-        className="submit-button" 
+      <button
+        type="submit"
+        className="submit-button"
         disabled={!isPickupValid || !isDeliveryValid}
       >
         Submit Transport Request
@@ -265,4 +322,4 @@ export function ManualSearchForm({
   );
 }
 
-export default ManualSearchForm;
+export default ManualForm;

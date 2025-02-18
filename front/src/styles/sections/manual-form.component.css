@@ -1,51 +1,44 @@
-/* File: src/styles/components/location-dropdown.css */
-/* Last change: Updated dropdown styles with original input styling */
+/* File: src/styles/components/dropdown.css */
+/* Last change: Fixed input styles and dropdown alignment */
+
 .manual-form { padding: 20px; max-width: 1000px; margin: 0 auto; }
 .form-section { border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin-bottom: 15px; }
-.section-title { font-size: 16px; font-weight: 500; margin-bottom: 15px; }
-.location-fields { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 15px; position: relative; }
+.location-fields { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; position: relative; }
 .field-group { display: flex; flex-direction: column; gap: 4px; }
 .field-label { font-size: 12px; color: #666; }
-.form-input { padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 100%; }
-.datetime-field { margin-top: 15px; }
-.datetime-input { width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
-.flag-placeholder { width: 32px; height: 24px; margin-bottom: 6px; }
-.pickup-flag, .delivery-flag { width: 32px; height: 24px; object-fit: cover; border-radius: 2px; }
-.country-flag { width: 20px; height: 15px; object-fit: cover; border-radius: 2px; margin-right: 8px; }
-.location-details { display: flex; align-items: center; gap: 8px; flex: 1; }
-.dd-wrapper { display: flex; position: relative; gap: 8px; flex: 1; }
-.dd-inputs { display: flex; gap: 8px; width: 100%; }
-.pickup-cc, .delivery-cc { width: 30px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; text-align: left; text-transform: uppercase; }
-.pickup-psc, .delivery-psc { width: 100px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
-.pickup-city, .delivery-city { width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
-.pickup-cc { border-color: #3b82f6; }
-.pickup-psc { border-color: #3b82f6; }
-.pickup-city { border-color: #3b82f6; }
-.delivery-cc { border-color: #10b981; }
-.delivery-psc { border-color: #10b981; }
-.delivery-city { border-color: #10b981; }
-.dd-list { position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; }
+.dd-wrapper { display: flex; position: relative; gap: 6px; flex: 1; }
+.dd-inputs { display: flex; gap: 6px; width: 100%; }
+
+/* Input fields */
+input.pickup-cc, input.delivery-cc { width: 30px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; text-align: left; text-transform: uppercase; }
+input.pickup-psc, input.delivery-psc { width: 100px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
+input.pickup-city, input.delivery-city { width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
+
+/* Input colors */
+input.pickup-cc, input.pickup-psc, input.pickup-city { border-color: #3b82f6; }
+input.delivery-cc, input.delivery-psc, input.delivery-city { border-color: #10b981; }
+
+/* Dropdown list */
+.dd-list { position: absolute; top: calc(100% + 4px); left: -20px; width: calc(100% + 38px); max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
 .dd-list::-webkit-scrollbar { width: 6px; }
 .dd-list::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
 .dd-list::-webkit-scrollbar-thumb:hover { background-color: #aaa; }
-.item-suggestion { display: flex; align-items: center; padding: 8px; cursor: pointer; min-height: 32px; transition: background-color 0.2s; }
-.item-suggestion:hover, .item-suggestion.highlighted { background-color: #f5f5f5; }
-.pickup-flag, .delivery-flag { width: 20px; height: 15px; object-fit: cover; border-radius: 2px; margin-right: 8px; }
-.pickup-cc, .delivery-cc { margin-right: 8px; font-weight: 500; min-width: 30px; }
-.pickup-psc, .delivery-psc { margin-right: 16px; font-weight: 500; min-width: 70px; }
-.pickup-city, .delivery-city { color: #666; flex: 1; }
-.no-results { padding: 8px; text-align: center; color: #666; }
-.submit-button { width: 100%; padding: 8px; background: #2563eb; color: white; border: none; border-radius: 4px; font-weight: 500; cursor: pointer; margin-top: 20px; }
-.submit-button:hover { background: #1d4ed8; }
-.submit-button:disabled { background: #ccc; cursor: not-allowed; }
-.dd-list.dd-country.dd-size-md.dd-pos-left.dd-pickup { position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; }
-.dd-item { display: flex; align-items: center; padding: 8px; cursor: pointer; min-height: 32px; transition: background-color 0.2s; }
+
+/* Items in dropdown */
+.dd-item { display: flex; align-items: center; padding: 4px 6px; cursor: pointer; min-height: 24px; }
 .dd-item:hover, .dd-item.dd-highlighted { background-color: #f5f5f5; }
-.item-content { display: flex; align-items: center; width: 100%; }
-.pickup-flag { width: 20px; height: 15px; object-fit: cover; border-radius: 2px; margin-right: 8px; }
-.dd-item .pickup-cc, .dd-item .delivery-cc { background: none; border: none; padding: 0; margin-right: 8px; font-weight: 500; min-width: 30px; }
-.country-name, .country-local { display: inline; margin-right: 4px; }
-.country-local { color: #666; }
-.country-name { flex: 1; }
-.dd-load-more { display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer; background-color: #f9f9f9; font-weight: bold; }
+.item-content, .item-suggestion { display: flex; align-items: center; width: 100%; gap: 6px; }
+
+/* Location details in dropdown */
+.location-details { display: flex; align-items: center; gap: 6px; flex: 1; }
+span.pickup-cc, span.delivery-cc { min-width: 30px; font-weight: 500; font-size: 14px; }
+span.pickup-psc, span.delivery-psc { min-width: 45px; font-weight: 500; font-size: 12px; }
+span.pickup-city, span.delivery-city { color: #666; font-size: 13px; }
+
+/* Flags */
+.pickup-flag, .delivery-flag { width: 18px; height: 14px; object-fit: cover; border-radius: 2px; }
+
+/* Utility */
+.no-results { padding: 6px; text-align: center; color: #666; font-size: 13px; }
+.dd-load-more { display: flex; align-items: center; justify-content: center; padding: 6px; cursor: pointer; background-color: #f9f9f9; font-weight: 500; font-size: 13px; }
 .dd-load-more:hover { background-color: #f5f5f5; }

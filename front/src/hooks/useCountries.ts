@@ -1,5 +1,5 @@
 // File: src/hooks/useCountries.ts
-// Last change: Replaced code_2 with cc while maintaining original structure
+// Last change: Fixed countries fetching and data transformation
 
 import { useState, useEffect } from 'react';
 import type { Country } from '@/types/location.types';
@@ -30,11 +30,14 @@ class CountriesManager {
       
       const data = await response.json();
       
-      // Map code_2 na cc
-      const transformedData = data.map((country: any) => ({
-        ...country,
-        cc: country.code_2  // Changed code_2 to cc
-      }));
+      // Správna transformácia dát - odstránime code_2 a použijeme cc
+      const transformedData = data.map((country: any) => {
+        const { code_2, ...rest } = country;
+        return {
+          ...rest,
+          cc: code_2
+        };
+      });
 
       const duration = Math.round(performance.now() - this.fetchStartTime);
       console.log(`✅ Countries fetched: ${transformedData.length} items in ${duration}ms`);
@@ -57,6 +60,13 @@ class CountriesManager {
     this.subscribers.add(callback);
     console.log('👥 New subscriber added, total:', this.subscribers.size);
 
+    // Spustíme fetch ak ešte nebeží
+    if (!this.fetchPromise) {
+      this.getCountries().catch(error => {
+        console.error('Failed to fetch countries:', error);
+      });
+    }
+
     return () => {
       this.subscribers.delete(callback);
       console.log('👋 Subscriber removed, total:', this.subscribers.size);
@@ -67,7 +77,6 @@ class CountriesManager {
     if (this.countries) {
       console.log('📢 Notifying subscribers:', this.subscribers.size);
       this.subscribers.forEach(callback => callback(this.countries!));
-      this.subscribers.clear();
     }
   }
 
@@ -116,15 +125,17 @@ export function useCountries() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Prihlásime sa na odber
     const unsubscribe = countriesManager.subscribe(countries => {
       setItems(countries);
       setLoading(false);
     });
 
-    // Trigger fetch only if needed
-    if (!countriesManager.getCountries()) {
+    // Aktívne spustíme fetch
+    countriesManager.getCountries().catch(error => {
+      console.error('Failed to fetch countries:', error);
       setLoading(false);
-    }
+    });
 
     return unsubscribe;
   }, []);
@@ -132,7 +143,10 @@ export function useCountries() {
   const filterCountries = (query: string): Country[] => {
     if (!query) return items;
     const upperQuery = query.toUpperCase();
-    return items.filter(country => country.cc?.startsWith(upperQuery));
+    return items.filter(country => 
+      country.cc?.startsWith(upperQuery) || 
+      country.name_en.toUpperCase().includes(upperQuery)
+    );
   };
 
   return {
