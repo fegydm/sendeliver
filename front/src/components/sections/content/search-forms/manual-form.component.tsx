@@ -70,8 +70,9 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
       [locationType]: {
         ...prev[locationType],
         country: { code, flag },
-        psc: '',
-        city: '',
+        // Only reset PSC and city if they are currently empty.
+        psc: prev[locationType].psc ? prev[locationType].psc : '',
+        city: prev[locationType].city ? prev[locationType].city : '',
       }
     }));
     if (code && !postalFormats[code]) {
@@ -147,23 +148,34 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
-              onCountrySelect={(code, flag) => handleCountrySelect('pickup', code, flag)}
-              onNextFieldFocus={() => pickupPscRef.current?.focus()}
-              initialValue={localFormData.pickup.country.code}
-              locationType="pickup"
-            />
+  onCountrySelect={(code, flag) => handleCountrySelect('pickup', code, flag)}
+  onNextFieldFocus={() => pickupPscRef.current?.focus()}
+  value={localFormData.pickup.country.code}
+  locationType="pickup"
+/>
           </div>
           <PostalCitySelect
-            pscRef={pickupPscRef}
-            onValidSelection={() => {}}
-            onSelectionChange={(psc, city, record) => handlePostalCityChange('pickup', psc, city, record)}
-            locationType="pickup"
-            code={localFormData.pickup.country.code}
-            dbPostalCodeMask={postalFormats[localFormData.pickup.country.code]?.format || ''}
-            postalCodeRegex={postalFormats[localFormData.pickup.country.code]?.regex}
-            value={localFormData.pickup.psc} // controlled value for PSC
-            initialCity={localFormData.pickup.city}
-          />
+  pscRef={pickupPscRef}
+  onValidSelection={() => {}}
+  onSelectionChange={(psc, city, record) =>
+    handlePostalCityChange('pickup', psc, city, record)
+  }
+  locationType="pickup"
+  // If no country was selected, pass undefined so that PostalCitySelect doesn't filter by country
+  code={localFormData.pickup.country.code || undefined}
+  dbPostalCodeMask={
+    postalFormats[localFormData.pickup.country.code]
+      ? postalFormats[localFormData.pickup.country.code].format
+      : ""
+  }
+  postalCodeRegex={
+    postalFormats[localFormData.pickup.country.code]
+      ? postalFormats[localFormData.pickup.country.code].regex
+      : undefined
+  }
+  value={localFormData.pickup.psc} // controlled value for PSC
+  initialCity={localFormData.pickup.city}
+/>
         </div>
         <div className="datetime-field">
           <label className="field-label">Loading Time</label>
@@ -192,11 +204,12 @@ const ManualSearchForm: React.FC<ManualSearchFormProps> = ({
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
-              onCountrySelect={(code, flag) => handleCountrySelect('delivery', code, flag)}
-              onNextFieldFocus={() => deliveryPscRef.current?.focus()}
-              initialValue={localFormData.delivery.country.code}
-              locationType="delivery"
-            />
+  onCountrySelect={(code, flag) => handleCountrySelect('pickup', code, flag)}
+  onNextFieldFocus={() => pickupPscRef.current?.focus()}
+  value={localFormData.pickup.country.code}
+  locationType="pickup"
+/>
+
           </div>
           <PostalCitySelect
             pscRef={deliveryPscRef}

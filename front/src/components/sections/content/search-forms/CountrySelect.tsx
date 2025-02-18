@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Improved focus handling and added English comments
+// Last change: Improved controlled input handling and removed unused useEffect
 
 import { useRef, useState, useMemo, useCallback } from "react";
 import { BaseDropdown, type LocationType } from "./BaseDropdown";
@@ -10,6 +10,9 @@ import { useCountries } from "@/hooks/useCountries";
 interface CountrySelectProps {
   onCountrySelect: (code: string, flag: string) => void;
   onNextFieldFocus?: () => void;
+  /** Controlled value for country code */
+  value?: string;
+  /** Initial value if not controlled */
   initialValue?: string;
   locationType: LocationType;
 }
@@ -17,11 +20,15 @@ interface CountrySelectProps {
 export function CountrySelect({
   onCountrySelect,
   onNextFieldFocus,
+  value,
   initialValue = "",
   locationType,
 }: CountrySelectProps) {
+  // Use controlled value if provided, otherwise use internal state
+  const [internalValue, setInternalValue] = useState(initialValue);
+  const inputValue = value !== undefined ? value : internalValue;
+
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(initialValue);
   const [visibleCount, setVisibleCount] = useState(COUNTRY_PAGE_SIZE);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -66,25 +73,31 @@ export function CountrySelect({
     const code = selected.code_2;
     const flagUrl = `/flags/4x3/optimized/${code.toLowerCase()}.svg`;
     
-    setInputValue(code);
+    if (value === undefined) {
+      setInternalValue(code);
+    }
     setIsOpen(false);
     onCountrySelect(code, flagUrl);
-  }, [onCountrySelect]);
+  }, [onCountrySelect, value]);
 
   // Handle input changes with improved focus logic
-  const handleInputChange = useCallback((value: string) => {
-    const upperValue = value.toUpperCase();
-    setInputValue(upperValue);
+  const handleInputChange = useCallback((val: string) => {
+    const upperValue = val.toUpperCase();
+    if (value === undefined) {
+      setInternalValue(upperValue);
+    }
     setVisibleCount(COUNTRY_PAGE_SIZE);
   
-    // Open dropdown and reset flag for less than 2 characters
+    // Open dropdown and reset country only if the input is completely empty
     if (upperValue.length < 2) {
       setIsOpen(true);
-      onCountrySelect("", "");
+      if (upperValue === "") {
+        onCountrySelect("", "");
+      }
       return;
     }
   
-    // Move focus only when exactly 2 characters and match found
+    // When exactly 2 characters and a match is found, select the country
     if (upperValue.length === 2) {
       const exactMatch = allCountries.find(c => c.code_2 === upperValue);
       if (exactMatch) {
@@ -98,7 +111,7 @@ export function CountrySelect({
         onNextFieldFocus?.();
       }
     }
-  }, [allCountries, onCountrySelect, onNextFieldFocus]);
+  }, [allCountries, onCountrySelect, onNextFieldFocus, value]);
 
   // Validate keystrokes and handle navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {

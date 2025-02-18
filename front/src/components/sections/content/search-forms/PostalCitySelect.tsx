@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Fixed infinite loop by removing duplicate useEffect and using functional updater
+// Last change: Fixed ordering of handleSelect to avoid "used before declaration" error
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import PostalCodeInput from "@/components/PostalCodeInput";
@@ -47,7 +47,7 @@ export function PostalCitySelect({
   const [internalPsc, setInternalPsc] = useState("");
   const pscValue = value !== undefined ? value : internalPsc;
   
-  // Local state for city (we assume uncontrolled here)
+  // Local state for city (assumed uncontrolled here)
   const [city, setCity] = useState(initialCity);
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -151,34 +151,7 @@ export function PostalCitySelect({
     }
   }, [code, pscValue, city, debouncedSearch]);
 
-  // Render a location item in the dropdown
-  const renderLocationItem = useCallback(
-    (item: LocationSuggestion, { isHighlighted }: { isHighlighted: boolean }) => (
-      <div className={`item-suggestion ${isHighlighted ? "highlighted" : ""}`}>
-        {item.code && (
-          <img
-            src={`/flags/4x3/optimized/${item.code.toLowerCase()}.svg`}
-            alt={`${item.code} flag`}
-            className="country-flag"
-          />
-        )}
-        <div className="location-details">
-          <span className="country-code">{item.code}</span>
-          <span className="psc">{item.psc}</span>
-          <span className="city-name">{item.city}</span>
-        </div>
-      </div>
-    ),
-    []
-  );
-
-  const renderNoResults = useCallback(() => {
-    if (!pscValue.trim() && !city.trim())
-      return <div className="no-results">Enter a value in any field</div>;
-    return <div className="no-results">No results found</div>;
-  }, [pscValue, city]);
-
-  // Handle selection from dropdown – fills all fields and moves focus
+  // Declare handleSelect before using in useEffect
   const handleSelect = useCallback(
     (item: LocationSuggestion) => {
       console.log("handleSelect called with item:", item);
@@ -205,6 +178,40 @@ export function PostalCitySelect({
     },
     [dateInputRef, onValidSelection, onSelectionChange, value]
   );
+
+  // Auto-select the only suggestion if applicable when PSC or city field is focused
+  useEffect(() => {
+    if (isOpen && (activeField === "psc" || activeField === "city") && suggestions.length === 1) {
+      handleSelect(suggestions[0]);
+    }
+  }, [suggestions, isOpen, activeField, handleSelect]);
+
+  // Render a location item in the dropdown
+  const renderLocationItem = useCallback(
+    (item: LocationSuggestion, { isHighlighted }: { isHighlighted: boolean }) => (
+      <div className={`item-suggestion ${isHighlighted ? "highlighted" : ""}`}>
+        {item.code && (
+          <img
+            src={`/flags/4x3/optimized/${item.code.toLowerCase()}.svg`}
+            alt={`${item.code} flag`}
+            className="country-flag"
+          />
+        )}
+        <div className="location-details">
+          <span className="country-code">{item.code}</span>
+          <span className="psc">{item.psc}</span>
+          <span className="city-name">{item.city}</span>
+        </div>
+      </div>
+    ),
+    []
+  );
+
+  const renderNoResults = useCallback(() => {
+    if (!pscValue.trim() && !city.trim())
+      return <div className="no-results">Enter a value in any field</div>;
+    return <div className="no-results">No results found</div>;
+  }, [pscValue, city]);
 
   // Handle loading more results for pagination
   const handleLoadMore = useCallback(
