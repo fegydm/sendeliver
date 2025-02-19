@@ -1,137 +1,93 @@
 // File: src/components/sections/content/search-forms/BaseDropdown.tsx
-// Last change: Made component more generic while preserving specific functionality
+// Last change: Fixed TypeScript type issues with getItemKey
 
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useCallback } from "react";
 import { useUINavigation } from "@/hooks/useUINavigation";
-import { useDropdownPagination } from "@/hooks/useDropdownPagination";
 
-// Generic dropdown types for reusability across the app
-export type DropdownVariant = "default" | "country" | "location" | "menu";
-export type DropdownSize = "sm" | "md" | "lg";
+export type DropdownVariant = "default" | "country" | "location";
 export type DropdownPosition = "left" | "right" | "center";
-export type LocationType = "pickup" | "delivery";  // Specific to location dropdowns
 
-// Base props that any dropdown will need
 interface BaseDropdownProps<T> {
   // Core functionality
   items: T[];
   isOpen: boolean;
   onSelect: (item: T, index: number) => void;
-  onClose: () => void;
-  renderItem: (item: T, meta: { isHighlighted: boolean; isSelected: boolean }) => React.ReactNode;
+  renderItem: (item: T, meta: { isHighlighted: boolean }) => React.ReactNode;
   inputRef: React.RefObject<HTMLInputElement>;
   
-  // Item identification and state
-  getItemKey?: (item: T, index: number) => string | number;
-  selectedItem?: T | null;
-  
-  // Styling and layout
+  // Optional configuration
   variant?: DropdownVariant;
-  size?: DropdownSize;
   position?: DropdownPosition;
   className?: string;
-  maxHeight?: number;
   
   // Pagination
   onLoadMore?: (lastItem: T | null) => void;
-  loadMoreText?: string;
   totalItems?: number;
   pageSize?: number;
+  loadMoreText?: string;
   
-  // Empty state
+  // Empty state handling
   onNoResults?: () => React.ReactNode;
-  noResultsText?: string;
   
   // Accessibility
   ariaLabel?: string;
-  
-  // Navigation
-  onNextFieldFocus?: () => void;
-  
-  // Location-specific (optional)
-  locationType?: LocationType;
+
+  // Optional key extraction function
+  getItemKey?: (item: T) => string | number;
 }
 
 export function BaseDropdown<T>({
-  // Destructure with defaults
   items,
   isOpen,
   onSelect,
-  onClose,
   renderItem,
   inputRef,
-  getItemKey = (_: T, index: number) => index,
-  selectedItem,
   variant = "default",
-  size = "md",
   position = "left",
   className = "",
-  maxHeight,
   onLoadMore,
-  loadMoreText = "Load more...",
   totalItems = 0,
   pageSize = 10,
+  loadMoreText = "Load more...",
   onNoResults,
-  noResultsText = "No results found",
   ariaLabel = "Dropdown options",
-  onNextFieldFocus,
-  locationType,
+  getItemKey,
 }: BaseDropdownProps<T>) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Default key generation if no custom function provided
+  const defaultGetItemKey = useCallback((item: T, index: number): string | number => {
+    // If getItemKey is provided, use it
+    if (getItemKey) return getItemKey(item);
+    
+    // Otherwise fall back to index
+    return index;
+  }, [getItemKey]);
+
   // Navigation hook setup
   const { 
-    highlightedIndex, 
-    handleKeyDown: originalHandleKeyDown, 
+    highlightedIndex,
+    handleKeyDown,
     handleItemMouseEnter,
     handleItemClick
   } = useUINavigation({
     items,
     isOpen,
-    onSelect: (item, index) => {
-      onSelect(item, index);
-      onClose();
-      onNextFieldFocus?.();
-    },
+    onSelect,
     inputRef,
     pageSize,
   });
 
-  // Keyboard navigation handler
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      onNextFieldFocus?.();
-      return;
+  // Calculate if there are more items to load
+  const hasMore = onLoadMore && items.length < totalItems;
+
+  // Handle "Load More" click
+  const handleLoadMore = useCallback(() => {
+    if (onLoadMore) {
+      const lastItem = items.length > 0 ? items[items.length - 1] : null;
+      onLoadMore(lastItem);
     }
-    originalHandleKeyDown(e);
-  }, [originalHandleKeyDown, onNextFieldFocus]);
-
-  // Pagination setup
-  const { hasMore, loadMoreData } = useDropdownPagination({
-    totalItems,
-    items,
-    onLoadMore,
-  });
-
-  // Click outside handler
-  const handleClickOutside = useCallback((event: MouseEvent) => {
-    if (
-      dropdownRef.current &&
-      !dropdownRef.current.contains(event.target as Node) &&
-      !inputRef.current?.contains(event.target as Node)
-    ) {
-      onClose();
-    }
-  }, [onClose, inputRef]);
-
-  // Click outside effect
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen, handleClickOutside]);
+  }, [items, onLoadMore]);
 
   if (!isOpen) return null;
 
@@ -139,9 +95,7 @@ export function BaseDropdown<T>({
   const dropdownClassName = [
     'dd-list',
     `dd-${variant}`,
-    `dd-size-${size}`,
     `dd-pos-${position}`,
-    locationType && `dd-${locationType}`,
     className
   ].filter(Boolean).join(' ');
 
@@ -153,39 +107,33 @@ export function BaseDropdown<T>({
       onKeyDown={handleKeyDown}
       aria-label={ariaLabel}
       tabIndex={-1}
-      style={maxHeight ? { maxHeight: `${maxHeight}px` } : undefined}
     >
       {items.length === 0 ? (
         <div className="dd-no-results" role="option">
-          {onNoResults ? onNoResults() : noResultsText}
+          {onNoResults ? onNoResults() : "No results found"}
         </div>
       ) : (
         <>
           {items.map((item, index) => (
             <div
-              key={getItemKey(item, index)}
+              key={defaultGetItemKey(item, index)}
               id={`dd-item-${index}`}
-              onClick={() => {
-                handleItemClick(index);
-                onNextFieldFocus?.();
-              }}
+              onClick={() => handleItemClick(index)}
               onMouseEnter={() => handleItemMouseEnter(index)}
               className={`dd-item ${index === highlightedIndex ? "dd-highlighted" : ""}`}
               role="option"
-              aria-selected={selectedItem === item}
               tabIndex={-1}
             >
               {renderItem(item, {
-                isHighlighted: index === highlightedIndex,
-                isSelected: selectedItem === item,
+                isHighlighted: index === highlightedIndex
               })}
             </div>
           ))}
 
           {hasMore && (
             <div
-              onClick={loadMoreData}
-              className={`dd-load-more ${highlightedIndex === items.length ? "dd-highlighted" : ""}`}
+              onClick={handleLoadMore}
+              className="dd-load-more"
               role="option"
               aria-label={loadMoreText}
               tabIndex={-1}

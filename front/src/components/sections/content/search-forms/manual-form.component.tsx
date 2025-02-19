@@ -76,29 +76,20 @@ export function ManualForm({
   const handleCountrySelect = useCallback((locationType: LocationType, cc: string, flag: string) => {
     console.log('Country selected:', { locationType, cc, flag });
     
-    // Update form data
+    // Update form data and reset PSC and City when CC changes
     setLocalFormData(prev => {
-      const locationData = locationType === LocationType.PICKUP ? prev.pickup : prev.delivery;
-      
-      // Only reset validation if we have PSC or city
-      if (locationData.psc.trim() !== '' || locationData.city.trim() !== '') {
-        if (locationType === LocationType.PICKUP) {
-          setIsPickupValid(false);
-        } else {
-          setIsDeliveryValid(false);
-        }
-      }
-
       return {
         ...prev,
         [locationType]: {
           ...prev[locationType],
-          cc,
-          flag
+          cc,        // update country code
+          flag,      // update flag URL
+          psc: '',   // reset postal code
+          city: ''   // reset city
         }
       };
     });
-
+  
     // If we have a complete country code, fetch its postal format
     if (cc.length === 2) {
       fetchPostalFormat(cc);
@@ -138,6 +129,8 @@ export function ManualForm({
       ...prev,
       [locationType]: {
         ...prev[locationType],
+        cc: location.cc, 
+        flag: location.flag,
         psc: location.psc,
         city: location.city,
         lat: location.lat || 0,

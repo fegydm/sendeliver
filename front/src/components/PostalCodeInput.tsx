@@ -1,12 +1,13 @@
 import React, { useState, useCallback, forwardRef, useRef, useEffect } from "react";
 
 export interface PostalCodeInputProps {
-  value?: string; // controlled raw value (digits only)
+  value?: string;
   initialValue?: string;
-  dbMask?: string; // mask loaded from DB, e.g. "####" or "### ##"
+  dbMask?: string;
   placeholder?: string;
-  onChange?: (value: string) => void; // returns raw value (digits only)
+  onChange?: (value: string) => void;
   className?: string;
+  onFocus?: () => void;  // onFocus handler
 }
 
 // Formats the raw value according to the given mask.
@@ -50,6 +51,7 @@ const PostalCodeInput = forwardRef<HTMLInputElement, PostalCodeInputProps>(({
   dbMask,
   placeholder,
   onChange,
+  onFocus,
   className
 }, ref) => {
   // The maximum number of digits is determined by the number of '#' in the mask.
@@ -110,6 +112,7 @@ const PostalCodeInput = forwardRef<HTMLInputElement, PostalCodeInputProps>(({
       type="text"
       value={displayValue}
       onChange={handleChange}
+      onFocus={onFocus}  // onFocus handler
       placeholder={placeholder}
       className={className || "inp-psc"}
     />
