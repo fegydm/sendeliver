@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Updated to use location types and improved focus handling
+// Last change: Removed flag handling (moved to CountrySelect)
 
 import React, { useState, useRef, useCallback } from 'react';
 import CountrySelect from './CountrySelect';
@@ -41,17 +41,14 @@ export function ManualForm({
   onSubmit,
   formData = DEFAULT_FORM_DATA
 }: ManualSearchFormProps) {
-  // Refs for postal code inputs
   const pickupPscRef = useRef<HTMLInputElement>(null);
   const deliveryPscRef = useRef<HTMLInputElement>(null);
 
-  // Form data state
   const [localFormData, setLocalFormData] = useState<LocationFormData>(formData);
   const [isPickupValid, setIsPickupValid] = useState(false);
   const [isDeliveryValid, setIsDeliveryValid] = useState(false);
   const [postalFormats, setPostalFormats] = useState<Record<string, { format: string; regex: string }>>({});
 
-  // Fetch postal code format from the API
   const fetchPostalFormat = useCallback(async (code: string) => {
     try {
       const response = await fetch(`/api/geo/country_formats?cc=${code}`);
@@ -72,31 +69,27 @@ export function ManualForm({
     }
   }, []);
 
-  // Handle country selection
   const handleCountrySelect = useCallback((locationType: LocationType, cc: string, flag: string) => {
     console.log('Country selected:', { locationType, cc, flag });
     
-    // Update form data and reset PSC and City when CC changes
     setLocalFormData(prev => {
       return {
         ...prev,
         [locationType]: {
           ...prev[locationType],
-          cc,        // update country code
-          flag,      // update flag URL
-          psc: '',   // reset postal code
-          city: ''   // reset city
+          cc,
+          flag,
+          psc: '',
+          city: ''
         }
       };
     });
   
-    // If we have a complete country code, fetch its postal format
     if (cc.length === 2) {
       fetchPostalFormat(cc);
     }
   }, [fetchPostalFormat]);
 
-  // Focus handlers
   const focusPostalCode = useCallback((locationType: LocationType) => {
     console.log(`[DEBUG] Focusing PSC field for ${locationType}`, {
       pickupRef: pickupPscRef.current,
@@ -104,21 +97,12 @@ export function ManualForm({
     });
     
     if (locationType === LocationType.PICKUP) {
-      if (pickupPscRef.current) {
-        pickupPscRef.current.focus();
-      } else {
-        console.warn('Pickup PSC ref is null');
-      }
+      pickupPscRef.current?.focus();
     } else {
-      if (deliveryPscRef.current) {
-        deliveryPscRef.current.focus();
-      } else {
-        console.warn('Delivery PSC ref is null');
-      }
+      deliveryPscRef.current?.focus();
     }
   }, []);
 
-  // Handle location selection from PostalCitySelect
   const handleLocationSelect = useCallback((
     locationType: LocationType,
     location: Omit<LocationSuggestion, "priority">
@@ -129,7 +113,7 @@ export function ManualForm({
       ...prev,
       [locationType]: {
         ...prev[locationType],
-        cc: location.cc, 
+        cc: location.cc,
         flag: location.flag,
         psc: location.psc,
         city: location.city,
@@ -138,7 +122,6 @@ export function ManualForm({
       }
     }));
 
-    // Update validation state
     if (location.psc && location.city) {
       if (locationType === LocationType.PICKUP) {
         setIsPickupValid(true);
@@ -148,7 +131,6 @@ export function ManualForm({
     }
   }, []);
 
-  // Handle time change
   const handleTimeChange = useCallback((
     locationType: LocationType,
     time: string
@@ -162,7 +144,6 @@ export function ManualForm({
     }));
   }, []);
 
-  // Handle cargo changes
   const handleCargoChange = useCallback((field: 'pallets' | 'weight', value: number) => {
     setLocalFormData(prev => ({
       ...prev,
@@ -173,7 +154,6 @@ export function ManualForm({
     }));
   }, []);
 
-  // Form submission
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     console.log('Submitting form data:', localFormData);
@@ -181,21 +161,11 @@ export function ManualForm({
   }, [localFormData, onSubmit]);
 
   return (
-    <form className="manual-form" onSubmit={handleSubmit}>
+    <form className="manual_form" onSubmit={handleSubmit}>
       {/* Pickup section */}
       <div className={`form-section ${isPickupValid ? 'valid' : 'invalid'}`}>
         <h3 className="section-title">Pickup Details</h3>
-        <div className="location-fields">
-          <div className="flag-placeholder">
-            {localFormData.pickup.flag && (
-              <img
-                src={localFormData.pickup.flag}
-                alt="Pickup Country Flag"
-                className="pickup-flag"
-              />
-            )}
-          </div>
-
+        <div className={`inputs-${LocationType.PICKUP}`}>
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
@@ -232,17 +202,7 @@ export function ManualForm({
       {/* Delivery section */}
       <div className={`form-section ${isDeliveryValid ? 'valid' : 'invalid'}`}>
         <h3 className="section-title">Delivery Details</h3>
-        <div className="location-fields">
-          <div className="flag-placeholder">
-            {localFormData.delivery.flag && (
-              <img
-                src={localFormData.delivery.flag}
-                alt="Delivery Country Flag"
-                className="delivery-flag"
-              />
-            )}
-          </div>
-
+        <div className={`inputs-${LocationType.DELIVERY}`}>
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
@@ -277,7 +237,7 @@ export function ManualForm({
       </div>
 
       {/* Cargo section */}
-      <div className="form-section">
+      <div className="form-cargo">
         <h3 className="section-title">Cargo Details</h3>
         <div className="cargo-container">
           <div className="field-group">

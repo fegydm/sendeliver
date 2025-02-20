@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Added improved input validation for country codes (controlled component)
+// Last change: For both pickup and delivery, default flag is /flags/4x3/optimized/en.svg with 50% opacity and grayscale
 
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "./BaseDropdown";
@@ -19,22 +19,16 @@ export function CountrySelect({
   initialValue = "",
   locationType
 }: CountrySelectProps) {
-  // Controlled input value from props
   const inputValue = initialValue;
-  // State for dropdown open/close
   const [isOpen, setIsOpen] = useState(false);
-  // State for pagination count of visible items
   const [visibleCount, setVisibleCount] = useState(20);
-  
-  // Component refs
+
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
 
-  // Fetch countries data
-  const { items: allCountries, isLoading } = useCountries();
+  const { items: allCountries } = useCountries();
 
-  // Filter countries list based on input value
   const filteredItems = useMemo(() => {
     if (!inputValue) return allCountries;
     return allCountries.filter(c =>
@@ -42,19 +36,16 @@ export function CountrySelect({
     );
   }, [inputValue, allCountries]);
 
-  // Get visible items based on pagination
   const visibleItems = useMemo(() => {
     return filteredItems.slice(0, visibleCount);
   }, [filteredItems, visibleCount]);
 
-  // Handle outside clicks to close dropdown
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
       setIsOpen(false);
     }
   }, []);
 
-  // Add and remove click handler
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
@@ -62,64 +53,51 @@ export function CountrySelect({
     };
   }, [handleClickOutside]);
 
-  // Handle input changes with improved validation
   const handleInputChange = useCallback((value: string) => {
     const upperValue = value.toUpperCase();
-    
-    // Reset if empty
+
     if (!upperValue) {
-      // Notify parent with empty values
       onCountrySelect("", "");
       setVisibleCount(20);
       setIsOpen(true);
       return;
     }
 
-    // Validation and processing for first character
     if (upperValue.length === 1) {
-      const hasMatchingCountries = allCountries.some(c => 
+      const hasMatchingCountries = allCountries.some(c =>
         c.cc?.startsWith(upperValue)
       );
-      
       if (!hasMatchingCountries) {
         console.log(`[CountrySelect] No countries starting with ${upperValue}`);
         return;
       }
-      
-      // Accept one character, but DO NOT move to the next field
-      onCountrySelect(upperValue, ""); // Send prefix to parent component
-      setIsOpen(true);  // Keep dropdown open for possible selection
+      onCountrySelect(upperValue, "");
+      setIsOpen(true);
       return;
     }
-    
-    // Processing for two characters - original logic remains
+
     if (upperValue.length === 2) {
       const exactMatch = allCountries.find(c => c.cc === upperValue);
       if (!exactMatch) {
         console.log(`[CountrySelect] No exact match for ${upperValue}`);
         return;
       }
-      
       const flagUrl = `/flags/4x3/optimized/${exactMatch.cc.toLowerCase()}.svg`;
       onCountrySelect(exactMatch.cc, flagUrl);
       setIsOpen(false);
-      onNextFieldFocus();  // Automatic focus shift only for complete code
+      onNextFieldFocus();
       return;
     }
   }, [allCountries, onCountrySelect, onNextFieldFocus]);
 
-  // Handle country selection from dropdown
   const handleSelect = useCallback((selected: Country) => {
     if (!selected.cc) return;
-    
     const flagUrl = `/flags/4x3/optimized/${selected.cc.toLowerCase()}.svg`;
-    
     onCountrySelect(selected.cc, flagUrl);
     setIsOpen(false);
     onNextFieldFocus();
   }, [onCountrySelect, onNextFieldFocus]);
 
-  // Handle keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -131,14 +109,10 @@ export function CountrySelect({
       }
       return;
     }
-    
-    // Only allow valid country code characters
     if (e.key.length === 1) {
       const upperKey = e.key.toUpperCase();
-      
-      // For empty input, check if any country starts with this letter
       if (!inputValue) {
-        const hasMatchingCountries = allCountries.some(c => 
+        const hasMatchingCountries = allCountries.some(c =>
           c.cc?.startsWith(upperKey)
         );
         if (!hasMatchingCountries) {
@@ -146,11 +120,9 @@ export function CountrySelect({
           return;
         }
       }
-      
-      // For one character input, check if there are countries with this prefix
       if (inputValue.length === 1) {
         const prefix = inputValue + upperKey;
-        const hasMatchingCountries = allCountries.some(c => 
+        const hasMatchingCountries = allCountries.some(c =>
           c.cc?.startsWith(prefix)
         );
         if (!hasMatchingCountries) {
@@ -158,26 +130,29 @@ export function CountrySelect({
           return;
         }
       }
-      
-      // Prevent input longer than 2 characters
       if (inputValue.length >= 2) {
         e.preventDefault();
       }
     }
   }, [inputValue, isOpen, allCountries]);
 
-  // Handle input focus
   const handleFocus = useCallback(() => {
     setIsOpen(true);
   }, []);
 
-  // Handle loading state
-  if (isLoading) {
-    return <div className="loading-state">Loading...</div>;
-  }
+  // Pre default flag pre obe sekcie, ak nie je zvolený iný kód (inputValue nie je dĺžky 2)
+  const flagSrc = inputValue.length === 2
+    ? `/flags/4x3/optimized/${inputValue.toLowerCase()}.svg`
+    : "/flags/4x3/optimized/gb.svg";
+  const flagStyle = inputValue.length === 2 ? {} : { filter: "grayscale(100%)", opacity: 0.3 };
 
   return (
-    <div className="country-select" ref={componentRef}>
+    <div className="dd-inputs" ref={componentRef}>
+      <img
+        src={flagSrc}
+        className={`flag-${locationType}`}
+        style={flagStyle}
+      />
       <input
         ref={inputRef}
         type="text"

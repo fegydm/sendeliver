@@ -3,14 +3,15 @@
 
 .manual-form { padding: 20px; max-width: 1000px; margin: 0 auto; }
 .form-section { border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin-bottom: 15px; }
-.location-fields, .inputs-pickup, .inputs-delivery  { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; position: relative; }
+.inputs-pickup, .inputs-delivery { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; position: relative; }
 .field-group { display: flex; flex-direction: column; gap: 4px; }
 .field-label { font-size: 12px; color: #666; }
 .dd-wrapper { display: flex; position: relative; gap: 6px; flex: 1; }
-.dd-inputs { display: flex; gap: 6px; width: 100%; }
+.dd-inputs { display: flex; gap: 6px; width: 100%; align-items: center; }
+
 
 /* Input fields */
-input.pickup-cc, input.delivery-cc { width: 30px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; text-align: left; text-transform: uppercase; }
+input.pickup-cc, input.delivery-cc { width: 20px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; text-align: left; text-transform: uppercase; }
 input.pickup-psc, input.delivery-psc { width: 100px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
 input.pickup-city, input.delivery-city { width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
 
@@ -19,12 +20,12 @@ input.pickup-cc, input.pickup-psc, input.pickup-city { border-color: #3b82f6; }
 input.delivery-cc, input.delivery-psc, input.delivery-city { border-color: #10b981; }
 
 /* Dropdown list */
-.dd-list { position: absolute; top: calc(100% + 4px); left: -20px; width: calc(100% + 38px); max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
-.dd-list.dd-country { position: absolute; top: calc(100% + 4px); left: -20px; width: calc(100% + 38px); max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
+.dd-list { position: absolute; top: calc(100% + 4px); left: -0px; width: calc(100% + 38px); max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
+.dd-list.dd-country { position: absolute; top: calc(100% + 4px); left: -0px; width: calc(100% + 38px); max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
 .dd-list.dd-country::-webkit-scrollbar { width: 6px; }
 .dd-list.dd-country::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
 .dd-list.dd-country::-webkit-scrollbar-thumb:hover { background-color: #aaa; }
-.dd-list.dd-location { position: absolute; top: calc(100% + 4px); right: -20px; width: calc(100% + 38px); max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
+.dd-list.dd-location { position: absolute; top: calc(100% + 4px); left: -50px; width: calc(100% + 38px); max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
 .dd-list.dd-location::-webkit-scrollbar { width: 6px; }
 .dd-list.dd-location::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
 .dd-list.dd-location::-webkit-scrollbar-thumb:hover { background-color: #aaa; }
@@ -44,7 +45,8 @@ span.pickup-city, span.delivery-city { color: #666; font-size: 16px; }
 .country-name { color: #000000; font-size: 14px; }
 
 /* Flags */
-.pickup-flag, .delivery-flag { width: 18px; height: 14px; object-fit: cover; border-radius: 2px; }
+.flag-pickup, .flag-delivery { width: 24px; height: 18px; object-fit: cover; border-radius: 2px; }
+.pickup-flag, .delivery-flag { width: 16px; height: 12px; object-fit: cover; border-radius: 2px; }
 
 /* Utility */
 .no-results { padding: 6px; text-align: center; color: #666; font-size: 13px; }
