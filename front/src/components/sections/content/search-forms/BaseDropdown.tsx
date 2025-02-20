@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/BaseDropdown.tsx
-// Last change: Fixed TypeScript type issues with getItemKey
+// Last change: Fixed TypeScript type issues with getItemKey and improved onNoResults handling
 
 import React, { useRef, useCallback } from "react";
 import { useUINavigation } from "@/hooks/useUINavigation";
@@ -99,6 +99,9 @@ export function BaseDropdown<T>({
     className
   ].filter(Boolean).join(' ');
 
+  // Determine if there are no real results; if there's one placeholder item (empty fields), consider it as no results
+  const isNoResults = items.length === 0 || (items.length === 1 && typeof items[0] === "object" && !(items[0] as any).psc && !(items[0] as any).city && !(items[0] as any).cc);
+
   return (
     <div 
       ref={dropdownRef}
@@ -108,8 +111,8 @@ export function BaseDropdown<T>({
       aria-label={ariaLabel}
       tabIndex={-1}
     >
-      {items.length === 0 ? (
-        <div className="dd-no-results" role="option">
+      {isNoResults ? (
+        <div className="no-results" role="option">
           {onNoResults ? onNoResults() : "No results found"}
         </div>
       ) : (
