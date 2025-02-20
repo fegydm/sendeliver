@@ -1,10 +1,11 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Removed flag handling (moved to CountrySelect)
+// Last change: Added testTime field with DateTimePicker
 
 import React, { useState, useRef, useCallback } from 'react';
 import CountrySelect from './CountrySelect';
 import PostalCitySelect from './PostalCitySelect';
-import { LocationFormData, LocationType, LocationSuggestion } from '@/types/location.types';
+import DateTimePicker from './DateTimePicker';
+import { LocationFormData, LocationType, Location, LocationSuggestion } from '@/types/location.types';
 import "@/styles/sections/manual-form.component.css";
 
 interface ManualSearchFormProps {
@@ -20,7 +21,8 @@ const DEFAULT_FORM_DATA: LocationFormData = {
     flag: '',
     lat: 0,
     lng: 0,
-    time: ''
+    time: '',
+    testTime: null
   },
   delivery: {
     cc: '',
@@ -29,7 +31,8 @@ const DEFAULT_FORM_DATA: LocationFormData = {
     flag: '',
     lat: 0,
     lng: 0,
-    time: ''
+    time: '',
+    testTime: null
   },
   cargo: {
     pallets: 0,
@@ -105,7 +108,7 @@ export function ManualForm({
 
   const handleLocationSelect = useCallback((
     locationType: LocationType,
-    location: Omit<LocationSuggestion, "priority">
+    location: Omit<Location, "priority">
   ) => {
     console.log('Location selected:', { locationType, location });
     
@@ -140,6 +143,19 @@ export function ManualForm({
       [locationType]: {
         ...prev[locationType],
         time
+      }
+    }));
+  }, []);
+
+  const handleTestTimeChange = useCallback((
+    locationType: LocationType,
+    testTime: Date
+  ) => {
+    setLocalFormData(prev => ({
+      ...prev,
+      [locationType]: {
+        ...prev[locationType],
+        testTime
       }
     }));
   }, []);
@@ -197,6 +213,15 @@ export function ManualForm({
             className="datetime-input"
           />
         </div>
+
+        <div className="datetime-field">
+          <DateTimePicker
+            label="Test Loading Time"
+            value={localFormData.pickup.testTime}
+            onChange={(testTime) => handleTestTimeChange(LocationType.PICKUP, testTime)}
+            min={new Date()} // Minimálny dátum je aktuálny dátum
+          />
+        </div>
       </div>
 
       {/* Delivery section */}
@@ -232,6 +257,15 @@ export function ManualForm({
             value={localFormData.delivery.time}
             onChange={(e) => handleTimeChange(LocationType.DELIVERY, e.target.value)}
             className="datetime-input"
+          />
+        </div>
+
+        <div className="datetime-field">
+          <DateTimePicker
+            label="Test Delivery Time"
+            value={localFormData.delivery.testTime}
+            onChange={(testTime) => handleTestTimeChange(LocationType.DELIVERY, testTime)}
+            min={new Date()} // Minimálny dátum je aktuálny dátum
           />
         </div>
       </div>

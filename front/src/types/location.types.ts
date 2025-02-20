@@ -30,6 +30,7 @@ export interface Location {
   lat: number;
   lng: number;
   time?: string;           // Optional for suggestions
+  testTime?: Date | null; // Pridané voliteľné testTime pole
 }
 
 export interface LocationSuggestion extends Omit<Location, 'time'> {
