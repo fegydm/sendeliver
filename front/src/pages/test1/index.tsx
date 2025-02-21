@@ -1,128 +1,42 @@
-// File: src/pages/test1/index.tsx
-// Last change: Added detailed console logging for debugging
-
-import React, { useEffect, useRef, useState } from "react";
-import DualPlayer, { type DualPlayerRef, type AnimationType } from "@/components/elements/animation/lottie-player.element";
+import React, { useState } from "react";
+import TimeColumn from "@/components/sections/content/search-forms/TimeColumn";
 
 const Test1Page: React.FC = () => {
-  const playerRef = useRef<DualPlayerRef>(null);
-  const [isPaused, setIsPaused] = useState(false);
-  const [animations, setAnimations] = useState<string[]>([]);
-  const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null);
-  const [animationType, setAnimationType] = useState<AnimationType | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const getAnimationType = (filename: string): AnimationType => {
-    console.log("Determining animation type for:", filename);
-    if (filename.endsWith(".svg")) return "svg";
-    if (filename.endsWith(".json")) return "lottie";
-    throw new Error(`Unsupported file type: ${filename}`);
-  };
-
-  useEffect(() => {
-    // Fetch the list of animations from the backend
-    const fetchAnimations = async () => {
-      console.log("Fetching animations from backend...");
-      try {
-        const response = await fetch("/api/animations");
-        console.log("Response received:", response);
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch animations, status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Animations fetched successfully:", data);
-
-        setAnimations(data);
-        setSelectedAnimation(data[0] || null);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An unknown error occurred.";
-        console.error("Error fetching animations:", errorMessage);
-        setError(errorMessage);
-      }
-    };
-
-    fetchAnimations();
-  }, []);
-
-  useEffect(() => {
-    if (selectedAnimation) {
-      console.log("Selected animation changed:", selectedAnimation);
-      try {
-        const type = getAnimationType(selectedAnimation);
-        setAnimationType(type);
-        console.log("Animation type determined:", type);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "An unknown error occurred.";
-        console.error("Error determining animation type:", errorMessage);
-        setError(errorMessage);
-      }
-    } else {
-      console.log("No animation selected.");
-    }
-  }, [selectedAnimation]);
-
-  const handlePlayPause = () => {
-    setIsPaused((prev) => {
-      const nextState = !prev;
-      console.log("Toggling play/pause:", nextState ? "Paused" : "Playing");
-      if (nextState) {
-        playerRef.current?.pause();
-      } else {
-        playerRef.current?.play();
-      }
-      return nextState;
-    });
-  };
-
-  const handleAnimationChange = (path: string) => {
-    console.log("Changing selected animation to:", path);
-    setSelectedAnimation(path);
-    setError(null);
-  };
+  const [useParent, setUseParent] = useState(true); // Toggle state
 
   return (
-    <div>
-      <h1>Test 1 - Dynamic Animation Player</h1>
+    <div style={{ textAlign: 'center' }}>
+      <h1>Test 1 - timepicker</h1>
 
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+      {/* Toggle button */}
+      <button 
+        onClick={() => setUseParent(prev => !prev)} 
+        style={{ marginBottom: '20px', padding: '10px', cursor: 'pointer' }}
+      >
+        {useParent ? "Switch to Outside Parent" : "Switch to Inside Parent"}
+      </button>
 
-      <div>
-        <label htmlFor="animationSelect">Select Animation:</label>
-        <select
-          id="animationSelect"
-          value={selectedAnimation || ""}
-          onChange={(e) => handleAnimationChange(e.target.value)}
-        >
-          {animations.map((anim) => (
-            <option key={anim} value={`/animation/${anim}`}>
-              {anim}
-            </option>
-          ))}
-        </select>
+      {/* Always visible parent */}
+      <div 
+        style={{ 
+          position: 'absolute', 
+          top: '200px', 
+          left: '50%', 
+          transform: 'translateX(-50%)', 
+          width: '100px', 
+          height: '200px', 
+          border: '2px solid black', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center'
+        }}
+      >
+        {/* Render inside parent only if `useParent === true` */}
+        {useParent && <TimeColumn />}
       </div>
 
-      <div>
-        <p>Current Animation: {selectedAnimation || "None selected"}</p>
-        <p>Animation Type: {animationType || "Unknown"}</p>
-
-        {selectedAnimation ? (
-          <DualPlayer
-            ref={playerRef}
-            animationPath={selectedAnimation}
-            isPaused={isPaused}
-          />
-        ) : (
-          <p>Please select an animation to play.</p>
-        )}
-
-        <button onClick={handlePlayPause} disabled={!selectedAnimation}>
-          {isPaused ? "Play" : "Pause"}
-        </button>
-      </div>
+      {/* Render outside parent if `useParent === false` */}
+      {!useParent && <TimeColumn />}
     </div>
   );
 };

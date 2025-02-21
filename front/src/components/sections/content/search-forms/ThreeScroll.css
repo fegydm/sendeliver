@@ -1,0 +1,7 @@
+/* File: src/components/sections/content/search-forms/ThreeScroll.css */ 
+/* Last change: Styles for the ThreeScroll control component */
+.three-scroll { display: flex; flex-direction: column; align-items: center; gap: 4px; } 
+.three-scroll-button { width: 24px; height: 24px; padding: 0; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; } 
+.three-scroll-button:hover { transform: scale(1.1); } 
+.three-scroll-button svg { width: 16px; height: 16px; fill: #666; } 
+.three-scroll-circle { width: 16px; height: 16px; background-color: #ccc; border-radius: 50%; }

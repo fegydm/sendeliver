@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/DateTimePicker.tsx
-// Last change: Created complete DateTimePicker with DatePicker and TimePicker
+// Last change: Created complete DateTimePicker with DatePicker and TimePicker; comments in English with braces content in one line
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import DatePicker from './DatePicker';
@@ -7,18 +7,17 @@ import TimePicker from './TimePicker';
 import './DateTimePicker.css';
 
 interface DateTimePickerProps {
-  value?: Date | string | null;
-  onChange?: (date: Date) => void;
-  label?: string;
-  className?: string;
-  min?: Date;
-  max?: Date;
-  required?: boolean;
-  disabled?: boolean;
+  value?: Date | string | null; // (Initial value for the picker)
+  onChange?: (date: Date) => void; // (Callback when date changes)
+  label?: string; // (Label for the picker)
+  className?: string; // (Additional CSS class)
+  min?: Date; // (Minimum allowed date)
+  max?: Date; // (Maximum allowed date)
+  required?: boolean; // (Whether the field is required)
+  disabled?: boolean; // (Whether the field is disabled)
 }
 
-// Utility pro formátování
-const pad = (num: number) => num.toString().padStart(2, '0');
+const pad = (num: number) => num.toString().padStart(2, '0'); // Utility to pad single-digit numbers with a leading zero
 
 export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   value = null,
@@ -30,25 +29,21 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   required = false,
   disabled = false
 }) => {
-  // Počáteční hodnoty
-  const initialDate = value instanceof Date 
-    ? value 
-    : value 
-      ? new Date(value) 
-      : new Date();
+  // Initialize the date value { if value is a Date, use it; else, if string then convert; otherwise use current date }
+  const initialDate = value instanceof Date ? value : value ? new Date(value) : new Date();
 
-  const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
-  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(initialDate); // (State for the selected date)
+  const [isPickerOpen, setIsPickerOpen] = useState(false); // (State whether the picker dropdown is open)
   
-  const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null); // (Reference to the container element)
+  const inputRef = useRef<HTMLInputElement>(null); // (Reference to the input element)
 
-  // Formátování data a času
+  // Format the date and time into a string "YYYY-MM-DD HH:mm"
   const formatDateTime = useCallback((date: Date): string => {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }, []);
 
-  // Handler změny data
+  // Handler for date change { updates the date part while preserving the time }
   const handleDateChange = useCallback((newDate: Date) => {
     const updatedDate = new Date(
       newDate.getFullYear(), 
@@ -57,18 +52,16 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
       selectedDate.getHours(), 
       selectedDate.getMinutes()
     );
-
-    // Validace min/max dat
+    // Validate against min/max dates
     if ((min && updatedDate < min) || (max && updatedDate > max)) {
-      console.warn('Vybraný dátum je mimo povolený rozsah');
+      console.warn('Selected date is out of allowed range');
       return;
     }
-
     setSelectedDate(updatedDate);
     onChange?.(updatedDate);
   }, [selectedDate, onChange, min, max]);
 
-  // Handler změny času
+  // Handler for time change { updates the time part of the selected date }
   const handleTimeChange = useCallback((timeString: string) => {
     const [hours, minutes] = timeString.split(':').map(Number);
     const updatedDate = new Date(
@@ -78,28 +71,22 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
       hours, 
       minutes
     );
-
-    // Validace min/max dat
+    // Validate against min/max dates
     if ((min && updatedDate < min) || (max && updatedDate > max)) {
-      console.warn('Vybraný dátum a čas sú mimo povolený rozsah');
+      console.warn('Selected date and time are out of allowed range');
       return;
     }
-
     setSelectedDate(updatedDate);
     onChange?.(updatedDate);
   }, [selectedDate, onChange, min, max]);
 
-  // Zavírání pickeru po kliknutí mimo
+  // Close the picker when clicking outside { adds event listener to document and cleans up on unmount }
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current && 
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsPickerOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -107,10 +94,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   }, []);
 
   return (
-    <div 
-      ref={containerRef} 
-      className="datetime-picker-wrapper"
-    >
+    <div ref={containerRef} className="datetime-picker-wrapper">
       {label && (
         <label className="datetime-picker-label">
           {label}
@@ -125,7 +109,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
           value={formatDateTime(selectedDate)}
           onClick={() => setIsPickerOpen(!isPickerOpen)}
           className={`datetime-picker-input ${className}`}
-          placeholder="Vyberte dátum a čas"
+          placeholder="Select date and time"
         />
 
         {isPickerOpen && (

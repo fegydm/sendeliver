@@ -1,274 +1,194 @@
 // File: src/components/sections/content/search-forms/TimePicker.tsx
-// Last change: Added control buttons with acceleration and square backgrounds
+// Last change: Fully implemented time picker with prop usage and scroll mechanics
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import './TimePicker.css';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 
 interface TimePickerProps {
   value?: string;
   onChange: (time: string) => void;
 }
 
-const pad = (num: number) => num.toString().padStart(2, '0');
+const SCROLL_PARAMS = {
+  START_SPEED: 8,
+  MAX_SPEED: 8,
+  INTERVAL: 50,
+  PROTECTIVE_ZONE: 5
+};
 
-export const TimePicker: React.FC<TimePickerProps> = ({ value = '', onChange }) => {
-  // Lists generation
-  const generateInfiniteList = (baseList: string[]) => [...baseList, ...baseList, ...baseList];
-  const hoursList = generateInfiniteList(Array.from({length: 24}, (_, i) => pad(i)));
-  const minutesList = generateInfiniteList(Array.from({length: 12}, (_, i) => pad(i * 5)));
+const ITEM_HEIGHT = 40;
 
-  // State management
-  const [hours, setHours] = useState(value ? value.split(':')[0] || '00' : '00');
-  const [minutes, setMinutes] = useState(value ? value.split(':')[1] || '00' : '00');
-  const [scrollSpeed, setScrollSpeed] = useState(1);
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const MINUTES = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'));
 
-  // Button press states
-  const [buttonPressTimer, setButtonPressTimer] = useState<NodeJS.Timer | null>(null);
-  const [pressedButton, setPressedButton] = useState<{
-    type: 'hours' | 'minutes';
-    direction: 'up' | 'down';
-  } | null>(null);
-  const [pressStartTime, setPressStartTime] = useState<number | null>(null);
+const EXTENDED_HOURS = [...HOURS, ...HOURS, ...HOURS];
+const EXTENDED_MINUTES = [...MINUTES, ...MINUTES, ...MINUTES];
 
-  // Refs
-  const hoursContainerRef = useRef<HTMLDivElement>(null);
-  const minutesContainerRef = useRef<HTMLDivElement>(null);
-  const scrollIntervalRef = useRef<NodeJS.Timer | null>(null);
-  
-  // Scroll positions
-  const [hoursScrollPosition, setHoursScrollPosition] = useState(0);
-  const [minutesScrollPosition, setMinutesScrollPosition] = useState(0);
+export const TimePicker: React.FC<TimePickerProps> = ({ 
+  value = '12:00', 
+  onChange 
+}) => {
+  // Parse initial time from value prop
+  const initialTime = useMemo(() => {
+    const [initialHour, initialMinute] = value.split(':').map(Number);
+    return {
+      hour: isNaN(initialHour) ? 12 : Math.min(Math.max(initialHour, 0), 23),
+      minute: isNaN(initialMinute) ? 0 : Math.min(Math.max(initialMinute, 0), 55)
+    };
+  }, [value]);
 
-  // Mouse hover states
-  const [isHoursHovered, setIsHoursHovered] = useState(false);
-  const [isMinutesHovered, setIsMinutesHovered] = useState(false);
-  const [mouseY, setMouseY] = useState(0);
+  // Initialize scroll positions based on initial time
+  const [scrollPosition, setScrollPosition] = useState({
+    hours: (initialTime.hour + HOURS.length) * ITEM_HEIGHT,
+    minutes: (Math.floor(initialTime.minute / 5) + MINUTES.length) * ITEM_HEIGHT
+  });
 
-  const performScroll = useCallback((
-    list: string[],
-    currentValue: string,
-    scrollPosition: number,
-    setScrollPosition: React.Dispatch<React.SetStateAction<number>>,
-    setValue: React.Dispatch<React.SetStateAction<string>>,
-    otherValue: string
-  ) => {
-    const itemHeight = 40;
-    const newPosition = scrollPosition % (list.length * itemHeight / 3);
-    const index = Math.floor(newPosition / itemHeight);
-    const newValue = list[index];
-    
-    setValue(newValue);
-    onChange(`${newValue}:${otherValue}`);
-    setScrollPosition(newPosition);
-  }, [onChange]);
+  const [mouseState, setMouseState] = useState({
+    hours: { speed: 0, direction: 0 },
+    minutes: { speed: 0, direction: 0 }
+  });
 
-  const handleScroll = useCallback((
-    type: 'hours' | 'minutes',
-    direction: number,
-    speed: number = 1
-  ) => {
-    const itemHeight = 40;
-    const delta = direction * speed * itemHeight / 10;
+  // Calculate current values based on scroll position
+  const calculateCurrentValues = useCallback((pos: number, items: string[]) => {
+    const totalHeight = items.length * ITEM_HEIGHT;
+    const normalizedPos = pos % totalHeight;
+    const index = Math.floor(normalizedPos / ITEM_HEIGHT);
+    return items[index];
+  }, []);
 
-    if (type === 'hours') {
-      setHoursScrollPosition(prev => {
-        const newPosition = prev + delta;
-        performScroll(hoursList, hours, newPosition, setHoursScrollPosition, setHours, minutes);
-        return newPosition;
-      });
-    } else {
-      setMinutesScrollPosition(prev => {
-        const newPosition = prev + delta;
-        performScroll(minutesList, minutes, newPosition, setMinutesScrollPosition, setMinutes, hours);
-        return newPosition;
-      });
-    }
-  }, [hoursList, minutesList, hours, minutes, performScroll]);
-
-  // Button press handlers
-  const handleButtonPress = useCallback((
-    type: 'hours' | 'minutes',
-    direction: 'up' | 'down'
-  ) => {
-    setPressedButton({ type, direction });
-    setPressStartTime(Date.now());
-    
-    const dir = direction === 'up' ? -1 : 1;
-    handleScroll(type, dir);
-
-    const timer = setInterval(() => {
-      const pressDuration = Date.now() - (pressStartTime || Date.now());
-      const acceleration = Math.min(pressDuration / 500, 5); // Max 5x speed
-      handleScroll(type, dir, acceleration);
-    }, 50);
-
-    setButtonPressTimer(timer);
-  }, [handleScroll, pressStartTime]);
-
-  const handleButtonRelease = useCallback(() => {
-    if (buttonPressTimer) {
-      clearInterval(buttonPressTimer);
-    }
-    setPressedButton(null);
-    setPressStartTime(null);
-    setButtonPressTimer(null);
-  }, [buttonPressTimer]);
-
-  // Current time handlers
-  const setCurrentTime = useCallback((type: 'hours' | 'minutes') => {
-    const now = new Date();
-    if (type === 'hours') {
-      const currentHours = pad(now.getHours());
-      setHours(currentHours);
-      onChange(`${currentHours}:${minutes}`);
-    } else {
-      const currentMinutes = pad(Math.floor(now.getMinutes() / 5) * 5);
-      setMinutes(currentMinutes);
-      onChange(`${hours}:${currentMinutes}`);
-    }
-  }, [hours, minutes, onChange]);
-
-  // Mouse movement handler
-  const lastMousePos = useRef({ x: 0, y: 0 });
-  const isMoving = useRef(false);
-  const mouseCheckInterval = useRef<NodeJS.Timer | null>(null);
-
-  const handleMouseMove = useCallback((
-    e: React.MouseEvent<HTMLDivElement>,
-    type: 'hours' | 'minutes'
-  ) => {
+  // Mouse move handler for scroll columns
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>, type: 'hours' | 'minutes') => {
     const rect = e.currentTarget.getBoundingClientRect();
     const centerY = rect.top + rect.height / 2;
     const distanceFromCenter = e.clientY - centerY;
-    
-    // Detekcia pohybu myši
-    const currentMousePos = { x: e.clientX, y: e.clientY };
-    isMoving.current = true;
-    
-    if (lastMousePos.current.x !== currentMousePos.x || 
-        lastMousePos.current.y !== currentMousePos.y) {
-      lastMousePos.current = currentMousePos;
-      
-      // Výpočet rýchlosti s pomalším zrýchľovaním
-      const normalizedDistance = Math.abs(distanceFromCenter) / (rect.height / 2);
-      const speed = Math.min(normalizedDistance * 0.8, 1.5); // Znížená maximálna rýchlosť
-      const direction = distanceFromCenter > 0 ? 1 : -1;
-      
-      setMouseY(e.clientY);
-      setScrollSpeed(speed);
 
-      if (type === 'hours') {
-        handleScroll('hours', direction, speed);
-      } else {
-        handleScroll('minutes', direction, speed);
-      }
+    if (Math.abs(distanceFromCenter) < SCROLL_PARAMS.PROTECTIVE_ZONE) {
+      setMouseState(prev => ({
+        ...prev,
+        [type]: { speed: 0, direction: 0 }
+      }));
+      return;
     }
 
-    // Kontrola zastavenia pohybu
-    if (mouseCheckInterval.current) {
-      clearInterval(mouseCheckInterval.current);
-    }
-    
-    mouseCheckInterval.current = setInterval(() => {
-      if (isMoving.current) {
-        isMoving.current = false;
-      } else {
-        // Ak sa myš nehýbe, zastavíme scrollovanie
-        setScrollSpeed(0);
+    setMouseState(prev => ({
+      ...prev,
+      [type]: {
+        speed: SCROLL_PARAMS.START_SPEED,
+        direction: distanceFromCenter > 0 ? 1 : -1
       }
-    }, 100); // Kontrola každých 100ms
-  }, [handleScroll]);
+    }));
+  }, []);
 
-  // Cleanup on unmount
+  // Mouse leave handler to stop scrolling
+  const handleMouseLeave = useCallback((type: 'hours' | 'minutes') => {
+    setMouseState(prev => ({
+      ...prev,
+      [type]: { speed: 0, direction: 0 }
+    }));
+  }, []);
+
+  // Continuous scrolling mechanism
   useEffect(() => {
-    return () => {
-      if (buttonPressTimer) clearInterval(buttonPressTimer);
-      if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
-    };
-  }, [buttonPressTimer]);
+    const interval = setInterval(() => {
+      setScrollPosition(prev => {
+        const totalHoursHeight = EXTENDED_HOURS.length * ITEM_HEIGHT;
+        const totalMinutesHeight = EXTENDED_MINUTES.length * ITEM_HEIGHT;
 
-  const renderControls = (type: 'hours' | 'minutes') => (
-    <div className="time-picker-controls">
-      <button
-        type="button"
-        className="time-picker-control-button"
-        onMouseDown={() => handleButtonPress(type, 'up')}
-        onMouseUp={handleButtonRelease}
-        onMouseLeave={handleButtonRelease}
-      >
-        <svg viewBox="0 0 24 24">
-          <path d="M7 14l5-5 5 5z"/>
-        </svg>
-      </button>
-      
-      <button
-        type="button"
-        className="time-picker-control-button"
-        onClick={() => setCurrentTime(type)}
-      >
-        <div className="time-picker-control-circle"></div>
-      </button>
-      
-      <button
-        type="button"
-        className="time-picker-control-button"
-        onMouseDown={() => handleButtonPress(type, 'down')}
-        onMouseUp={handleButtonRelease}
-        onMouseLeave={handleButtonRelease}
-      >
-        <svg viewBox="0 0 24 24">
-          <path d="M7 10l5 5 5-5z"/>
-        </svg>
-      </button>
-    </div>
-  );
+        let newHoursPos = prev.hours + mouseState.hours.direction * mouseState.hours.speed;
+        let newMinutesPos = prev.minutes + mouseState.minutes.direction * mouseState.minutes.speed;
+
+        // Wrap around logic for hours
+        if (newHoursPos < 0) {
+          newHoursPos += totalHoursHeight;
+        } else if (newHoursPos >= totalHoursHeight) {
+          newHoursPos -= totalHoursHeight;
+        }
+
+        // Wrap around logic for minutes
+        if (newMinutesPos < 0) {
+          newMinutesPos += totalMinutesHeight;
+        } else if (newMinutesPos >= totalMinutesHeight) {
+          newMinutesPos -= totalMinutesHeight;
+        }
+
+        return {
+          hours: newHoursPos,
+          minutes: newMinutesPos
+        };
+      });
+    }, SCROLL_PARAMS.INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [mouseState]);
+
+  // Calculate and emit current time
+  const currentHour = calculateCurrentValues(scrollPosition.hours, EXTENDED_HOURS);
+  const currentMinute = calculateCurrentValues(scrollPosition.minutes, EXTENDED_MINUTES);
+
+  // Emit time changes
+  useEffect(() => {
+    const formattedTime = `${currentHour}:${currentMinute}`;
+    onChange(formattedTime);
+  }, [currentHour, currentMinute, onChange]);
 
   return (
     <div className="time-picker">
       <div className="time-picker-columns">
+        {/* Hours Column */}
         <div className="time-picker-column hours">
-          {renderControls('hours')}
           <div 
-            ref={hoursContainerRef}
             className="time-picker-scroll-container"
-            onMouseEnter={() => setIsHoursHovered(true)}
-            onMouseLeave={() => setIsHoursHovered(false)}
             onMouseMove={(e) => handleMouseMove(e, 'hours')}
+            onMouseLeave={() => handleMouseLeave('hours')}
           >
             <div 
               className="time-picker-scroll-content"
-              style={{ transform: `translateY(${-hoursScrollPosition}px)` }}
+              style={{ transform: `translateY(${-scrollPosition.hours}px)` }}
             >
-              {hoursList.map((hour, index) => (
-                <div key={`hour-${index}`} className="time-picker-scroll-item">
+              {EXTENDED_HOURS.map((hour, index) => (
+                <div 
+                  key={`hour-${index}`} 
+                  className="time-picker-scroll-item"
+                  data-index={index}
+                >
                   {hour}
                 </div>
               ))}
             </div>
           </div>
+          <div className="current-time-display">
+            Current Hour: {currentHour}
+          </div>
         </div>
 
+        {/* Minutes Column */}
         <div className="time-picker-column minutes">
-          {renderControls('minutes')}
           <div 
-            ref={minutesContainerRef}
             className="time-picker-scroll-container"
-            onMouseEnter={() => setIsMinutesHovered(true)}
-            onMouseLeave={() => setIsMinutesHovered(false)}
             onMouseMove={(e) => handleMouseMove(e, 'minutes')}
+            onMouseLeave={() => handleMouseLeave('minutes')}
           >
             <div 
               className="time-picker-scroll-content"
-              style={{ transform: `translateY(${-minutesScrollPosition}px)` }}
+              style={{ transform: `translateY(${-scrollPosition.minutes}px)` }}
             >
-              {minutesList.map((minute, index) => (
-                <div key={`minute-${index}`} className="time-picker-scroll-item">
+              {EXTENDED_MINUTES.map((minute, index) => (
+                <div 
+                  key={`minute-${index}`} 
+                  className="time-picker-scroll-item"
+                  data-index={index}
+                >
                   {minute}
                 </div>
               ))}
             </div>
           </div>
+          <div className="current-time-display">
+            Current Minute: {currentMinute}
+          </div>
         </div>
+      </div>
+      <div className="full-time-display">
+        Full Time: {currentHour}:{currentMinute}
       </div>
     </div>
   );
