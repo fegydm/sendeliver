@@ -1,9 +1,12 @@
 // File: src/components/TimeColumn.tsx
+// Artifact: Fixed error "Cannot find name 'newPos'" and warnings "'e' is declared but never read"
 import React, { useState, useRef, useCallback } from 'react';
 import './TimeColumn.css';
+import ThreeScroll from './ThreeScroll';
 
-// Configuration constants
-const ITEM_HEIGHT = 40;
+// Constants for item height and debounce time
+const ITEM_HEIGHT = 24;
+const DEBOUNCE_TIME = 200;
 const TOTAL_HOURS = 24;
 const TOTAL_MINUTES = 12;
 const TOTAL_HOURS_HEIGHT = ITEM_HEIGHT * TOTAL_HOURS;
@@ -19,7 +22,7 @@ interface TimeColumnProps {
 }
 
 const TimeColumn: React.FC<TimeColumnProps> = () => {
-  const [scrollPosition, setScrollPosition] = useState({ hours: 0, minutes: 0 });
+  const [scrollPosition, setScrollPosition] = useState<{ hours: number; minutes: number }>({ hours: 0, minutes: 0 });
   const intervalRef = useRef<{ hours: NodeJS.Timeout | null; minutes: NodeJS.Timeout | null }>({ hours: null, minutes: null });
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const scrollStateRef = useRef<{
@@ -30,30 +33,20 @@ const TimeColumn: React.FC<TimeColumnProps> = () => {
     minutes: { speed: 0, direction: 'up' }
   });
 
-  const calculateScrollSpeed = useCallback((mouseY: number, centerY: number) => {
-    const distanceFromCenter = mouseY - centerY;
-    
-    // Dead zone affects only scrolling speed
-    if (Math.abs(distanceFromCenter) <= DEAD_ZONE_SIZE) {
-      // Return direction based on exact center position, but zero speed
-      return { 
-        speed: 0, 
-        direction: distanceFromCenter <= 0 ? 'up' as const : 'down' as const 
-      };
-    }
-
-    const direction = distanceFromCenter < 0 ? 'up' as const : 'down' as const;
-    
-    // Calculate relative distance (0-1)
-    const maxDistance = (wrapperRef.current?.clientHeight ?? 200) / 2;
-    const relativeDistance = Math.abs(distanceFromCenter) / maxDistance;
-    
-    // Apply exponential curve
-    const speed = MIN_SCROLL_SPEED + (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED) * 
-      Math.pow(Math.min(1, relativeDistance), EXPONENTIAL_FACTOR);
-    
-    return { speed, direction };
-  }, []);
+  const frameStyle = {
+    position: 'absolute' as const,
+    left: 0,
+    right: 0,
+    top: '50%',
+    height: `${ITEM_HEIGHT}px`,
+    transform: 'translateY(-50%)',
+    border: '4px solid #2196f3',
+    backgroundColor: 'rgba(33, 150, 243, 0.2)',
+    pointerEvents: 'none' as const,
+    zIndex: 1,
+    width: '100%',
+    boxSizing: 'border-box' as const
+  };
 
   const handleMouseMove = useCallback((e: React.MouseEvent, type: 'hours' | 'minutes') => {
     if (!wrapperRef.current) return;
@@ -62,15 +55,12 @@ const TimeColumn: React.FC<TimeColumnProps> = () => {
     const centerY = rect.top + rect.height / 2;
     const mouseY = e.clientY;
     
-    // Arrow direction changes exactly at center point
     const direction = mouseY <= centerY ? 'up' : 'down';
     
-    // Update cursor immediately based on direction
     const target = e.currentTarget as HTMLElement;
     target.classList.remove('scrolling-up', 'scrolling-down');
     target.classList.add(`scrolling-${direction}`);
 
-    // Scrolling speed respects dead zone
     const distanceFromCenter = mouseY - centerY;
     let speed = 0;
     
@@ -81,10 +71,8 @@ const TimeColumn: React.FC<TimeColumnProps> = () => {
         Math.pow(Math.min(1, relativeDistance), EXPONENTIAL_FACTOR);
     }
 
-    // Update scroll state
     scrollStateRef.current[type] = { speed, direction };
 
-    // Start/stop interval based on speed
     if (!intervalRef.current[type] && speed > 0) {
       startScrolling(type);
     } else if (speed === 0 && intervalRef.current[type]) {
@@ -117,49 +105,161 @@ const TimeColumn: React.FC<TimeColumnProps> = () => {
       intervalRef.current[type] = null;
     }
     
-    // Remove scroll direction classes
     const columns = document.querySelectorAll('.time-column');
     columns.forEach(column => {
       column.classList.remove('scrolling-up', 'scrolling-down');
     });
   }, []);
 
+  const calculateVisibleValue = useCallback((type: 'hours' | 'minutes') => {
+    const currentPos = scrollPosition[type];
+    const itemHeight = ITEM_HEIGHT;
+    const totalItems = type === 'hours' ? TOTAL_HOURS : TOTAL_MINUTES;
+    
+    const centerOffset = (200 - itemHeight) / 2;
+    const adjustedPos = currentPos + centerOffset;
+    const index = Math.round(adjustedPos / itemHeight) % totalItems;
+    
+    return index;
+  }, [scrollPosition]);
+
+  const alignToCenter = useCallback((type: 'hours' | 'minutes', value: number) => {
+    const itemHeight = ITEM_HEIGHT;
+    const totalHeight = type === 'hours' ? TOTAL_HOURS_HEIGHT : TOTAL_MINUTES_HEIGHT;
+    const centerOffset = (200 - itemHeight) / 2;
+    const currentPos = scrollPosition[type];
+    
+    const basePosition = value * itemHeight;
+    const currentOffset = currentPos % totalHeight;
+    let targetPosition = basePosition - centerOffset;
+
+    const diff = currentOffset - (basePosition - centerOffset);
+    if (diff > totalHeight / 2) {
+      targetPosition += totalHeight;
+    } else if (diff < -totalHeight / 2) {
+      targetPosition -= totalHeight;
+    }
+    const currentCycle = Math.floor(currentPos / totalHeight);
+    targetPosition += currentCycle * totalHeight;
+
+    let startTime: number;
+    const duration = 300;
+    const startPos = scrollPosition[type];
+    const distance = targetPosition - startPos;
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      let currentPos = startPos + (distance * easeProgress);
+      
+      if (currentPos < 0) currentPos += totalHeight;
+      if (currentPos >= totalHeight) currentPos -= totalHeight; // Fixed: Changed 'newPos' to 'currentPos'
+
+      setScrollPosition(prev => ({
+        ...prev,
+        [type]: currentPos
+      }));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [scrollPosition]);
+
+  const handleThreeScroll = useCallback((type: 'hours' | 'minutes', distance: number) => {
+    setScrollPosition(prev => {
+      const totalHeight = type === 'hours' ? TOTAL_HOURS_HEIGHT : TOTAL_MINUTES_HEIGHT;
+      let newPos = prev[type] + distance;
+
+      if (newPos < 0) newPos += totalHeight;
+      if (newPos >= totalHeight) newPos -= totalHeight;
+      
+      return { ...prev, [type]: newPos };
+    });
+  }, []);
+
+  const handleSetCurrent = useCallback((type: 'hours' | 'minutes', value: number) => {
+    alignToCenter(type, value);
+  }, [alignToCenter]);
+
+  const currentTime = new Date();
+
   return (
     <div ref={wrapperRef} className="time-columns-wrapper">
-      {/* Hours Column */}
-      <div 
-        className="time-column"
-        style={{ transform: `translateY(${-scrollPosition.hours}px)` }}
-        onMouseMove={(e) => handleMouseMove(e, 'hours')}
-        onMouseLeave={() => stopScrolling('hours')}
-      >
-        {Array.from({ length: TOTAL_HOURS * 3 }, (_, i) => (
+      <div style={{ display: 'flex', width: '100%', alignItems: 'center' }}>
+        <ThreeScroll 
+          type="hours" 
+          onScroll={(distance) => handleThreeScroll('hours', distance)} 
+          onSetCurrent={(value) => handleSetCurrent('hours', value)} 
+          currentTime={currentTime}
+          itemHeight={ITEM_HEIGHT}
+          debounceTime={DEBOUNCE_TIME}
+        />
+        <div style={{ position: 'relative', height: '200px' }}>
+          <div style={frameStyle} />
           <div 
-            key={`hour-${i}`} 
-            className="time-item"
-            style={{ height: `${ITEM_HEIGHT}px`, lineHeight: `${ITEM_HEIGHT}px` }}
+            className="time-column"
+            style={{ transform: `translateY(${-scrollPosition.hours}px)` }}
+            onMouseMove={(e) => handleMouseMove(e, 'hours')}
+            onMouseLeave={() => { // Fixed: Removed unused 'e' parameter
+              stopScrolling('hours');
+              alignToCenter('hours', calculateVisibleValue('hours'));
+            }}
           >
-            {String(i % TOTAL_HOURS).padStart(2, '0')}
+            {Array.from({ length: TOTAL_HOURS * 3 }, (_, i) => {
+              const value = i % TOTAL_HOURS;
+              return (
+                <div 
+                  key={`hour-${i}`} 
+                  className="time-item"
+                  style={{ height: `${ITEM_HEIGHT}px`, lineHeight: `${ITEM_HEIGHT}px` }}
+                  onClick={() => alignToCenter('hours', value)}
+                >
+                  {String(value).padStart(2, '0')}
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
-
-      {/* Minutes Column */}
-      <div 
-        className="time-column"
-        style={{ transform: `translateY(${-scrollPosition.minutes}px)` }}
-        onMouseMove={(e) => handleMouseMove(e, 'minutes')}
-        onMouseLeave={() => stopScrolling('minutes')}
-      >
-        {Array.from({ length: TOTAL_MINUTES * 6 }, (_, i) => (
+        </div>
+        <div style={{ position: 'relative', height: '200px' }}>
+          <div style={frameStyle} />
           <div 
-            key={`minute-${i}`} 
-            className="time-item"
-            style={{ height: `${ITEM_HEIGHT}px`, lineHeight: `${ITEM_HEIGHT}px` }}
+            className="time-column"
+            style={{ transform: `translateY(${-scrollPosition.minutes}px)` }}
+            onMouseMove={(e) => handleMouseMove(e, 'minutes')}
+            onMouseLeave={() => { // Fixed: Removed unused 'e' parameter
+              stopScrolling('minutes');
+              alignToCenter('minutes', calculateVisibleValue('minutes'));
+            }}
           >
-            {String((i % TOTAL_MINUTES) * 5).padStart(2, '0')}
+            {Array.from({ length: TOTAL_MINUTES * 6 }, (_, i) => {
+              const value = i % TOTAL_MINUTES;
+              return (
+                <div 
+                  key={`minute-${i}`} 
+                  className="time-item"
+                  style={{ height: `${ITEM_HEIGHT}px`, lineHeight: `${ITEM_HEIGHT}px` }}
+                  onClick={() => alignToCenter('minutes', value)}
+                >
+                  {String(value * 5).padStart(2, '0')}
+                </div>
+              );
+            })}
           </div>
-        ))}
+        </div>
+        <ThreeScroll 
+          type="minutes" 
+          onScroll={(distance) => handleThreeScroll('minutes', distance)} 
+          onSetCurrent={(value) => handleSetCurrent('minutes', value)} 
+          currentTime={currentTime}
+          itemHeight={ITEM_HEIGHT}
+          debounceTime={DEBOUNCE_TIME}
+        />
       </div>
     </div>
   );

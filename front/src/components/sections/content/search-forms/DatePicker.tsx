@@ -70,7 +70,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     'Január', 'Február', 'Marec', 'Apríl', 'Máj', 'Jún', 
     'Júl', 'August', 'September', 'Október', 'November', 'December'
   ];
-  const weekdays = ['P', 'U', 'S', 'Š', 'P', 'S', 'N']; // Note: duplicates exist, so we append index to key
+  const weekdays = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']; // Note: duplicates exist, so we append index to key
 
   return (
     <div className="date-picker">

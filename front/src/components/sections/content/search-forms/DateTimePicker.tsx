@@ -1,20 +1,21 @@
 // File: src/components/sections/content/search-forms/DateTimePicker.tsx
-// Last change: Created complete DateTimePicker with DatePicker and TimePicker; comments in English with braces content in one line
-
+// Last change: Added onHourChange and onMinuteChange props to pass framed hour and minute values from TimePicker
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import DatePicker from './DatePicker';
 import TimePicker from './TimePicker';
 import './DateTimePicker.css';
 
 interface DateTimePickerProps {
-  value?: Date | string | null; // (Initial value for the picker)
-  onChange?: (date: Date) => void; // (Callback when date changes)
-  label?: string; // (Label for the picker)
-  className?: string; // (Additional CSS class)
-  min?: Date; // (Minimum allowed date)
-  max?: Date; // (Maximum allowed date)
-  required?: boolean; // (Whether the field is required)
-  disabled?: boolean; // (Whether the field is disabled)
+  value?: Date | string | null; // Initial value for the picker
+  onChange?: (date: Date) => void; // Callback when date changes
+  label?: string; // Label for the picker
+  className?: string; // Additional CSS class
+  min?: Date; // Minimum allowed date
+  max?: Date; // Maximum allowed date
+  required?: boolean; // Whether the field is required
+  disabled?: boolean; // Whether the field is disabled
+  onHourChange?: (hour: number) => void; // Callback for hour value in frame
+  onMinuteChange?: (minute: number) => void; // Callback for minute value in frame
 }
 
 const pad = (num: number) => num.toString().padStart(2, '0'); // Utility to pad single-digit numbers with a leading zero
@@ -27,16 +28,18 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   min,
   max,
   required = false,
-  disabled = false
+  disabled = false,
+  onHourChange,
+  onMinuteChange,
 }) => {
   // Initialize the date value { if value is a Date, use it; else, if string then convert; otherwise use current date }
   const initialDate = value instanceof Date ? value : value ? new Date(value) : new Date();
 
-  const [selectedDate, setSelectedDate] = useState<Date>(initialDate); // (State for the selected date)
-  const [isPickerOpen, setIsPickerOpen] = useState(false); // (State whether the picker dropdown is open)
+  const [selectedDate, setSelectedDate] = useState<Date>(initialDate); // State for the selected date
+  const [isPickerOpen, setIsPickerOpen] = useState(false); // State whether the picker dropdown is open
   
-  const containerRef = useRef<HTMLDivElement>(null); // (Reference to the container element)
-  const inputRef = useRef<HTMLInputElement>(null); // (Reference to the input element)
+  const containerRef = useRef<HTMLDivElement>(null); // Reference to the container element
+  const inputRef = useRef<HTMLInputElement>(null); // Reference to the input element
 
   // Format the date and time into a string "YYYY-MM-DD HH:mm"
   const formatDateTime = useCallback((date: Date): string => {
@@ -52,7 +55,6 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
       selectedDate.getHours(), 
       selectedDate.getMinutes()
     );
-    // Validate against min/max dates
     if ((min && updatedDate < min) || (max && updatedDate > max)) {
       console.warn('Selected date is out of allowed range');
       return;
@@ -71,7 +73,6 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
       hours, 
       minutes
     );
-    // Validate against min/max dates
     if ((min && updatedDate < min) || (max && updatedDate > max)) {
       console.warn('Selected date and time are out of allowed range');
       return;
@@ -123,6 +124,8 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
             <TimePicker 
               value={`${pad(selectedDate.getHours())}:${pad(selectedDate.getMinutes())}`}
               onChange={handleTimeChange}
+              onHourChange={onHourChange} // Pass hour callback
+              onMinuteChange={onMinuteChange} // Pass minute callback
             />
           </div>
         )}

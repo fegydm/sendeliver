@@ -1,194 +1,293 @@
-// File: src/components/sections/content/search-forms/TimePicker.tsx
-// Last change: Fully implemented time picker with prop usage and scroll mechanics
+// File: src/components/TimePicker.tsx
+// Artifact: Fixed error "Cannot find name 'handleMobileMouseMove'" by replacing with 'handleMouseMove'
+import React, { useState, useRef, useCallback } from 'react';
+import './TimeColumn.css';
+import ThreeScroll from './ThreeScroll';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+// Constants for item height and debounce time
+const ITEM_HEIGHT = 24;
+const DEBOUNCE_TIME = 200;
+const TOTAL_HOURS = 24;
+const TOTAL_MINUTES = 12;
+const TOTAL_HOURS_HEIGHT = ITEM_HEIGHT * TOTAL_HOURS;
+const TOTAL_MINUTES_HEIGHT = ITEM_HEIGHT * TOTAL_MINUTES;
+const DEAD_ZONE_SIZE = 5;
+const MIN_SCROLL_SPEED = 1;
+const MAX_SCROLL_SPEED = 10;
+const EXPONENTIAL_FACTOR = 2;
+const INTERVAL_DELAY = 50;
 
 interface TimePickerProps {
-  value?: string;
-  onChange: (time: string) => void;
+  className?: string;
+  value?: string; // Initial time value (e.g., "HH:mm")
+  onChange?: (timeString: string) => void; // Callback to pass updated time to parent
+  onHourChange?: (hour: number) => void; // Callback to pass selected hour
+  onMinuteChange?: (minute: number) => void; // Callback to pass selected minute
 }
 
-const SCROLL_PARAMS = {
-  START_SPEED: 8,
-  MAX_SPEED: 8,
-  INTERVAL: 50,
-  PROTECTIVE_ZONE: 5
-};
+const pad = (num: number) => num.toString().padStart(2, '0'); // Utility to pad single-digit numbers with a leading zero
 
-const ITEM_HEIGHT = 40;
-
-const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-const MINUTES = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'));
-
-const EXTENDED_HOURS = [...HOURS, ...HOURS, ...HOURS];
-const EXTENDED_MINUTES = [...MINUTES, ...MINUTES, ...MINUTES];
-
-export const TimePicker: React.FC<TimePickerProps> = ({ 
-  value = '12:00', 
-  onChange 
+const TimePicker: React.FC<TimePickerProps> = ({
+  
+  value,
+  onChange,
+  onHourChange,
+  onMinuteChange,
 }) => {
-  // Parse initial time from value prop
-  const initialTime = useMemo(() => {
-    const [initialHour, initialMinute] = value.split(':').map(Number);
-    return {
-      hour: isNaN(initialHour) ? 12 : Math.min(Math.max(initialHour, 0), 23),
-      minute: isNaN(initialMinute) ? 0 : Math.min(Math.max(initialMinute, 0), 55)
-    };
-  }, [value]);
-
-  // Initialize scroll positions based on initial time
-  const [scrollPosition, setScrollPosition] = useState({
-    hours: (initialTime.hour + HOURS.length) * ITEM_HEIGHT,
-    minutes: (Math.floor(initialTime.minute / 5) + MINUTES.length) * ITEM_HEIGHT
+  // Initialize scroll position based on value if provided
+  const [initialHours, initialMinutes] = value ? value.split(':').map(Number) : [0, 0];
+  const [scrollPosition, setScrollPosition] = useState<{ hours: number; minutes: number }>({
+    hours: value ? initialHours * ITEM_HEIGHT : 0,
+    minutes: value ? (initialMinutes / 5) * ITEM_HEIGHT : 0,
+  });
+  const intervalRef = useRef<{ hours: NodeJS.Timeout | null; minutes: NodeJS.Timeout | null }>({ hours: null, minutes: null });
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const scrollStateRef = useRef<{
+    hours: { speed: number; direction: 'up' | 'down' };
+    minutes: { speed: number; direction: 'up' | 'down' };
+  }>({
+    hours: { speed: 0, direction: 'up' },
+    minutes: { speed: 0, direction: 'up' }
   });
 
-  const [mouseState, setMouseState] = useState({
-    hours: { speed: 0, direction: 0 },
-    minutes: { speed: 0, direction: 0 }
-  });
+  const frameStyle = {
+    position: 'absolute' as const,
+    left: 0,
+    right: 0,
+    top: '50%',
+    height: `${ITEM_HEIGHT}px`,
+    transform: 'translateY(-50%)',
+    border: '4px solid #2196f3',
+    backgroundColor: 'rgba(33, 150, 243, 0.2)',
+    pointerEvents: 'none' as const,
+    zIndex: 1,
+    width: '100%',
+    boxSizing: 'border-box' as const
+  };
 
-  // Calculate current values based on scroll position
-  const calculateCurrentValues = useCallback((pos: number, items: string[]) => {
-    const totalHeight = items.length * ITEM_HEIGHT;
-    const normalizedPos = pos % totalHeight;
-    const index = Math.floor(normalizedPos / ITEM_HEIGHT);
-    return items[index];
-  }, []);
-
-  // Mouse move handler for scroll columns
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>, type: 'hours' | 'minutes') => {
-    const rect = e.currentTarget.getBoundingClientRect();
+  const handleMouseMove = useCallback((e: React.MouseEvent, type: 'hours' | 'minutes') => {
+    if (!wrapperRef.current) return;
+    
+    const rect = wrapperRef.current.getBoundingClientRect();
     const centerY = rect.top + rect.height / 2;
-    const distanceFromCenter = e.clientY - centerY;
+    const mouseY = e.clientY;
+    
+    const direction = mouseY <= centerY ? 'up' : 'down';
+    
+    const target = e.currentTarget as HTMLElement;
+    target.classList.remove('scrolling-up', 'scrolling-down');
+    target.classList.add(`scrolling-${direction}`);
 
-    if (Math.abs(distanceFromCenter) < SCROLL_PARAMS.PROTECTIVE_ZONE) {
-      setMouseState(prev => ({
-        ...prev,
-        [type]: { speed: 0, direction: 0 }
-      }));
-      return;
+    const distanceFromCenter = mouseY - centerY;
+    let speed = 0;
+    
+    if (Math.abs(distanceFromCenter) > DEAD_ZONE_SIZE) {
+      const maxDistance = (wrapperRef.current?.clientHeight ?? 200) / 2;
+      const relativeDistance = Math.abs(distanceFromCenter) / maxDistance;
+      speed = MIN_SCROLL_SPEED + (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED) * 
+        Math.pow(Math.min(1, relativeDistance), EXPONENTIAL_FACTOR);
     }
 
-    setMouseState(prev => ({
-      ...prev,
-      [type]: {
-        speed: SCROLL_PARAMS.START_SPEED,
-        direction: distanceFromCenter > 0 ? 1 : -1
-      }
-    }));
+    scrollStateRef.current[type] = { speed, direction };
+
+    if (!intervalRef.current[type] && speed > 0) {
+      startScrolling(type);
+    } else if (speed === 0 && intervalRef.current[type]) {
+      stopScrolling(type);
+    }
   }, []);
 
-  // Mouse leave handler to stop scrolling
-  const handleMouseLeave = useCallback((type: 'hours' | 'minutes') => {
-    setMouseState(prev => ({
-      ...prev,
-      [type]: { speed: 0, direction: 0 }
-    }));
-  }, []);
+  const startScrolling = useCallback((type: 'hours' | 'minutes') => {
+    if (intervalRef.current[type]) return;
 
-  // Continuous scrolling mechanism
-  useEffect(() => {
-    const interval = setInterval(() => {
+    intervalRef.current[type] = setInterval(() => {
+      const { speed, direction } = scrollStateRef.current[type];
+      if (speed === 0) return;
+
       setScrollPosition(prev => {
-        const totalHoursHeight = EXTENDED_HOURS.length * ITEM_HEIGHT;
-        const totalMinutesHeight = EXTENDED_MINUTES.length * ITEM_HEIGHT;
+        const totalHeight = type === 'hours' ? TOTAL_HOURS_HEIGHT : TOTAL_MINUTES_HEIGHT;
+        let newPos = direction === 'up' ? prev[type] + speed : prev[type] - speed;
 
-        let newHoursPos = prev.hours + mouseState.hours.direction * mouseState.hours.speed;
-        let newMinutesPos = prev.minutes + mouseState.minutes.direction * mouseState.minutes.speed;
-
-        // Wrap around logic for hours
-        if (newHoursPos < 0) {
-          newHoursPos += totalHoursHeight;
-        } else if (newHoursPos >= totalHoursHeight) {
-          newHoursPos -= totalHoursHeight;
-        }
-
-        // Wrap around logic for minutes
-        if (newMinutesPos < 0) {
-          newMinutesPos += totalMinutesHeight;
-        } else if (newMinutesPos >= totalMinutesHeight) {
-          newMinutesPos -= totalMinutesHeight;
-        }
-
-        return {
-          hours: newHoursPos,
-          minutes: newMinutesPos
-        };
+        if (newPos < 0) newPos += totalHeight;
+        if (newPos >= totalHeight) newPos -= totalHeight;
+        
+        return { ...prev, [type]: newPos };
       });
-    }, SCROLL_PARAMS.INTERVAL);
+    }, INTERVAL_DELAY);
+  }, []);
 
-    return () => clearInterval(interval);
-  }, [mouseState]);
+  const stopScrolling = useCallback((type: 'hours' | 'minutes') => {
+    if (intervalRef.current[type]) {
+      clearInterval(intervalRef.current[type]!);
+      intervalRef.current[type] = null;
+    }
+    
+    const columns = document.querySelectorAll('.time-column');
+    columns.forEach(column => {
+      column.classList.remove('scrolling-up', 'scrolling-down');
+    });
+  }, []);
 
-  // Calculate and emit current time
-  const currentHour = calculateCurrentValues(scrollPosition.hours, EXTENDED_HOURS);
-  const currentMinute = calculateCurrentValues(scrollPosition.minutes, EXTENDED_MINUTES);
+  const calculateVisibleValue = useCallback((type: 'hours' | 'minutes') => {
+    const currentPos = scrollPosition[type];
+    const itemHeight = ITEM_HEIGHT;
+    const totalItems = type === 'hours' ? TOTAL_HOURS : TOTAL_MINUTES;
+    
+    const centerOffset = (200 - itemHeight) / 2;
+    const adjustedPos = currentPos + centerOffset;
+    const index = Math.round(adjustedPos / itemHeight) % totalItems;
+    
+    return index;
+  }, [scrollPosition]);
 
-  // Emit time changes
-  useEffect(() => {
-    const formattedTime = `${currentHour}:${currentMinute}`;
-    onChange(formattedTime);
-  }, [currentHour, currentMinute, onChange]);
+  const alignToCenter = useCallback((type: 'hours' | 'minutes', value: number) => {
+    const itemHeight = ITEM_HEIGHT;
+    const totalHeight = type === 'hours' ? TOTAL_HOURS_HEIGHT : TOTAL_MINUTES_HEIGHT;
+    const centerOffset = (200 - itemHeight) / 2;
+    const currentPos = scrollPosition[type];
+    
+    const basePosition = value * itemHeight;
+    const currentOffset = currentPos % totalHeight;
+    let targetPosition = basePosition - centerOffset;
+
+    const diff = currentOffset - (basePosition - centerOffset);
+    if (diff > totalHeight / 2) {
+      targetPosition += totalHeight;
+    } else if (diff < -totalHeight / 2) {
+      targetPosition -= totalHeight;
+    }
+    const currentCycle = Math.floor(currentPos / totalHeight);
+    targetPosition += currentCycle * totalHeight;
+
+    let startTime: number;
+    const duration = 300;
+    const startPos = scrollPosition[type];
+    const distance = targetPosition - startPos;
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      let currentPos = startPos + (distance * easeProgress);
+      
+      if (currentPos < 0) currentPos += totalHeight;
+      if (currentPos >= totalHeight) currentPos -= totalHeight;
+
+      setScrollPosition(prev => {
+        const newState = { ...prev, [type]: currentPos };
+        const hour = calculateVisibleValue('hours');
+        const minute = calculateVisibleValue('minutes') * 5;
+        onHourChange?.(hour);
+        onMinuteChange?.(minute);
+        if (onChange) onChange(`${pad(hour)}:${pad(minute)}`);
+        return newState;
+      });
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [scrollPosition, onHourChange, onMinuteChange, onChange]);
+
+  const handleThreeScroll = useCallback((type: 'hours' | 'minutes', distance: number) => {
+    setScrollPosition(prev => {
+      const totalHeight = type === 'hours' ? TOTAL_HOURS_HEIGHT : TOTAL_MINUTES_HEIGHT;
+      let newPos = prev[type] + distance;
+
+      if (newPos < 0) newPos += totalHeight;
+      if (newPos >= totalHeight) newPos -= totalHeight;
+      
+      const newState = { ...prev, [type]: newPos };
+      const hour = calculateVisibleValue('hours');
+      const minute = calculateVisibleValue('minutes') * 5;
+      onHourChange?.(hour);
+      onMinuteChange?.(minute);
+      if (onChange) onChange(`${pad(hour)}:${pad(minute)}`);
+      return newState;
+    });
+  }, [onHourChange, onMinuteChange, onChange]);
+
+  const handleSetCurrent = useCallback((type: 'hours' | 'minutes', value: number) => {
+    alignToCenter(type, value);
+  }, [alignToCenter]);
+
+  const currentTime = new Date();
 
   return (
-    <div className="time-picker">
-      <div className="time-picker-columns">
-        {/* Hours Column */}
-        <div className="time-picker-column hours">
+    <div ref={wrapperRef} className="time-columns-wrapper">
+      <div style={{ display: 'flex', width: '100%', alignItems: 'center' }}>
+        <ThreeScroll 
+          type="hours" 
+          onScroll={(distance) => handleThreeScroll('hours', distance)} 
+          onSetCurrent={(value) => handleSetCurrent('hours', value)} 
+          currentTime={currentTime}
+          itemHeight={ITEM_HEIGHT}
+          debounceTime={DEBOUNCE_TIME}
+        />
+        <div style={{ position: 'relative', height: '200px' }}>
+          <div style={frameStyle} />
           <div 
-            className="time-picker-scroll-container"
+            className="time-column"
+            style={{ transform: `translateY(${-scrollPosition.hours}px)` }}
             onMouseMove={(e) => handleMouseMove(e, 'hours')}
-            onMouseLeave={() => handleMouseLeave('hours')}
+            onMouseLeave={() => {
+              stopScrolling('hours');
+              alignToCenter('hours', calculateVisibleValue('hours'));
+            }}
           >
-            <div 
-              className="time-picker-scroll-content"
-              style={{ transform: `translateY(${-scrollPosition.hours}px)` }}
-            >
-              {EXTENDED_HOURS.map((hour, index) => (
+            {Array.from({ length: TOTAL_HOURS * 3 }, (_, i) => {
+              const value = i % TOTAL_HOURS;
+              return (
                 <div 
-                  key={`hour-${index}`} 
-                  className="time-picker-scroll-item"
-                  data-index={index}
+                  key={`hour-${i}`} 
+                  className="time-item"
+                  style={{ height: `${ITEM_HEIGHT}px`, lineHeight: `${ITEM_HEIGHT}px` }}
+                  onClick={() => alignToCenter('hours', value)}
                 >
-                  {hour}
+                  {String(value).padStart(2, '0')}
                 </div>
-              ))}
-            </div>
-          </div>
-          <div className="current-time-display">
-            Current Hour: {currentHour}
+              );
+            })}
           </div>
         </div>
-
-        {/* Minutes Column */}
-        <div className="time-picker-column minutes">
+        <div style={{ position: 'relative', height: '200px' }}>
+          <div style={frameStyle} />
           <div 
-            className="time-picker-scroll-container"
-            onMouseMove={(e) => handleMouseMove(e, 'minutes')}
-            onMouseLeave={() => handleMouseLeave('minutes')}
+            className="time-column"
+            style={{ transform: `translateY(${-scrollPosition.minutes}px)` }}
+            onMouseMove={(e) => handleMouseMove(e, 'minutes')} // Fixed: Replaced handleMobileMouseMove with handleMouseMove
+            onMouseLeave={() => {
+              stopScrolling('minutes');
+              alignToCenter('minutes', calculateVisibleValue('minutes'));
+            }}
           >
-            <div 
-              className="time-picker-scroll-content"
-              style={{ transform: `translateY(${-scrollPosition.minutes}px)` }}
-            >
-              {EXTENDED_MINUTES.map((minute, index) => (
+            {Array.from({ length: TOTAL_MINUTES * 6 }, (_, i) => {
+              const value = i % TOTAL_MINUTES;
+              return (
                 <div 
-                  key={`minute-${index}`} 
-                  className="time-picker-scroll-item"
-                  data-index={index}
+                  key={`minute-${i}`} 
+                  className="time-item"
+                  style={{ height: `${ITEM_HEIGHT}px`, lineHeight: `${ITEM_HEIGHT}px` }}
+                  onClick={() => alignToCenter('minutes', value)}
                 >
-                  {minute}
+                  {String(value * 5).padStart(2, '0')}
                 </div>
-              ))}
-            </div>
-          </div>
-          <div className="current-time-display">
-            Current Minute: {currentMinute}
+              );
+            })}
           </div>
         </div>
-      </div>
-      <div className="full-time-display">
-        Full Time: {currentHour}:{currentMinute}
+        <ThreeScroll 
+          type="minutes" 
+          onScroll={(distance) => handleThreeScroll('minutes', distance)} 
+          onSetCurrent={(value) => handleSetCurrent('minutes', value)} 
+          currentTime={currentTime}
+          itemHeight={ITEM_HEIGHT}
+          debounceTime={DEBOUNCE_TIME}
+        />
       </div>
     </div>
   );
