@@ -1,11 +1,10 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Added testTime field with DateTimePicker
-
+// Artifact: ManualForm using simplified DateTimePicker with date and time aligned side by side in dropdown
 import React, { useState, useRef, useCallback } from 'react';
 import CountrySelect from './CountrySelect';
 import PostalCitySelect from './PostalCitySelect';
 import DateTimePicker from './DateTimePicker';
-import { LocationFormData, LocationType, Location, LocationSuggestion } from '@/types/location.types';
+import { LocationFormData, LocationType, Location } from '@/types/location.types';
 import "@/styles/sections/manual-form.component.css";
 
 interface ManualSearchFormProps {
@@ -22,7 +21,7 @@ const DEFAULT_FORM_DATA: LocationFormData = {
     lat: 0,
     lng: 0,
     time: '',
-    testTime: null
+    testTime: null, // Stores full Date from DateTimePicker
   },
   delivery: {
     cc: '',
@@ -32,17 +31,17 @@ const DEFAULT_FORM_DATA: LocationFormData = {
     lat: 0,
     lng: 0,
     time: '',
-    testTime: null
+    testTime: null, // Stores full Date from DateTimePicker
   },
   cargo: {
     pallets: 0,
-    weight: 0
-  }
+    weight: 0,
+  },
 };
 
 export function ManualForm({
   onSubmit,
-  formData = DEFAULT_FORM_DATA
+  formData = DEFAULT_FORM_DATA,
 }: ManualSearchFormProps) {
   const pickupPscRef = useRef<HTMLInputElement>(null);
   const deliveryPscRef = useRef<HTMLInputElement>(null);
@@ -50,7 +49,9 @@ export function ManualForm({
   const [localFormData, setLocalFormData] = useState<LocationFormData>(formData);
   const [isPickupValid, setIsPickupValid] = useState(false);
   const [isDeliveryValid, setIsDeliveryValid] = useState(false);
-  const [postalFormats, setPostalFormats] = useState<Record<string, { format: string; regex: string }>>({});
+  const [postalFormats, setPostalFormats] = useState<
+    Record<string, { format: string; regex: string }>
+  >({});
 
   const fetchPostalFormat = useCallback(async (code: string) => {
     try {
@@ -63,42 +64,43 @@ export function ManualForm({
         throw new Error(`HTTP error: ${response.status}`);
       }
       const data = await response.json();
-      setPostalFormats(prev => ({
+      setPostalFormats((prev) => ({
         ...prev,
-        [code]: { format: data.postal_code_format, regex: data.postal_code_regex }
+        [code]: { format: data.postal_code_format, regex: data.postal_code_regex },
       }));
     } catch (error) {
       console.error(`Error fetching postal format for ${code}:`, error);
     }
   }, []);
 
-  const handleCountrySelect = useCallback((locationType: LocationType, cc: string, flag: string) => {
-    console.log('Country selected:', { locationType, cc, flag });
-    
-    setLocalFormData(prev => {
-      return {
+  const handleCountrySelect = useCallback(
+    (locationType: LocationType, cc: string, flag: string) => {
+      console.log('Country selected:', { locationType, cc, flag });
+
+      setLocalFormData((prev) => ({
         ...prev,
         [locationType]: {
           ...prev[locationType],
           cc,
           flag,
           psc: '',
-          city: ''
-        }
-      };
-    });
-  
-    if (cc.length === 2) {
-      fetchPostalFormat(cc);
-    }
-  }, [fetchPostalFormat]);
+          city: '',
+        },
+      }));
+
+      if (cc.length === 2) {
+        fetchPostalFormat(cc);
+      }
+    },
+    [fetchPostalFormat]
+  );
 
   const focusPostalCode = useCallback((locationType: LocationType) => {
     console.log(`[DEBUG] Focusing PSC field for ${locationType}`, {
       pickupRef: pickupPscRef.current,
-      deliveryRef: deliveryPscRef.current
+      deliveryRef: deliveryPscRef.current,
     });
-    
+
     if (locationType === LocationType.PICKUP) {
       pickupPscRef.current?.focus();
     } else {
@@ -106,75 +108,65 @@ export function ManualForm({
     }
   }, []);
 
-  const handleLocationSelect = useCallback((
-    locationType: LocationType,
-    location: Omit<Location, "priority">
-  ) => {
-    console.log('Location selected:', { locationType, location });
-    
-    setLocalFormData(prev => ({
-      ...prev,
-      [locationType]: {
-        ...prev[locationType],
-        cc: location.cc,
-        flag: location.flag,
-        psc: location.psc,
-        city: location.city,
-        lat: location.lat || 0,
-        lng: location.lng || 0
-      }
-    }));
+  const handleLocationSelect = useCallback(
+    (locationType: LocationType, location: Omit<Location, 'priority'>) => {
+      console.log('Location selected:', { locationType, location });
 
-    if (location.psc && location.city) {
-      if (locationType === LocationType.PICKUP) {
-        setIsPickupValid(true);
-      } else {
-        setIsDeliveryValid(true);
-      }
-    }
-  }, []);
+      setLocalFormData((prev) => ({
+        ...prev,
+        [locationType]: {
+          ...prev[locationType],
+          cc: location.cc,
+          flag: location.flag,
+          psc: location.psc,
+          city: location.city,
+          lat: location.lat || 0,
+          lng: location.lng || 0,
+        },
+      }));
 
-  const handleTimeChange = useCallback((
-    locationType: LocationType,
-    time: string
-  ) => {
-    setLocalFormData(prev => ({
-      ...prev,
-      [locationType]: {
-        ...prev[locationType],
-        time
+      if (location.psc && location.city) {
+        if (locationType === LocationType.PICKUP) {
+          setIsPickupValid(true);
+        } else {
+          setIsDeliveryValid(true);
+        }
       }
-    }));
-  }, []);
+    },
+    []
+  );
 
-  const handleTestTimeChange = useCallback((
-    locationType: LocationType,
-    testTime: Date
-  ) => {
-    setLocalFormData(prev => ({
-      ...prev,
-      [locationType]: {
-        ...prev[locationType],
-        testTime
-      }
-    }));
-  }, []);
+  const handleDateTimeChange = useCallback(
+    (locationType: LocationType, date: Date) => {
+      setLocalFormData((prev) => ({
+        ...prev,
+        [locationType]: {
+          ...prev[locationType],
+          testTime: date,
+        },
+      }));
+    },
+    []
+  );
 
   const handleCargoChange = useCallback((field: 'pallets' | 'weight', value: number) => {
-    setLocalFormData(prev => ({
+    setLocalFormData((prev) => ({
       ...prev,
       cargo: {
         ...prev.cargo,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   }, []);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Submitting form data:', localFormData);
-    onSubmit(localFormData);
-  }, [localFormData, onSubmit]);
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      console.log('Submitting form data:', localFormData);
+      onSubmit(localFormData);
+    },
+    [localFormData, onSubmit]
+  );
 
   return (
     <form className="manual_form" onSubmit={handleSubmit}>
@@ -185,7 +177,9 @@ export function ManualForm({
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
-              onCountrySelect={(cc, flag) => handleCountrySelect(LocationType.PICKUP, cc, flag)}
+              onCountrySelect={(cc, flag) =>
+                handleCountrySelect(LocationType.PICKUP, cc, flag)
+              }
               onNextFieldFocus={() => focusPostalCode(LocationType.PICKUP)}
               initialValue={localFormData.pickup.cc}
               locationType={LocationType.PICKUP}
@@ -195,8 +189,9 @@ export function ManualForm({
           <PostalCitySelect
             pscRef={pickupPscRef}
             onValidSelection={() => {}}
-            onSelectionChange={(location) => 
-              handleLocationSelect(LocationType.PICKUP, location)}
+            onSelectionChange={(location) =>
+              handleLocationSelect(LocationType.PICKUP, location)
+            }
             locationType={LocationType.PICKUP}
             cc={localFormData.pickup.cc}
             dbPostalCodeMask={postalFormats[localFormData.pickup.cc]?.format || ''}
@@ -205,21 +200,11 @@ export function ManualForm({
         </div>
 
         <div className="datetime-field">
-          <label className="field-label">Loading Time</label>
-          <input
-            type="datetime-local"
-            value={localFormData.pickup.time}
-            onChange={(e) => handleTimeChange(LocationType.PICKUP, e.target.value)}
-            className="datetime-input"
-          />
-        </div>
-
-        <div className="datetime-field">
+          <label className="field-label">Loading Date/Time</label>
           <DateTimePicker
-            label="Test Loading Time"
             value={localFormData.pickup.testTime}
-            onChange={(testTime) => handleTestTimeChange(LocationType.PICKUP, testTime)}
-            min={new Date()} // Minimálny dátum je aktuálny dátum
+            onChange={(date) => handleDateTimeChange(LocationType.PICKUP, date)}
+            min={new Date()} // Minimum date is current date
           />
         </div>
       </div>
@@ -231,7 +216,9 @@ export function ManualForm({
           <div className="field-group">
             <label className="field-label">Country</label>
             <CountrySelect
-              onCountrySelect={(cc, flag) => handleCountrySelect(LocationType.DELIVERY, cc, flag)}
+              onCountrySelect={(cc, flag) =>
+                handleCountrySelect(LocationType.DELIVERY, cc, flag)
+              }
               onNextFieldFocus={() => focusPostalCode(LocationType.DELIVERY)}
               initialValue={localFormData.delivery.cc}
               locationType={LocationType.DELIVERY}
@@ -241,8 +228,9 @@ export function ManualForm({
           <PostalCitySelect
             pscRef={deliveryPscRef}
             onValidSelection={() => {}}
-            onSelectionChange={(location) => 
-              handleLocationSelect(LocationType.DELIVERY, location)}
+            onSelectionChange={(location) =>
+              handleLocationSelect(LocationType.DELIVERY, location)
+            }
             locationType={LocationType.DELIVERY}
             cc={localFormData.delivery.cc}
             dbPostalCodeMask={postalFormats[localFormData.delivery.cc]?.format || ''}
@@ -251,21 +239,11 @@ export function ManualForm({
         </div>
 
         <div className="datetime-field">
-          <label className="field-label">Delivery Time</label>
-          <input
-            type="datetime-local"
-            value={localFormData.delivery.time}
-            onChange={(e) => handleTimeChange(LocationType.DELIVERY, e.target.value)}
-            className="datetime-input"
-          />
-        </div>
-
-        <div className="datetime-field">
+          <label className="field-label">Loading Date/Time</label>
           <DateTimePicker
-            label="Test Delivery Time"
             value={localFormData.delivery.testTime}
-            onChange={(testTime) => handleTestTimeChange(LocationType.DELIVERY, testTime)}
-            min={new Date()} // Minimálny dátum je aktuálny dátum
+            onChange={(date) => handleDateTimeChange(LocationType.DELIVERY, date)}
+            
           />
         </div>
       </div>

@@ -2,7 +2,6 @@
 // Last change: Created standalone DatePicker component; fixed duplicate keys by appending index; comments in English with braces content in one line
 
 import React, { useState, useCallback } from 'react';
-import './DatePicker.css';
 
 interface DatePickerProps {
   value?: Date | string | null;

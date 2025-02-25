@@ -1,24 +1,22 @@
-// File: src/components/sections/content/search-forms/DateTimePicker.tsx
-// Last change: Added onHourChange and onMinuteChange props to pass framed hour and minute values from TimePicker
+// File: src/components/DateTimePicker.tsx
+// Artifact: Fixed DateTimePicker with logs to debug value transfer issues
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import DatePicker from './DatePicker';
 import TimePicker from './TimePicker';
 import './DateTimePicker.css';
 
 interface DateTimePickerProps {
-  value?: Date | string | null; // Initial value for the picker
-  onChange?: (date: Date) => void; // Callback when date changes
-  label?: string; // Label for the picker
-  className?: string; // Additional CSS class
-  min?: Date; // Minimum allowed date
-  max?: Date; // Maximum allowed date
-  required?: boolean; // Whether the field is required
-  disabled?: boolean; // Whether the field is disabled
-  onHourChange?: (hour: number) => void; // Callback for hour value in frame
-  onMinuteChange?: (minute: number) => void; // Callback for minute value in frame
+  value?: Date | string | null;
+  onChange?: (date: Date) => void;
+  label?: string;
+  className?: string;
+  min?: Date;
+  max?: Date;
+  required?: boolean;
+  disabled?: boolean;
 }
 
-const pad = (num: number) => num.toString().padStart(2, '0'); // Utility to pad single-digit numbers with a leading zero
+const pad = (num: number): string => num.toString().padStart(2, '0');
 
 export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   value = null,
@@ -29,59 +27,84 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   max,
   required = false,
   disabled = false,
-  onHourChange,
-  onMinuteChange,
 }) => {
-  // Initialize the date value { if value is a Date, use it; else, if string then convert; otherwise use current date }
-  const initialDate = value instanceof Date ? value : value ? new Date(value) : new Date();
+  const getInitialDate = (): Date => {
+    if (value instanceof Date && !isNaN(value.getTime())) return value;
+    if (typeof value === 'string') {
+      const parsed = new Date(value);
+      return !isNaN(parsed.getTime()) ? parsed : new Date();
+    }
+    return new Date();
+  };
 
-  const [selectedDate, setSelectedDate] = useState<Date>(initialDate); // State for the selected date
-  const [isPickerOpen, setIsPickerOpen] = useState(false); // State whether the picker dropdown is open
-  
-  const containerRef = useRef<HTMLDivElement>(null); // Reference to the container element
-  const inputRef = useRef<HTMLInputElement>(null); // Reference to the input element
+  const [selectedDate, setSelectedDate] = useState<Date>(getInitialDate());
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Format the date and time into a string "YYYY-MM-DD HH:mm"
   const formatDateTime = useCallback((date: Date): string => {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }, []);
 
-  // Handler for date change { updates the date part while preserving the time }
   const handleDateChange = useCallback((newDate: Date) => {
     const updatedDate = new Date(
-      newDate.getFullYear(), 
-      newDate.getMonth(), 
-      newDate.getDate(), 
-      selectedDate.getHours(), 
+      newDate.getFullYear(),
+      newDate.getMonth(),
+      newDate.getDate(),
+      selectedDate.getHours(),
       selectedDate.getMinutes()
     );
+    console.log('[DateTimePicker] handleDateChange:', { newDate, updatedDate, min, max });
     if ((min && updatedDate < min) || (max && updatedDate > max)) {
-      console.warn('Selected date is out of allowed range');
+      console.warn('[DateTimePicker] Selected date is out of allowed range', { updatedDate, min, max });
       return;
     }
     setSelectedDate(updatedDate);
+    if (inputRef.current) {
+      inputRef.current.value = formatDateTime(updatedDate);
+      console.log('[DateTimePicker] Updated input value:', inputRef.current.value);
+    }
     onChange?.(updatedDate);
-  }, [selectedDate, onChange, min, max]);
+  }, [selectedDate, onChange, min, max, formatDateTime]);
 
-  // Handler for time change { updates the time part of the selected date }
   const handleTimeChange = useCallback((timeString: string) => {
+    console.log('[DateTimePicker] handleTimeChange received:', timeString);
     const [hours, minutes] = timeString.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) {
+      console.warn('[DateTimePicker] Invalid time string:', timeString);
+      return;
+    }
     const updatedDate = new Date(
-      selectedDate.getFullYear(), 
-      selectedDate.getMonth(), 
-      selectedDate.getDate(), 
-      hours, 
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      hours,
       minutes
     );
+    console.log('[DateTimePicker] New time:', { hours, minutes, updatedDate, min, max });
     if ((min && updatedDate < min) || (max && updatedDate > max)) {
-      console.warn('Selected date and time are out of allowed range');
+      console.warn('[DateTimePicker] Selected date and time are out of allowed range', { updatedDate, min, max });
       return;
     }
     setSelectedDate(updatedDate);
+    if (inputRef.current) {
+      inputRef.current.value = formatDateTime(updatedDate);
+      console.log('[DateTimePicker] Updated input value:', inputRef.current.value);
+    }
     onChange?.(updatedDate);
-  }, [selectedDate, onChange, min, max]);
+  }, [selectedDate, onChange, min, max, formatDateTime]);
 
-  // Close the picker when clicking outside { adds event listener to document and cleans up on unmount }
+  useEffect(() => {
+    const newDate = getInitialDate();
+    if (newDate.getTime() !== selectedDate.getTime()) {
+      setSelectedDate(newDate);
+      if (inputRef.current) {
+        inputRef.current.value = formatDateTime(newDate);
+        console.log('[DateTimePicker] Initial input value set:', inputRef.current.value);
+      }
+    }
+  }, [value]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -95,37 +118,36 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   }, []);
 
   return (
-    <div ref={containerRef} className="datetime-picker-wrapper">
+    <div ref={containerRef} className={`datetime-picker-wrapper ${disabled ? 'disabled' : ''}`}>
       {label && (
         <label className="datetime-picker-label">
           {label}
+          {required && <span className="required-asterisk">*</span>}
         </label>
       )}
-      
       <div className="datetime-picker-input-container">
         <input
           ref={inputRef}
           type="text"
           readOnly
           value={formatDateTime(selectedDate)}
-          onClick={() => setIsPickerOpen(!isPickerOpen)}
+          onClick={() => !disabled && setIsPickerOpen(!isPickerOpen)}
           className={`datetime-picker-input ${className}`}
           placeholder="Select date and time"
+          disabled={disabled}
+          required={required}
         />
-
-        {isPickerOpen && (
+        {isPickerOpen && !disabled && (
           <div className="datetime-picker-dropdown">
-            <DatePicker 
-              value={selectedDate} 
+            <DatePicker
+              value={selectedDate}
               onChange={handleDateChange}
               min={min}
               max={max}
             />
-            <TimePicker 
+            <TimePicker
               value={`${pad(selectedDate.getHours())}:${pad(selectedDate.getMinutes())}`}
               onChange={handleTimeChange}
-              onHourChange={onHourChange} // Pass hour callback
-              onMinuteChange={onMinuteChange} // Pass minute callback
             />
           </div>
         )}

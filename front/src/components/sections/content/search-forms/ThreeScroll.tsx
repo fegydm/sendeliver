@@ -1,15 +1,14 @@
 // File: src/components/sections/content/search-forms/ThreeScroll.tsx
 import React, { useState, useCallback } from 'react';
-import './ThreeScroll.css';
 
-// Rozhranie pre props, pridávame itemHeight a debounceTime
+// Interface for props, adding itemHeight and debounceTime
 interface ThreeScrollProps {
   type: 'hours' | 'minutes';
   onScroll: (distance: number) => void;
   onSetCurrent: (value: number) => void;
   currentTime: Date;
-  itemHeight: number; // Dynamická výška položky
-  debounceTime: number; // Dynamický čas oneskorenia
+  itemHeight: number; // Dynamic item height
+  debounceTime: number; // Dynamic debounce time
 }
 
 const ThreeScroll: React.FC<ThreeScrollProps> = ({ 
@@ -23,26 +22,26 @@ const ThreeScroll: React.FC<ThreeScrollProps> = ({
   const [buttonPressTimer, setButtonPressTimer] = useState<number | null>(null);
   const [lastClickTime, setLastClickTime] = useState<number>(0);
 
-  // Funkcia pre kliknutie s dynamickým debounceTime a itemHeight
+  // Function for button click with dynamic debounceTime and itemHeight
   const handleButtonClick = useCallback((direction: 'up' | 'down') => {
     const now = Date.now();
-    if (now - lastClickTime < debounceTime) return; // Používame dynamický debounceTime
+    if (now - lastClickTime < debounceTime) return; // Using dynamic debounceTime
     setLastClickTime(now);
 
-    const dir = direction === 'up' ? itemHeight : -itemHeight; // Používame dynamický itemHeight
+    const dir = direction === 'up' ? itemHeight : -itemHeight; // Using dynamic itemHeight
     onScroll(dir);
   }, [lastClickTime, onScroll, itemHeight, debounceTime]);
 
-  // Funkcia pre podržanie tlačidla s dynamickým debounceTime ako interval
+  // Function for holding the button with dynamic debounceTime as interval
   const handleButtonPress = useCallback((direction: 'up' | 'down') => {
-    const dir = direction === 'up' ? itemHeight : -itemHeight; // Používame dynamický itemHeight
+    const dir = direction === 'up' ? itemHeight : -itemHeight; // Using dynamic itemHeight
     const timer = window.setInterval(() => {
       onScroll(dir);
-    }, debounceTime); // Interval je dynamický debounceTime
+    }, debounceTime); // Interval is dynamic debounceTime
     setButtonPressTimer(timer);
   }, [onScroll, itemHeight, debounceTime]);
 
-  // Funkcia pre uvoľnenie tlačidla
+  // Function for releasing the button
   const handleButtonRelease = useCallback(() => {
     if (buttonPressTimer !== null) {
       window.clearInterval(buttonPressTimer);
@@ -50,7 +49,7 @@ const ThreeScroll: React.FC<ThreeScrollProps> = ({
     setButtonPressTimer(null);
   }, [buttonPressTimer]);
 
-  // Výpočet zobrazeného času
+  // Calculation of displayed time
   const hours = currentTime.getHours();
   const minutes = currentTime.getMinutes();
   const displayValue = type === 'hours'
