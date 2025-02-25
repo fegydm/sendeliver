@@ -1,13 +1,14 @@
-// File: src/components/sections/content/search-forms/DatePicker.tsx
-// Last change: Created standalone DatePicker component; fixed duplicate keys by appending index; comments in English with braces content in one line
+// File: src/components/DatePicker.tsx
+// Last change: Fixed Today button and allowed past date selection
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 interface DatePickerProps {
   value?: Date | string | null;
   onChange?: (date: Date) => void;
   min?: Date;
   max?: Date;
+  allowPastDates?: boolean;
 }
 
 const pad = (num: number) => num.toString().padStart(2, '0'); // Utility to pad numbers with leading zero
@@ -16,13 +17,16 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   value = null,
   onChange,
   min,
-  max
+  max,
+  allowPastDates = false
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth()); // current month state
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear()); // current year state
   const [selectedDate, setSelectedDate] = useState<string | null>(
     value ? formatDate(value) : null
   );
+  const today = new Date();
+  const todayDateString = formatDate(today);
 
   function formatDate(date: Date | string | null): string { // formats date as "YYYY-MM-DD"
     if (!date) return '';
@@ -39,16 +43,28 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     return days;
   }, [currentMonth, currentYear]);
 
-  const handleDaySelect = useCallback((day: number) => { // handles day selection and validates against min/max dates
+  const handleDaySelect = useCallback((day: number) => { // handles day selection
     const newDate = new Date(currentYear, currentMonth, day);
+    
+    // Check constraints, but allow past dates if specified
+    if (!allowPastDates) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (newDate < today) {
+        console.warn('Selected date is in the past and allowPastDates=false');
+        return;
+      }
+    }
+    
     if ((min && newDate < min) || (max && newDate > max)) {
       console.warn('Selected date is out of allowed range');
       return;
     }
+    
     const formattedDate = formatDate(newDate);
     setSelectedDate(formattedDate);
     onChange?.(newDate);
-  }, [currentYear, currentMonth, onChange, min, max]);
+  }, [currentYear, currentMonth, onChange, min, max, allowPastDates]);
 
   const changeMonth = useCallback((delta: number) => { // changes current month by delta and adjusts year accordingly
     let newMonth = currentMonth + delta;
@@ -65,11 +81,19 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     handleDaySelect(today.getDate());
   }, [handleDaySelect]);
 
+  // If value prop changes, update the selected date
+  useEffect(() => {
+    if (value) {
+      const newDate = value instanceof Date ? value : new Date(value);
+      setSelectedDate(formatDate(newDate));
+    }
+  }, [value]);
+
   const monthNames = [
     'Január', 'Február', 'Marec', 'Apríl', 'Máj', 'Jún', 
     'Júl', 'August', 'September', 'Október', 'November', 'December'
   ];
-  const weekdays = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']; // Note: duplicates exist, so we append index to key
+  const weekdays = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne'];
 
   return (
     <div className="date-picker">
@@ -84,24 +108,38 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         ))}
       </div>
       <div className="date-picker-days">
-        {generateCalendarDays().map((day, index) => (
-          <button
-            key={index}
-            type="button"
-            disabled={day === null}
-            onClick={() => day !== null && handleDaySelect(day)}
-            className={`
-              date-picker-day
-              ${day === null ? 'date-picker-day-disabled' : ''}
-              ${selectedDate === `${currentYear}-${pad(currentMonth + 1)}-${pad(day || 0)}` ? 'date-picker-day-selected' : ''}
-            `}
-          >
-            {day || ''}
-          </button>
-        ))}
+        {generateCalendarDays().map((day, index) => {
+          const isDisabled = day === null;
+          const dateString = day !== null ? `${currentYear}-${pad(currentMonth + 1)}-${pad(day)}` : '';
+          const isSelectedDay = dateString === selectedDate;
+          const isTodayDay = dateString === todayDateString;
+          
+          let dayClasses = 'date-picker-day';
+          if (isDisabled) dayClasses += ' date-picker-day-disabled';
+          if (isSelectedDay) dayClasses += ' date-picker-day-selected';
+          else if (isTodayDay) dayClasses += ' date-picker-day-today';
+          
+          return (
+            <button
+              key={index}
+              type="button"
+              disabled={isDisabled}
+              onClick={() => day !== null && handleDaySelect(day)}
+              className={dayClasses}
+            >
+              {day || ''}
+            </button>
+          );
+        })}
       </div>
       <div className="date-picker-footer">
-        <button type="button" className="date-picker-today-button" onClick={setToday}>Dnes</button>
+        <button 
+          type="button" 
+          className="date-picker-today-button" 
+          onClick={setToday}
+        >
+          Dnes
+        </button>
       </div>
     </div>
   );

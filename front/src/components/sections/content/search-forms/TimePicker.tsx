@@ -1,10 +1,9 @@
 // File: src/components/TimePicker.tsx
-// Last change: Restored original scrolling logic while keeping original structure
+// Last change: Updated frame styling to match DatePicker selected color
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ThreeScroll from './ThreeScroll';
 
-// Constants for layout and behavior
 const ITEM_HEIGHT = 24;
 const DEBOUNCE_TIME = 200;
 const TOTAL_HOURS = 24;
@@ -16,10 +15,11 @@ const MIN_SCROLL_SPEED = 1;
 const MAX_SCROLL_SPEED = 10;
 const EXPONENTIAL_FACTOR = 2;
 const INTERVAL_DELAY = 50;
+const VALUE_UPDATE_DELAY = 100;
 
 interface TimePickerProps {
   className?: string;
-  value?: string; // Format "HH:MM", e.g. "14:30"
+  value?: string;
   onChange?: (timeString: string) => void;
 }
 
@@ -29,6 +29,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
   const [scrollPosition, setScrollPosition] = useState<{ hours: number; minutes: number }>({ hours: 0, minutes: 0 });
   const [lastSentValue, setLastSentValue] = useState<string | null>(null);
   const intervalRef = useRef<{ hours: NodeJS.Timeout | null; minutes: NodeJS.Timeout | null }>({ hours: null, minutes: null });
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const scrollStateRef = useRef<{
     hours: { speed: number; direction: 'up' | 'down' };
@@ -45,15 +46,14 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
     top: '50%',
     height: `${ITEM_HEIGHT}px`,
     transform: 'translateY(-50%)',
-    border: '4px solid #2196f3',
-    backgroundColor: 'rgba(33, 150, 243, 0.2)',
+    border: '4px solid #1d4ed8',
+    backgroundColor: 'rgba(29, 78, 216, 0.2)',
     pointerEvents: 'none' as const,
     zIndex: 1,
     width: '100%',
     boxSizing: 'border-box' as const,
   };
 
-  // Calculate visible value (hours or minutes)
   const calculateVisibleValue = useCallback(
     (type: 'hours' | 'minutes') => {
       const currentPos = scrollPosition[type];
@@ -70,7 +70,13 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
     [scrollPosition]
   );
 
-  // Update time value and call onChange
+  const cleanupUpdateTimer = useCallback(() => {
+    if (updateTimerRef.current) {
+      clearTimeout(updateTimerRef.current);
+      updateTimerRef.current = null;
+    }
+  }, []);
+
   const updateSelectedTime = useCallback(() => {
     const hour = calculateVisibleValue('hours');
     const minute = calculateVisibleValue('minutes') * 5;
@@ -83,7 +89,18 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
     }
   }, [calculateVisibleValue, onChange, lastSentValue]);
 
-  // Initialize scrolling based on input value
+  const throttledUpdateTime = useCallback(() => {
+    cleanupUpdateTimer();
+    updateTimerRef.current = setTimeout(() => {
+      updateSelectedTime();
+    }, VALUE_UPDATE_DELAY);
+  }, [updateSelectedTime, cleanupUpdateTimer]);
+
+  useEffect(() => {
+    throttledUpdateTime();
+    return () => cleanupUpdateTimer();
+  }, [scrollPosition, throttledUpdateTime, cleanupUpdateTimer]);
+
   useEffect(() => {
     if (value && value !== lastSentValue) {
       console.log(`Initializing from value: ${value}`);
@@ -94,7 +111,18 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
     }
   }, [value]);
 
-  // Handle mouse movement for scrolling
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current.hours) {
+        clearInterval(intervalRef.current.hours);
+      }
+      if (intervalRef.current.minutes) {
+        clearInterval(intervalRef.current.minutes);
+      }
+      cleanupUpdateTimer();
+    };
+  }, [cleanupUpdateTimer]);
+
   const handleMouseMove = useCallback((e: React.MouseEvent, type: 'hours' | 'minutes') => {
     if (!wrapperRef.current) return;
     
@@ -127,7 +155,6 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
     }
   }, []);
 
-  // Start smooth scrolling
   const startScrolling = useCallback((type: 'hours' | 'minutes') => {
     if (intervalRef.current[type]) return;
 
@@ -147,7 +174,6 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
     }, INTERVAL_DELAY);
   }, []);
 
-  // Stop scrolling
   const stopScrolling = useCallback((type: 'hours' | 'minutes') => {
     if (intervalRef.current[type]) {
       clearInterval(intervalRef.current[type]!);
@@ -160,7 +186,6 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
     });
   }, []);
 
-  // Align to center with animation
   const alignToCenter = useCallback((type: 'hours' | 'minutes', value: number) => {
     const itemHeight = ITEM_HEIGHT;
     const totalHeight = type === 'hours' ? TOTAL_HOURS_HEIGHT : TOTAL_MINUTES_HEIGHT;
@@ -211,7 +236,6 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
     requestAnimationFrame(animate);
   }, [scrollPosition, updateSelectedTime]);
 
-  // Handle scrolling via ThreeScroll
   const handleThreeScroll = useCallback((type: 'hours' | 'minutes', distance: number) => {
     setScrollPosition(prev => {
       const totalHeight = type === 'hours' ? TOTAL_HOURS_HEIGHT : TOTAL_MINUTES_HEIGHT;
@@ -226,7 +250,6 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
     alignToCenter(type, calculateVisibleValue(type));
   }, [calculateVisibleValue, alignToCenter]);
 
-  // Set specific value
   const handleSetCurrent = useCallback((type: 'hours' | 'minutes', value: number) => {
     alignToCenter(type, value);
   }, [alignToCenter]);
