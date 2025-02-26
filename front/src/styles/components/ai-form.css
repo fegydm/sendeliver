@@ -1,0 +1,20 @@
+/* File: src/styles/components/ai-form.css */
+/* Last change: Created BEM structure for AI form component */
+
+.ai-form { padding: 1.5rem; border-radius: 0.5rem; background-color: #f5f5f7; margin-bottom: 1.5rem; }
+.ai-form--sender { border-left: 3px solid #3b82f6; }
+.ai-form--hauler { border-left: 3px solid #10b981; }
+
+.ai-form__textarea { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; margin-bottom: 1rem; resize: vertical; }
+.ai-form__textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+.ai-form__button { padding: 0.5rem 1rem; background-color: #3b82f6; color: white; border: none; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; margin-bottom: 1rem; }
+.ai-form__button:hover { background-color: #2563eb; }
+.ai-form--hauler .ai-form__button { background-color: #10b981; }
+.ai-form--hauler .ai-form__button:hover { background-color: #059669; }
+
+.ai-form__result { margin-top: 1.5rem; padding: 1rem; background-color: white; border-radius: 0.375rem; border: 1px solid #e5e7eb; }
+.ai-form__result-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: #1f2937; }
+.ai-form__result-item { margin-bottom: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.ai-form__result-label { font-weight: 500; color: #4b5563; }
+.ai-form__result-value { color: #1f2937; }

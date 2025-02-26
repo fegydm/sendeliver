@@ -1,8 +1,9 @@
 // File: src/components/sections/content/search-forms/ai-form.component.tsx
-// Last change: Fixed type compatibility with main AI types
+// Last change: Updated component structure to use form and BEM styling
 
 import { useState, useEffect, useRef } from "react";
 import { AIResponse } from "@/types/form-ai.types";
+import "@/styles/components/ai-form.css";
 
 interface Coordinates {
   lat: number;
@@ -34,7 +35,7 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState<ExtractedAIResponse | null>(null);
   const [maxWidth, setMaxWidth] = useState<number>(600);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     const updateMaxWidth = () => {
@@ -51,7 +52,9 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
     };
   }, []);
 
-  const handleSearch = async () => {
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
       const response = await fetch("/api/ai/extract", {
         method: "POST",
@@ -92,7 +95,12 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
   };
 
   return (
-    <div ref={containerRef} className={`ai-form--${type}`} style={{ maxWidth: "600px" }}>
+    <form 
+      ref={containerRef} 
+      className={`ai-form ai-form--${type}`} 
+      style={{ maxWidth: "600px" }}
+      onSubmit={handleSearch}
+    >
       <textarea
         className="ai-form__textarea"
         placeholder={`Describe your ${type === "sender" ? "transportation" : "carrier"} needs`}
@@ -105,44 +113,63 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
           minWidth: "200px",
         }}
       />
-      <button className="ai-form__button" onClick={handleSearch}>
+      <button type="submit" className="ai-form__button">
         {type === "sender" ? "Ask AI" : "Find Requests"}
       </button>
 
       {result && (
         <div className="ai-form__result">
-          <h3>Extracted Data:</h3>
-          <p>
-            <strong>Pickup Location:</strong> {result.data.pickupLocation}
-          </p>
+          <h3 className="ai-form__result-title">Extracted Data:</h3>
+          <div className="ai-form__result-item">
+            <strong className="ai-form__result-label">Pickup Location:</strong>
+            <span className="ai-form__result-value">{result.data.pickupLocation}</span>
+          </div>
+          
           {result.data.coordinates?.pickup && (
-            <p>
-              GPS: {result.data.coordinates.pickup.lat}, {result.data.coordinates.pickup.lng}
-            </p>
+            <div className="ai-form__result-item">
+              <strong className="ai-form__result-label">GPS:</strong>
+              <span className="ai-form__result-value">
+                {result.data.coordinates.pickup.lat}, {result.data.coordinates.pickup.lng}
+              </span>
+            </div>
           )}
-          <p>
-            <strong>Delivery Location:</strong> {result.data.deliveryLocation}
-          </p>
+          
+          <div className="ai-form__result-item">
+            <strong className="ai-form__result-label">Delivery Location:</strong>
+            <span className="ai-form__result-value">{result.data.deliveryLocation}</span>
+          </div>
+          
           {result.data.coordinates?.delivery && (
-            <p>
-              GPS: {result.data.coordinates.delivery.lat}, {result.data.coordinates.delivery.lng}
-            </p>
+            <div className="ai-form__result-item">
+              <strong className="ai-form__result-label">GPS:</strong>
+              <span className="ai-form__result-value">
+                {result.data.coordinates.delivery.lat}, {result.data.coordinates.delivery.lng}
+              </span>
+            </div>
           )}
-          <p>
-            <strong>Pickup Date:</strong> {result.data.pickupTime}
-          </p>
-          <p>
-            <strong>Delivery Date:</strong> {result.data.deliveryTime}
-          </p>
-          <p>
-            <strong>Weight:</strong> {result.data.weight}
-          </p>
-          <p>
-            <strong>Number of Pallets:</strong> {result.data.palletCount}
-          </p>
+          
+          <div className="ai-form__result-item">
+            <strong className="ai-form__result-label">Pickup Date:</strong>
+            <span className="ai-form__result-value">{result.data.pickupTime}</span>
+          </div>
+          
+          <div className="ai-form__result-item">
+            <strong className="ai-form__result-label">Delivery Date:</strong>
+            <span className="ai-form__result-value">{result.data.deliveryTime}</span>
+          </div>
+          
+          <div className="ai-form__result-item">
+            <strong className="ai-form__result-label">Weight:</strong>
+            <span className="ai-form__result-value">{result.data.weight}</span>
+          </div>
+          
+          <div className="ai-form__result-item">
+            <strong className="ai-form__result-label">Number of Pallets:</strong>
+            <span className="ai-form__result-value">{result.data.palletCount}</span>
+          </div>
         </div>
       )}
-    </div>
+    </form>
   );
 };
 

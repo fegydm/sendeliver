@@ -1,15 +1,17 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Artifact: ManualForm using simplified DateTimePicker with date and time aligned side by side in dropdown
+// Last change: Fixed import paths and added proper type declarations
+
 import React, { useState, useRef, useCallback } from 'react';
 import CountrySelect from './CountrySelect';
 import PostalCitySelect from './PostalCitySelect';
-import DateTimePicker from './DateTimePicker';
+import DateTimePicker from './DateTimePicker'; 
 import { LocationFormData, LocationType, Location } from '@/types/location.types';
-import "@/styles/sections/manual-form.component.css";
+import "@/styles/components/manual-form.css";
 
 interface ManualSearchFormProps {
   onSubmit: (data: LocationFormData) => void;
   formData?: LocationFormData;
+  type: 'sender' | 'hauler';
 }
 
 const DEFAULT_FORM_DATA: LocationFormData = {
@@ -42,6 +44,7 @@ const DEFAULT_FORM_DATA: LocationFormData = {
 export function ManualForm({
   onSubmit,
   formData = DEFAULT_FORM_DATA,
+  type = 'sender'
 }: ManualSearchFormProps) {
   const pickupPscRef = useRef<HTMLInputElement>(null);
   const deliveryPscRef = useRef<HTMLInputElement>(null);
@@ -136,6 +139,7 @@ export function ManualForm({
     []
   );
 
+  //Date for parameter date
   const handleDateTimeChange = useCallback(
     (locationType: LocationType, date: Date) => {
       setLocalFormData((prev) => ({
@@ -169,13 +173,14 @@ export function ManualForm({
   );
 
   return (
-    <form className="manual_form" onSubmit={handleSubmit}>
+    <form className={`manual-form manual-form--${type}`} onSubmit={handleSubmit}>
       {/* Pickup section */}
-      <div className={`form-section ${isPickupValid ? 'valid' : 'invalid'}`}>
-        <h3 className="section-title">Pickup Details</h3>
-        <div className={`inputs-${LocationType.PICKUP}`}>
-          <div className="field-group">
-            <label className="field-label">Country</label>
+      <div className={`manual-form__pickup ${isPickupValid ? 'manual-form__pickup--valid' : 'manual-form__pickup--invalid'}`}>
+        <h3 className="manual-form__title">Pickup Details</h3>
+        
+        <div className="manual-form__location">
+          <div className="manual-form__country">
+            <label className="manual-form__label">Country</label>
             <CountrySelect
               onCountrySelect={(cc, flag) =>
                 handleCountrySelect(LocationType.PICKUP, cc, flag)
@@ -186,35 +191,39 @@ export function ManualForm({
             />
           </div>
 
-          <PostalCitySelect
-            pscRef={pickupPscRef}
-            onValidSelection={() => {}}
-            onSelectionChange={(location) =>
-              handleLocationSelect(LocationType.PICKUP, location)
-            }
-            locationType={LocationType.PICKUP}
-            cc={localFormData.pickup.cc}
-            dbPostalCodeMask={postalFormats[localFormData.pickup.cc]?.format || ''}
-            postalCodeRegex={postalFormats[localFormData.pickup.cc]?.regex}
-          />
+          <div className="manual-form__address">
+            <PostalCitySelect
+              pscRef={pickupPscRef}
+              onValidSelection={() => {}}
+              onSelectionChange={(location) =>
+                handleLocationSelect(LocationType.PICKUP, location)
+              }
+              locationType={LocationType.PICKUP}
+              cc={localFormData.pickup.cc}
+              dbPostalCodeMask={postalFormats[localFormData.pickup.cc]?.format || ''}
+              postalCodeRegex={postalFormats[localFormData.pickup.cc]?.regex}
+            />
+          </div>
         </div>
 
-        <div className="datetime-field">
-          <label className="field-label">Loading Date/Time</label>
+        <div className="manual-form__datetime">
+          <label className="manual-form__label">Loading Date/Time</label>
           <DateTimePicker
             value={localFormData.pickup.testTime}
-            onChange={(date) => handleDateTimeChange(LocationType.PICKUP, date)}
+            onChange={(date: Date) => handleDateTimeChange(LocationType.PICKUP, date)}
             min={new Date()} // Minimum date is current date
+            className="datetime-picker--pickup"
           />
         </div>
       </div>
 
       {/* Delivery section */}
-      <div className={`form-section ${isDeliveryValid ? 'valid' : 'invalid'}`}>
-        <h3 className="section-title">Delivery Details</h3>
-        <div className={`inputs-${LocationType.DELIVERY}`}>
-          <div className="field-group">
-            <label className="field-label">Country</label>
+      <div className={`manual-form__delivery ${isDeliveryValid ? 'manual-form__delivery--valid' : 'manual-form__delivery--invalid'}`}>
+        <h3 className="manual-form__title">Delivery Details</h3>
+        
+        <div className="manual-form__location">
+          <div className="manual-form__country">
+            <label className="manual-form__label">Country</label>
             <CountrySelect
               onCountrySelect={(cc, flag) =>
                 handleCountrySelect(LocationType.DELIVERY, cc, flag)
@@ -225,52 +234,56 @@ export function ManualForm({
             />
           </div>
 
-          <PostalCitySelect
-            pscRef={deliveryPscRef}
-            onValidSelection={() => {}}
-            onSelectionChange={(location) =>
-              handleLocationSelect(LocationType.DELIVERY, location)
-            }
-            locationType={LocationType.DELIVERY}
-            cc={localFormData.delivery.cc}
-            dbPostalCodeMask={postalFormats[localFormData.delivery.cc]?.format || ''}
-            postalCodeRegex={postalFormats[localFormData.delivery.cc]?.regex}
-          />
+          <div className="manual-form__address">
+            <PostalCitySelect
+              pscRef={deliveryPscRef}
+              onValidSelection={() => {}}
+              onSelectionChange={(location) =>
+                handleLocationSelect(LocationType.DELIVERY, location)
+              }
+              locationType={LocationType.DELIVERY}
+              cc={localFormData.delivery.cc}
+              dbPostalCodeMask={postalFormats[localFormData.delivery.cc]?.format || ''}
+              postalCodeRegex={postalFormats[localFormData.delivery.cc]?.regex}
+            />
+          </div>
         </div>
 
-        <div className="datetime-field">
-          <label className="field-label">Loading Date/Time</label>
+        <div className="manual-form__datetime">
+          <label className="manual-form__label">Loading Date/Time</label>
           <DateTimePicker
             value={localFormData.delivery.testTime}
-            onChange={(date) => handleDateTimeChange(LocationType.DELIVERY, date)}
-            
+            onChange={(date: Date) => handleDateTimeChange(LocationType.DELIVERY, date)}
+            className="datetime-picker--delivery"
           />
         </div>
       </div>
 
       {/* Cargo section */}
-      <div className="form-cargo">
-        <h3 className="section-title">Cargo Details</h3>
-        <div className="cargo-container">
-          <div className="field-group">
-            <label className="field-label">Number of Pallets</label>
+      <div className="manual-form__cargo">
+        <h3 className="manual-form__title">Cargo Details</h3>
+        
+        <div className="manual-form__cargo-inputs">
+          <div className="manual-form__field">
+            <label className="manual-form__label">Number of Pallets</label>
             <input
               type="number"
               value={localFormData.cargo.pallets}
               onChange={(e) => handleCargoChange('pallets', Number(e.target.value))}
               min="0"
-              className="form-input"
+              className="manual-form__input manual-form__input--number"
             />
           </div>
-          <div className="field-group">
-            <label className="field-label">Total Weight (kg)</label>
+          
+          <div className="manual-form__field">
+            <label className="manual-form__label">Total Weight (kg)</label>
             <input
               type="number"
               value={localFormData.cargo.weight}
               onChange={(e) => handleCargoChange('weight', Number(e.target.value))}
               min="0"
               step="0.1"
-              className="form-input"
+              className="manual-form__input manual-form__input--number"
             />
           </div>
         </div>
@@ -278,7 +291,7 @@ export function ManualForm({
 
       <button
         type="submit"
-        className="submit-button"
+        className={`manual-form__submit ${!isPickupValid || !isDeliveryValid ? 'manual-form__submit--disabled' : ''}`}
         disabled={!isPickupValid || !isDeliveryValid}
       >
         Submit Transport Request

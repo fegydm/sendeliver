@@ -1,90 +1,96 @@
-// File: src/components/sections/content/search-forms/ThreeScroll.tsx
-import React, { useState, useCallback } from 'react';
+// File: src/components/ThreeScroll.tsx
+import React, { useCallback, useState, useEffect } from 'react';
+import './ThreeScroll.css';
 
-// Interface for props, adding itemHeight and debounceTime
 interface ThreeScrollProps {
   type: 'hours' | 'minutes';
-  onScroll: (distance: number) => void;
-  onSetCurrent: (value: number) => void;
-  currentTime: Date;
-  itemHeight: number; // Dynamic item height
-  debounceTime: number; // Dynamic debounce time
+  onStep: (step: number) => void;
+  onSelectCurrent: (value: number) => void;
+  currentTime?: Date;
 }
 
-const ThreeScroll: React.FC<ThreeScrollProps> = ({ 
-  type, 
-  onScroll, 
-  onSetCurrent, 
-  currentTime, 
-  itemHeight, 
-  debounceTime 
+const ThreeScroll: React.FC<ThreeScrollProps> = ({
+  type,
+  onStep,
+  onSelectCurrent,
+  currentTime
 }) => {
-  const [buttonPressTimer, setButtonPressTimer] = useState<number | null>(null);
-  const [lastClickTime, setLastClickTime] = useState<number>(0);
+  const effectiveTime = currentTime || new Date();
+  const [minuteDisplay, setMinuteDisplay] = useState<'00' | '30'>(() => {
+    const minutes = effectiveTime.getMinutes();
+    return minutes < 30 ? '30' : '00';
+  });
 
-  // Function for button click with dynamic debounceTime and itemHeight
-  const handleButtonClick = useCallback((direction: 'up' | 'down') => {
-    const now = Date.now();
-    if (now - lastClickTime < debounceTime) return; // Using dynamic debounceTime
-    setLastClickTime(now);
+  useEffect(() => {
+    const minutes = effectiveTime.getMinutes();
+    setMinuteDisplay(minutes < 30 ? '30' : '00');
+  }, [effectiveTime]);
 
-    const dir = direction === 'up' ? itemHeight : -itemHeight; // Using dynamic itemHeight
-    onScroll(dir);
-  }, [lastClickTime, onScroll, itemHeight, debounceTime]);
+  const isFutureDate = (date: Date) => {
+    const today = new Date();
+    const referenceDate = new Date('2025-02-27T00:00:00');
+    return date.getTime() >= referenceDate.getTime() || date.getTime() > today.getTime();
+  };
 
-  // Function for holding the button with dynamic debounceTime as interval
-  const handleButtonPress = useCallback((direction: 'up' | 'down') => {
-    const dir = direction === 'up' ? itemHeight : -itemHeight; // Using dynamic itemHeight
-    const timer = window.setInterval(() => {
-      onScroll(dir);
-    }, debounceTime); // Interval is dynamic debounceTime
-    setButtonPressTimer(timer);
-  }, [onScroll, itemHeight, debounceTime]);
-
-  // Function for releasing the button
-  const handleButtonRelease = useCallback(() => {
-    if (buttonPressTimer !== null) {
-      window.clearInterval(buttonPressTimer);
+  const getCircleValue = useCallback(() => {
+    if (type === 'hours') {
+      const hours = effectiveTime.getHours();
+      if (isFutureDate(effectiveTime)) {
+        return '08';
+      }
+      return String((hours + 1) % 24).padStart(2, '0');
+    } else {
+      return minuteDisplay;
     }
-    setButtonPressTimer(null);
-  }, [buttonPressTimer]);
+  }, [effectiveTime, type, minuteDisplay]);
 
-  // Calculation of displayed time
-  const hours = currentTime.getHours();
-  const minutes = currentTime.getMinutes();
-  const displayValue = type === 'hours'
-    ? String(minutes > 0 ? (hours + 1) % 24 : hours).padStart(2, '0')
-    : (minutes >= 35 ? '00' : '30');
+  const handleCircleClick = useCallback(() => {
+    if (type === 'hours') {
+      const value = isFutureDate(effectiveTime)
+        ? 8
+        : (effectiveTime.getHours() + 1) % 24;
+      onSelectCurrent(value);
+    } else {
+      if (minuteDisplay === '30') {
+        onSelectCurrent(30);
+        setMinuteDisplay('00');
+      } else {
+        onSelectCurrent(0);
+        setMinuteDisplay('30');
+      }
+    }
+  }, [type, effectiveTime, onSelectCurrent, minuteDisplay]);
+
+  const handleUp = useCallback(() => {
+    onStep(1);
+  }, [onStep]);
+
+  const handleDown = useCallback(() => {
+    onStep(-1);
+  }, [onStep]);
+
+  const displayValue = getCircleValue();
 
   return (
     <div className="three-scroll">
+     <button className="three-scroll__triangle three-scroll__triangle--up" type="button" onClick={handleUp} aria-label={`Increase ${type}`}>
+  <svg className="three-scroll__icon" viewBox="0 0 24 24">
+    <path d="M6 16l6-8 6 8z" />
+  </svg>
+</button>
       <button
+        className="three-scroll__circle"
         type="button"
-        className="three-scroll-button"
-        onClick={() => handleButtonClick('up')}
-        onMouseDown={() => handleButtonPress('up')}
-        onMouseUp={handleButtonRelease}
-        onMouseLeave={handleButtonRelease}
+        onClick={handleCircleClick}
+        aria-label={`Set ${type} to ${displayValue}`}
       >
-        <svg viewBox="0 0 24 24"><path d="M7 14l5-5 5 5z"/></svg>
+        {displayValue}
       </button>
-      <button
-        type="button"
-        className="three-scroll-button circle-button"
-        onClick={() => onSetCurrent(type === 'hours' ? parseInt(displayValue) : displayValue === '00' ? 0 : 6)}
-      >
-        <div className="three-scroll-circle">{displayValue}</div>
-      </button>
-      <button
-        type="button"
-        className="three-scroll-button"
-        onClick={() => handleButtonClick('down')}
-        onMouseDown={() => handleButtonPress('down')}
-        onMouseUp={handleButtonRelease}
-        onMouseLeave={handleButtonRelease}
-      >
-        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-      </button>
+      <button className="three-scroll__triangle three-scroll__triangle--down" type="button" onClick={handleDown} aria-label={`Decrease ${type}`}>
+  <svg className="three-scroll__icon" viewBox="0 0 24 24">
+    <path d="M6 8l6 8 6-8z" />
+  </svg>
+</button>
     </div>
   );
 };
