@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: For both pickup and delivery, default flag is /flags/4x3/optimized/en.svg with 50% opacity and grayscale
+// Last change: Moved all logic into flag-cc, flag-cc__dropdown is now its direct child
 
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "./BaseDropdown";
@@ -19,7 +19,7 @@ export function CountrySelect({
   initialValue = "",
   locationType
 }: CountrySelectProps) {
-  const inputValue = initialValue;
+  const [inputValue, setInputValue] = useState(initialValue);
   const [isOpen, setIsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
 
@@ -40,6 +40,7 @@ export function CountrySelect({
     return filteredItems.slice(0, visibleCount);
   }, [filteredItems, visibleCount]);
 
+  // Handle click outside to close dropdown
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
       setIsOpen(false);
@@ -53,8 +54,10 @@ export function CountrySelect({
     };
   }, [handleClickOutside]);
 
-  const handleInputChange = useCallback((value: string) => {
-    const upperValue = value.toUpperCase();
+  // Handle input change
+  const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const upperValue = event.target.value.toUpperCase();
+    setInputValue(upperValue);
 
     if (!upperValue) {
       onCountrySelect("", "");
@@ -90,19 +93,22 @@ export function CountrySelect({
     }
   }, [allCountries, onCountrySelect, onNextFieldFocus]);
 
+  // Handle country selection from dropdown
   const handleSelect = useCallback((selected: Country) => {
     if (!selected.cc) return;
+    setInputValue(selected.cc);
     const flagUrl = `/flags/4x3/optimized/${selected.cc.toLowerCase()}.svg`;
     onCountrySelect(selected.cc, flagUrl);
     setIsOpen(false);
     onNextFieldFocus();
   }, [onCountrySelect, onNextFieldFocus]);
 
+  // Handle keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (isOpen && dropdownRef.current) {
-        const firstItem = dropdownRef.current.querySelector('.item-content');
+        const firstItem = dropdownRef.current.querySelector('.country-dropdown__item');
         if (firstItem instanceof HTMLElement) {
           firstItem.focus();
         }
@@ -140,18 +146,20 @@ export function CountrySelect({
     setIsOpen(true);
   }, []);
 
-  // Pre default flag pre obe sekcie, ak nie je zvolený iný kód (inputValue nie je dĺžky 2)
+  // Determine flag to display
   const flagSrc = inputValue.length === 2
     ? `/flags/4x3/optimized/${inputValue.toLowerCase()}.svg`
     : "/flags/4x3/optimized/gb.svg";
-  const flagStyle = inputValue.length === 2 ? {} : { filter: "grayscale(100%)", opacity: 0.3 };
+  
+  const flagClasses = `flag-cc__flag ${inputValue.length !== 2 ? 'flag-cc__flag--inactive' : ''}`;
+  const inputClasses = `flag-cc__input flag-cc__input--${locationType}`;
 
   return (
-    <div className="dd-inputs" ref={componentRef}>
+    <div ref={componentRef} className="flag-cc">
       <img
         src={flagSrc}
-        className={`flag-${locationType}`}
-        style={flagStyle}
+        className={flagClasses}
+        alt="Country flag"
       />
       <input
         ref={inputRef}
@@ -159,15 +167,15 @@ export function CountrySelect({
         value={inputValue}
         placeholder="CC"
         maxLength={2}
-        onChange={(e) => handleInputChange(e.target.value)}
+        onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
-        className={`${locationType}-cc`}
+        className={inputClasses}
         aria-autocomplete="list"
         aria-controls="country-dropdown"
         aria-expanded={isOpen}
       />
-      <BaseDropdown<Country>
+      <BaseDropdown
         items={visibleItems}
         isOpen={isOpen}
         onSelect={handleSelect}
@@ -179,17 +187,17 @@ export function CountrySelect({
         onLoadMore={() => setVisibleCount(prev => prev + 20)}
         renderItem={(country: Country, { isHighlighted }: { isHighlighted: boolean }) => (
           <div
-            className={`item-content ${isHighlighted ? 'highlighted' : ''}`}
+            className={`country-dropdown__item ${isHighlighted ? 'country-dropdown__item--highlighted' : ''}`}
             tabIndex={0}
           >
             <img
               src={`/flags/4x3/optimized/${country.cc.toLowerCase()}.svg`}
               alt={`${country.cc} flag`}
-              className={`${locationType}-flag`}
+              className="country-dropdown__flag"
             />
-            <span className={`${locationType}-cc`}>{country.cc}</span>
-            <span className="country-name">{country.name_en}</span>
-            <span className="country-local">({country.name_local})</span>
+            <span className="country-dropdown__code">{country.cc}</span>
+            <span className="country-dropdown__name">{country.name_en}</span>
+            <span className="country-dropdown__local-name">({country.name_local})</span>
           </div>
         )}
         getItemKey={(item: Country) => item.cc || ''}

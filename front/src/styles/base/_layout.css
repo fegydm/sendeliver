@@ -1,74 +1,38 @@
-/* File: src/styles/base/_layout.css */
-
+/* Base Layout */
 .body { margin:10px 0; padding-left:10px; }
-
-/* Navbar Primary */
-.navbar__primary { display:flex; align-items:center; gap:1rem; }
-.navbar { display:flex; justify-content:space-between; align-items:center; background-color:var(--navbar-bg-color, rgb(255,233,233)); padding:0 20px; }
-
-
-/* Banner */
-.banner { display:flex; padding:20px; height:100%; background-color:var(--navbar-bg-color, rgb(255,200,200)); }
-.banner__left, .banner__right { flex:1; }
+.navbar__primary, .navbar { display:flex; align-items:center; gap:1rem; }
+.navbar { justify-content:space-between; background-color:var(--navbar-bg-color, rgb(255,233,233)); padding:0 20px; }
+.banner, .quick-stats { display:flex; padding:20px; height:100%; background-color:var(--navbar-bg-color, rgb(255,200,200)); }
+.banner__left, .banner__right, .quick-stats { flex:1; }
 .banner__animation { display:flex; justify-content:center; }
 .banner__right { text-align:center; }
-
 
 /* Content Layout */
 .content { background-color:var(--navbar-bg-color, rgb(255,240,240)); }
 .content__navigation { display:flex; justify-content:center; align-items:center; margin:0 auto; }
 .button--left { color:var(--sender-text-color, rgb(184,36,134)); }
 .button--right { color:var(--hauler-text-color, #28a745); }
-.content__wrapper { display:flex; }
 
-.content__sender { flex:1; padding:20px; }
-.content__sender .content__navigation { text-align:right; }
-.content__hauler { flex:1; padding:20px; }
-.ai-form__textarea { width:100%; max-width:100%; }
+.content__wrapper { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+.content__sender, .content__hauler { flex: 1 1 50%; min-width: 300px; padding: 20px; box-sizing: border-box; }
+html, body { width: 100%; margin: 0; padding: 0; overflow-x: auto; }
+
+/* Forms & Inputs */
+.ai-form__textarea { width:100%; max-width:100%; min-width:200px; box-sizing:border-box; resize:both; padding:10px; border:1px solid #ccc; border-radius:5px; font-size:16px; font-family:inherit; overflow:auto; }
 .ai-form { max-width:600px; margin:0 auto; }
+.content__sender { display:flex; flex-direction:column; align-items:center; max-width:80%; margin:0 auto; padding:20px; box-sizing:border-box; }
 
-/* Quick Stats */
-.quick-stats { display:flex; justify-content:flex-start; align-items:center; gap:30px; background-color:var(--navbar-bg-color, rgb(255,200,200)); padding:20px; }
-
-
-/* Page Footer Section */
-.footer__page { background-color:var(--footer-page-bg-color, rgb(255,233,233)); padding:20px; position:relative; }
+/* Footer */
+.footer__page, .footer__test { background-color:var(--footer-page-bg-color, rgb(255,233,233)); padding:20px; position:relative; }
 .footer__social { text-align:center; }
-.footer__row { display:flex; justify-content:flex-end; align-items:center; ; position:relative; }
+.footer__row { display:flex; justify-content:flex-end; align-items:center; position:relative; }
 .footer__copyright { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center; }
 .footer__menu { display:flex; gap:16px; margin-left:auto; }
 .footer__menu-list { display:flex; gap:15px; list-style:none; padding:0; margin:0; }
 .footer__menu-link { text-decoration:none; color:var(--text-color, #333); transition:color 0.3s ease; }
 .footer__menu-link:hover { color:var(--text-hover-color, #000); }
 
-
-/* Test Footer Section */
+/* Test Footer */
 .footer__test { display:flex; flex-direction:column; gap:16px; background-color:var(--footer-test-bg, rgb(255, 248, 248)); padding:20px; }
 .footer__test__left, .footer-test__right { display:flex; align-items:center; gap:10px; }
 .footer__test__container { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
-
-/* File: src/styles/components/ai-form.css */
-.ai-form__textarea {
-    width: 100%; /* Textarea bude vyplňovať dostupnú šírku */
-    max-width: 100%; /* Maximálna šírka je obmedzená na šírku rodičovského kontajnera */
-    min-width: 200px; /* Minimálna šírka pri zmenšovaní */
-    box-sizing: border-box; /* Zohľadni padding a border pri nastavovaní šírky */
-    resize: both; /* Povoliť voľné zväčšovanie a zmenšovanie */
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    font-family: inherit;
-    overflow: auto; /* Zabezpečiť scrollbar pri nadmernom obsahu */
-  }
-
-  /* File: src/styles/components/content.css */
-.content__sender {
-    display: flex; /* Udržanie správneho rozloženia */
-    flex-direction: column; /* Obsah bude vertikálne zarovnaný */
-    align-items: center; /* Zarovnanie textarea na stred */
-    max-width: 80%; /* Obmedzenie maximálnej šírky na % viewportu */
-    margin: 0 auto; /* Stredové zarovnanie kontajnera */
-    padding: 20px; /* Priestor okolo obsahu */
-    box-sizing: border-box; /* Zohľadni padding a border pri šírke */
-  }

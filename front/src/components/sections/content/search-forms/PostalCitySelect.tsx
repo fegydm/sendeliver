@@ -1,4 +1,6 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
+// Last change: Moved all logic into postal-city, removed postal-city__inputs wrapper
+
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import PostalCodeInput from "@/components/PostalCodeInput";
 import { BaseDropdown } from "./BaseDropdown";
@@ -33,7 +35,6 @@ export function PostalCitySelect({
   const [isLoading, setIsLoading] = useState(false);
   const [activeField, setActiveField] = useState<"psc" | "city" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // New state flag to indicate manual override (prevent auto-select)
   const [manualOverride, setManualOverride] = useState(false);
 
   // Refs
@@ -98,7 +99,6 @@ export function PostalCitySelect({
 
         const data = await response.json();
         
-        // Auto-select only if there's exactly one result and manualOverride is false
         if (!pagination && data.results.length === 1 && !manualOverride) {
           handleSelect(data.results[0]);
           return false;
@@ -123,14 +123,10 @@ export function PostalCitySelect({
   const handleSelect = useCallback((item: LocationSuggestion) => {
     console.log(`[PostalCitySelect] ${locationType} Selected row:`, item);
     
-    // 1. Update input values
     setPsc(item.psc);
     setCity(item.city);
-    
-    // 2. Close dropdown
     setIsOpen(false);
     
-    // 3. Propagate data to parent
     if (onSelectionChange) {
       const locationData = {
         cc: item.cc || '',
@@ -143,14 +139,11 @@ export function PostalCitySelect({
       onSelectionChange(locationData);
     }
     
-    // 4. Notify valid selection
     onValidSelection();
     
-    // 5. Move focus to date input
     if (dateInputRef?.current) {
       dateInputRef.current.focus();
     }
-    // Reset manual override after selection
     setManualOverride(false);
   }, [locationType, onSelectionChange, onValidSelection, dateInputRef]);
 
@@ -185,9 +178,7 @@ export function PostalCitySelect({
       setActiveField("psc");
       setIsOpen(true);
       setError(null);
-      // Reset city when PSC is changed
       setCity("");
-      // Set manualOverride to true to prevent auto-select
       setManualOverride(true);
       debouncedSearch(newValue, "");
     },
@@ -202,9 +193,7 @@ export function PostalCitySelect({
       setActiveField("city");
       setIsOpen(true);
       setError(null);
-      // Reset PSC when city is changed
       setPsc("");
-      // Set manualOverride to true to prevent auto-select
       setManualOverride(true);
       debouncedSearch("", newValue);
     },
@@ -255,28 +244,28 @@ export function PostalCitySelect({
     item: LocationSuggestion, 
     { isHighlighted }: { isHighlighted: boolean }
   ) => (
-    <div className={`item-suggestion ${isHighlighted ? "highlighted" : ""}`}>
+    <div className={`postal-city__dropdown__item ${isHighlighted ? "postal-city__dropdown__item--highlighted" : ""}`}>
       {item.cc && (
         <img
           src={`/flags/4x3/optimized/${item.cc.toLowerCase()}.svg`}
           alt={`${item.cc} flag`}
-          className={`${locationType}-flag`}
+          className="postal-city__dropdown__flag"
         />
       )}
-      <div className="location-details">
-        <span className={`${locationType}-cc`}>{item.cc}</span>
-        <span className={`${locationType}-psc`}>{item.psc}</span>
-        <span className={`${locationType}-city`}>{item.city}</span>
+      <div className="postal-city__dropdown__details">
+        <span className="postal-city__dropdown__country-code">{item.cc}</span>
+        <span className="postal-city__dropdown__postal-code">{item.psc}</span>
+        <span className="postal-city__dropdown__city-name">{item.city}</span>
       </div>
     </div>
-  ), [locationType]);
+  ), []);
 
   // Render messages
   const renderNoResults = useCallback(() => {
-    if (isLoading) return <div className="no-results">Loading...</div>;
-    if (error) return <div className="error-message">{error}</div>;
-    if (!validateSearchInput(psc, city)) return <div className="no-results">Enter a value in any field</div>;
-    return <div className="no-results">No results found</div>;
+    if (isLoading) return <div className="postal-city__dropdown__no-results">Loading...</div>;
+    if (error) return <div className="postal-city__dropdown__error">{error}</div>;
+    if (!validateSearchInput(psc, city)) return <div className="postal-city__dropdown__no-results">Enter a value in any field</div>;
+    return <div className="postal-city__dropdown__no-results">No results found</div>;
   }, [psc, city, isLoading, error, validateSearchInput]);
 
   // Handle loading more
@@ -293,41 +282,36 @@ export function PostalCitySelect({
   );
 
   return (
-    <div className="dd-wrapper" ref={dropdownRef}>
-      <div className="dd-inputs">
-        <PostalCodeInput
-          value={psc}
-          onChange={handlePscChange}
-          dbMask={dbPostalCodeMask}
-          placeholder="PSC"
-          className={`${locationType}-psc`}
-          ref={activePscRef}
-          // When focusing on PSC, reset city and open dropdown
-          onFocus={() => { 
-            setCity(""); 
-            // Set manualOverride to true so that auto-select is prevented
-            setManualOverride(true);
-            handleInputFocus("psc"); 
-          }}
-        />
-        <input
-          ref={cityInputRef}
-          type="text"
-          value={city}
-          onChange={handleCityChange}
-          // When focusing on City, reset PSC and open dropdown
-          onFocus={() => { 
-            setPsc(""); 
-            setManualOverride(true);
-            handleInputFocus("city"); 
-          }}
-          placeholder="Place/City"
-          className={`${locationType}-city`}
-          aria-autocomplete="list"
-          aria-controls="location-dropdown"
-          aria-expanded={isOpen}
-        />
-      </div>
+    <div className="postal-city" ref={dropdownRef}>
+      <PostalCodeInput
+        value={psc}
+        onChange={handlePscChange}
+        dbMask={dbPostalCodeMask}
+        placeholder="PSC"
+        className={`manual-form__postal-input manual-form__postal-input--${locationType}`}
+        ref={activePscRef}
+        onFocus={() => { 
+          setCity(""); 
+          setManualOverride(true);
+          handleInputFocus("psc"); 
+        }}
+      />
+      <input
+        ref={cityInputRef}
+        type="text"
+        value={city}
+        onChange={handleCityChange}
+        onFocus={() => { 
+          setPsc(""); 
+          setManualOverride(true);
+          handleInputFocus("city"); 
+        }}
+        placeholder="Place/City"
+        className={`manual-form__city-input manual-form__city-input--${locationType}`}
+        aria-autocomplete="list"
+        aria-controls="postal-city__dropdown"
+        aria-expanded={isOpen}
+      />
       <BaseDropdown<LocationSuggestion>
         items={suggestions.length > 0 ? suggestions : [placeholderSuggestion]}
         isOpen={isOpen && !error}
@@ -336,7 +320,7 @@ export function PostalCitySelect({
         inputRef={activeField === "psc" ? activePscRef : cityInputRef}
         variant="location"
         position="left"
-        className={`${locationType}-dropdown`}
+        className="postal-city__dropdown"
         onLoadMore={handleLoadMore}
         totalItems={suggestions.length}
         pageSize={LOCATION_PAGE_SIZE}

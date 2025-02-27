@@ -1,52 +1,95 @@
-/* File: src/components/sections/content/search-forms/manual-form.css */
-/* Last change: */
-
+/* File: src/styles/components/manual-form.css */
 .manual-form { padding: 20px; max-width: 1000px; margin: 0 auto; }
+.manual-form--sender { border-left: 3px solid #3b82f6; }
+.manual-form--hauler { border-left: 3px solid #10b981; }
 .manual-form__pickup, .manual-form__delivery { border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin-bottom: 15px; }
-.manual-form__location { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; position: relative; }
-.manual-form__field { display: flex; flex-direction: column; gap: 4px; }
-.manual-form__label { font-size: 12px; color: #666; }
-.manual-form__address { display: flex; position: relative; gap: 6px; flex: 1; }
-.postal-city__inputs { display: flex; gap: 6px; width: 100%; align-items: center; }
-
-/* Input fields */
-.country-select__input { width: 20px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; text-align: left; text-transform: uppercase; }
-.postal-city__postal-input { width: 100px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
-.postal-city__city-input { width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; }
-
-/* Input colors */
-.country-select__input--pickup, .postal-city__postal-input--pickup, .postal-city__city-input--pickup { border-color: #3b82f6; }
-.country-select__input--delivery, .postal-city__postal-input--delivery, .postal-city__city-input--delivery { border-color: #10b981; }
-
-/* Dropdown list */
-.country-select__dropdown, .postal-city__dropdown { position: absolute; top: calc(100% + 4px); left: -0px; width: calc(100% + 38px); max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
-.country-select__dropdown { position: absolute; top: calc(100% + 4px); left: -0px; width: calc(100% + 38px); max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
-.country-select__dropdown::-webkit-scrollbar { width: 6px; }
-.country-select__dropdown::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
-.country-select__dropdown::-webkit-scrollbar-thumb:hover { background-color: #aaa; }
-.postal-city__dropdown { position: absolute; top: calc(100% + 4px); left: -50px; width: calc(100% + 38px); max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
+.manual-form__pickup--valid { border-left: 4px solid #4CAF50; }
+.manual-form__pickup--invalid { border-left: 4px solid #f5f5f7; }
+.manual-form__delivery--valid { border-left: 4px solid #4CAF50; }
+.manual-form__delivery--invalid { border-left: 4px solid #f5f5f7; }
+.manual-form__cargo { border: 1px solid #ccc; border-radius: 4px; padding: 15px; margin-bottom: 15px; }
+.manual-form__title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #333; }
+.manual-form__label { font-size: 12px; color: #666; margin-bottom: 4px; display: block; }
+.manual-form__grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.manual-form__country { display: grid; grid-template-rows: auto auto; gap: 0.5rem; }
+.manual-form__location { display: grid; grid-template-rows: auto auto; gap: 0.5rem; }
+.manual-form__datetime { display: grid; grid-template-rows: auto auto; gap: 0.5rem; }
+.flag-cc { display: flex; gap: 0.5rem; position: relative; }
+.flag-cc__flag { width: 24px; height: 24px; }
+.flag-cc__flag--inactive { opacity: 0.5; }
+.flag-cc__input { flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+.flag-cc__input--pickup { border-color: #3b82f6; }
+.flag-cc__input--delivery { border-color: #10b981; }
+.flag-cc__dropdown { position: absolute; top: calc(100% + 4px); left: 0; width: 300px; max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; }
+.flag-cc__dropdown::-webkit-scrollbar { width: 6px; }
+.flag-cc__dropdown::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
+.flag-cc__dropdown::-webkit-scrollbar-thumb:hover { background-color: #aaa; }
+.flag-cc__dropdown-item { display: flex; align-items: center; padding: 6px 8px; cursor: pointer; }
+.flag-cc__dropdown-item:hover, .flag-cc__dropdown-item--highlighted { background-color: #f5f5f5; }
+.flag-cc__dropdown-flag { width: 16px; height: 12px; object-fit: cover; border-radius: 2px; margin-right: 8px; }
+.flag-cc__dropdown-code { min-width: 30px; font-weight: 500; font-size: 14px; }
+.flag-cc__dropdown-name { color: #000000; font-size: 14px; flex-grow: 1; }
+.flag-cc__dropdown-local-name { color: #808080; font-size: 13px; }
+.postal-city { display: flex; gap: 0.5rem; position: relative; }
+.manual-form__postal-input { flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+.manual-form__postal-input--pickup { border-color: #3b82f6; }
+.manual-form__postal-input--delivery { border-color: #10b981; }
+.manual-form__city-input { flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+.manual-form__city-input--pickup { border-color: #3b82f6; }
+.manual-form__city-input--delivery { border-color: #10b981; }
+.postal-city__dropdown { position: absolute; top: calc(100% + 4px); left: 0; width: 100%; max-height: 300px; overflow-y: auto; background-color: white; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000; font-size: 13px; }
 .postal-city__dropdown::-webkit-scrollbar { width: 6px; }
 .postal-city__dropdown::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
 .postal-city__dropdown::-webkit-scrollbar-thumb:hover { background-color: #aaa; }
+.postal-city__dropdown-item { display: flex; align-items: center; padding: 4px 6px; cursor: pointer; min-height: 24px; }
+.postal-city__dropdown-item:hover, .postal-city__dropdown-item--highlighted { background-color: #f5f5f5; }
+.postal-city__dropdown-flag { width: 16px; height: 12px; object-fit: cover; border-radius: 2px; margin-right: 8px; }
+.postal-city__dropdown-details { display: flex; align-items: center; gap: 6px; flex: 1; }
+.postal-city__dropdown-country-code { min-width: 30px; font-weight: 500; font-size: 14px; }
+.postal-city__dropdown-postal-code { min-width: 35px; font-weight: 500; font-size: 14px; }
+.postal-city__dropdown-city-name { color: #666; font-size: 16px; }
+.postal-city__dropdown-no-results { padding: 6px; text-align: center; color: #666; font-size: 13px; }
+.postal-city__dropdown-error { padding: 6px; text-align: center; color: #e53e3e; font-size: 13px; }
+.postal-city__dropdown-load-more { display: flex; align-items: center; justify-content: center; padding: 6px; cursor: pointer; background-color: #f9f9f9; font-weight: 500; font-size: 13px; }
+.postal-city__dropdown-load-more:hover { background-color: #f5f5f5; }
+.manual-form__field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.manual-form__input { width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+.manual-form__input--number { text-align: right; }
+.manual-form__cargo-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.manual-form__submit { padding: 0.75rem 1.5rem; background-color: #0066cc; color: white; border: none; border-radius: 0.25rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease; margin-top: 1rem; }
+.manual-form__submit:hover { background-color: #0052a3; }
+.manual-form__submit--disabled { background-color: #cccccc; cursor: not-allowed; }
+@media (max-width: 768px) { .manual-form__cargo-inputs { grid-template-columns: 1fr; } }
 
-/* Items in dropdown */
-.country-select__item, .postal-city__item { display: flex; align-items: center; padding: 4px 6px; cursor: pointer; min-height: 24px; }
-.country-select__item:hover, .country-select__item--highlighted, .postal-city__item:hover, .postal-city__item--highlighted { background-color: #f5f5f5; }
-.country-select__item-content, .postal-city__suggestion { display: flex; align-items: center; width: 100%; gap: 6px; }
 
-/* Location details in dropdown */
-.postal-city__details { display: flex; align-items: center; gap: 6px; flex: 1; }
-.postal-city__country-code { min-width: 30px; font-weight: 500; font-size: 14px; }
-.postal-city__postal-code { min-width: 35px; font-weight: 500; font-size: 14px; }
-.postal-city__city-name { color: #666; font-size: 16px; }
-.country-select__local-name { color: #808080; font-size: 13px; }
-.country-select__name { color: #000000; font-size: 14px; }
-
-/* Flags */
-.country-select__flag { width: 24px; height: 18px; object-fit: cover; border-radius: 2px; }
-.postal-city__flag { width: 16px; height: 12px; object-fit: cover; border-radius: 2px; }
-
-/* Utility */
-.country-select__no-results, .postal-city__no-results { padding: 6px; text-align: center; color: #666; font-size: 13px; }
-.country-select__load-more, .postal-city__load-more { display: flex; align-items: center; justify-content: center; padding: 6px; cursor: pointer; background-color: #f9f9f9; font-weight: 500; font-size: 13px; }
-.country-select__load-more:hover, .postal-city__load-more:hover { background-color: #f5f5f5; }
+/* Layout pre hlavný kontajner */
+.manual-form__grid {
+    display: flex;
+    flex-wrap: wrap; /* Zabezpečí zalamovanie pri menšej šírke */
+    gap: 1rem;
+  }
+  
+  /* Každý kontajner */
+  .manual-form__country,
+  .manual-form__location,
+  .manual-form__datetime {
+    display: flex;
+    flex-direction: column; /* Label vždy hore */
+    flex: 1 1 calc(50% - 0.5rem); /* Defaultne 50% šírky, ak je miesto */
+    min-width: 250px; /* Ak nie je dosť miesta, zalomí sa pod seba */
+  }
+  
+  /* DateTime bude vždy v druhom riadku */
+  .manual-form__datetime {
+    flex: 1 1 100%; /* Zaberie celý riadok */
+  }
+  
+  /* Responsivita - keď je menej miesta, všetko sa zalomí pod seba */
+  @media (max-width: 600px) {
+    .manual-form__country,
+    .manual-form__location,
+    .manual-form__datetime {
+      flex: 1 1 100%; /* Každý kontajner sa zobrazí pod sebou */
+    }
+  }
+  

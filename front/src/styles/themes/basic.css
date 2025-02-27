@@ -6,8 +6,8 @@
 /* Import minimal reset */
 @import './none.css';
 
-/* Import basic layout */
-@import '../base/_layout.css';
+/* Import basic layout 
+@import '../base/_layout.css';*/
 
 
 /* File: src/styles/themes/basic.css */
