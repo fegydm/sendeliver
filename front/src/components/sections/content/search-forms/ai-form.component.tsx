@@ -1,9 +1,7 @@
 // File: src/components/sections/content/search-forms/ai-form.component.tsx
-// Last change: Updated component structure to use form and BEM styling
-
 import { useState, useEffect, useRef } from "react";
 import { AIResponse } from "@/types/form-ai.types";
-import "@/styles/components/ai-form.css";
+// import "@/styles/components/ai-form.css"
 
 interface Coordinates {
   lat: number;
@@ -34,22 +32,10 @@ interface AIFormProps {
 const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState<ExtractedAIResponse | null>(null);
-  const [maxWidth, setMaxWidth] = useState<number>(600);
   const containerRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    const updateMaxWidth = () => {
-      if (containerRef.current) {
-        setMaxWidth(containerRef.current.offsetWidth);
-      }
-    };
-
-    updateMaxWidth();
-    window.addEventListener("resize", updateMaxWidth);
-
-    return () => {
-      window.removeEventListener("resize", updateMaxWidth);
-    };
+    // English comment: No longer setting maxWidth dynamically since it's handled by CSS
   }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -98,7 +84,6 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
     <form 
       ref={containerRef} 
       className={`ai-form ai-form--${type}`} 
-      style={{ maxWidth: "600px" }}
       onSubmit={handleSearch}
     >
       <textarea
@@ -107,11 +92,6 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         rows={4}
-        style={{
-          width: "100%",
-          maxWidth: `${maxWidth}px`,
-          minWidth: "200px",
-        }}
       />
       <button type="submit" className="ai-form__button">
         {type === "sender" ? "Ask AI" : "Find Requests"}

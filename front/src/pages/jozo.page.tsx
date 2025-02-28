@@ -1,5 +1,8 @@
+// File: ./front/src/pages/jozo.page.tsx
 import { useState, useEffect, useRef } from "react";
-import PinForm from "./pin-form.component";
+import PinForm from "@/components/elements/pin-form.element";
+import "@/styles/sections/jozo.page.css";
+import videoFile from "@/assets/jp.mp4";
 
 const JozoPage: React.FC = () => {
   const [isPinVerified, setIsPinVerified] = useState(false);
@@ -8,29 +11,25 @@ const JozoPage: React.FC = () => {
 
   useEffect(() => {
     if (isPinVerified) {
-      // Preload video into cache
       const link = document.createElement("link");
       link.rel = "preload";
       link.as = "video";
-      link.href = "https://storage.googleapis.com/sendel/video/vj.mp4";
+      link.href = videoFile;
       document.head.appendChild(link);
-
-      // Set timeout to revert to PIN form after inactivity
       timerRef.current = setTimeout(() => {
         setIsPinVerified(false);
-      }, 60000); // 1 minute inactivity
-
+      }, 60000);
       return () => {
         if (timerRef.current) {
           clearTimeout(timerRef.current);
         }
-        document.head.removeChild(link); // Cleanup preloaded video link
+        document.head.removeChild(link);
       };
     }
   }, [isPinVerified]);
 
   const handlePlay = () => {
-    videoRef.current?.play();
+    window.open(videoFile, "_blank");
   };
 
   const handlePause = () => {
@@ -45,45 +44,34 @@ const JozoPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 py-12 px-4">
-      <div className="max-w-5xl mx-auto">
-        {/* Video Player */}
+    <div className="jozo-page">
+      <div className="jozo-page__container">
         {isPinVerified ? (
           <>
-            <div className="relative pt-[56.25%] bg-black rounded-lg overflow-hidden">
+            <div className="jozo-page__video-container">
               <video
                 ref={videoRef}
-                className="absolute inset-0 w-full h-full"
+                className="jozo-page__video"
                 playsInline
-                src="https://storage.googleapis.com/sendel/video/vj.mp4"
+                src={videoFile}
               >
                 Your browser does not support the video tag.
               </video>
             </div>
-            <div className="mt-4 flex justify-center space-x-4">
-              <button
-                onClick={handlePlay}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-              >
+            <div className="jozo-page__button-container">
+              <button onClick={handlePlay} className="jozo-page__button jozo-page__button--play">
                 Play
               </button>
-              <button
-                onClick={handlePause}
-                className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
-              >
+              <button onClick={handlePause} className="jozo-page__button jozo-page__button--pause">
                 Pause
               </button>
-              <button
-                onClick={handleStop}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-              >
+              <button onClick={handleStop} className="jozo-page__button jozo-page__button--stop">
                 Stop
               </button>
             </div>
           </>
         ) : (
-          // PIN Form Overlay
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="jozo-page__overlay">
             <PinForm onCorrectPin={() => setIsPinVerified(true)} />
           </div>
         )}

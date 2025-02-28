@@ -1,0 +1,21 @@
+/* File: front/src/styles/base/_variables-basic.css */
+/* Global variables */
+:root {
+    /* Layout */
+    --navbar-height: 50px;
+    --banner-height: 150px;
+
+    /* Breakpoints */
+    --breakpoint-navbar: 600px;
+
+    /* Other variables */
+    --min-content-width: 300px;
+    --max-content-width: 1200px;
+
+    /* Colors  */
+    --logo-1-color: #dc1ff0;
+    --logo-2-color: #57cc32;
+    --navbar-bg-color: #D1D5DB;
+    --banner-bg-color: #111827;
+    --content-bg-color: #f3f4f6;
+}

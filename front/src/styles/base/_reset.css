@@ -1,27 +1,49 @@
-/* File: front/src/styles/base/_reset.css */
-.ai-search-form__editable {
-    display: inline-block;
-    width: 100%;
-    min-height: 40px;
-    padding: 8px 12px;
-    font-size: 16px;
-    line-height: 1.5;
-    color: #333;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    outline: none;
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: Public Domain
+*/
+
+/* Reset margins, paddings, borders, fonts, and vertical alignments for all elements */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
 }
 
-.ai-search-form__editable:focus {
-    border-color: #66afe9;
-    box-shadow: 0 0 5px rgba(102, 175, 233, 0.5);
-    outline: none;
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+    display: block;
 }
 
-.ai-search-form__editable:empty::before {
-    content: attr(data-placeholder);
-    color: #aaa;
-    pointer-events: none;
-}
+/* Set a consistent line-height for the body */
+body { line-height: 1; }
+
+/* Remove list styles */
+ol, ul { list-style: none; }
+
+/* Remove default blockquote and quote styling */
+blockquote, q { quotes: none; }
+blockquote:before, blockquote:after,
+q:before, q:after { content: ''; content: none;}
+
+/* Collapse table borders */
+table { border-collapse: collapse; border-spacing: 0; }
+
+/* <img> elements with .svg sources and specific flag classes */
+.flag-cc img[src$=".svg"], .country-dropdown img[src$=".svg"] { max-width: 50px; height: auto; }

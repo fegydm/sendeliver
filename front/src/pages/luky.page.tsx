@@ -1,5 +1,8 @@
+// File: ./front/src/pages/luky.page.tsx
+
 import { useState, useEffect, useRef } from 'react';
 import PinForm from './pin-form-luke.component';
+import "@/styles/sections/jozo.page.css";
 
 const SecretPage2: React.FC = () => {
   const [isPinVerified, setIsPinVerified] = useState<boolean>(false);

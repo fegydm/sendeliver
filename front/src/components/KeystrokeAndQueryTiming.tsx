@@ -52,7 +52,7 @@ const KeystrokeAndQueryTiming = () => {
         onChange={e => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Type something..."
-        style={{ width: '300px', padding: '8px', fontSize: '16px' }}
+        style={{ width: '200px', padding: '8px', fontSize: '16px' }}
       />
       <div style={{ marginTop: '20px' }}>
         <h2>Keystroke Intervals (ms):</h2>

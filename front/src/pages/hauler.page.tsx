@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import BannerH from "@/components/sections/banners/banner-h.component";
 import DriverCard from "@/components/elements/DriverCard";
-import "@/styles/sections/hauler.page.css";
+// import "@/styles/sections/hauler.page.css";
 
 const HaulerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("dashboard");

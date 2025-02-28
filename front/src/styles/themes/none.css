@@ -1,4 +1,2 @@
 /* Practically empty, or with just a basic reset */
-html, body {
-    all: unset; /* Removes inherited styles */
-}
+html, body {all: unset; }
