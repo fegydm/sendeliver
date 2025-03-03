@@ -9,6 +9,11 @@
     --color-modal-bg: #ffffff; /* Modal background color */
     --color-text-primary: #000000; /* Primary text color */
     --color-text-secondary: #333333; /* Secondary text color */
+    --color-pickup-section: #3b82f6;
+    --color-delivery-section: #10b981;
+    --logo-1-color: #dc1ff0;
+    --logo-2-color: #57cc32;
+
     
     /* Heights */
     --height-header: 100px; /* Header height */

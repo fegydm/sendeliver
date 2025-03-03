@@ -1,12 +1,14 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Updated to use revised DateTimePicker with two inputs, removed unnecessary wrappers
+// Last change: Added load and delivery SVG images in grid layout
 
 import React, { useState, useRef, useCallback } from 'react';
 import CountrySelect from './CountrySelect';
 import PostalCitySelect from './PostalCitySelect';
-import { DateTimeSelect } from './DateTimeSelect'; // Using updated DateTimePicker instead of DateTimeSelect
+import { DateTimeSelect } from './DateTimeSelect';
 import { LocationFormData, LocationType, Location } from '@/types/location.types';
- // import "@/styles/components/manual-form.css";
+import loadIcon from '@/assets/load-icon.svg';
+import deliverIcon from '@/assets/deliver-icon.svg';
+// import "@/styles/components/manual-form.css";
 
 interface ManualSearchFormProps {
   onSubmit: (data: LocationFormData) => void;
@@ -201,6 +203,11 @@ export function ManualForm({
             />
           </div>
 
+          {/* Loading SVG */}
+          <div className="manual-form__load-img">
+  <img src={loadIcon} alt="Loading icon" />
+</div>
+
           {/* DateTime */}
           <div className="manual-form__datetime">
             <label className="manual-form__label">Loading Date/Time</label>
@@ -208,6 +215,7 @@ export function ManualForm({
               value={localFormData.pickup.testTime}
               onChange={(date: Date) => handleDateTimeChange(LocationType.PICKUP, date)}
               min={new Date()}
+              locationType="pickup"
             />
           </div>
         </div>
@@ -250,6 +258,11 @@ export function ManualForm({
             />
           </div>
 
+          {/* Delivery SVG */}
+          <div className="manual-form__deliver-img">
+  <img src={deliverIcon} alt="Delivery icon" />
+</div>
+
           {/* DateTime */}
           <div className="manual-form__datetime">
             <label className="manual-form__label">Delivery Date/Time</label>
@@ -257,6 +270,7 @@ export function ManualForm({
               value={localFormData.delivery.testTime}
               onChange={(date: Date) => handleDateTimeChange(LocationType.DELIVERY, date)}
               min={new Date()}
+              locationType="delivery"
             />
           </div>
         </div>

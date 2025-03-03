@@ -287,8 +287,8 @@ export function PostalCitySelect({
         value={psc}
         onChange={handlePscChange}
         dbMask={dbPostalCodeMask}
-        placeholder="PSC"
-        className={`manual-form__postal-input manual-form__postal-input--${locationType}`}
+        placeholder="Postal code"
+        className={`postal-city__psc-input postal-city__psc-input--${locationType}`}
         ref={activePscRef}
         onFocus={() => { 
           setCity(""); 
@@ -307,7 +307,7 @@ export function PostalCitySelect({
           handleInputFocus("city"); 
         }}
         placeholder="Place/City"
-        className={`manual-form__city-input manual-form__city-input--${locationType}`}
+        className={`postal-city__city-input postal-city__city-input--${locationType}`}
         aria-autocomplete="list"
         aria-controls="postal-city__dropdown"
         aria-expanded={isOpen}

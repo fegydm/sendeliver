@@ -1,5 +1,5 @@
 // File: src/components/DateTimeSelect.tsx
-// Last change: Renamed from DateTimePicker to DateTimeSelect for naming consistency
+// Last change: Renamed from DateTimePicker to DateTimeSelect for naming consistency and updated class names for BEM
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import DatePicker from './DatePicker';
@@ -14,6 +14,7 @@ interface DateTimeSelectProps {
   max?: Date;
   required?: boolean;
   disabled?: boolean;
+  locationType?: 'pickup' | 'delivery'; // Added locationType prop
 }
 
 const pad = (num: number): string => num.toString().padStart(2, '0');
@@ -26,6 +27,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   max,
   required = false,
   disabled = false,
+  locationType = 'pickup', // Default to pickup if not specified
 }) => {
   const getInitialDate = (): Date => {
     if (value instanceof Date && !isNaN(value.getTime())) return value;
@@ -149,7 +151,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
         timeInputRef.current.value = formatTime(newDate);
       }
     }
-  }, [value, formatDate, formatTime, checkPastDate]);
+  }, [value, formatDate, formatTime, checkPastDate, selectedDate]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -163,15 +165,20 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
     };
   }, []);
 
+  // Construct class names according to BEM methodology
+  const containerClassName = disabled ? 'date-time date-time--disabled' : 'date-time';
+  const dateInputClassName = `date-time__date-input date-time__date-input--${locationType} ${className}`;
+  const timeInputClassName = `date-time__time-input date-time__time-input--${locationType} ${className}`;
+
   return (
-    <div ref={containerRef} className={disabled ? 'date-time--disabled' : 'date-time'}>
+    <div ref={containerRef} className={containerClassName}>
       <input
         ref={dateInputRef}
         type="text"
         readOnly
         value={formatDate(selectedDate)}
         onClick={handleInputClick}
-        className={`date-time__input date-time__input--date ${className}`}
+        className={dateInputClassName}
         placeholder="YYYY-MM-DD"
         disabled={disabled}
         required={required}
@@ -182,14 +189,14 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
         readOnly
         value={formatTime(selectedDate)}
         onClick={handleInputClick}
-        className={`date-time__input date-time__input--time ${className}`}
+        className={timeInputClassName}
         placeholder="HH:MM"
         disabled={disabled}
         required={required}
       />
       {isPickerOpen && !disabled && (
         <div className="date-time__dropdown">
-          <div className="date-time__date-time-container">
+          <div className="date-time__container">
             <DatePicker
               value={selectedDate}
               onChange={handleDateChange}
@@ -203,7 +210,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
             />
           </div>
           {pastDateWarning && (
-            <div className="date-time__warning-message">{pastDateWarning}</div>
+            <div className="date-time__warning">{pastDateWarning}</div>
           )}
         </div>
       )}

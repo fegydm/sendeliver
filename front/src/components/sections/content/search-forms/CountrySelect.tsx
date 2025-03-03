@@ -151,8 +151,8 @@ export function CountrySelect({
     ? `/flags/4x3/optimized/${inputValue.toLowerCase()}.svg`
     : "/flags/4x3/optimized/gb.svg";
   
-  const flagClasses = `flag-cc__flag ${inputValue.length !== 2 ? 'flag-cc__flag--inactive' : ''}`;
-  const inputClasses = `flag-cc__input flag-cc__input--${locationType}`;
+  const flagClasses = `flag-cc__flag-img ${inputValue.length !== 2 ? 'flag-cc__flag-img--inactive' : ''}`;
+  const inputClasses = `flag-cc__cc-input flag-cc__cc-input--${locationType}`;
 
   return (
     <div ref={componentRef} className="flag-cc">
