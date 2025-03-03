@@ -6,7 +6,7 @@ import CountrySelect from './CountrySelect';
 import PostalCitySelect from './PostalCitySelect';
 import { DateTimeSelect } from './DateTimeSelect'; // Using updated DateTimePicker instead of DateTimeSelect
 import { LocationFormData, LocationType, Location } from '@/types/location.types';
-// import "@/styles/components/manual-form.css";
+ // import "@/styles/components/manual-form.css";
 
 interface ManualSearchFormProps {
   onSubmit: (data: LocationFormData) => void;

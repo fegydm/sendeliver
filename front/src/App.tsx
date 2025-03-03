@@ -1,13 +1,13 @@
 // File: src/App.tsx
-// Last change: Removed unused CountriesProvider
-
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Navigation from "@/components/sections/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
-import JozoPage from "@/pages/jozo.page";
-import LukyPage from "@/pages/luky.page";
+// Removed static pages for secret videos
+// import JozoPage from "@/pages/jozo.page";
+// import LukyPage from "@/pages/luky.page";
+import VideoPage from "@/pages/video.page"; // English comment: Dynamic video page for secret videos
 import NotFoundPage from "@/pages/notfound.page";
 import HomePage from "@/pages/home.page";
 import TestPage from "@/pages/test.page";
@@ -27,7 +27,8 @@ const ROUTES = {
   TEST2: "/test2",
   TEST1: "/test1",
   TEST3: "/test3",
-  SECRET: ["/jozo", "/luky"],
+  // Removed static secret routes
+  // SECRET: ["/jozo", "/luky"],
 } as const;
 
 const App: React.FC = () => {
@@ -35,7 +36,6 @@ const App: React.FC = () => {
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const savedMode = localStorage.getItem("darkMode");
     return savedMode ? JSON.parse(savedMode) : prefersDark;
@@ -53,6 +53,7 @@ const App: React.FC = () => {
 
   const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
 
+  // English comment: Determine if the current page should hide header and footer.
   const isTestPageWithoutHeaderFooter = [ROUTES.TEST2, ROUTES.TEST1, ROUTES.TEST3].includes(
     window.location.pathname as typeof ROUTES.TEST2
   );
@@ -82,8 +83,10 @@ const App: React.FC = () => {
           <Route path={ROUTES.TEST1} element={<Test1Page />} />
           <Route path={ROUTES.TEST3} element={<Test3Page />} />
 
-          <Route path="/jozo" element={<JozoPage />} />
-          <Route path="/luky" element={<LukyPage />} />
+          {/* English comment: Dynamic route for secret videos.
+              If the alias exists in videoMap inside VideoPage, it will load the video,
+              otherwise it will show an error message. */}
+          <Route path="/:alias" element={<VideoPage />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
