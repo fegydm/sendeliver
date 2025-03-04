@@ -1,9 +1,8 @@
 // File: src/components/TimePicker.tsx
-// Last change: Updated day-night cycle with two boundaries, reduced minutes display to 3 repetitions
+// Last change: Updated BEM class names to align with datetime-select, max 2 parts in className
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import ThreeScroll from './ThreeScroll';
-import './TimePicker.css';
 
 const ITEM_HEIGHT = 24;
 const TOTAL_HOURS = 24;
@@ -232,19 +231,19 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
   const currentTime = new Date();
 
   return (
-    <div ref={wrapperRef} className={`time-picker ${className || ''}`}>
-      <div className="time-picker__header">HRS : MIN</div>
-      <div className="time-picker__wrapper">
+    <div ref={wrapperRef} className={`datetime-select__time-picker ${className || ''}`}>
+      <div className="datetime-select__time-header">HRS : MIN</div>
+      <div className="datetime-select__time-wrapper">
         <ThreeScroll
           type="hours"
           onStep={(step) => handleStep('hours', step)}
           onSelectCurrent={(value) => handleSelectCurrent('hours', value)}
           currentTime={currentTime}
         />
-        <div className="time-picker__column-container">
-          <div className="time-picker__column-frame" />
+        <div className="datetime-select__time-container">
+          <div className="datetime-select__time-frame" />
           <div
-            className="time-picker__column--hours"
+            className="datetime-select__time-hours"
             style={{ transform: `translateY(${-scrollPosition.hours}px)` }}
             onMouseMove={(e) => handleMouseMove(e, 'hours')}
             onMouseLeave={() => stopScrolling('hours')}
@@ -254,7 +253,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
               return (
                 <div
                   key={`hour-${i}`}
-                  className="time-picker__item"
+                  className="datetime-select__time-item"
                   data-hour={hour}
                   onClick={() => alignToCenter('hours', hour)}
                 >
@@ -264,10 +263,10 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
             })}
           </div>
         </div>
-        <div className="time-picker__column-container">
-          <div className="time-picker__column-frame" />
+        <div className="datetime-select__time-container">
+          <div className="datetime-select__time-frame" />
           <div
-            className="time-picker__column--minutes"
+            className="datetime-select__time-minutes"
             style={{ transform: `translateY(${-scrollPosition.minutes}px)` }}
             onMouseMove={(e) => handleMouseMove(e, 'minutes')}
             onMouseLeave={() => stopScrolling('minutes')}
@@ -277,7 +276,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
               return (
                 <div
                   key={`minute-${i}`}
-                  className="time-picker__item"
+                  className="datetime-select__time-item"
                   onClick={() => alignToCenter('minutes', minute / 5)}
                 >
                   {pad(minute)}
@@ -293,7 +292,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ value, onChange, className }) =
           currentTime={currentTime}
         />
       </div>
-      <div className="time-picker__footer"></div>
+      <div className="datetime-select__time-footer"></div>
     </div>
   );
 };

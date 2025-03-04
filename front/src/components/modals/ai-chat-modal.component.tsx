@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import AIChat from "../sections/content/chat/ai-chat.component";
 import MapView from "../sections/content/maps/map-view.component";
-import { AIRequest, AIResponse, FormData } from "@/types/form-ai.types";
+import { AIRequest, AIResponse, FormData } from "@/types/transport-forms.types";
 // import "./ai-chat-modal.component.css";
 
 interface AIChatModalProps {

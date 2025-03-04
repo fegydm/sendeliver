@@ -1,6 +1,3 @@
-// File: src/hooks/useUINavigation.ts
-// Last change: Improved handling of focus, added support for mouse navigation, and better handling of edge cases.
-
 import { useState, RefObject, useCallback, useRef, useEffect } from "react";
 
 interface UINavigationOptions<T> {
@@ -28,62 +25,71 @@ export function useUINavigation<T>({
       setIsInputFocused(true);
       return;
     }
-
     if (highlightedIndex !== null && highlightedIndex >= items.length) {
-        setHighlightedIndex(items.length > 0 ? 0 : null);
+      setHighlightedIndex(items.length > 0 ? 0 : null);
     }
-    
   }, [isOpen, items.length]);
 
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (!isOpen) return;
+  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (!isOpen) return;
 
-      event.preventDefault();
+    // Calculate the total number of selectable items (including "Load more" if present)
+    const totalSelectableItems = items.length + (items.length < pageSize ? 0 : 1);
 
-      switch (event.key) {
-        case "ArrowDown":
-          setIsInputFocused(false);
-          setHighlightedIndex((prev) => (prev === null ? 0 : Math.min(prev + 1, items.length - 1)));
-          break;
-
-        case "ArrowUp":
-          if (highlightedIndex === null || highlightedIndex === 0) {
-            setIsInputFocused(true);
-            setHighlightedIndex(null);
-            inputRef?.current?.focus();
-          } else {
-            setHighlightedIndex((prev) => (prev !== null ? prev - 1 : null));
-          }
-          break;
-
-        case "PageDown":
-          setIsInputFocused(false);
-          setHighlightedIndex((prev) => Math.min((prev ?? 0) + pageSize, items.length - 1));
-          break;
-
-        case "PageUp":
-           setIsInputFocused(false);
-          setHighlightedIndex((prev) => Math.max((prev ?? 0) - pageSize, 0));
-          break;
-
-        case "Enter":
-          if (highlightedIndex !== null && !isInputFocused) {
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        setIsInputFocused(false);
+        setHighlightedIndex((prev) => {
+          if (prev === null) return 0;
+          // Allow navigation to "Load more" option when at the last item
+          return Math.min(prev + 1, items.length);
+        });
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        if (highlightedIndex === null || highlightedIndex === 0) {
+          setIsInputFocused(true);
+          setHighlightedIndex(null);
+          inputRef?.current?.focus();
+        } else {
+          setHighlightedIndex((prev) => (prev !== null ? prev - 1 : null));
+        }
+        break;
+      case "PageDown":
+        event.preventDefault();
+        setIsInputFocused(false);
+        setHighlightedIndex((prev) => Math.min((prev ?? 0) + pageSize, items.length - 1));
+        break;
+      case "PageUp":
+        event.preventDefault();
+        setIsInputFocused(false);
+        setHighlightedIndex((prev) => Math.max((prev ?? 0) - pageSize, 0));
+        break;
+      case "Enter":
+        event.preventDefault();
+        if (highlightedIndex !== null && !isInputFocused) {
+          if (highlightedIndex < items.length) {
+            // Regular item selected
             onSelect(items[highlightedIndex], highlightedIndex);
-            setHighlightedIndex(null);
-            setIsInputFocused(true);
+          } else {
+            // "Load more" option selected
+            // We need to handle this in the BaseDropdown component
+            const loadMoreEvent = new CustomEvent('loadMore');
+            document.dispatchEvent(loadMoreEvent);
           }
-          break;
-
-        case "Escape":
           setHighlightedIndex(null);
           setIsInputFocused(true);
-          inputRef?.current?.focus();
-          break;
-      }
-    },
-    [isOpen, items, highlightedIndex, onSelect, inputRef, pageSize]
-  );
+        }
+        break;
+      case "Escape":
+        event.preventDefault();
+        setHighlightedIndex(null);
+        setIsInputFocused(true);
+        inputRef?.current?.focus();
+        break;
+    }
+  }, [isOpen, items, highlightedIndex, onSelect, inputRef, pageSize]);
 
   const handleItemMouseEnter = useCallback((index: number) => {
     setHighlightedIndex(index);
@@ -96,9 +102,9 @@ export function useUINavigation<T>({
     setIsInputFocused(true);
   }, [onSelect, items]);
 
-
   return {
     highlightedIndex,
+    setHighlightedIndex, // Export setHighlightedIndex function
     isInputFocused,
     setIsInputFocused,
     handleKeyDown,

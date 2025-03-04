@@ -1,7 +1,8 @@
 // File: src/components/sections/content/search-forms/ai-form.component.tsx
+// Last change: Added className prop and aligned with HomePage
+
 import { useState, useEffect, useRef } from "react";
-import { AIResponse } from "@/types/form-ai.types";
-// import "@/styles/components/ai-form.css"
+import { AIResponse } from "@/types/transport-forms.types";
 
 interface Coordinates {
   lat: number;
@@ -27,9 +28,10 @@ interface ExtractedAIResponse extends AIResponse {
 interface AIFormProps {
   type: "sender" | "hauler";
   onAIRequest: (response: ExtractedAIResponse) => void;
+  className?: string; // Added for parent styling
 }
 
-const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
+const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = '' }) => {
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState<ExtractedAIResponse | null>(null);
   const containerRef = useRef<HTMLFormElement>(null);
@@ -68,8 +70,8 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
           deliveryTime: rawData.deliveryTime || "",
           weight: rawData.weight || "0",
           palletCount: rawData.palletCount || 0,
-          coordinates: rawData.coordinates
-        }
+          coordinates: rawData.coordinates,
+        },
       };
 
       console.log("AI Response:", data);
@@ -83,7 +85,7 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest }) => {
   return (
     <form 
       ref={containerRef} 
-      className={`ai-form ai-form--${type}`} 
+      className={`ai-form ai-form--${type} ${className}`} 
       onSubmit={handleSearch}
     >
       <textarea

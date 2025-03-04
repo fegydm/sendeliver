@@ -1,5 +1,5 @@
 // front/src/services/ai.service.ts
-import { AIRequest, AIResponse } from "../types/form-ai.types";
+import { AIRequest, AIResponse } from "../types/transport-forms.types";
 
 export class AIService {
   private static API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:5000/api/ai/chat';

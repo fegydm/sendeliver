@@ -1,55 +1,50 @@
 // File: src/pages/home.page.tsx
-// Last change: Fixed type compatibility issues
+// Last change: Added GUI labels and className props for styling from parent
 
 import { useState } from "react";
 import PageBanner from "@/components/sections/banners/banner.component";
 import Content from "@/components/sections/content/content.component";
 import AIForm from "@/components/sections/content/search-forms/ai-form.component";
-import ManualSearchForm from "@/components/sections/content/search-forms/manual-form.component";
+import ManualForm from "@/components/sections/content/search-forms/manual-form.component";
 import ResultTable from "@/components/sections/content/results/result-table.component";
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
 import QuickStats from "@/components/sections/stats/quick-stats.component";
 import { mockClientData, mockCarrierData } from "@/data/mockData";
-import { 
-  AIRequest, 
-  AIResponse,
-  FormData,
-  AIFormData,
-  convertToFormData,
-  convertAIResponseToFormData
-} from "@/types/form-ai.types";
-
-const DEFAULT_FORM_DATA: FormData = {
-  pickup: {
-    country: { code: '', flag: '' },
-    psc: '',
-    city: '',
-    time: ''
-  },
-  delivery: {
-    country: { code: '', flag: '' },
-    psc: '',
-    city: '',
-    time: ''
-  },
-  cargo: {
-    pallets: 0,
-    weight: 0
-  }
-};
+import { AIRequest, AIResponse, TransportFormData, DEFAULT_TRANSPORT_FORM_DATA } from "@/types/transport-forms.types";
 
 const HomePage = () => {
   const [activeSection, setActiveSection] = useState<"sender" | "hauler" | null>(null);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState<AIRequest | null>(null);
-  const [formData, setFormData] = useState<FormData>(DEFAULT_FORM_DATA);
+  const [formData, setFormData] = useState<TransportFormData>(DEFAULT_TRANSPORT_FORM_DATA);
 
+  // Handle AI form response and update state
   const handleAIResponse = (type: "sender" | "hauler", response: AIResponse & { content: string }) => {
     console.log('Received AI Response:', response);
-    
+
     if (response.data) {
-      const aiFormData = convertAIResponseToFormData(response);
-      const newFormData = convertToFormData(aiFormData);
+      const newFormData: TransportFormData = {
+        pickup: {
+          country: { cc: '', flag: '' },
+          psc: '',
+          city: response.data.pickupLocation || '',
+          time: response.data.pickupTime || '',
+          lat: response.data.coordinates?.pickup?.lat,
+          lng: response.data.coordinates?.pickup?.lng,
+        },
+        delivery: {
+          country: { cc: '', flag: '' },
+          psc: '',
+          city: response.data.deliveryLocation || '',
+          time: response.data.deliveryTime || '',
+          lat: response.data.coordinates?.delivery?.lat,
+          lng: response.data.coordinates?.delivery?.lng,
+        },
+        cargo: {
+          pallets: response.data.palletCount || 0,
+          weight: response.data.weight ? parseFloat(response.data.weight) : 0,
+        },
+      };
       setFormData(newFormData);
     }
 
@@ -63,33 +58,41 @@ const HomePage = () => {
     setIsAIChatOpen(true);
   };
 
-  const handleManualSubmit = (type: "sender" | "hauler", data: FormData) => {
+  // Handle manual form submission
+  const handleManualSubmit = (type: "sender" | "hauler", data: TransportFormData) => {
     console.log(`${type} form data:`, data);
     setFormData(data);
   };
 
-  const handleAIModalData = (aiFormData: FormData) => {
-    // Convert FormData from modal to our internal format if needed
-    const modalData = aiFormData as unknown as AIFormData;
-    const newFormData = convertToFormData(modalData);
-    console.log("Received AI form data:", modalData);
-    setFormData(newFormData);
+  // Handle data from AI chat modal
+  const handleAIModalData = (data: TransportFormData) => {
+    console.log("Received AI form data:", data);
+    setFormData(data);
   };
 
+  // Render content for sender or hauler
   const renderContent = (type: "sender" | "hauler") => (
     <>
-      <AIForm
+      <div className={`${type}-content__section`}>
+        <h3>Search by AI</h3>
+        <AIForm
+          type={type}
+          onAIRequest={(response) => handleAIResponse(type, response)}
+          className={`${type}-content__ai-form`}
+        />
+      </div>
+      <div className={`${type}-content__section`}>
+        <h3>Search by Manual Inputs</h3>
+        <ManualForm
+          type={type}
+          onSubmit={(data) => handleManualSubmit(type, data)}
+          formData={formData}
+          className={`${type}-content__manual-form`}
+        />
+      </div>
+      <ResultTable
         type={type}
-        onAIRequest={(response) => handleAIResponse(type, response)}
-      />
-      <ManualSearchForm
-        userType={type}
-        onSubmit={(data) => handleManualSubmit(type, data)}
-        formData={formData}
-      />
-      <ResultTable 
-        type={type} 
-        data={type === "sender" ? mockClientData : mockCarrierData} 
+        data={type === "sender" ? mockClientData : mockCarrierData}
       />
     </>
   );
@@ -97,7 +100,6 @@ const HomePage = () => {
   return (
     <>
       <PageBanner />
-
       {isAIChatOpen && currentPrompt && (
         <AIChatModal
           onClose={() => setIsAIChatOpen(false)}
@@ -106,12 +108,10 @@ const HomePage = () => {
           onDataReceived={handleAIModalData}
         />
       )}
-
       <Content
         senderContent={renderContent("sender")}
         haulerContent={renderContent("hauler")}
       />
-
       <QuickStats type="sender" />
     </>
   );

@@ -1,10 +1,7 @@
-// File: src/components/DateTimeSelect.tsx
-// Last change: Renamed from DateTimePicker to DateTimeSelect for naming consistency and updated class names for BEM
-
+/* File: src/components/DateTimeSelect.tsx */
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import DatePicker from './DatePicker';
 import TimePicker from './TimePicker';
-// import './DateTimeSelect.css'; 
 
 interface DateTimeSelectProps {
   value?: Date | string | null;
@@ -14,7 +11,7 @@ interface DateTimeSelectProps {
   max?: Date;
   required?: boolean;
   disabled?: boolean;
-  locationType?: 'pickup' | 'delivery'; // Added locationType prop
+  locationType?: 'pickup' | 'delivery';
 }
 
 const pad = (num: number): string => num.toString().padStart(2, '0');
@@ -27,7 +24,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   max,
   required = false,
   disabled = false,
-  locationType = 'pickup', // Default to pickup if not specified
+  locationType = 'pickup',
 }) => {
   const getInitialDate = (): Date => {
     if (value instanceof Date && !isNaN(value.getTime())) return value;
@@ -45,130 +42,62 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
   const dateInputRef = useRef<HTMLInputElement>(null);
   const timeInputRef = useRef<HTMLInputElement>(null);
 
-  const formatDate = useCallback((date: Date): string => {
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-  }, []);
-
-  const formatTime = useCallback((date: Date): string => {
-    return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  }, []);
-
+  const formatDate = useCallback((date: Date): string => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`, []);
+  const formatTime = useCallback((date: Date): string => `${pad(date.getHours())}:${pad(date.getMinutes())}`, []);
   const checkPastDate = useCallback((date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const checkDate = new Date(date);
     checkDate.setHours(0, 0, 0, 0);
-
-    if (checkDate < today) {
-      setPastDateWarning("Selected date is in the past");
-    } else {
-      setPastDateWarning(null);
-    }
+    setPastDateWarning(checkDate < today ? "Selected date is in the past" : null);
   }, []);
 
-  const handleDateChange = useCallback(
-    (newDate: Date) => {
-      const updatedDate = new Date(
-        newDate.getFullYear(),
-        newDate.getMonth(),
-        newDate.getDate(),
-        selectedDate.getHours(),
-        selectedDate.getMinutes()
-      );
+  const handleDateChange = useCallback((newDate: Date) => {
+    const updatedDate = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), selectedDate.getHours(), selectedDate.getMinutes());
+    console.log('[DateTimeSelect] handleDateChange:', { newDate, updatedDate, min, max });
+    checkPastDate(updatedDate);
+    if ((min && updatedDate < min) || (max && updatedDate > max)) return;
+    setSelectedDate(updatedDate);
+    if (dateInputRef.current) dateInputRef.current.value = formatDate(updatedDate);
+    if (timeInputRef.current) timeInputRef.current.value = formatTime(updatedDate);
+    onChange?.(updatedDate);
+  }, [selectedDate, onChange, min, max, formatDate, formatTime, checkPastDate]);
 
-      console.log('[DateTimeSelect] handleDateChange:', { newDate, updatedDate, min, max });
+  const handleTimeChange = useCallback((timeString: string) => {
+    console.log('[DateTimeSelect] handleTimeChange received:', timeString);
+    const [hours, minutes] = timeString.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return;
+    const updatedDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), hours, minutes);
+    console.log('[DateTimeSelect] New time:', { hours, minutes, updatedDate, min, max });
+    if ((min && updatedDate < min) || (max && updatedDate > max)) return;
+    setSelectedDate(updatedDate);
+    if (dateInputRef.current) dateInputRef.current.value = formatDate(updatedDate);
+    if (timeInputRef.current) timeInputRef.current.value = formatTime(updatedDate);
+    onChange?.(updatedDate);
+  }, [selectedDate, onChange, min, max, formatDate, formatTime]);
 
-      checkPastDate(updatedDate);
-
-      if ((min && updatedDate < min) || (max && updatedDate > max)) {
-        console.warn('[DateTimeSelect] Selected date is out of allowed range', { updatedDate, min, max });
-        return;
-      }
-
-      setSelectedDate(updatedDate);
-      if (dateInputRef.current) {
-        dateInputRef.current.value = formatDate(updatedDate);
-      }
-      if (timeInputRef.current) {
-        timeInputRef.current.value = formatTime(updatedDate);
-      }
-      onChange?.(updatedDate);
-    },
-    [selectedDate, onChange, min, max, formatDate, formatTime, checkPastDate]
-  );
-
-  const handleTimeChange = useCallback(
-    (timeString: string) => {
-      console.log('[DateTimeSelect] handleTimeChange received:', timeString);
-      const [hours, minutes] = timeString.split(':').map(Number);
-      if (isNaN(hours) || isNaN(minutes)) {
-        console.warn('[DateTimeSelect] Invalid time string:', timeString);
-        return;
-      }
-
-      const updatedDate = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        hours,
-        minutes
-      );
-
-      console.log('[DateTimeSelect] New time:', { hours, minutes, updatedDate, min, max });
-
-      if ((min && updatedDate < min) || (max && updatedDate > max)) {
-        console.warn('[DateTimeSelect] Selected date and time are out of allowed range', { updatedDate, min, max });
-        return;
-      }
-
-      setSelectedDate(updatedDate);
-      if (dateInputRef.current) {
-        dateInputRef.current.value = formatDate(updatedDate);
-      }
-      if (timeInputRef.current) {
-        timeInputRef.current.value = formatTime(updatedDate);
-      }
-      onChange?.(updatedDate);
-    },
-    [selectedDate, onChange, min, max, formatDate, formatTime]
-  );
-
-  const handleInputClick = useCallback(() => {
-    if (!disabled) {
-      setIsPickerOpen(true);
-    }
-  }, [disabled]);
+  const handleInputClick = useCallback(() => !disabled && setIsPickerOpen(true), [disabled]);
 
   useEffect(() => {
     const newDate = getInitialDate();
     if (newDate.getTime() !== selectedDate.getTime()) {
       setSelectedDate(newDate);
       checkPastDate(newDate);
-      if (dateInputRef.current) {
-        dateInputRef.current.value = formatDate(newDate);
-      }
-      if (timeInputRef.current) {
-        timeInputRef.current.value = formatTime(newDate);
-      }
+      if (dateInputRef.current) dateInputRef.current.value = formatDate(newDate);
+      if (timeInputRef.current) timeInputRef.current.value = formatTime(newDate);
     }
-  }, [value, formatDate, formatTime, checkPastDate, selectedDate]);
+  }, [value, formatDate, formatTime, checkPastDate]);  
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsPickerOpen(false);
-      }
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setIsPickerOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Construct class names according to BEM methodology
-  const containerClassName = disabled ? 'date-time date-time--disabled' : 'date-time';
-  const dateInputClassName = `date-time__date-input date-time__date-input--${locationType} ${className}`;
-  const timeInputClassName = `date-time__time-input date-time__time-input--${locationType} ${className}`;
+  const containerClassName = `datetime-select ${disabled ? 'datetime-select--disabled' : ''} datetime-select--${locationType} ${className}`;
+  const dropdownClassName = 'datetime-select__dropdown dropdown';
 
   return (
     <div ref={containerRef} className={containerClassName}>
@@ -178,7 +107,7 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
         readOnly
         value={formatDate(selectedDate)}
         onClick={handleInputClick}
-        className={dateInputClassName}
+        className="datetime-select__date"
         placeholder="YYYY-MM-DD"
         disabled={disabled}
         required={required}
@@ -189,29 +118,18 @@ export const DateTimeSelect: React.FC<DateTimeSelectProps> = ({
         readOnly
         value={formatTime(selectedDate)}
         onClick={handleInputClick}
-        className={timeInputClassName}
+        className="datetime-select__time"
         placeholder="HH:MM"
         disabled={disabled}
         required={required}
       />
       {isPickerOpen && !disabled && (
-        <div className="date-time__dropdown">
-          <div className="date-time__container">
-            <DatePicker
-              value={selectedDate}
-              onChange={handleDateChange}
-              min={min}
-              max={max}
-              allowPastDates={true}
-            />
-            <TimePicker
-              value={`${pad(selectedDate.getHours())}:${pad(selectedDate.getMinutes())}`}
-              onChange={handleTimeChange}
-            />
+        <div className={dropdownClassName}>
+          <div className="datetime-select__container">
+            <DatePicker value={selectedDate} onChange={handleDateChange} min={min} max={max} allowPastDates={true} />
+            <TimePicker value={`${pad(selectedDate.getHours())}:${pad(selectedDate.getMinutes())}`} onChange={handleTimeChange} />
           </div>
-          {pastDateWarning && (
-            <div className="date-time__warning">{pastDateWarning}</div>
-          )}
+          {pastDateWarning && <div className="datetime-select__warning">{pastDateWarning}</div>}
         </div>
       )}
     </div>

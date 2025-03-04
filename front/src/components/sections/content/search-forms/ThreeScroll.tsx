@@ -1,6 +1,7 @@
 // File: src/components/ThreeScroll.tsx
+// Last change: Updated BEM class names to align with datetime-select
+
 import React, { useCallback, useState, useEffect } from 'react';
-import './ThreeScroll.css';
 
 interface ThreeScrollProps {
   type: 'hours' | 'minutes';
@@ -72,25 +73,35 @@ const ThreeScroll: React.FC<ThreeScrollProps> = ({
   const displayValue = getCircleValue();
 
   return (
-    <div className="three-scroll">
-     <button className="three-scroll__triangle three-scroll__triangle--up" type="button" onClick={handleUp} aria-label={`Increase ${type}`}>
-  <svg className="three-scroll__icon" viewBox="0 0 24 24">
-    <path d="M6 16l6-8 6 8z" />
-  </svg>
-</button>
+    <div className="datetime-select__scroll">
+      <button 
+        className="datetime-select__scroll-up" 
+        type="button" 
+        onClick={handleUp} 
+        aria-label={`Increase ${type}`}
+      >
+        <svg className="datetime-select__scroll-icon" viewBox="0 0 24 24">
+          <path d="M6 16l6-8 6 8z" />
+        </svg>
+      </button>
       <button
-        className="three-scroll__circle"
+        className="datetime-select__scroll-circle"
         type="button"
         onClick={handleCircleClick}
         aria-label={`Set ${type} to ${displayValue}`}
       >
         {displayValue}
       </button>
-      <button className="three-scroll__triangle three-scroll__triangle--down" type="button" onClick={handleDown} aria-label={`Decrease ${type}`}>
-  <svg className="three-scroll__icon" viewBox="0 0 24 24">
-    <path d="M6 8l6 8 6-8z" />
-  </svg>
-</button>
+      <button 
+        className="datetime-select__scroll-down" 
+        type="button" 
+        onClick={handleDown} 
+        aria-label={`Decrease ${type}`}
+      >
+        <svg className="datetime-select__scroll-icon" viewBox="0 0 24 24">
+          <path d="M6 8l6 8 6-8z" />
+        </svg>
+      </button>
     </div>
   );
 };
