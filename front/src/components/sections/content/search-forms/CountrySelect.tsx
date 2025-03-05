@@ -1,3 +1,6 @@
+// File: ./front/src/components/sections/content/search-forms/CountrySelect.tsx
+// Last change: Fixed dropdown positioning with simpler approach
+
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "./BaseDropdown";
 import type { Country } from "@/types/transport-forms.types";
@@ -36,6 +39,8 @@ export function CountrySelect({
     items: visibleItems,
     isOpen,
     onSelect: (country) => handleSelect(country),
+    pageSize: 20,
+    onLoadMore: () => setVisibleCount(prev => prev + 20),
     inputRef,
   });
 
@@ -51,30 +56,20 @@ export function CountrySelect({
   const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const upperValue = event.target.value.toUpperCase();
     setInputValue(upperValue);
-    
-    // Keep focus in the input during typing and filtering
-    inputRef.current?.focus();
-    
+    setIsOpen(true);
+
     if (!upperValue) {
       onCountrySelect("", "");
       setVisibleCount(20);
-      setIsOpen(true);
-      // Keep focus in input even with empty value
     } else if (upperValue.length === 1) {
-      // Check if there's at least one country code starting with this letter
       if (!allCountries.some(c => c.cc?.startsWith(upperValue))) return;
-      
       onCountrySelect(upperValue, "");
-      setIsOpen(true);
     } else if (upperValue.length === 2) {
-      // Find exact match for two-letter code
       const exactMatch = allCountries.find(c => c.cc === upperValue);
       if (!exactMatch) {
-        // If no exact match, revert to one letter
         setInputValue(upperValue.charAt(0));
         return;
       }
-      
       const flagUrl = `/flags/4x3/optimized/${exactMatch.cc.toLowerCase()}.svg`;
       onCountrySelect(exactMatch.cc, flagUrl);
       setIsOpen(false);
@@ -91,23 +86,32 @@ export function CountrySelect({
     onNextFieldFocus();
   }, [onCountrySelect, onNextFieldFocus]);
 
-  const handleFocus = useCallback(() => setIsOpen(true), []);
+  const handleFocus = useCallback(() => {
+    setIsOpen(true);
+  }, []);
 
-  // Handle key down in the input field
-  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
-    // Only allow arrow down when dropdown is open and not typing
-    if (event.key === "ArrowDown" && isOpen && dropdownRef.current && 
-        // Add this condition to prevent arrow navigation during typing
-        (inputValue.length === 0 || (inputValue.length === 1 && visibleItems.length > 0))) {
+  // Add click handler to stop propagation
+  const handleInputClick = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    setIsOpen(true);
+  }, []);
+
+  const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "ArrowDown") {
       event.preventDefault();
-      // Focus the dropdown, which will auto-select the first item
-      dropdownRef.current.focus();
-      return;
+      setIsOpen(true);
+      dropdownRef.current?.focus();
+    } else if (event.key === "Escape") {
+      setIsOpen(false);
+      inputRef.current?.focus();
+    } else if (event.key === "Backspace" || event.key === "Delete") {
+      event.preventDefault();
+      const newValue = event.key === "Backspace" ? inputValue.slice(0, -1) : inputValue.slice(1);
+      setInputValue(newValue.toUpperCase());
+      setIsOpen(true);
+      inputRef.current?.focus();
     }
-    
-    // Allow other keyboard navigation through the dropdown
-    handleDropdownKeyDown(event);
-  }, [isOpen, handleDropdownKeyDown, inputValue.length, visibleItems.length]);
+  }, [inputValue]);
 
   const flagSrc = inputValue.length === 2 ? `/flags/4x3/optimized/${inputValue.toLowerCase()}.svg` : "/flags/4x3/optimized/gb.svg";
 
@@ -121,8 +125,9 @@ export function CountrySelect({
         placeholder="CC"
         maxLength={2}
         onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
+        onKeyDown={handleInputKeyDown}
         onFocus={handleFocus}
+        onClick={handleInputClick}
         className="country-select__input"
         aria-autocomplete="list"
         aria-controls="country-select-dropdown"
@@ -132,7 +137,6 @@ export function CountrySelect({
         items={visibleItems}
         isOpen={isOpen}
         onSelect={handleSelect}
-        inputRef={inputRef}
         variant="country"
         position="left"
         totalItems={filteredItems.length}
@@ -151,6 +155,10 @@ export function CountrySelect({
         loadMoreText="Load more countries..."
         className="country-select__dropdown"
         ref={dropdownRef}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          handleDropdownKeyDown(e);
+        }}
       />
     </div>
   );

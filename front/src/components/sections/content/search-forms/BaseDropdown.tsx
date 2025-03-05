@@ -1,25 +1,32 @@
-import React, { useRef, useCallback, useEffect, forwardRef } from "react";
-import { useUINavigation } from "@/hooks/useUINavigation";
+// File: ./front/src/components/sections/content/search-forms/BaseDropdown.tsx
+// Last change: Enhanced keyboard scrolling with buffer
 
-export type DropdownVariant = "default" | "country" | "location";
-export type DropdownPosition = "left" | "right" | "center";
+import React, { useRef, useCallback, useEffect, useState, forwardRef } from "react";
+import { useUINavigation } from "@/hooks/useUINavigation";
 
 interface BaseDropdownProps<T> {
   items: T[];
   isOpen: boolean;
   onSelect: (item: T, index: number) => void;
   renderItem: (item: T, meta: { isHighlighted: boolean }) => React.ReactNode;
-  inputRef: React.RefObject<HTMLInputElement>;
-  variant?: DropdownVariant;
-  position?: DropdownPosition;
+  variant?: string;
+  position?: string;
   className?: string;
-  onLoadMore?: (lastItem: T | null) => void;
+  classNamePrefix?: string;
+  onLoadMore?: () => void;
   totalItems?: number;
   pageSize?: number;
   loadMoreText?: string;
   onNoResults?: () => React.ReactNode;
+  noResultsText?: string;
+  isEmptyItem?: (item: T) => boolean;
   ariaLabel?: string;
   getItemKey?: (item: T) => string | number;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void;
+  autoFocusOnOpen?: boolean;
+  focusOnHover?: boolean;
+  scrollEdgeThreshold?: number;
+  scrollSpeedBase?: number;
 }
 
 export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
@@ -28,146 +35,243 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
     isOpen,
     onSelect,
     renderItem,
-    inputRef,
-    variant = "default",
-    position = "left",
+    variant,
+    position,
     className = "",
+    classNamePrefix = "dropdown",
     onLoadMore,
     totalItems = 0,
     pageSize = 10,
     loadMoreText = "Load more...",
     onNoResults,
+    noResultsText = "No results found",
+    isEmptyItem,
     ariaLabel = "Dropdown options",
     getItemKey,
+    onKeyDown,
+    autoFocusOnOpen = true,
+    focusOnHover = true,
+    scrollEdgeThreshold = 0.15,
+    scrollSpeedBase = 12,
   }: BaseDropdownProps<T>, ref: React.Ref<HTMLDivElement>) => {
     const internalDropdownRef = useRef<HTMLDivElement>(null);
     const dropdownRef = (ref as React.RefObject<HTMLDivElement>) || internalDropdownRef;
-    const defaultGetItemKey = useCallback((item: T, index: number) => getItemKey ? getItemKey(item) : index, [getItemKey]);
-    const { highlightedIndex, setHighlightedIndex, handleKeyDown, handleItemMouseEnter, handleItemClick, itemsRef } = useUINavigation({
-      items,
-      isOpen,
-      onSelect,
-      inputRef,
-      pageSize,
-    });
+    const itemsRef = useRef<(HTMLElement | null)[]>([]);
+    const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const scrollIntervalRef = useRef<number | null>(null);
+
+    const [isHovered, setIsHovered] = useState(false);
+    const [lastHoveredIndex, setLastHoveredIndex] = useState<number | null>(null);
+
+    const defaultGetItemKey = useCallback(
+      (item: T, index: number) => (getItemKey ? getItemKey(item) : index),
+      [getItemKey]
+    );
+
+    const { highlightedIndex, setHighlightedIndex, handleKeyDown: handleUINavigationKeyDown, handleItemClick } =
+      useUINavigation({ items, isOpen, onSelect, pageSize, onLoadMore });
 
     const hasMore = onLoadMore && items.length < totalItems;
-    
-    // Track previous items count to detect new items
     const prevItemsLengthRef = useRef(items.length);
-    
-    // Flag to indicate we need to focus the first new item 
-    const shouldFocusFirstNewItem = useRef(false);
-    
-    // Handle dropdown focus event
+
+    // Updated scroll function with buffer
+    const scrollToHighlightedItem = useCallback(() => {
+      if (!dropdownRef.current || highlightedIndex === null || !itemsRef.current[highlightedIndex]) return;
+
+      const dropdown = dropdownRef.current;
+      const item = itemsRef.current[highlightedIndex];
+      const dropdownRect = dropdown.getBoundingClientRect();
+      const itemRect = item.getBoundingClientRect();
+
+      // Add a buffer (e.g., 20px) to scroll sooner
+      const buffer = 20;
+      const visibleTop = dropdownRect.top + buffer;
+      const visibleBottom = dropdownRect.bottom - buffer;
+
+      const isAboveView = itemRect.top < visibleTop;
+      const isBelowView = itemRect.bottom > visibleBottom;
+
+      if (isAboveView) {
+        // Scroll up with buffer included
+        dropdown.scrollTop -= (visibleTop - itemRect.top);
+      } else if (isBelowView) {
+        // Scroll down with buffer included
+        dropdown.scrollTop += (itemRect.bottom - visibleBottom);
+      }
+    }, [highlightedIndex]);
+
+    const handleDropdownMouseEnter = useCallback(() => {
+      setIsHovered(true);
+      if (lastHoveredIndex !== null && lastHoveredIndex < items.length && focusOnHover) {
+        setHighlightedIndex(lastHoveredIndex);
+        setTimeout(() => {
+          if (itemsRef.current[lastHoveredIndex] && document.activeElement !== dropdownRef.current) {
+            dropdownRef.current?.focus();
+            itemsRef.current[lastHoveredIndex]?.focus();
+          }
+        }, 0);
+      }
+    }, [lastHoveredIndex, items.length, setHighlightedIndex, focusOnHover]);
+
+    const handleDropdownMouseMove = useCallback(
+      (event: React.MouseEvent<HTMLDivElement>) => {
+        event.stopPropagation();
+        if (!isHovered || !dropdownRef.current) return;
+        const dropdownRect = dropdownRef.current.getBoundingClientRect();
+        const mouseY = event.clientY;
+        const topEdge = dropdownRect.top + dropdownRect.height * scrollEdgeThreshold;
+        const bottomEdge = dropdownRect.bottom - dropdownRect.height * scrollEdgeThreshold;
+        if (scrollIntervalRef.current) {
+          window.clearInterval(scrollIntervalRef.current);
+          scrollIntervalRef.current = null;
+        }
+        if (mouseY < topEdge) {
+          const distanceFromEdge = mouseY - dropdownRect.top;
+          const percent = Math.min(1, Math.max(0, distanceFromEdge / (dropdownRect.height * scrollEdgeThreshold)));
+          const scrollSpeed = Math.max(1, scrollSpeedBase * (1 - percent));
+          scrollIntervalRef.current = window.setInterval(() => {
+            if (dropdownRef.current) dropdownRef.current.scrollTop -= scrollSpeed;
+          }, 8);
+        } else if (mouseY > bottomEdge) {
+          const distanceFromEdge = dropdownRect.bottom - mouseY;
+          const percent = Math.min(1, Math.max(0, distanceFromEdge / (dropdownRect.height * scrollEdgeThreshold)));
+          const scrollSpeed = Math.max(1, scrollSpeedBase * (1 - percent));
+          scrollIntervalRef.current = window.setInterval(() => {
+            if (dropdownRef.current) dropdownRef.current.scrollTop += scrollSpeed;
+          }, 8);
+        }
+      },
+      [isHovered, scrollEdgeThreshold, scrollSpeedBase]
+    );
+
+    const handleDropdownMouseLeave = useCallback(() => {
+      setIsHovered(false);
+      if (highlightedIndex !== null) setLastHoveredIndex(highlightedIndex);
+      if (document.activeElement !== dropdownRef.current) setHighlightedIndex(null);
+      if (scrollIntervalRef.current) {
+        clearInterval(scrollIntervalRef.current);
+        scrollIntervalRef.current = null;
+      }
+    }, [setHighlightedIndex, highlightedIndex]);
+
+    const handleItemMouseEnter = useCallback(
+      (index: number, event?: React.MouseEvent) => {
+        if (event) event.stopPropagation();
+        if (isHovered && focusOnHover) {
+          if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+          setHighlightedIndex(index);
+          setLastHoveredIndex(index);
+          requestAnimationFrame(() => {
+            if (itemsRef.current[index] && document.activeElement !== dropdownRef.current) {
+              dropdownRef.current?.focus();
+              itemsRef.current[index].focus();
+            }
+          });
+        }
+      },
+      [isHovered, setHighlightedIndex, focusOnHover]
+    );
+
+    const handleItemMouseLeave = useCallback(() => {}, []);
+
     const handleDropdownFocus = useCallback(() => {
-      if (items.length > 0 && highlightedIndex === null) {
-        // Automatically highlight the first item when dropdown receives focus
-        setHighlightedIndex(0);
-        
-        // Ensure the first item gets focus
-        if (itemsRef.current[0]) {
-          itemsRef.current[0].focus();
+      if (isOpen && items.length > 0 && autoFocusOnOpen) {
+        if (lastHoveredIndex !== null && lastHoveredIndex < items.length) {
+          setHighlightedIndex(lastHoveredIndex);
+          if (itemsRef.current[lastHoveredIndex]) itemsRef.current[lastHoveredIndex].focus();
+        } else if (highlightedIndex === null) {
+          setHighlightedIndex(0);
+          if (itemsRef.current[0]) itemsRef.current[0].focus();
         }
       }
-    }, [items, highlightedIndex, setHighlightedIndex, itemsRef]);
+    }, [isOpen, items.length, highlightedIndex, setHighlightedIndex, lastHoveredIndex, autoFocusOnOpen]);
 
-    // Handle loading more items via mouse click
-    const handleLoadMore = useCallback(() => {
-      if (onLoadMore) {
-        // Set flag to false for mouse clicks
-        shouldFocusFirstNewItem.current = false;
-        onLoadMore(items.length > 0 ? items[items.length - 1] : null);
-      }
-    }, [items, onLoadMore]);
+    const handleCombinedKeyDown = useCallback(
+      (event: React.KeyboardEvent<HTMLDivElement>) => {
+        event.stopPropagation();
+        handleUINavigationKeyDown(event);
+        if (highlightedIndex !== null) setLastHoveredIndex(highlightedIndex);
+        if (onKeyDown) onKeyDown(event);
+        requestAnimationFrame(scrollToHighlightedItem);
+      },
+      [handleUINavigationKeyDown, onKeyDown, highlightedIndex, scrollToHighlightedItem]
+    );
 
-    // Handle loading more items via keyboard (Enter)
-    const handleLoadMoreKeyboard = useCallback(() => {
-      if (onLoadMore) {
-        // Set flag to true for keyboard navigation
-        shouldFocusFirstNewItem.current = true;
-        onLoadMore(items.length > 0 ? items[items.length - 1] : null);
-      }
-    }, [items, onLoadMore]);
-
-    // Listen for custom loadMore event from keyboard
     useEffect(() => {
-      const handleLoadMoreEvent = () => {
-        handleLoadMoreKeyboard();
-      };
-      
-      document.addEventListener('loadMore', handleLoadMoreEvent);
       return () => {
-        document.removeEventListener('loadMore', handleLoadMoreEvent);
+        if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
       };
-    }, [handleLoadMoreKeyboard]);
+    }, []);
 
-    // Do not run the effect that might move focus when input text changes or when dropdown opens
     useEffect(() => {
-      if (isOpen && highlightedIndex !== null && itemsRef.current[highlightedIndex]) {
-        // Only focus highlighted items when the focus wasn't in the input
-        // This prevents focus from jumping to dropdown when typing/deleting in input
-        if (document.activeElement !== inputRef.current) {
-          itemsRef.current[highlightedIndex].focus();
-        }
+      if (!isOpen) {
+        setLastHoveredIndex(null);
+        if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
       }
-    }, [highlightedIndex, itemsRef, isOpen, inputRef]);
+    }, [isOpen]);
 
-    // Effect to handle focus when items change (new items loaded)
     useEffect(() => {
       const prevLength = prevItemsLengthRef.current;
       const currentLength = items.length;
-      
-      // If new items were added
-      if (currentLength > prevLength && prevLength > 0) {
-        if (shouldFocusFirstNewItem.current) {
-          // Focus on the first new item (when using keyboard navigation)
-          setHighlightedIndex(prevLength);
-          if (itemsRef.current[prevLength]) {
-            itemsRef.current[prevLength].focus();
-          }
-          // Reset the flag
-          shouldFocusFirstNewItem.current = false;
-        } else {
-          // For mouse click, also focus on first new item
-          setHighlightedIndex(prevLength);
-          if (itemsRef.current[prevLength]) {
-            itemsRef.current[prevLength].focus();
-          }
-        }
+      if (currentLength > prevLength && prevLength > 0 && document.activeElement === dropdownRef.current) {
+        const newIndex = prevLength;
+        setHighlightedIndex(newIndex);
+        setLastHoveredIndex(newIndex);
+        if (itemsRef.current[newIndex]) itemsRef.current[newIndex].focus();
       }
-      
-      // Update the reference to current length
       prevItemsLengthRef.current = currentLength;
-    }, [items.length, setHighlightedIndex, itemsRef]);
+    }, [items.length, setHighlightedIndex]);
 
-    const dropdownClassName = `dropdown ${className}`;
-    const isNoResults = items.length === 0 || (items.length === 1 && typeof items[0] === "object" && !(items[0] as any).psc && !(items[0] as any).city && !(items[0] as any).cc);
+    useEffect(() => {
+      if (!isOpen || !dropdownRef.current) return;
+      const dropdown = dropdownRef.current;
+      const updateScrollIndicators = () => {
+        const canScrollUp = dropdown.scrollTop > 0;
+        const canScrollDown = dropdown.scrollTop < (dropdown.scrollHeight - dropdown.clientHeight);
+        dropdown.classList.toggle("can-scroll-up", canScrollUp);
+        dropdown.classList.toggle("can-scroll-down", canScrollDown);
+      };
+      updateScrollIndicators();
+      dropdown.addEventListener("scroll", updateScrollIndicators);
+      return () => dropdown.removeEventListener("scroll", updateScrollIndicators);
+    }, [isOpen]);
+
+    const prefix = classNamePrefix || "dropdown";
+    const dropdownClassName = `${prefix} ${variant ? `${prefix}--${variant}` : ""} ${position ? `${prefix}--${position}` : ""} ${className}`.trim();
+    const isNoResults = items.length === 0 || (isEmptyItem && items.every(isEmptyItem));
+    const noResultsContent = onNoResults ? onNoResults() : noResultsText;
 
     if (!isOpen) return null;
 
     return (
-      <div 
-        ref={dropdownRef} 
-        className={dropdownClassName} 
-        role="listbox" 
-        onKeyDown={handleKeyDown} 
+      <div
+        ref={dropdownRef}
+        className={`${dropdownClassName} ${highlightedIndex !== null ? `${prefix}--has-highlight` : ""}`}
+        role="listbox"
+        onKeyDown={handleCombinedKeyDown}
         onFocus={handleDropdownFocus}
-        aria-label={ariaLabel} 
+        onMouseEnter={handleDropdownMouseEnter}
+        onMouseLeave={handleDropdownMouseLeave}
+        onMouseMove={handleDropdownMouseMove}
+        aria-label={ariaLabel}
         tabIndex={0}
       >
         {isNoResults ? (
-          <div className="dropdown__no-results" role="option">{onNoResults ? onNoResults() : "No results found"}</div>
+          <div className={`${prefix}__no-results`} role="option">
+            {noResultsContent}
+          </div>
         ) : (
           <>
             {items.map((item, index) => (
               <div
                 key={defaultGetItemKey(item, index)}
                 id={`dropdown-item-${index}`}
-                ref={(el) => itemsRef.current[index] = el!}
+                ref={(el) => (itemsRef.current[index] = el)}
                 onClick={() => handleItemClick(index)}
-                onMouseEnter={() => handleItemMouseEnter(index)}
-                className={`dropdown__item ${index === highlightedIndex ? "dropdown--highlighted" : ""}`}
+                onMouseEnter={(e) => handleItemMouseEnter(index, e)}
+                onMouseLeave={handleItemMouseLeave}
+                className={`${prefix}__item ${index === highlightedIndex ? `${prefix}--highlighted` : ""}`}
+                data-highlighted={index === highlightedIndex ? "true" : "false"}
                 role="option"
                 tabIndex={-1}
               >
@@ -175,11 +279,13 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
               </div>
             ))}
             {hasMore && (
-              <div 
-                onClick={handleLoadMore} 
-                className={`dropdown__load-more ${highlightedIndex === items.length ? "dropdown--highlighted" : ""}`}
-                role="option" 
-                aria-label={loadMoreText} 
+              <div
+                onClick={onLoadMore}
+                onMouseEnter={(e) => handleItemMouseEnter(items.length, e)}
+                onMouseLeave={handleItemMouseLeave}
+                className={`${prefix}__load-more ${highlightedIndex === items.length ? `${prefix}--highlighted` : ""}`}
+                role="option"
+                aria-label={loadMoreText}
                 tabIndex={-1}
                 ref={(el) => el && (itemsRef.current[items.length] = el)}
               >
