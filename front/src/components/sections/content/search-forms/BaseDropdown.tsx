@@ -52,50 +52,14 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
     });
 
     const hasMore = onLoadMore && items.length < totalItems;
-    const handleLoadMore = useCallback(() => {
-      if (onLoadMore) {
-        // Just trigger the load more action
-        // The focus will be handled by the useEffect that watches items.length
-        onLoadMore(items.length > 0 ? items[items.length - 1] : null);
-      }
-    }, [items, onLoadMore]);
     
-    // Listen for loadMore custom event
-    useEffect(() => {
-      const handleLoadMoreEvent = () => {
-        handleLoadMore();
-      };
-      
-      document.addEventListener('loadMore', handleLoadMoreEvent);
-      return () => {
-        document.removeEventListener('loadMore', handleLoadMoreEvent);
-      };
-    }, [handleLoadMore]);
-    
-    // Track the previous items length to identify new items
+    // Track previous items count to detect new items
     const prevItemsLengthRef = useRef(items.length);
     
-    // Effect to track changes in items array and focus on the first new item
-    useEffect(() => {
-      const prevLength = prevItemsLengthRef.current;
-      const currentLength = items.length;
-      
-      // If items were added
-      if (currentLength > prevLength && prevLength > 0) {
-        // Focus on the first new item (at prevLength index)
-        setHighlightedIndex(prevLength);
-        if (itemsRef.current[prevLength]) {
-          itemsRef.current[prevLength].focus();
-        }
-      }
-      
-      // Update the reference
-      prevItemsLengthRef.current = currentLength;
-    }, [items.length, setHighlightedIndex]);
-    const dropdownClassName = `dropdown ${className}`;
-    const isNoResults = items.length === 0 || (items.length === 1 && typeof items[0] === "object" && !(items[0] as any).psc && !(items[0] as any).city && !(items[0] as any).cc);
-
-    // Handle focus event on the dropdown container
+    // Flag to indicate we need to focus the first new item 
+    const shouldFocusFirstNewItem = useRef(false);
+    
+    // Handle dropdown focus event
     const handleDropdownFocus = useCallback(() => {
       if (items.length > 0 && highlightedIndex === null) {
         // Automatically highlight the first item when dropdown receives focus
@@ -108,15 +72,77 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
       }
     }, [items, highlightedIndex, setHighlightedIndex, itemsRef]);
 
-    useEffect(() => {
-      if (isOpen && itemsRef.current[0] && document.activeElement === dropdownRef.current) {
-        // When dropdown opens and has focus, automatically highlight first item
-        setHighlightedIndex(0);
-        itemsRef.current[0].focus();
-      } else if (isOpen && highlightedIndex !== null && itemsRef.current[highlightedIndex]) {
-        itemsRef.current[highlightedIndex].focus();
+    // Handle loading more items via mouse click
+    const handleLoadMore = useCallback(() => {
+      if (onLoadMore) {
+        // Set flag to false for mouse clicks
+        shouldFocusFirstNewItem.current = false;
+        onLoadMore(items.length > 0 ? items[items.length - 1] : null);
       }
-    }, [isOpen, highlightedIndex, setHighlightedIndex]);
+    }, [items, onLoadMore]);
+
+    // Handle loading more items via keyboard (Enter)
+    const handleLoadMoreKeyboard = useCallback(() => {
+      if (onLoadMore) {
+        // Set flag to true for keyboard navigation
+        shouldFocusFirstNewItem.current = true;
+        onLoadMore(items.length > 0 ? items[items.length - 1] : null);
+      }
+    }, [items, onLoadMore]);
+
+    // Listen for custom loadMore event from keyboard
+    useEffect(() => {
+      const handleLoadMoreEvent = () => {
+        handleLoadMoreKeyboard();
+      };
+      
+      document.addEventListener('loadMore', handleLoadMoreEvent);
+      return () => {
+        document.removeEventListener('loadMore', handleLoadMoreEvent);
+      };
+    }, [handleLoadMoreKeyboard]);
+
+    // Do not run the effect that might move focus when input text changes or when dropdown opens
+    useEffect(() => {
+      if (isOpen && highlightedIndex !== null && itemsRef.current[highlightedIndex]) {
+        // Only focus highlighted items when the focus wasn't in the input
+        // This prevents focus from jumping to dropdown when typing/deleting in input
+        if (document.activeElement !== inputRef.current) {
+          itemsRef.current[highlightedIndex].focus();
+        }
+      }
+    }, [highlightedIndex, itemsRef, isOpen, inputRef]);
+
+    // Effect to handle focus when items change (new items loaded)
+    useEffect(() => {
+      const prevLength = prevItemsLengthRef.current;
+      const currentLength = items.length;
+      
+      // If new items were added
+      if (currentLength > prevLength && prevLength > 0) {
+        if (shouldFocusFirstNewItem.current) {
+          // Focus on the first new item (when using keyboard navigation)
+          setHighlightedIndex(prevLength);
+          if (itemsRef.current[prevLength]) {
+            itemsRef.current[prevLength].focus();
+          }
+          // Reset the flag
+          shouldFocusFirstNewItem.current = false;
+        } else {
+          // For mouse click, also focus on first new item
+          setHighlightedIndex(prevLength);
+          if (itemsRef.current[prevLength]) {
+            itemsRef.current[prevLength].focus();
+          }
+        }
+      }
+      
+      // Update the reference to current length
+      prevItemsLengthRef.current = currentLength;
+    }, [items.length, setHighlightedIndex, itemsRef]);
+
+    const dropdownClassName = `dropdown ${className}`;
+    const isNoResults = items.length === 0 || (items.length === 1 && typeof items[0] === "object" && !(items[0] as any).psc && !(items[0] as any).city && !(items[0] as any).cc);
 
     if (!isOpen) return null;
 

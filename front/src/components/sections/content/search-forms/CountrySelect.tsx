@@ -1,4 +1,3 @@
-/* File: src/components/sections/content/search-forms/CountrySelect.tsx */
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "./BaseDropdown";
 import type { Country } from "@/types/transport-forms.types";
@@ -52,17 +51,30 @@ export function CountrySelect({
   const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const upperValue = event.target.value.toUpperCase();
     setInputValue(upperValue);
+    
+    // Keep focus in the input during typing and filtering
+    inputRef.current?.focus();
+    
     if (!upperValue) {
       onCountrySelect("", "");
       setVisibleCount(20);
       setIsOpen(true);
+      // Keep focus in input even with empty value
     } else if (upperValue.length === 1) {
+      // Check if there's at least one country code starting with this letter
       if (!allCountries.some(c => c.cc?.startsWith(upperValue))) return;
+      
       onCountrySelect(upperValue, "");
       setIsOpen(true);
     } else if (upperValue.length === 2) {
+      // Find exact match for two-letter code
       const exactMatch = allCountries.find(c => c.cc === upperValue);
-      if (!exactMatch) return;
+      if (!exactMatch) {
+        // If no exact match, revert to one letter
+        setInputValue(upperValue.charAt(0));
+        return;
+      }
+      
       const flagUrl = `/flags/4x3/optimized/${exactMatch.cc.toLowerCase()}.svg`;
       onCountrySelect(exactMatch.cc, flagUrl);
       setIsOpen(false);
@@ -81,16 +93,21 @@ export function CountrySelect({
 
   const handleFocus = useCallback(() => setIsOpen(true), []);
 
-  // Updated handleKeyDown to use the dropdown focus behavior
+  // Handle key down in the input field
   const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "ArrowDown" && isOpen && dropdownRef.current) {
+    // Only allow arrow down when dropdown is open and not typing
+    if (event.key === "ArrowDown" && isOpen && dropdownRef.current && 
+        // Add this condition to prevent arrow navigation during typing
+        (inputValue.length === 0 || (inputValue.length === 1 && visibleItems.length > 0))) {
       event.preventDefault();
-      // Simply focus the dropdown, it will auto-select the first item
+      // Focus the dropdown, which will auto-select the first item
       dropdownRef.current.focus();
       return;
     }
+    
+    // Allow other keyboard navigation through the dropdown
     handleDropdownKeyDown(event);
-  }, [isOpen, handleDropdownKeyDown]);
+  }, [isOpen, handleDropdownKeyDown, inputValue.length, visibleItems.length]);
 
   const flagSrc = inputValue.length === 2 ? `/flags/4x3/optimized/${inputValue.toLowerCase()}.svg` : "/flags/4x3/optimized/gb.svg";
 

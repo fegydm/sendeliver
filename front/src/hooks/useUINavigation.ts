@@ -74,9 +74,10 @@ export function useUINavigation<T>({
             onSelect(items[highlightedIndex], highlightedIndex);
           } else {
             // "Load more" option selected
-            // We need to handle this in the BaseDropdown component
             const loadMoreEvent = new CustomEvent('loadMore');
             document.dispatchEvent(loadMoreEvent);
+            // Do NOT reset highlightedIndex here
+            return;
           }
           setHighlightedIndex(null);
           setIsInputFocused(true);
