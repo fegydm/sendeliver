@@ -82,7 +82,9 @@ const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
     <footer className="footer-test">
       <div className="footer-test__left">
         <Button variant="secondary" onClick={onClose}>Close Footer</Button>
-        <ThemeSwitcher is3DMode={is3DMode} />
+        <div className="theme-switcher-wrapper">
+  <ThemeSwitcher is3DMode={is3DMode} />
+</div>
         <Button variant="secondary" onClick={() => setIs3DMode(prev => !prev)}>
           {is3DMode ? "Switch to 2D" : "Switch to 3D"}
         </Button>

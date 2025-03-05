@@ -1,13 +1,15 @@
 /* File: src/styles/themes/default.css */
 
-/* Import default variables */
+/* Import default variables 
 @import '../base/_variables-default.css';
 
 /* Import the basic layout and structure styles */
 @import './basic.css';
 
-/*Import components */
-@import '../sections/manual-form.content.css';
+/*Import components 
+@import '../sections/manual-form.content.css';*/
+@import '../sections/_content.css';
+
 
 
 /* Default theme styles */

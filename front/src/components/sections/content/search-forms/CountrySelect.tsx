@@ -1,5 +1,5 @@
 // File: ./front/src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Fixed dropdown positioning with simpler approach
+// Last change: Down arrow from input focuses HL or first item
 
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "./BaseDropdown";
@@ -23,10 +23,13 @@ export function CountrySelect({
   const [inputValue, setInputValue] = useState(initialValue);
   const [isOpen, setIsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
+  const [isDropdownHovered, setIsDropdownHovered] = useState(false);
+  const [isInputHovered, setIsInputHovered] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
+  const itemsRef = useRef<(HTMLElement | null)[]>([]);
 
   const { items: allCountries } = useCountries();
   const filteredItems = useMemo(() => {
@@ -35,7 +38,7 @@ export function CountrySelect({
   }, [inputValue, allCountries]);
   const visibleItems = useMemo(() => filteredItems.slice(0, visibleCount), [filteredItems, visibleCount]);
 
-  const { handleKeyDown: handleDropdownKeyDown } = useUINavigation({
+  const { highlightedIndex, setHighlightedIndex, handleKeyDown: handleUINavKeyDown } = useUINavigation({
     items: visibleItems,
     isOpen,
     onSelect: (country) => handleSelect(country),
@@ -45,7 +48,9 @@ export function CountrySelect({
   });
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
-    if (componentRef.current && !componentRef.current.contains(event.target as Node)) setIsOpen(false);
+    if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
+      setIsOpen(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -90,7 +95,6 @@ export function CountrySelect({
     setIsOpen(true);
   }, []);
 
-  // Add click handler to stop propagation
   const handleInputClick = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
     setIsOpen(true);
@@ -98,9 +102,27 @@ export function CountrySelect({
 
   const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setIsOpen(true);
-      dropdownRef.current?.focus();
+      if (document.activeElement === inputRef.current) { // Check if input is focused
+        event.preventDefault();
+        if (!isOpen) setIsOpen(true);
+        if (highlightedIndex === null) {
+          setHighlightedIndex(0); // Go to first item if none selected
+        }
+        dropdownRef.current?.focus(); // Move focus to dropdown
+      } else if (isInputHovered) {
+        event.preventDefault();
+        if (!isOpen) setIsOpen(true);
+        if (highlightedIndex === null) {
+          setHighlightedIndex(0); // Go to first item if none selected
+        }
+        dropdownRef.current?.focus(); // Move focus to dropdown
+      }
+      // If not hovering input or DD, let arrow keys scroll page
+    } else if (event.key === "ArrowUp") {
+      if (isInputHovered && isOpen) {
+        event.preventDefault();
+        // Minimal action unless dropdown focused
+      }
     } else if (event.key === "Escape") {
       setIsOpen(false);
       inputRef.current?.focus();
@@ -111,7 +133,55 @@ export function CountrySelect({
       setIsOpen(true);
       inputRef.current?.focus();
     }
-  }, [inputValue]);
+  }, [inputValue, isOpen, isInputHovered, highlightedIndex, setHighlightedIndex]);
+
+  const handleDropdownNavigation = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      handleUINavKeyDown(event);
+      if (dropdownRef.current && highlightedIndex !== null && itemsRef.current[highlightedIndex]) {
+        requestAnimationFrame(() => {
+          const dropdown = dropdownRef.current;
+          const item = itemsRef.current[highlightedIndex];
+          if (item && dropdown) {
+            const dropdownRect = dropdown.getBoundingClientRect();
+            const itemRect = item.getBoundingClientRect();
+            const buffer = 20;
+            const visibleTop = dropdownRect.top + buffer;
+            const visibleBottom = dropdownRect.bottom - buffer;
+
+            const isAboveView = itemRect.top < visibleTop;
+            const isBelowView = itemRect.bottom > visibleBottom;
+
+            if (isAboveView) {
+              dropdown.scrollTop -= (visibleTop - itemRect.top);
+            } else if (isBelowView) {
+              dropdown.scrollTop += (itemRect.bottom - visibleBottom);
+            }
+          }
+        });
+      }
+    } else if (event.key === "Escape") {
+      setIsOpen(false);
+      inputRef.current?.focus();
+    }
+  }, [handleUINavKeyDown, highlightedIndex]);
+
+  const handleInputMouseEnter = useCallback(() => {
+    setIsInputHovered(true);
+  }, []);
+
+  const handleInputMouseLeave = useCallback(() => {
+    setIsInputHovered(false);
+  }, []);
+
+  const handleDropdownMouseEnter = useCallback(() => {
+    setIsDropdownHovered(true);
+  }, []);
+
+  const handleDropdownMouseLeave = useCallback(() => {
+    setIsDropdownHovered(false);
+  }, []);
 
   const flagSrc = inputValue.length === 2 ? `/flags/4x3/optimized/${inputValue.toLowerCase()}.svg` : "/flags/4x3/optimized/gb.svg";
 
@@ -128,6 +198,8 @@ export function CountrySelect({
         onKeyDown={handleInputKeyDown}
         onFocus={handleFocus}
         onClick={handleInputClick}
+        onMouseEnter={handleInputMouseEnter}
+        onMouseLeave={handleInputMouseLeave}
         className="country-select__input"
         aria-autocomplete="list"
         aria-controls="country-select-dropdown"
@@ -143,7 +215,10 @@ export function CountrySelect({
         pageSize={20}
         onLoadMore={() => setVisibleCount(prev => prev + 20)}
         renderItem={(country: Country, { isHighlighted }: { isHighlighted: boolean }) => (
-          <div className={`dropdown__item ${isHighlighted ? 'dropdown--highlighted' : ''}`}>
+          <div
+            className={`dropdown__item ${isHighlighted ? 'dropdown--highlighted' : ''}`}
+            ref={(el) => (itemsRef.current[visibleItems.indexOf(country)] = el)}
+          >
             <img src={`/flags/4x3/optimized/${country.cc.toLowerCase()}.svg`} alt={`${country.cc} flag`} className="dropdown__item-flag" />
             <span className="dropdown__item-code">{country.cc}</span>
             <span className="dropdown__item-name">{country.name_en}</span>
@@ -155,10 +230,9 @@ export function CountrySelect({
         loadMoreText="Load more countries..."
         className="country-select__dropdown"
         ref={dropdownRef}
-        onKeyDown={(e) => {
-          e.stopPropagation();
-          handleDropdownKeyDown(e);
-        }}
+        onKeyDown={isDropdownHovered ? handleDropdownNavigation : undefined}
+        onMouseEnter={handleDropdownMouseEnter}
+        onMouseLeave={handleDropdownMouseLeave}
       />
     </div>
   );

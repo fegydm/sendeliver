@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Fixed isHighlighted usage in renderItem
+// Last change: Fixed BaseDropdown and onLoadMore implementation
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import PostalCodeInput from "@/components/PostalCodeInput";
@@ -205,7 +205,10 @@ export function PostalCitySelect({
     item: LocationSuggestion, 
     { isHighlighted }: { isHighlighted: boolean }
   ) => (
-    <div className={`dropdown__item ${isHighlighted ? "dropdown--highlighted" : ""}`}>
+    <div className={`dropdown__item ${isHighlighted ? "dropdown--highlighted" : ""} ${
+      activeField === 'psc' ? 'location-item--focus-psc' : 
+      activeField === 'city' ? 'location-item--focus-city' : ''
+    }`}>
       {item.cc && (
         <img
           src={`/flags/4x3/optimized/${item.cc.toLowerCase()}.svg`}
@@ -219,7 +222,7 @@ export function PostalCitySelect({
         <span className="dropdown__item-city">{item.city}</span>
       </div>
     </div>
-  ), []);
+  ), [activeField]);
 
   const renderNoResults = useCallback(() => {
     if (isLoading) return <div className="dropdown__no-results">Loading...</div>;
@@ -228,17 +231,16 @@ export function PostalCitySelect({
     return <div className="dropdown__no-results">No results found</div>;
   }, [psc, city, isLoading, error, validateSearchInput]);
 
-  const handleLoadMore = useCallback(
-    (lastItem: LocationSuggestion | null) => {
-      if (lastItem) {
-        loadSuggestions(psc, city, {
-          lastPsc: lastItem.psc,
-          lastCity: lastItem.city
-        });
-      }
-    },
-    [psc, city, loadSuggestions]
-  );
+  // Fixed handleLoadMore to match the expected function signature (no parameters)
+  const handleLoadMore = useCallback(() => {
+    if (suggestions.length > 0) {
+      const lastItem = suggestions[suggestions.length - 1];
+      loadSuggestions(psc, city, {
+        lastPsc: lastItem.psc,
+        lastCity: lastItem.city
+      });
+    }
+  }, [psc, city, loadSuggestions, suggestions]);
 
   return (
     <div className={`location-select location-select--${locationType}`} ref={dropdownRef}>
@@ -271,12 +273,11 @@ export function PostalCitySelect({
         aria-controls="location-select-dropdown"
         aria-expanded={isOpen}
       />
-      <BaseDropdown<LocationSuggestion>
+      <BaseDropdown
         items={suggestions.length > 0 ? suggestions : [placeholderSuggestion]}
         isOpen={isOpen && !error}
         onSelect={handleSelect}
         renderItem={renderLocationItem}
-        inputRef={activeField === "psc" ? activePscRef : cityInputRef}
         variant="location"
         position="left"
         className="location-select__dropdown"

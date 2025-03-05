@@ -25,3 +25,14 @@
 .dropdown.can-scroll-up::before {opacity: 1;}
 .dropdown.can-scroll-down::after {opacity: 1;}
 .dropdown__item:last-child, .dropdown__load-more:last-child {margin-bottom: 4px;}
+
+/* Location dropdown specific styles */
+.dropdown--location { width: auto; min-width: 400px; left: -60px; }
+.location-select { position: relative; }
+.location-select__psc { width: 50px; margin-right: 5px; }
+.location-select__city { width: 180px; }
+.dropdown__item-postal { font-weight: 500; margin-right: 16px; }
+.dropdown__item-city { font-weight: normal; }
+.location-item--focus-psc .dropdown__item-city { color: #888; }
+.location-item--focus-city .dropdown__item-postal { color: #888; }
+.country-select + .location-select .dropdown--location { left: 0; }

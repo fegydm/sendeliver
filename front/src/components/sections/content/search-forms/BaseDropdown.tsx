@@ -1,5 +1,5 @@
 // File: ./front/src/components/sections/content/search-forms/BaseDropdown.tsx
-// Last change: Enhanced keyboard scrolling with buffer
+// Last change: Added itemsRef forwarding and mouse event props
 
 import React, { useRef, useCallback, useEffect, useState, forwardRef } from "react";
 import { useUINavigation } from "@/hooks/useUINavigation";
@@ -27,6 +27,8 @@ interface BaseDropdownProps<T> {
   focusOnHover?: boolean;
   scrollEdgeThreshold?: number;
   scrollSpeedBase?: number;
+  onMouseEnter?: (event: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseLeave?: (event: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
@@ -53,6 +55,8 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
     focusOnHover = true,
     scrollEdgeThreshold = 0.15,
     scrollSpeedBase = 12,
+    onMouseEnter,
+    onMouseLeave,
   }: BaseDropdownProps<T>, ref: React.Ref<HTMLDivElement>) => {
     const internalDropdownRef = useRef<HTMLDivElement>(null);
     const dropdownRef = (ref as React.RefObject<HTMLDivElement>) || internalDropdownRef;
@@ -74,7 +78,6 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
     const hasMore = onLoadMore && items.length < totalItems;
     const prevItemsLengthRef = useRef(items.length);
 
-    // Updated scroll function with buffer
     const scrollToHighlightedItem = useCallback(() => {
       if (!dropdownRef.current || highlightedIndex === null || !itemsRef.current[highlightedIndex]) return;
 
@@ -83,7 +86,6 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
       const dropdownRect = dropdown.getBoundingClientRect();
       const itemRect = item.getBoundingClientRect();
 
-      // Add a buffer (e.g., 20px) to scroll sooner
       const buffer = 20;
       const visibleTop = dropdownRect.top + buffer;
       const visibleBottom = dropdownRect.bottom - buffer;
@@ -92,26 +94,19 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
       const isBelowView = itemRect.bottom > visibleBottom;
 
       if (isAboveView) {
-        // Scroll up with buffer included
         dropdown.scrollTop -= (visibleTop - itemRect.top);
       } else if (isBelowView) {
-        // Scroll down with buffer included
         dropdown.scrollTop += (itemRect.bottom - visibleBottom);
       }
     }, [highlightedIndex]);
 
-    const handleDropdownMouseEnter = useCallback(() => {
+    const handleDropdownMouseEnter = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
       setIsHovered(true);
-      if (lastHoveredIndex !== null && lastHoveredIndex < items.length && focusOnHover) {
+      if (lastHoveredIndex !== null && lastHoveredIndex < items.length) {
         setHighlightedIndex(lastHoveredIndex);
-        setTimeout(() => {
-          if (itemsRef.current[lastHoveredIndex] && document.activeElement !== dropdownRef.current) {
-            dropdownRef.current?.focus();
-            itemsRef.current[lastHoveredIndex]?.focus();
-          }
-        }, 0);
       }
-    }, [lastHoveredIndex, items.length, setHighlightedIndex, focusOnHover]);
+      if (onMouseEnter) onMouseEnter(event);
+    }, [lastHoveredIndex, items.length, setHighlightedIndex, onMouseEnter]);
 
     const handleDropdownMouseMove = useCallback(
       (event: React.MouseEvent<HTMLDivElement>) => {
@@ -144,32 +139,26 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
       [isHovered, scrollEdgeThreshold, scrollSpeedBase]
     );
 
-    const handleDropdownMouseLeave = useCallback(() => {
+    const handleDropdownMouseLeave = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
       setIsHovered(false);
       if (highlightedIndex !== null) setLastHoveredIndex(highlightedIndex);
-      if (document.activeElement !== dropdownRef.current) setHighlightedIndex(null);
       if (scrollIntervalRef.current) {
         clearInterval(scrollIntervalRef.current);
         scrollIntervalRef.current = null;
       }
-    }, [setHighlightedIndex, highlightedIndex]);
+      if (onMouseLeave) onMouseLeave(event);
+    }, [highlightedIndex, onMouseLeave]);
 
     const handleItemMouseEnter = useCallback(
       (index: number, event?: React.MouseEvent) => {
         if (event) event.stopPropagation();
-        if (isHovered && focusOnHover) {
+        if (isHovered) {
           if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
           setHighlightedIndex(index);
           setLastHoveredIndex(index);
-          requestAnimationFrame(() => {
-            if (itemsRef.current[index] && document.activeElement !== dropdownRef.current) {
-              dropdownRef.current?.focus();
-              itemsRef.current[index].focus();
-            }
-          });
         }
       },
-      [isHovered, setHighlightedIndex, focusOnHover]
+      [isHovered, setHighlightedIndex]
     );
 
     const handleItemMouseLeave = useCallback(() => {}, []);
@@ -188,11 +177,16 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
 
     const handleCombinedKeyDown = useCallback(
       (event: React.KeyboardEvent<HTMLDivElement>) => {
-        event.stopPropagation();
-        handleUINavigationKeyDown(event);
-        if (highlightedIndex !== null) setLastHoveredIndex(highlightedIndex);
-        if (onKeyDown) onKeyDown(event);
-        requestAnimationFrame(scrollToHighlightedItem);
+        if (document.activeElement === dropdownRef.current) {
+          if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+            event.preventDefault();
+          }
+          event.stopPropagation();
+          handleUINavigationKeyDown(event);
+          if (highlightedIndex !== null) setLastHoveredIndex(highlightedIndex);
+          if (onKeyDown) onKeyDown(event);
+          requestAnimationFrame(scrollToHighlightedItem);
+        }
       },
       [handleUINavigationKeyDown, onKeyDown, highlightedIndex, scrollToHighlightedItem]
     );
@@ -254,7 +248,7 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
         onMouseLeave={handleDropdownMouseLeave}
         onMouseMove={handleDropdownMouseMove}
         aria-label={ariaLabel}
-        tabIndex={0}
+        tabIndex={-1}
       >
         {isNoResults ? (
           <div className={`${prefix}__no-results`} role="option">

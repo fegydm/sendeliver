@@ -46,4 +46,8 @@ q:before, q:after { content: ''; content: none;}
 table { border-collapse: collapse; border-spacing: 0; }
 
 /* <img> elements with .svg sources and specific flag classes */
-.flag-cc img[src$=".svg"], .country-dropdown img[src$=".svg"] { max-width: 50px; height: auto; }
+img.country-select__flag[src$=".svg"],
+img.dropdown__item-flag[src$=".svg"] {
+  max-width: 24px;
+  height: auto;
+}
