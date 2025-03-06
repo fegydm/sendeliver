@@ -139,14 +139,7 @@
   This will ensure that the theme switcher remains visible at the bottom,
   even when the footer is scrolled out of view.
 */
-.theme-switcher-wrapper {
-    position: fixed;       /* Fixed positioning relative to the viewport */
-    bottom: 0;             /* Stick to the bottom */
-    left: 50%;             /* Center horizontally */
-    transform: translateX(-50%);
-    z-index: 1000;         /* Ensure it's on top */
-    margin: 10px;          /* Optional margin */
-}
+
 
 /* Anchor the .theme-switcher to the bottom center */
 div.theme-switcher {

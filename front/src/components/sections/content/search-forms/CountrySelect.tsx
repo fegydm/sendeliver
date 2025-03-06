@@ -1,6 +1,3 @@
-// File: ./front/src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Down arrow from input focuses HL or first item
-
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "./BaseDropdown";
 import type { Country } from "@/types/transport-forms.types";
@@ -20,7 +17,14 @@ export function CountrySelect({
   initialValue = "",
   locationType,
 }: CountrySelectProps) {
+  // English comment: Internal state for input value
   const [inputValue, setInputValue] = useState(initialValue);
+  
+  // English comment: Update internal state when initialValue prop changes
+  useEffect(() => {
+    setInputValue(initialValue);
+  }, [initialValue]);
+
   const [isOpen, setIsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
   const [isDropdownHovered, setIsDropdownHovered] = useState(false);
@@ -102,26 +106,24 @@ export function CountrySelect({
 
   const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") {
-      if (document.activeElement === inputRef.current) { // Check if input is focused
+      if (document.activeElement === inputRef.current) { // English comment: Check if input is focused
         event.preventDefault();
         if (!isOpen) setIsOpen(true);
         if (highlightedIndex === null) {
-          setHighlightedIndex(0); // Go to first item if none selected
+          setHighlightedIndex(0); // English comment: Go to first item if none selected
         }
-        dropdownRef.current?.focus(); // Move focus to dropdown
+        dropdownRef.current?.focus(); // English comment: Move focus to dropdown
       } else if (isInputHovered) {
         event.preventDefault();
         if (!isOpen) setIsOpen(true);
         if (highlightedIndex === null) {
-          setHighlightedIndex(0); // Go to first item if none selected
+          setHighlightedIndex(0);
         }
-        dropdownRef.current?.focus(); // Move focus to dropdown
+        dropdownRef.current?.focus();
       }
-      // If not hovering input or DD, let arrow keys scroll page
     } else if (event.key === "ArrowUp") {
       if (isInputHovered && isOpen) {
         event.preventDefault();
-        // Minimal action unless dropdown focused
       }
     } else if (event.key === "Escape") {
       setIsOpen(false);

@@ -41,15 +41,6 @@ export function PostalCitySelect({
   const activePscRef = pscRef || useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const placeholderSuggestion: LocationSuggestion = {
-    psc: '',
-    city: '',
-    cc: '',
-    priority: 0,
-    flag: '',
-    lat: 0,
-    lng: 0
-  };
 
   const validateSearchInput = useCallback((pscValue: string, cityValue: string): boolean => {
     return pscValue.trim().length > 0 || cityValue.trim().length > 0;
@@ -274,20 +265,20 @@ export function PostalCitySelect({
         aria-expanded={isOpen}
       />
       <BaseDropdown
-        items={suggestions.length > 0 ? suggestions : [placeholderSuggestion]}
-        isOpen={isOpen && !error}
-        onSelect={handleSelect}
-        renderItem={renderLocationItem}
-        variant="location"
-        position="left"
-        className="location-select__dropdown"
-        onLoadMore={handleLoadMore}
-        totalItems={suggestions.length}
-        pageSize={LOCATION_PAGE_SIZE}
-        loadMoreText="Load more locations..."
-        onNoResults={renderNoResults}
-        ariaLabel="Location suggestions"
-      />
+  items={suggestions} // Pass suggestions directly; empty array triggers onNoResults callback
+  isOpen={isOpen && !error}
+  onSelect={(item) => handleSelect(item)} // onSelect remains the same
+  renderItem={renderLocationItem}
+  variant="location"
+  position="left"
+  className="location-select__dropdown"
+  onLoadMore={handleLoadMore}
+  totalItems={suggestions.length}
+  pageSize={LOCATION_PAGE_SIZE}
+  loadMoreText="Load more locations..."
+  onNoResults={renderNoResults} // This callback returns "Enter a value in any field" when inputs are empty
+  ariaLabel="Location suggestions"
+/>
     </div>
   );
 }
