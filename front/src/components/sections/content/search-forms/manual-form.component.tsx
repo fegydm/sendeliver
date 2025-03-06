@@ -1,4 +1,6 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
+// Last change: Pridaná automatická vyhľadávacia akcia po vyplnení údajov nakladky
+
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import CountrySelect from './CountrySelect';
 import PostalCitySelect from './PostalCitySelect';
@@ -13,6 +15,12 @@ interface ManualFormProps {
   formData?: TransportFormData;
   type: 'sender' | 'hauler';
   className?: string;
+}
+
+// Definícia typu pre formáty poštových smerových čísel
+interface PostalFormat {
+  format: string;
+  regex: string;
 }
 
 const DEFAULT_FORM_DATA: TransportFormData = {
@@ -35,11 +43,12 @@ export function ManualForm({
 
   const [localFormData, setLocalFormData] = useState<TransportFormData>(formData);
   const [isPickupValid, setIsPickupValid] = useState(false);
-  const [isDeliveryValid, setIsDeliveryValid] = useState(false);
-  const [postalFormats, setPostalFormats] = useState<
-    Record<string, { format: string; regex: string }>
-  >({});
+  const [isSearching, setIsSearching] = useState(false);
+  const [postalFormats, setPostalFormats] = useState<Record<string, PostalFormat>>({});
   const { items: allCountries } = useCountries();
+  
+  // Predchádzajúci stav súradníc - pre detekciu zmien
+  const prevCoordsRef = useRef<{lat: number, lng: number}>({lat: 0, lng: 0});
 
   const fetchPostalFormat = useCallback(async (cc: string) => {
     try {
@@ -81,6 +90,83 @@ export function ManualForm({
     }
   }, [allCountries, postalFormats]);
 
+  // Validácia nakladky - kontrola či máme cc, psc a city
+  const validatePickup = useCallback(() => {
+    const pickup = localFormData.pickup;
+    const isValid = 
+      pickup.country.cc !== '' && 
+      pickup.psc !== '' && 
+      pickup.city !== '';
+    
+    setIsPickupValid(isValid);
+    return isValid;
+  }, [localFormData.pickup]);
+
+  // Funkcia na vyhľadávanie áut podľa súradníc nakladky
+  const searchAvailableVehicles = useCallback(async () => {
+    try {
+      const { lat, lng } = localFormData.pickup;
+      
+      // Kontrola, či máme platné súradnice
+      if (!lat || !lng) {
+        console.error('[ManualForm] Súradnice nakladky chýbajú');
+        return;
+      }
+      
+      // Kontrola, či sa súradnice zmenili
+      if (lat === prevCoordsRef.current.lat && lng === prevCoordsRef.current.lng) {
+        console.log('[ManualForm] Súradnice sa nezmenili, preskakujem vyhľadávanie');
+        return;
+      }
+      
+      // Aktualizácia referencie na súradnice
+      prevCoordsRef.current = { lat, lng };
+      
+      console.log(`[ManualForm] Spúšťam vyhľadávanie áut v blízkosti: LAT=${lat}, LNG=${lng}`);
+      setIsSearching(true);
+      
+      // Simulovaná implementácia vyhľadávania - nahradiť reálnou
+      const response = await fetch('/api/vehicles/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pickupLat: lat,
+          pickupLng: lng,
+          radius: 100, // km
+          cargo: localFormData.cargo,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Chyba pri vyhľadávaní: ${response.status}`);
+      }
+      
+      const results = await response.json();
+      console.log(`[ManualForm] Nájdené vozidlá:`, results);
+      
+      // Tu by sa spracovali výsledky a zobrazili sa v UI
+      
+    } catch (error) {
+      console.error('Chyba pri vyhľadávaní vozidiel:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [localFormData.pickup, localFormData.cargo]);
+
+  // Vyvolať validáciu pri každej zmene pickup údajov
+  useEffect(() => {
+    const isValid = validatePickup();
+    
+    // Ak máme platné údaje pre nakladku, spustíme vyhľadávanie
+    if (isValid && 
+        localFormData.pickup.lat && 
+        localFormData.pickup.lng) {
+      searchAvailableVehicles();
+    }
+  }, [localFormData.pickup, validatePickup, searchAvailableVehicles]);
+
   const handleCountrySelect = useCallback(
     (locationType: LocationType, cc: string, flag: string) => {
       console.log(`[ManualForm] Country selected for ${locationType}:`, cc, flag);
@@ -105,26 +191,26 @@ export function ManualForm({
   const handleLocationSelect = useCallback(
     (locationType: LocationType, location: Omit<LocationSuggestion, 'priority'>) => {
       console.log(`[ManualForm] Location selected for ${locationType}:`, location);
+      
+      // Vytvoríme aktualizované dáta
+      const updatedData = { ...localFormData };
+      
+      // Aktualizujeme country, ak je k dispozícii
       if (location.cc) {
         const flagUrl = location.cc ? `/flags/4x3/optimized/${location.cc.toLowerCase()}.svg` : '';
-        handleCountrySelect(locationType, location.cc, flagUrl);
+        updatedData[locationType].country = { cc: location.cc, flag: flagUrl };
       }
-      setLocalFormData(prev => ({
-        ...prev,
-        [locationType]: {
-          ...prev[locationType],
-          psc: location.psc || '',
-          city: location.city || '',
-          lat: location.lat ?? 0,
-          lng: location.lng ?? 0,
-        },
-      }));
-      if (location.psc && location.city) {
-        if (locationType === LocationType.PICKUP) setIsPickupValid(true);
-        else setIsDeliveryValid(true);
-      }
+      
+      // Aktualizujeme ostatné údaje
+      updatedData[locationType].psc = location.psc || '';
+      updatedData[locationType].city = location.city || '';
+      updatedData[locationType].lat = location.lat ?? 0;
+      updatedData[locationType].lng = location.lng ?? 0;
+      
+      // Aktualizujeme stav
+      setLocalFormData(updatedData);
     },
-    [handleCountrySelect]
+    []
   );
 
   const handleDateTimeChange = useCallback((locationType: LocationType, date: Date) => {
@@ -193,7 +279,7 @@ export function ManualForm({
       </section>
 
       {/* Delivery Section */}
-      <section className={`manual-form__delivery ${isDeliveryValid ? 'manual-form__delivery--valid' : ''}`}>
+      <section className="manual-form__delivery">
         <h3 className="manual-form__title">Delivery Details</h3>
         <div className="manual-form__grid">
           <div className="manual-form__country">
@@ -262,10 +348,10 @@ export function ManualForm({
 
       <button
         type="submit"
-        className={`manual-form__submit ${!isPickupValid || !isDeliveryValid ? 'manual-form__submit--disabled' : ''}`}
-        disabled={!isPickupValid || !isDeliveryValid}
+        className={`manual-form__submit ${!isPickupValid ? 'manual-form__submit--disabled' : ''}`}
+        disabled={!isPickupValid || isSearching}
       >
-        Submit Transport Request
+        {isSearching ? 'Vyhľadávam vozidlá...' : 'Potvrdiť prepravnú požiadavku'}
       </button>
     </form>
   );

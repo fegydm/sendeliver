@@ -4,61 +4,51 @@ import React, { useState, useCallback, forwardRef, useRef, useEffect } from "rea
 export interface PostalCodeInputProps {
   value?: string;
   initialValue?: string;
-  mask?: string; // Supports multiple masks separated by '|', e.g., "@# #@@|@## #@@"
+  mask?: string; // e.g., "§§§ §§§" for GB
   placeholder?: string;
   onChange?: (value: string) => void;
   className?: string;
   onFocus?: () => void;
 }
 
-// Formats raw input according to the first valid mask
+// Formats raw input according to the mask
 const formatValueForDisplay = (raw: string, mask?: string): string => {
   if (!mask) return raw;
-  const masks = mask.split("|");
-  for (const m of masks) {
-    let formatted = "";
-    let charIndex = 0;
-    for (let i = 0; i < m.length; i++) {
-      if (m[i] === "#" || m[i] === "@") {
-        if (charIndex < raw.length) {
-          formatted += raw[charIndex++];
-        } else {
-          break;
-        }
+  let formatted = "";
+  let charIndex = 0;
+  for (let i = 0; i < mask.length; i++) {
+    if (mask[i] === "#" || mask[i] === "@" || mask[i] === "§") {
+      if (charIndex < raw.length) {
+        formatted += raw[charIndex++];
       } else {
-        formatted += m[i];
+        break;
       }
-    }
-    // Check if mask matches the raw length
-    const expectedLength = (m.match(/[#@]/g) || []).length;
-    if (raw.length <= expectedLength) {
-      return formatted;
+    } else {
+      formatted += mask[i];
     }
   }
-  return raw; // Fallback if no mask matches
+  return formatted;
 };
 
 // Maps raw index to display index based on mask
 const getDisplayIndex = (rawIndex: number, mask: string): number => {
-  const selectedMask = mask.split("|")[0]; // Use first mask for simplicity
   let charCount = 0;
-  for (let i = 0; i < selectedMask.length; i++) {
-    if (selectedMask[i] === "#" || selectedMask[i] === "@") {
+  for (let i = 0; i < mask.length; i++) {
+    if (mask[i] === "#" || mask[i] === "@" || mask[i] === "§") {
       if (charCount === rawIndex) {
         return i;
       }
       charCount++;
     }
   }
-  return selectedMask.length;
+  return mask.length;
 };
 
 // Maps display index to raw index
 const getRawIndex = (displayIndex: number, mask: string): number => {
-  const selectedMask = mask.split("|")[0]; // Use first mask for simplicity
   let charCount = 0;
-  for (let i = 0; i < selectedMask.length && i < displayIndex; i++) {
-    if (selectedMask[i] === "#" || selectedMask[i] === "@") {
+  for (let i = 0; i < mask.length && i < displayIndex; i++) {
+    if (mask[i] === "#" || mask[i] === "@" || mask[i] === "§") {
       charCount++;
     }
   }
@@ -69,6 +59,7 @@ const getRawIndex = (displayIndex: number, mask: string): number => {
 const isValidChar = (char: string, maskChar: string): boolean => {
   if (maskChar === "#") return /\d/.test(char);
   if (maskChar === "@") return /[A-Za-z]/.test(char);
+  if (maskChar === "§") return /[A-Za-z0-9]/.test(char);
   return false;
 };
 
@@ -81,19 +72,19 @@ const PostalCodeInput = forwardRef<HTMLInputElement, PostalCodeInputProps>(({
   onFocus,
   className,
 }, ref) => {
-  const maxChars = mask ? Math.max(...mask.split("|").map(m => (m.match(/[#@]/g) || []).length)) : Infinity;
+  const maxChars = mask ? (mask.match(/[#@§]/g) || []).length : Infinity;
   
   const [internalRawValue, setInternalRawValue] = useState(
-    initialValue.replace(/[^A-Za-z0-9]/g, '').slice(0, maxChars)
+    initialValue.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, maxChars)
   );
   
   const rawValue = value !== undefined
-    ? value.replace(/[^A-Za-z0-9]/g, '').slice(0, maxChars)
+    ? value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, maxChars)
     : internalRawValue;
   
   useEffect(() => {
     if (value === undefined) {
-      setInternalRawValue(initialValue.replace(/[^A-Za-z0-9]/g, '').slice(0, maxChars));
+      setInternalRawValue(initialValue.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, maxChars));
     }
   }, [initialValue, maxChars, value]);
 
@@ -135,8 +126,7 @@ const PostalCodeInput = forwardRef<HTMLInputElement, PostalCodeInputProps>(({
     // Adjust cursor movement to skip separators
     if (e.key === "ArrowLeft" && caretPos > 0) {
       let newPos = caretPos - 1;
-      const selectedMask = mask.split("|")[0];
-      while (newPos > 0 && selectedMask[newPos] !== "#" && selectedMask[newPos] !== "@") {
+      while (newPos > 0 && mask[newPos] !== "#" && mask[newPos] !== "@" && mask[newPos] !== "§") {
         newPos--;
       }
       e.preventDefault();
@@ -144,8 +134,7 @@ const PostalCodeInput = forwardRef<HTMLInputElement, PostalCodeInputProps>(({
     }
     if (e.key === "ArrowRight" && caretPos < displayValue.length) {
       let newPos = caretPos + 1;
-      const selectedMask = mask.split("|")[0];
-      while (newPos < selectedMask.length && selectedMask[newPos] !== "#" && selectedMask[newPos] !== "@") {
+      while (newPos < mask.length && mask[newPos] !== "#" && mask[newPos] !== "@" && mask[newPos] !== "§") {
         newPos++;
       }
       e.preventDefault();
@@ -155,23 +144,22 @@ const PostalCodeInput = forwardRef<HTMLInputElement, PostalCodeInputProps>(({
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const inputEl = e.target;
-    const selectedMask = mask ? mask.split("|")[0] : undefined; // Use first mask for validation
     let newRawValue = "";
     
-    // Validate each character against the mask
-    if (selectedMask) {
-      const rawInput = inputEl.value.replace(/[^A-Za-z0-9]/g, '');
+    // Convert to uppercase and validate against mask
+    if (mask) {
+      const rawInput = inputEl.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
       let charIndex = 0;
-      for (let i = 0; i < selectedMask.length && charIndex < rawInput.length; i++) {
-        if (selectedMask[i] === "#" || selectedMask[i] === "@") {
-          if (isValidChar(rawInput[charIndex], selectedMask[i])) {
+      for (let i = 0; i < mask.length && charIndex < rawInput.length; i++) {
+        if (mask[i] === "#" || mask[i] === "@" || mask[i] === "§") {
+          if (isValidChar(rawInput[charIndex], mask[i])) {
             newRawValue += rawInput[charIndex];
           }
           charIndex++;
         }
       }
     } else {
-      newRawValue = inputEl.value.replace(/[^A-Za-z0-9]/g, '');
+      newRawValue = inputEl.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     }
 
     newRawValue = newRawValue.slice(0, maxChars);
