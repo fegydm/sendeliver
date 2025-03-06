@@ -1,3 +1,6 @@
+// File: src/components/sections/content/search-forms/CountrySelect.tsx
+// Úprava: Synchronizácia inputValue s initialValue a dynamická aktualizácia flag
+
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "./BaseDropdown";
 import type { Country } from "@/types/transport-forms.types";
@@ -17,14 +20,7 @@ export function CountrySelect({
   initialValue = "",
   locationType,
 }: CountrySelectProps) {
-  // English comment: Internal state for input value
   const [inputValue, setInputValue] = useState(initialValue);
-  
-  // English comment: Update internal state when initialValue prop changes
-  useEffect(() => {
-    setInputValue(initialValue);
-  }, [initialValue]);
-
   const [isOpen, setIsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
   const [isDropdownHovered, setIsDropdownHovered] = useState(false);
@@ -36,6 +32,23 @@ export function CountrySelect({
   const itemsRef = useRef<(HTMLElement | null)[]>([]);
 
   const { items: allCountries } = useCountries();
+
+  // Synchronizácia inputValue s initialValue
+  useEffect(() => {
+    console.log(`[CountrySelect] ${locationType} initialValue changed to:`, initialValue);
+    if (initialValue !== inputValue) {
+      setInputValue(initialValue); // Vždy aktualizuj inputValue na initialValue
+      if (inputRef.current && initialValue !== inputRef.current.value) {
+        inputRef.current.value = initialValue; // Aktualizuj DOM
+      }
+      // Ak je initialValue platný kód krajiny, aktualizuj flag
+      if (initialValue.length === 2) {
+        const flagUrl = `/flags/4x3/optimized/${initialValue.toLowerCase()}.svg`;
+        onCountrySelect(initialValue, flagUrl); // Informuj rodiča
+      }
+    }
+  }, [initialValue, locationType, onCountrySelect]);
+
   const filteredItems = useMemo(() => {
     if (!inputValue) return allCountries;
     return allCountries.filter(c => c.cc?.startsWith(inputValue.toUpperCase()));
@@ -70,19 +83,14 @@ export function CountrySelect({
     if (!upperValue) {
       onCountrySelect("", "");
       setVisibleCount(20);
-    } else if (upperValue.length === 1) {
-      if (!allCountries.some(c => c.cc?.startsWith(upperValue))) return;
-      onCountrySelect(upperValue, "");
     } else if (upperValue.length === 2) {
       const exactMatch = allCountries.find(c => c.cc === upperValue);
-      if (!exactMatch) {
-        setInputValue(upperValue.charAt(0));
-        return;
+      if (exactMatch) {
+        const flagUrl = `/flags/4x3/optimized/${exactMatch.cc.toLowerCase()}.svg`;
+        onCountrySelect(exactMatch.cc, flagUrl);
+        setIsOpen(false);
+        onNextFieldFocus();
       }
-      const flagUrl = `/flags/4x3/optimized/${exactMatch.cc.toLowerCase()}.svg`;
-      onCountrySelect(exactMatch.cc, flagUrl);
-      setIsOpen(false);
-      onNextFieldFocus();
     }
   }, [allCountries, onCountrySelect, onNextFieldFocus]);
 
@@ -106,13 +114,13 @@ export function CountrySelect({
 
   const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") {
-      if (document.activeElement === inputRef.current) { // English comment: Check if input is focused
+      if (document.activeElement === inputRef.current) { // Check if input is focused
         event.preventDefault();
         if (!isOpen) setIsOpen(true);
         if (highlightedIndex === null) {
-          setHighlightedIndex(0); // English comment: Go to first item if none selected
+          setHighlightedIndex(0); // Go to first item if none selected
         }
-        dropdownRef.current?.focus(); // English comment: Move focus to dropdown
+        dropdownRef.current?.focus(); // Move focus to dropdown
       } else if (isInputHovered) {
         event.preventDefault();
         if (!isOpen) setIsOpen(true);
@@ -185,11 +193,25 @@ export function CountrySelect({
     setIsDropdownHovered(false);
   }, []);
 
-  const flagSrc = inputValue.length === 2 ? `/flags/4x3/optimized/${inputValue.toLowerCase()}.svg` : "/flags/4x3/optimized/gb.svg";
+  // Get the correct flag source based on inputValue
+  const flagSrc = useMemo(() => {
+    if (inputValue.length === 2) {
+      return `/flags/4x3/optimized/${inputValue.toLowerCase()}.svg`;
+    }
+    return "/flags/4x3/optimized/gb.svg";
+  }, [inputValue]);
 
   return (
     <div ref={componentRef} className={`country-select country-select--${locationType}`}>
-      <img src={flagSrc} className={`country-select__flag ${inputValue.length !== 2 ? 'country-select__flag--inactive' : ''}`} alt="Country flag" />
+      <img 
+        src={flagSrc} 
+        className={`country-select__flag ${inputValue.length !== 2 ? 'country-select__flag--inactive' : ''}`} 
+        alt="Country flag" 
+        onError={(e) => {
+          console.error(`[CountrySelect] Error loading flag:`, flagSrc);
+          e.currentTarget.src = "/flags/4x3/optimized/gb.svg";
+        }}
+      />
       <input
         ref={inputRef}
         type="text"

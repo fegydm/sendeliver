@@ -2,7 +2,7 @@
 
 @import '../components/dropdown.css';
 
-/* File: ./front/src/styles/sections/_content.css */
+/* Define color and layout variables */
 :root {
   --logo-1-color: #dc1ff0;
   --logo-2-color: #57cc32;
@@ -21,6 +21,7 @@
   --transition-speed: 0.2s;
 }
 
+/* Global content container styling */
 .content {
   display: flex;
   flex-direction: column;
@@ -30,6 +31,7 @@
   padding: 2rem;
 }
 
+/* Navigation styling for dashboard buttons */
 .content__navigation {
   display: flex;
   justify-content: center;
@@ -40,7 +42,7 @@
 .button {
   padding: 0.8rem 1.5rem;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 600; /* Buttons môžu zostať tučné */
   border: none;
   border-radius: var(--border-radius);
   cursor: pointer;
@@ -65,12 +67,14 @@
   background-color: var(--hauler-dark);
 }
 
+/* Wrapper for sender and hauler sections */
 .content__wrapper {
   display: flex;
   gap: 2rem;
   position: relative;
 }
 
+/* Separator between sender a hauler sekciami */
 .content__wrapper::before {
   content: '';
   position: absolute;
@@ -82,6 +86,7 @@
   transform: translateX(-50%);
 }
 
+/* Sender and Hauler area styling */
 .content__sender,
 .content__hauler {
   flex: 1;
@@ -100,6 +105,7 @@
   border-right: 4px solid var(--hauler-primary);
 }
 
+/* Titles styling for content sections */
 .content__title {
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
@@ -118,6 +124,7 @@
   border-bottom: 2px solid var(--hauler-primary);
 }
 
+/* Section styling */
 .sender-content__section,
 .hauler-content__section {
   margin-bottom: 2rem;
@@ -127,11 +134,12 @@
   box-shadow: var(--shadow-light);
 }
 
+/* Override h3 in sections to be non-bold */
 .sender-content__section h3,
 .hauler-content__section h3 {
   margin-bottom: 1rem;
   color: #000000;
-  font-weight: 600;
+  font-weight: normal; /* Upravené na normálnu váhu */
 }
 
 /* Form Styling */
@@ -160,7 +168,7 @@
 
 .ai-form__button {
   padding: 0.8rem 1.5rem;
-  font-weight: 600;
+  font-weight: 600; /* Button text môžu zostať tučné */
   border: none;
   border-radius: var(--border-radius);
   cursor: pointer;
@@ -186,7 +194,7 @@
   background-color: var(--hauler-dark);
 }
 
-/* Manual Form */
+/* Manual Form styling */
 .manual-form {
   display: flex;
   flex-direction: column;
@@ -229,11 +237,12 @@
   background-color: rgba(76, 159, 50, 0.03);
 }
 
+/* Titles within manual forms - nastavene na normálnu váhu */
 .manual-form__title {
   margin-bottom: 1rem;
   font-size: 1.2rem;
   color: #000000;
-  font-weight: 600;
+  font-weight: normal; /* Upravené na normálnu váhu */
 }
 
 .manual-form__grid {
@@ -296,7 +305,7 @@
 .manual-form__submit {
   padding: 0.8rem 1.5rem;
   margin-top: 1rem;
-  font-weight: 600;
+  font-weight: 600; /* Button text môžu zostať tučné */
   font-size: 1rem;
   border: none;
   border-radius: var(--border-radius);
@@ -328,7 +337,7 @@
   cursor: not-allowed;
 }
 
-/* Result Tables */
+/* Result Tables styling */
 .result-table--sender,
 .result-table--hauler {
   margin-top: 2rem;
@@ -432,7 +441,7 @@
   box-shadow: 0 0 0 2px var(--hauler-light);
 }
 
-/* DateTime Select */
+/* DateTime Select styling */
 .datetime-select {
   display: flex;
   gap: 0.5rem;
@@ -465,7 +474,13 @@
   box-shadow: 0 0 0 2px var(--hauler-light);
 }
 
-/* Media Queries */
+/* Global override for all h2 and h3 elements to be non-bold */
+h2,
+h3 {
+  font-weight: normal;
+}
+
+/* Responsive Media Queries */
 @media (max-width: 992px) {
   .content__wrapper {
     flex-direction: column;

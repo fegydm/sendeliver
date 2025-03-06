@@ -1,8 +1,8 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Fixed BaseDropdown and onLoadMore implementation
+// Last change: Enhanced location selection to always notify parent with complete location data
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import PostalCodeInput from "@/components/PostalCodeInput";
+import PostalCodeInput from "@/components/elements/PostalCodeInput";
 import { BaseDropdown } from "./BaseDropdown";
 import { LOCATION_PAGE_SIZE, DEBOUNCE_LOCATION_SEARCH } from "@/constants/pagination.constants";
 import { LocationType, LocationSuggestion } from "@/types/transport-forms.types";
@@ -98,28 +98,40 @@ export function PostalCitySelect({
     [cc, locationType, validateSearchInput, manualOverride]
   );
 
+  // Enhanced to always provide complete location data to parent
   const handleSelect = useCallback((item: LocationSuggestion) => {
-    console.log(`[PostalCitySelect] ${locationType} Selected row:`, item);
+    // Update local state
     setPsc(item.psc);
     setCity(item.city);
     setIsOpen(false);
+    
+    // Always notify parent component with complete location data
     if (onSelectionChange) {
+      console.log(`[PostalCitySelect] ${locationType} Selected:`, item);
+      
+      // Create a complete location object with all fields
       const locationData = {
         cc: item.cc || '',
         flag: item.cc ? `/flags/4x3/optimized/${item.cc.toLowerCase()}.svg` : '',
         psc: item.psc,
         city: item.city,
         lat: item.lat,
-        lng: item.lng
+        lng: item.lng,
       };
+      
+      // Send complete data to parent
       onSelectionChange(locationData);
     }
+    
     onValidSelection();
+    
+    // Focus the next field if provided
     if (dateInputRef?.current) {
       dateInputRef.current.focus();
     }
+    
     setManualOverride(false);
-  }, [locationType, onSelectionChange, onValidSelection, dateInputRef]);
+  }, [onSelectionChange, onValidSelection, dateInputRef, locationType]);
 
   const debouncedSearch = useCallback(
     (pscValue: string, cityValue: string) => {
@@ -238,7 +250,7 @@ export function PostalCitySelect({
       <PostalCodeInput
         value={psc}
         onChange={handlePscChange}
-        dbMask={dbPostalCodeMask}
+        mask={dbPostalCodeMask}
         placeholder="Postal code"
         className="location-select__psc"
         ref={activePscRef}
@@ -265,20 +277,20 @@ export function PostalCitySelect({
         aria-expanded={isOpen}
       />
       <BaseDropdown
-  items={suggestions} // Pass suggestions directly; empty array triggers onNoResults callback
-  isOpen={isOpen && !error}
-  onSelect={(item) => handleSelect(item)} // onSelect remains the same
-  renderItem={renderLocationItem}
-  variant="location"
-  position="left"
-  className="location-select__dropdown"
-  onLoadMore={handleLoadMore}
-  totalItems={suggestions.length}
-  pageSize={LOCATION_PAGE_SIZE}
-  loadMoreText="Load more locations..."
-  onNoResults={renderNoResults} // This callback returns "Enter a value in any field" when inputs are empty
-  ariaLabel="Location suggestions"
-/>
+        items={suggestions} // Pass suggestions directly; empty array triggers onNoResults callback
+        isOpen={isOpen && !error}
+        onSelect={(item) => handleSelect(item)} // onSelect remains the same
+        renderItem={renderLocationItem}
+        variant="location"
+        position="left"
+        className="location-select__dropdown"
+        onLoadMore={handleLoadMore}
+        totalItems={suggestions.length}
+        pageSize={LOCATION_PAGE_SIZE}
+        loadMoreText="Load more locations..."
+        onNoResults={renderNoResults} // This callback returns "Enter a value in any field" when inputs are empty
+        ariaLabel="Location suggestions"
+      />
     </div>
   );
 }

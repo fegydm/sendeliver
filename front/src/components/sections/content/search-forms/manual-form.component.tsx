@@ -1,11 +1,10 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Updated BEM class names to align with datetime-select and minimize 3-part classNames
-
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import CountrySelect from './CountrySelect';
 import PostalCitySelect from './PostalCitySelect';
 import { DateTimeSelect } from './DateTimeSelect';
 import { TransportFormData, LocationType, LocationSuggestion } from '@/types/transport-forms.types';
+import { useCountries } from '@/hooks/useCountries';
 import loadIcon from '@/assets/load-icon.svg';
 import deliverIcon from '@/assets/deliver-icon.svg';
 
@@ -22,6 +21,9 @@ const DEFAULT_FORM_DATA: TransportFormData = {
   cargo: { pallets: 0, weight: 0 },
 };
 
+// Show reminders only when NODE_ENV is set to 'development'
+const isDevMode = process.env.NODE_ENV === 'development';
+
 export function ManualForm({
   onSubmit,
   formData = DEFAULT_FORM_DATA,
@@ -37,13 +39,21 @@ export function ManualForm({
   const [postalFormats, setPostalFormats] = useState<
     Record<string, { format: string; regex: string }>
   >({});
+  const { items: allCountries } = useCountries();
 
   const fetchPostalFormat = useCallback(async (cc: string) => {
     try {
       const response = await fetch(`/api/geo/country_formats?cc=${cc}`);
       if (!response.ok) {
         if (response.status === 404) {
-          console.warn(`No postal format found for ${cc}`);
+          // Log reminder only in development mode
+          if (isDevMode) {
+            console.warn(`[ManualForm] Missing format for ${cc}, using fallback. TODO: Add mask to country_formats table.`);
+          }
+          setPostalFormats((prev) => ({
+            ...prev,
+            [cc]: { format: "#####", regex: "^[0-9]{5}$" }, // Fallback to DE format
+          }));
           return;
         }
         throw new Error(`HTTP error: ${response.status}`);
@@ -58,11 +68,30 @@ export function ManualForm({
     }
   }, []);
 
+  // Check format count vs country count, log reminder only in development mode
+  useEffect(() => {
+    if (!isDevMode) return; // Skip if not in development
+    const countryCount = allCountries.length;
+    const formatCount = Object.keys(postalFormats).length;
+    if (formatCount > 0 && formatCount < countryCount) {
+      console.warn(
+        `[ManualForm] Format mismatch: ${formatCount} postal formats vs. ${countryCount} countries. ` +
+        `TODO: Ensure all countries have postal code formats in country_formats table.`
+      );
+    }
+  }, [allCountries, postalFormats]);
+
   const handleCountrySelect = useCallback(
     (locationType: LocationType, cc: string, flag: string) => {
+      console.log(`[ManualForm] Country selected for ${locationType}:`, cc, flag);
       setLocalFormData((prev) => ({
         ...prev,
-        [locationType]: { ...prev[locationType], country: { cc, flag }, psc: '', city: '' },
+        [locationType]: { 
+          ...prev[locationType], 
+          country: { cc, flag }, 
+          psc: '', 
+          city: '' 
+        },
       }));
       if (cc.length === 2) fetchPostalFormat(cc);
     },
@@ -75,22 +104,27 @@ export function ManualForm({
 
   const handleLocationSelect = useCallback(
     (locationType: LocationType, location: Omit<LocationSuggestion, 'priority'>) => {
-      setLocalFormData((prev) => ({
+      console.log(`[ManualForm] Location selected for ${locationType}:`, location);
+      if (location.cc) {
+        const flagUrl = location.cc ? `/flags/4x3/optimized/${location.cc.toLowerCase()}.svg` : '';
+        handleCountrySelect(locationType, location.cc, flagUrl);
+      }
+      setLocalFormData(prev => ({
         ...prev,
         [locationType]: {
           ...prev[locationType],
-          country: { cc: location.cc, flag: location.flag },
-          psc: location.psc,
-          city: location.city,
-          lat: location.lat || 0,
-          lng: location.lng || 0,
+          psc: location.psc || '',
+          city: location.city || '',
+          lat: location.lat ?? 0,
+          lng: location.lng ?? 0,
         },
       }));
       if (location.psc && location.city) {
-        locationType === LocationType.PICKUP ? setIsPickupValid(true) : setIsDeliveryValid(true);
+        if (locationType === LocationType.PICKUP) setIsPickupValid(true);
+        else setIsDeliveryValid(true);
       }
     },
-    []
+    [handleCountrySelect]
   );
 
   const handleDateTimeChange = useCallback((locationType: LocationType, date: Date) => {
@@ -119,11 +153,7 @@ export function ManualForm({
   return (
     <form className={`manual-form manual-form--${type} ${className}`} onSubmit={handleSubmit}>
       {/* Pickup Section */}
-      <section
-        className={`manual-form__pickup ${
-          isPickupValid ? 'manual-form__pickup--valid' : ''
-        }`}
-      >
+      <section className={`manual-form__pickup ${isPickupValid ? 'manual-form__pickup--valid' : ''}`}>
         <h3 className="manual-form__title">Pickup Details</h3>
         <div className="manual-form__grid">
           <div className="manual-form__country">
@@ -163,11 +193,7 @@ export function ManualForm({
       </section>
 
       {/* Delivery Section */}
-      <section
-        className={`manual-form__delivery ${
-          isDeliveryValid ? 'manual-form__delivery--valid' : ''
-        }`}
-      >
+      <section className={`manual-form__delivery ${isDeliveryValid ? 'manual-form__delivery--valid' : ''}`}>
         <h3 className="manual-form__title">Delivery Details</h3>
         <div className="manual-form__grid">
           <div className="manual-form__country">
@@ -236,9 +262,7 @@ export function ManualForm({
 
       <button
         type="submit"
-        className={`manual-form__submit ${
-          !isPickupValid || !isDeliveryValid ? 'manual-form__submit--disabled' : ''
-        }`}
+        className={`manual-form__submit ${!isPickupValid || !isDeliveryValid ? 'manual-form__submit--disabled' : ''}`}
         disabled={!isPickupValid || !isDeliveryValid}
       >
         Submit Transport Request
