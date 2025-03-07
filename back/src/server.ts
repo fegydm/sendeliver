@@ -1,10 +1,10 @@
 // File: server.ts
-// Last change: Added vehicles router for handling vehicle search requests
+// Last change: Fixed WebSocket type using InstanceType<typeof WebSocket>
 
-import express, { Request, Response } from "express";
+import express from "express";
 import cors from "cors";
 import http from "http";
-import { WebSocketServer } from "ws";
+import WebSocket, { WebSocketServer } from "ws"; // Import WebSocket as default
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -12,7 +12,7 @@ import dotenv from "dotenv";
 import aiRouter from "./routes/ai.routes.js";
 import geoRouter from "./routes/geo.routes.js";
 import deliveryRouter from "./routes/delivery.routes.js";
-import vehiclesRouter from "./routes/vehicles.routes.js"; // Added import for vehicles router
+import vehiclesRouter from "./routes/vehicles.routes.js";
 
 // Load environment variables
 dotenv.config();
@@ -49,7 +49,7 @@ app.use(
     credentials: true,
   })
 );
-app.use((req: Request, _res: Response, next) => {
+app.use((req: any, _res: any, next: any) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
@@ -68,11 +68,16 @@ staticRoutes.forEach((route) => app.use(route.url, express.static(route.path)));
 // API routes (must come before SPA fallback)
 app.use("/api/ai", aiRouter);
 app.use("/api/geo", geoRouter);
-app.use("/api/vehicles", vehiclesRouter); // Added vehicles router to handle /api/vehicles/search
+app.use("/api/vehicles", vehiclesRouter);
 app.use("/api", deliveryRouter);
 
+// Define extended WebSocket interface with our custom property
+interface ExtendedWebSocket extends InstanceType<typeof WebSocket> {
+  isAlive: boolean;
+}
+
 // SPA fallback route
-app.get("*", (req: Request, res: Response) => {
+app.get("*", (req: any, res: any) => {
   const possibleStaticFile = path.join(publicPath, req.path);
 
   if (fs.existsSync(possibleStaticFile)) {
@@ -89,25 +94,26 @@ const setupWebSocketServer = (server: http.Server) => {
   const wss = new WebSocketServer({ server });
   const heartbeatInterval = 30000;
 
-  wss.on("connection", (ws) => {
-    (ws as any).isAlive = true;
+  wss.on("connection", (ws: InstanceType<typeof WebSocket>) => {
+    // Use our extended type
+    (ws as ExtendedWebSocket).isAlive = true;
 
     ws.on("pong", () => {
-      (ws as any).isAlive = true;
+      (ws as ExtendedWebSocket).isAlive = true;
     });
 
-    ws.on("message", (message: string) => {
+    ws.on("message", (message: Buffer | string) => {
       try {
-        const data = JSON.parse(message);
+        const data = JSON.parse(message.toString());
         if (data.type === "ping") {
           ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error processing WebSocket message:", error);
       }
     });
 
-    ws.on("error", (error) => {
+    ws.on("error", (error: Error) => {
       console.error("WebSocket error:", error);
     });
 
@@ -118,9 +124,9 @@ const setupWebSocketServer = (server: http.Server) => {
 
   // Heartbeat interval
   const interval = setInterval(() => {
-    wss.clients.forEach((ws) => {
-      if (!(ws as any).isAlive) return ws.terminate();
-      (ws as any).isAlive = false;
+    wss.clients.forEach((ws: InstanceType<typeof WebSocket>) => {
+      if (!(ws as ExtendedWebSocket).isAlive) return ws.terminate();
+      (ws as ExtendedWebSocket).isAlive = false;
       ws.ping();
     });
   }, heartbeatInterval);
@@ -135,7 +141,7 @@ const setupWebSocketServer = (server: http.Server) => {
 setupWebSocketServer(server);
 
 // Health check
-app.get("/api/health", (_req: Request, res: Response) => {
+app.get("/api/health", (_req: any, res: any) => {
   res.json({ status: "ok" });
 });
 

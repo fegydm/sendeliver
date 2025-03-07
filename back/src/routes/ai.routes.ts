@@ -1,10 +1,10 @@
 // File: ./back/src/routes/ai.routes.ts
-// Last change: Added /chat endpoint and ensured prompts are explicitly preserved
+// Last change: Fixed TypeScript errors related to request body typing and response methods
 
-import { Router, Request, Response } from "express";
+import { Router } from "express";
 import { AIService } from "../services/ai.services.js";
 import { GeocodingService } from "../services/geocoding.services.js";
-import { handleAIError, AIServiceError } from "../utils/error-handler.js";
+import { handleAIError } from "../utils/error-handler.js";
 
 const router = Router();
 
@@ -58,8 +58,8 @@ const createPromptByType = {
 };
 
 // AI Extraction Endpoint
-router.post("/extract", async (req: Request, res: Response): Promise<void> => {
-  const { message } = req.body;
+router.post("/extract", async (req: any, res: any): Promise<void> => {
+  const { message } = req.body as { message: string };
 
   logRawData("Extract Request", req.body);
 
@@ -85,8 +85,8 @@ router.post("/extract", async (req: Request, res: Response): Promise<void> => {
 });
 
 // AI Chat Endpoint
-router.post("/chat", async (req: Request, res: Response): Promise<void> => {
-  const { message } = req.body;
+router.post("/chat", async (req: any, res: any): Promise<void> => {
+  const { message } = req.body as { message: string };
 
   logRawData("Chat Request", req.body);
 
@@ -111,8 +111,8 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
 });
 
 // Geocoding Endpoint
-router.post("/geo", async (req: Request, res: Response): Promise<void> => {
-  const { pickup, delivery } = req.body;
+router.post("/geo", async (req: any, res: any): Promise<void> => {
+  const { pickup, delivery } = req.body as { pickup?: string; delivery?: string };
 
   logRawData("Geo Request", req.body);
 

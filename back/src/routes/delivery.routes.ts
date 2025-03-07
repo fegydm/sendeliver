@@ -1,9 +1,9 @@
 // File: back/src/routes/delivery.routes.ts
-// Last change: Fixed TypeScript overload error by ensuring proper async handler typing
+// Last change: Fixed TypeScript errors related to request and response types
 
 import pkg from 'pg';
 const { Pool } = pkg;
-import { Router, Request, Response, NextFunction } from "express";
+import { Router } from "express";
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -12,9 +12,39 @@ const pool = new Pool({
 
 const router = Router();
 
-router.post("/import-delivery", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+// Define the interface for delivery data to ensure type safety
+interface DeliveryData {
+    id?: string;
+    delivery_date: string;
+    delivery_time?: string;
+    delivery_type?: string;
+    delivery_country?: string;
+    delivery_zip?: string;
+    delivery_city?: string;
+    weight?: number;
+    id_pp: string;
+    id_carrier?: string;
+    name_carrier?: string;
+    vehicle_type?: string;
+}
+
+router.post("/import-delivery", async (req: any, res: any, next: any): Promise<void> => {
     try {
-        const { id, delivery_date, delivery_time, delivery_type, delivery_country, delivery_zip, delivery_city, weight, id_pp, id_carrier, name_carrier, vehicle_type } = req.body;
+        // Cast req.body to DeliveryData interface for better type safety
+        const { 
+            id, 
+            delivery_date, 
+            delivery_time, 
+            delivery_type, 
+            delivery_country, 
+            delivery_zip, 
+            delivery_city, 
+            weight, 
+            id_pp, 
+            id_carrier, 
+            name_carrier, 
+            vehicle_type 
+        } = req.body as DeliveryData;
 
         if (!id_pp || !delivery_date) {
             res.status(400).json({

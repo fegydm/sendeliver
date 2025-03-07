@@ -1,9 +1,11 @@
-// ./back/services/ws.service.ts
-import { WebSocket } from "ws";
+// File: ./back/services/ws.service.ts
+// Last change: Fixed WebSocket type using InstanceType
+
+import WebSocket from "ws";
 
 // Function to handle incoming WebSocket messages
 export const handleMessage = async (
-  ws: WebSocket,
+  ws: InstanceType<typeof WebSocket>,
   data: any
 ): Promise<void> => {
   try {

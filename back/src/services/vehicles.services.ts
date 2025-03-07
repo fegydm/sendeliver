@@ -1,5 +1,5 @@
 // File: .back/src/services/vehicles.services.ts
-// Description: Service to fetch vehicle records from yesterday with proper ISO-formatted delivery_time
+// Last change: Added explicit type for delivery parameter in map function
 
 import { pool } from "../configs/db.js";
 
@@ -42,6 +42,25 @@ interface Vehicle {
   };
   delivery_time: string;
   id_pp: number;
+}
+
+// Define interface for delivery record from database
+interface DeliveryRecord {
+  id: number;
+  delivery_id?: string;
+  delivery_date?: Date;
+  delivery_time?: string;
+  delivery_type?: string;
+  delivery_country?: string;
+  delivery_zip?: string;
+  delivery_city?: string;
+  weight?: number;
+  id_pp?: number;
+  id_carrier?: number;
+  name_carrier?: string;
+  vehicle_type?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 // Query to fetch vehicle records from yesterday with coordinates
@@ -117,7 +136,7 @@ export class VehicleService {
       const result = await pool.query(GET_RECENT_DELIVERIES_WITH_COORDINATES_QUERY);
       const deliveries = result.rows;
 
-      const vehicles: Vehicle[] = deliveries.map((delivery) => {
+      const vehicles: Vehicle[] = deliveries.map((delivery: DeliveryRecord) => {
         // Format date and time correctly into ISO string (YYYY-MM-DDTHH:MM:SSZ)
         const datePart = delivery.delivery_date
           ? String(delivery.delivery_date).trim() // Ensure no extra spaces

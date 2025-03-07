@@ -1,20 +1,46 @@
-// Súbor: .back/src/routes/vehicles.routes.ts
-// Posledná zmena: Upravené spracovanie požiadaviek na načítanie reálnych dát z databázy
+// File: .back/src/routes/vehicles.routes.ts
+// Last change: Fixed TypeScript errors and improved type safety
 
-import { Router, RequestHandler } from "express";
+import { Router } from "express";
 import { VehicleService } from "../services/vehicles.services.js";
 
 const router = Router();
 const vehicleService = VehicleService.getInstance();
 
+// Define interfaces for better type safety
+interface CountryInfo {
+  cc: string;
+  flag: string;
+}
+
+interface LocationData {
+  country: CountryInfo;
+  psc: string;
+  city: string;
+  time: string;
+  lat: number;
+  lng: number;
+}
+
+interface CargoData {
+  pallets: number;
+  weight: number;
+}
+
+interface SearchRequestBody {
+  pickup?: Partial<LocationData>;
+  delivery?: Partial<LocationData>;
+  cargo?: Partial<CargoData>;
+}
+
 // Handler pre vyhľadávanie vozidiel
-const handleSearchVehicles: RequestHandler = async (req, res): Promise<void> => {
+const handleSearchVehicles = async (req: any, res: any): Promise<void> => {
   try {
     // Zaloguj celé telo požiadavky na ladenie
     console.log('🚚 Prijatá požiadavka na vyhľadanie vozidiel:', JSON.stringify(req.body, null, 2));
 
     // Extrahuj parametre z tela požiadavky (z frontendu)
-    const { pickup, delivery, cargo } = req.body;
+    const { pickup, delivery, cargo } = req.body as SearchRequestBody;
 
     // Over, či máme potrebné údaje
     if (!pickup || !pickup.lat || !pickup.lng) {

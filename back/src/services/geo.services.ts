@@ -1,4 +1,6 @@
 // File: .back/src/services/geo.services.ts
+// Last change: Added explicit type for row parameter in map function
+
 import { pool } from "../configs/db.js";
 import {
   GET_COUNTRIES_QUERY,
@@ -22,6 +24,18 @@ interface SearchParams {
 interface SearchResult {
   results: any[];
   hasMore: boolean;
+}
+
+// Define location row interface
+interface LocationRow {
+  country_code: string;
+  postal_code: string;
+  place_name: string;
+  country: string;
+  flag_url: string;
+  logistics_priority: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 export class GeoService {
@@ -216,7 +230,7 @@ export class GeoService {
       }
 
       return { 
-        results: result.rows.map(row => ({
+        results: result.rows.map((row: LocationRow) => ({
           cc: row.country_code,
           psc: row.postal_code,
           city: row.place_name,

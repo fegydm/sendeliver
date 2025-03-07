@@ -1,12 +1,12 @@
 // File: .back/src/routes/geo.routes.ts
-// Last change: Added route for country postal format retrieval
+// Last change: Fixed type issues for Express and query parsing types
 
-import { Router, RequestHandler } from "express";
-import { ParsedQs } from "qs";
+import { Router } from "express";
 import { GeoService } from "../services/geo.services.js";
 import { DEFAULT_FETCH_SIZE, MAX_QUERY_SIZE } from "../constants/geo.constants.js";
 
-interface LocationQuery extends ParsedQs {
+// Define our own interfaces instead of extending ParsedQs
+interface LocationQuery {
   psc?: string;
   city?: string;
   cc?: string;
@@ -20,7 +20,7 @@ const router = Router();
 const geoService = GeoService.getInstance();
 
 // Handler for getting countries list
-const handleGetCountries: RequestHandler = async (req, res): Promise<void> => {
+const handleGetCountries = async (req: any, res: any): Promise<void> => {
   try {
     const { q } = req.query;
     const countries = await geoService.getCountries();
@@ -35,13 +35,13 @@ const handleGetCountries: RequestHandler = async (req, res): Promise<void> => {
 
     if (q && typeof q === 'string') {
       const searchTerm = q.toLowerCase();
-      result = countries.filter(country =>
+      result = countries.filter((country: any) =>
         country.name_en.toLowerCase().includes(searchTerm) ||
         country.name_sk.toLowerCase().includes(searchTerm)
       );
     }
 
-    result.sort((a, b) => a.name_en.localeCompare(b.name_en));
+    result.sort((a: any, b: any) => a.name_en.localeCompare(b.name_en));
 
     console.log("✅ Countries fetched:", result.length);
     res.json(result);
@@ -52,8 +52,9 @@ const handleGetCountries: RequestHandler = async (req, res): Promise<void> => {
 };
 
 // Handler for getting locations
-const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (req, res): Promise<void> => {
+const handleGetLocation = async (req: any, res: any): Promise<void> => {
   try {
+    // Cast query to our interface for better typing
     const {
       psc,
       city,
@@ -62,7 +63,7 @@ const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (re
       lastPsc,
       lastCity,
       checkExists
-    } = req.query;
+    } = req.query as LocationQuery;
 
     // Log incoming parameters for debugging
     console.log('🔍 Search params:', {
@@ -145,7 +146,7 @@ const handleGetLocation: RequestHandler<{}, any, any, LocationQuery> = async (re
 };
 
 // Handler for getting postal format for a country
-const handleGetCountryPostalFormat: RequestHandler = async (req, res): Promise<void> => {
+const handleGetCountryPostalFormat = async (req: any, res: any): Promise<void> => {
   try {
     const { cc } = req.query;
 

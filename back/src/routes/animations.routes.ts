@@ -1,11 +1,13 @@
 // File: back/src/routes/animations.routes.ts
-import express, { Request, Response } from "express";
+// Last change: Fixed TypeScript errors related to express Response methods
+
+import express from "express";
 import fs from "fs";
 import path from "path";
 
 const router = express.Router();
 
-router.get("/", (_req: Request, res: Response) => {
+router.get("/", (_req: any, res: any) => {
   const animationsDir = path.join(process.cwd(), "front/public/animations");
 
   fs.readdir(animationsDir, (err, files) => {

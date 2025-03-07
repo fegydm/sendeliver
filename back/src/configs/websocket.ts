@@ -1,6 +1,9 @@
-import { WebSocketServer } from "ws";
+// File: ./back/src/configs/websocket.ts
+// Last change: Fixed WebSocket type issue by using the correct type import
 
-export const setupWebSocket = (server: any): WebSocketServer => {
+import WebSocket, { WebSocketServer } from "ws";
+
+export const setupWebSocket = (server: any): InstanceType<typeof WebSocketServer> => {
   const wss = new WebSocketServer({
     server,
     path: "/ws",
@@ -8,15 +11,14 @@ export const setupWebSocket = (server: any): WebSocketServer => {
     handleProtocols: () => "echo-protocol",
   });
 
-  wss.on("connection", (ws) => {
+  wss.on("connection", (ws: InstanceType<typeof WebSocket>) => {
     console.log("Client connected");
 
     ws.send(JSON.stringify({ message: "Connected!" }));
 
     ws.on("message", (message: string | Buffer) => {
-      // Úprava tu, aby sme použili správny typ
       console.log("Received:", message.toString());
-      ws.send(message.toString()); // Echo back
+      ws.send(message.toString());
     });
   });
 

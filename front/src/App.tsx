@@ -41,10 +41,7 @@ const App: React.FC = () => {
     return savedMode ? JSON.parse(savedMode) : prefersDark;
   });
 
-  const [isTestFooterVisible, setIsTestFooterVisible] = useState(() => {
-    const savedState = localStorage.getItem("isTestFooterVisible");
-    return savedState ? JSON.parse(savedState) : process.env.NODE_ENV === "development";
-  });
+  const [isTestFooterVisible, setIsTestFooterVisible] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
