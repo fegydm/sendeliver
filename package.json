@@ -8,7 +8,7 @@
     "install": "npm run install:unix", 
     "install:win": "start /b /wait cmd /c \"(cd back && npm install) & (cd ../front && npm install)\"",
     "install:unix": "cd back && npm install && cd ../front && npm install",
-    "build": "npm run build:unix", 
+    "build": "cd back && node -v && npm ci && npm run build && cd ../front && node -v && npm ci && npm run build",
     "build:win": "start /b /wait cmd /c \"cd back && npm run build\" && cd front && set NODE_ENV=production && .\\node_modules\\.bin\\vite build",
     "build:unix": "cd back && NODE_ENV=production npm run build && cd ../front && NODE_ENV=production npm run build",
     "dev": "npm run dev:unix", 
