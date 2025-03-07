@@ -23,7 +23,7 @@ export interface HaulerResultData {
 
 interface ResultTableProps {
   type: "sender" | "hauler";
-  data: SenderResultData[] | HaulerResultData[];
+  data?: SenderResultData[] | HaulerResultData[];
 }
 
 // Extract date as MM/DD from any malformed time string
@@ -92,7 +92,7 @@ const formatRating = (rating?: number): string => {
   return rating !== undefined ? `★ ${rating.toFixed(1)}` : "★ N/A";
 };
 
-const ResultTable: React.FC<ResultTableProps> = ({ type, data }) => {
+const ResultTable: React.FC<ResultTableProps> = ({ type, data = [] }) => {
   const [filter, setFilter] = useState<string>("all");
 
   // Define table columns based on type
@@ -150,9 +150,9 @@ const ResultTable: React.FC<ResultTableProps> = ({ type, data }) => {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
-            {vehicleTypes.map((type) => (
-              <option key={type} value={type}>
-                {type === "all" ? "All Types" : type}
+            {vehicleTypes.map((vehicleType) => (
+              <option key={vehicleType} value={vehicleType}>
+                {vehicleType === "all" ? "All Types" : vehicleType}
               </option>
             ))}
           </select>
@@ -191,10 +191,6 @@ const ResultTable: React.FC<ResultTableProps> = ({ type, data }) => {
       </div>
     </div>
   );
-};
-
-ResultTable.defaultProps = {
-  data: [],
 };
 
 export default ResultTable;
