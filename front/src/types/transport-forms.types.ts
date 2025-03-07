@@ -1,5 +1,5 @@
 // File: src/types/transport-forms.types.ts
-// Last change: Unified types for AI and manual transport forms
+// Last change: Updated LocationSuggestion to support both front-end and API formats
 
 // Request sent to AI API
 export interface AIRequest {
@@ -72,10 +72,15 @@ export interface LocationSuggestion {
   cc: string;
   psc: string;
   city: string;
-  flag: string;
-  lat: number;
-  lng: number;
-  priority: number;        // For sorting results
+  country?: string;        // API response includes this
+  flag_url?: string;       // API response format
+  flag?: string;           // Front-end format
+  lat?: number;            // Frontend format
+  lng?: number;            // Frontend format
+  latitude?: number;       // API response format
+  longitude?: number;      // API response format
+  logistics_priority?: number; // API response format
+  priority?: number;       // For sorting results
 }
 
 export enum LocationType {

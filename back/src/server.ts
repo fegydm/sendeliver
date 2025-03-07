@@ -1,3 +1,6 @@
+// File: server.ts
+// Last change: Added vehicles router for handling vehicle search requests
+
 import express, { Request, Response } from "express";
 import cors from "cors";
 import http from "http";
@@ -9,6 +12,7 @@ import dotenv from "dotenv";
 import aiRouter from "./routes/ai.routes.js";
 import geoRouter from "./routes/geo.routes.js";
 import deliveryRouter from "./routes/delivery.routes.js";
+import vehiclesRouter from "./routes/vehicles.routes.js"; // Added import for vehicles router
 
 // Load environment variables
 dotenv.config();
@@ -64,6 +68,7 @@ staticRoutes.forEach((route) => app.use(route.url, express.static(route.path)));
 // API routes (must come before SPA fallback)
 app.use("/api/ai", aiRouter);
 app.use("/api/geo", geoRouter);
+app.use("/api/vehicles", vehiclesRouter); // Added vehicles router to handle /api/vehicles/search
 app.use("/api", deliveryRouter);
 
 // SPA fallback route

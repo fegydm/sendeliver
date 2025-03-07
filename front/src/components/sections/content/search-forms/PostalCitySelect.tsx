@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Enhanced location selection to always notify parent with complete location data
+// Last change: Fixed coordinate handling to support both API and front-end formats
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import PostalCodeInput from "@/components/elements/PostalCodeInput";
@@ -78,12 +78,30 @@ export function PostalCitySelect({
         }
 
         const data = await response.json();
-        if (!pagination && data.results.length === 1 && !manualOverride) {
-          handleSelect(data.results[0]);
+        
+        // Debug API response to check data structure
+        if (data.results && data.results.length > 0) {
+          console.log(`[PostalCitySelect] ${locationType} API response sample:`, data.results[0]);
+        }
+        
+        // Normalize the results to ensure all items have lat/lng properties
+        const normalizedResults = data.results.map((item: LocationSuggestion) => ({
+          ...item,
+          // Set coordinates with proper fallbacks
+          lat: item.lat !== undefined ? item.lat : 
+               item.latitude !== undefined ? item.latitude : 0,
+          lng: item.lng !== undefined ? item.lng : 
+               item.longitude !== undefined ? item.longitude : 0,
+          // Ensure we have a flag property
+          flag: item.flag || item.flag_url
+        }));
+
+        if (!pagination && normalizedResults.length === 1 && !manualOverride) {
+          handleSelect(normalizedResults[0]);
           return false;
         }
 
-        setSuggestions(prev => (pagination ? [...prev, ...data.results] : data.results));
+        setSuggestions(prev => (pagination ? [...prev, ...normalizedResults] : normalizedResults));
         return data.hasMore;
       } catch (error) {
         console.error(`[PostalCitySelect] ${locationType} Load error:`, error);
@@ -100,6 +118,8 @@ export function PostalCitySelect({
 
   // Enhanced to always provide complete location data to parent
   const handleSelect = useCallback((item: LocationSuggestion) => {
+    console.log(`[PostalCitySelect] ${locationType} Selected:`, item);
+    
     // Update local state
     setPsc(item.psc);
     setCity(item.city);
@@ -107,19 +127,19 @@ export function PostalCitySelect({
     
     // Always notify parent component with complete location data
     if (onSelectionChange) {
-      console.log(`[PostalCitySelect] ${locationType} Selected:`, item);
-      
-      // Create a complete location object with all fields
-      const locationData = {
+      // Create a complete location object with consistent properties
+      const locationData: Omit<LocationSuggestion, 'priority'> = {
         cc: item.cc || '',
-        flag: item.cc ? `/flags/4x3/optimized/${item.cc.toLowerCase()}.svg` : '',
+        flag: item.flag || item.flag_url || 
+              (item.cc ? `/flags/4x3/optimized/${item.cc.toLowerCase()}.svg` : ''),
         psc: item.psc,
         city: item.city,
-        lat: item.lat,
-        lng: item.lng,
+        // Ensure we always provide coordinates with fallbacks to prevent null/undefined
+        lat: item.lat ?? item.latitude ?? 0,
+        lng: item.lng ?? item.longitude ?? 0,
       };
       
-      // Send complete data to parent
+      console.log(`[PostalCitySelect] ${locationType} Sending to parent:`, locationData);
       onSelectionChange(locationData);
     }
     
@@ -234,7 +254,6 @@ export function PostalCitySelect({
     return <div className="dropdown__no-results">No results found</div>;
   }, [psc, city, isLoading, error, validateSearchInput]);
 
-  // Fixed handleLoadMore to match the expected function signature (no parameters)
   const handleLoadMore = useCallback(() => {
     if (suggestions.length > 0) {
       const lastItem = suggestions[suggestions.length - 1];
@@ -277,9 +296,9 @@ export function PostalCitySelect({
         aria-expanded={isOpen}
       />
       <BaseDropdown
-        items={suggestions} // Pass suggestions directly; empty array triggers onNoResults callback
+        items={suggestions}
         isOpen={isOpen && !error}
-        onSelect={(item) => handleSelect(item)} // onSelect remains the same
+        onSelect={(item) => handleSelect(item)}
         renderItem={renderLocationItem}
         variant="location"
         position="left"
@@ -288,7 +307,7 @@ export function PostalCitySelect({
         totalItems={suggestions.length}
         pageSize={LOCATION_PAGE_SIZE}
         loadMoreText="Load more locations..."
-        onNoResults={renderNoResults} // This callback returns "Enter a value in any field" when inputs are empty
+        onNoResults={renderNoResults}
         ariaLabel="Location suggestions"
       />
     </div>

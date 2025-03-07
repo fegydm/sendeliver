@@ -1,13 +1,13 @@
+// File: .back/src/services/geo.services.ts
 import { pool } from "../configs/db.js";
 import {
   GET_COUNTRIES_QUERY,
   CHECK_LOCATION_EXISTS_QUERY,
   SEARCH_LOCATION_QUERY,
   SEARCH_LOCATION_BY_COUNTRY_QUERY,
-  GET_COUNTRY_POSTAL_FORMAT_QUERY
+  GET_COUNTRY_POSTAL_FORMAT_QUERY,
 } from "./geo.queries.js";
 
-// Frontend interfaces
 interface SearchParams {
   psc?: string;
   city?: string;
@@ -32,11 +32,13 @@ export class GeoService {
   private static lastCacheTime: number = 0;
 
   private constructor() {
-    this.checkHealth();
+    console.log('🔧 GeoService instance created');
+    this.checkHealth().catch(err => console.error('Initial health check failed:', err));
   }
 
   public static getInstance(): GeoService {
     if (!GeoService.instance) {
+      console.log('➕ Creating new GeoService instance');
       GeoService.instance = new GeoService();
     }
     return GeoService.instance;
@@ -46,8 +48,9 @@ export class GeoService {
     const cacheAge = Date.now() - GeoService.lastCacheTime;
     const isValid = GeoService.countriesCache !== null && cacheAge < this.CACHE_DURATION;
     
-    console.log('Cache status:', {
+    console.log('🕵️ Checking cache validity:', {
       hasCache: GeoService.countriesCache !== null,
+      cacheLength: GeoService.countriesCache?.length || 0,
       cacheAge: `${Math.round(cacheAge / 1000)}s`,
       maxAge: `${this.CACHE_DURATION / 1000}s`,
       isValid
@@ -56,19 +59,19 @@ export class GeoService {
     return isValid;
   }
 
-  // Health check for database connection
   private async checkHealth(): Promise<void> {
+    console.log('🔍 Starting database health check');
     try {
-      await pool.query('SELECT 1');
+      const result = await pool.query('SELECT 1');
       this.isHealthy = true;
+      console.log('✅ Database health check passed:', result.rows);
     } catch (error) {
       this.isHealthy = false;
-      console.error("Database health check failed:", error instanceof Error ? error.message : 'Unknown error');
+      console.error('❌ Database health check failed:', error instanceof Error ? error.stack : error);
       throw error;
     }
   }
 
-  // Check if we should use exact country matching
   private shouldUseExactCountryMatch(countryCode?: string): boolean {
     console.log('🕵️ Checking exact country match:', {
       countryCode,
@@ -77,54 +80,59 @@ export class GeoService {
     return countryCode?.length === 2;
   }
 
-  // Check if there's any search input
   private hasSearchInput(psc?: string, city?: string): boolean {
     return !!(psc || city);
   }
 
-  // Get appropriate country code filter
   private getCountryCodeFilter(countryCode?: string): string | undefined {
     if (!countryCode) return undefined;
     
-    // Normalizácia vstupu
     const normalizedCode = countryCode.trim().toUpperCase();
+    console.log('🌍 Normalizing country code:', { input: countryCode, normalized: normalizedCode });
     
-    // Presná zhoda pre 2-znakový kód
     if (normalizedCode.length === 2) return normalizedCode;
-    
-    // Čiastočná zhoda pre 1-znakový kód
     if (normalizedCode.length === 1) return normalizedCode;
     
     return undefined;
   }
 
-  // Get list of all countries
   public async getCountries() {
+    console.log('🌍 Starting getCountries');
     try {
       if (!this.isHealthy) {
+        console.log('⚠️ Service not healthy, running health check');
         await this.checkHealth();
+        console.log('✅ Health restored after check');
       }
 
       if (this.isCacheValid()) {
-        console.log('✅ Returning cached countries data');
+        console.log('✅ Returning cached countries:', GeoService.countriesCache?.length || 0);
         return GeoService.countriesCache;
       }
 
       console.log('🔄 Fetching fresh countries data');
+      console.log('📜 Query:', GET_COUNTRIES_QUERY);
       const result = await pool.query(GET_COUNTRIES_QUERY);
+      console.log('📊 Countries fetched from DB:', {
+        rowCount: result.rowCount,
+        rows: result.rows
+      });
       GeoService.countriesCache = result.rows;
       GeoService.lastCacheTime = Date.now();
+      console.log('✅ Countries cached:', {
+        total: result.rows.length,
+        timestamp: new Date(GeoService.lastCacheTime).toISOString()
+      });
       return result.rows;
 
     } catch (error) {
-      console.error('Failed to fetch countries:', error);
+      console.error('❌ Failed to fetch countries:', error instanceof Error ? error.stack : error);
       GeoService.countriesCache = null;
       GeoService.lastCacheTime = 0;
       throw error;
     }
   }
 
-  // Nová metóda pre získanie formátu poštového smerového čísla
   public async getCountryPostalFormat(cc: string) {
     try {
       if (!this.isHealthy) {
@@ -132,11 +140,13 @@ export class GeoService {
       }
 
       const normalizedCC = cc.trim().toUpperCase();
+      console.log('📮 Fetching postal format for:', normalizedCC);
 
       const result = await pool.query(GET_COUNTRY_POSTAL_FORMAT_QUERY, [normalizedCC]);
+      console.log('📊 Postal format result:', result.rows);
 
       if (result.rows.length === 0) {
-        console.warn(`No postal format found for country code: ${normalizedCC}`);
+        console.warn(`⚠️ No postal format found for country code: ${normalizedCC}`);
         return null;
       }
 
@@ -146,12 +156,11 @@ export class GeoService {
       };
 
     } catch (error) {
-      console.error(`Failed to get postal format for ${cc}:`, error);
+      console.error(`❌ Failed to get postal format for ${cc}:`, error);
       throw error;
     }
   }
 
-  // Search locations with given parameters
   public async searchLocations(params: SearchParams): Promise<SearchResult> {
     try {
       if (!this.isHealthy) {
@@ -166,13 +175,11 @@ export class GeoService {
         countryFilter: this.getCountryCodeFilter(params.cc)
       });
 
-      // Pridaná explicitná kontrola
       const countryFilter = this.getCountryCodeFilter(params.cc);
-      
       console.log('🌍 Country Filter:', countryFilter);
 
-      // Upravená podmienka pre spustenie query
       if (!this.hasSearchInput(params.psc, params.city) && !countryFilter) {
+        console.log('⚠️ No search input or country filter, returning empty');
         return { results: [], hasMore: false };
       }
 
@@ -200,8 +207,14 @@ export class GeoService {
       }
 
       console.log(`📊 Found ${result.rows.length} locations`);
+      
+      if (result.rows.length > 0) {
+        console.log('🔍 Sample row data:', { 
+          firstRow: result.rows[0],
+          hasCoordinates: result.rows[0].latitude !== undefined && result.rows[0].longitude !== undefined
+        });
+      }
 
-      // Transform database results to frontend format
       return { 
         results: result.rows.map(row => ({
           cc: row.country_code,
@@ -209,18 +222,19 @@ export class GeoService {
           city: row.place_name,
           country: row.country,
           flag_url: row.flag_url,
-          logistics_priority: row.logistics_priority
+          logistics_priority: row.logistics_priority,
+          lat: row.latitude,
+          lng: row.longitude
         })),
         hasMore: result.rows.length >= params.limit
       };
 
     } catch (error) {
-      console.error('Failed to search locations:', error);
+      console.error('❌ Failed to search locations:', error);
       throw error;
     }
   }
 
-  // Check if location exists
   public async checkLocationExists(
     psc?: string,
     city?: string,
@@ -237,10 +251,11 @@ export class GeoService {
         cc || null
       ]);
       
+      console.log('🕵️ Location check result:', result.rows[0]);
       return result.rows[0].found;
 
     } catch (error) {
-      console.error('Failed to check location:', error);
+      console.error('❌ Failed to check location:', error);
       throw error;
     }
   }

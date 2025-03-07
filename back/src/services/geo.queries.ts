@@ -1,5 +1,5 @@
 // File: src/routes/geo.queries.ts
-// Updated queries: Normalize both postal_code column and parameter $1 using REPLACE
+// Last change: Added latitude and longitude to location search queries
 
 export const GET_COUNTRIES_QUERY = `
 SELECT 
@@ -39,7 +39,9 @@ WITH matched_locations AS (
     p.country_code,
     p.postal_code,
     p.place_name,
-    c.logistics_priority
+    c.logistics_priority,
+    p.latitude,
+    p.longitude
   FROM geo.countries c
   JOIN geo.postal_codes p ON p.country_code = c.code_2
   WHERE 
@@ -75,7 +77,9 @@ SELECT
   ml.place_name, 
   c.name_en AS country,
   ml.logistics_priority,
-  CONCAT('/flags/4x3/optimized/', LOWER(ml.country_code), '.svg') AS flag_url
+  CONCAT('/flags/4x3/optimized/', LOWER(ml.country_code), '.svg') AS flag_url,
+  ml.latitude,
+  ml.longitude
 FROM matched_locations ml
 JOIN geo.countries c ON c.code_2 = ml.country_code
 ORDER BY 
@@ -99,7 +103,9 @@ SELECT
   p.postal_code, 
   p.place_name, 
   c.name_en AS country,
-  CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url
+  CONCAT('/flags/4x3/optimized/', LOWER(p.country_code), '.svg') AS flag_url,
+  p.latitude,
+  p.longitude
 FROM geo.postal_codes p 
 JOIN geo.countries c ON c.code_2 = p.country_code
 JOIN filtered_countries fc ON fc.code_2 = p.country_code
@@ -126,4 +132,33 @@ ORDER BY
   p.postal_code,
   p.place_name
 LIMIT $6;
+`;
+
+export const GET_RECENT_DELIVERIES_WITH_COORDINATES_QUERY = `
+SELECT DISTINCT ON (d.id)
+    d.id,
+    d.delivery_id,
+    d.delivery_date,
+    d.delivery_time,
+    d.delivery_type,
+    d.delivery_country,
+    d.delivery_zip,
+    d.delivery_city,
+    d.weight,
+    d.id_pp,
+    d.id_carrier,
+    d.name_carrier,
+    d.vehicle_type,
+    p.latitude,
+    p.longitude
+FROM 
+    deliveries d
+INNER JOIN 
+    geo.postal_codes p 
+    ON d.delivery_country = p.country_code 
+    AND d.delivery_zip = p.postal_code
+WHERE 
+    d.delivery_date >= CURRENT_DATE - 1
+ORDER BY 
+    d.id, d.delivery_date DESC, d.delivery_time DESC;
 `;
