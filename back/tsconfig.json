@@ -1,5 +1,4 @@
 {
-  "name": "back/tsconfig",
   "compilerOptions": {
     "target": "ES2022",
     "module": "NodeNext",
@@ -19,7 +18,8 @@
     "paths": {
       "@types/*": ["src/types/*"]
     },
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node"] 
   },
   "include": ["src/**/*"],
   "exclude": [
