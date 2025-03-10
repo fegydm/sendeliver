@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "cors": "2.8.5",
+    "@types/cors": "^2.8.17",
     "dotenv": "^16.4.5",
     "express": "4.21.1",
     "ioredis": "^5.3.2",
@@ -26,7 +27,7 @@
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.2",
-    "@types/cors": "^2.8.17",
+   
     "@types/express": "^5.0.0",
     "@types/pg": "^8.11.0",
     "@types/qs": "^6.9.15",
