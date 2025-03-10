@@ -2,7 +2,7 @@
 // Úprava: Synchronizácia inputValue s initialValue a dynamická aktualizácia flag
 
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
-import { BaseDropdown } from "./BaseDropdown";
+import { BaseDropdown } from "../../../elements/BaseDropdown";
 import type { Country } from "@/types/transport-forms.types";
 import { useCountries } from "@/hooks/useCountries";
 import { useUINavigation } from "@/hooks/useUINavigation";

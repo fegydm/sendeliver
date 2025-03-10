@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import PostalCodeInput from "@/components/elements/PostalCodeInput";
-import { BaseDropdown } from "./BaseDropdown";
+import { BaseDropdown } from "../../../elements/BaseDropdown";
 import { LOCATION_PAGE_SIZE, DEBOUNCE_LOCATION_SEARCH } from "@/constants/pagination.constants";
 import { LocationType, LocationSuggestion } from "@/types/transport-forms.types";
 

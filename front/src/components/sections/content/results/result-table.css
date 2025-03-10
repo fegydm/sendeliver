@@ -1,37 +1,64 @@
+/* Dropdown container */
+.dropdown__container {
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: absolute; /* Allows dropdown to be displayed outside table boundaries */
+  z-index: 1000;
+}
+
+/* Dropdown content */
+.dropdown__content {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Dropdown item */
+.dropdown__item {
+  max-height: 12px;
+  padding: 2px; /* Minimal padding */
+  cursor: pointer;
+  white-space: nowrap; /* Prevents text wrapping so width adjusts to longest item */
+}
+
+/* Specific classes for different dropdowns if needed */
+.dropdown-icon__content {
+  /* Additional styles for icon filter dropdown if needed */
+}
+.dropdown-icon__item {
+  max-height: 20px;
+  padding: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Result table styles */
 .result-table-container {
-    width: 100%;
-    max-width: 1000px;
-    margin: 20px auto;
-  }
-  .result-table-filter {
-    margin-bottom: 10px;
-  }
-  .result-table-filter select {
-    padding: 5px;
-    font-size: 16px;
-  }
-  .result-table-scroll {
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    resize: vertical;
-  }
-  .result-table__table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .result-table__header-cell,
-  .result-table__body-cell {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: left;
-  }
-  .result-table__header-cell {
-    background-color: #f5f5f5;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
-  .result-table__body-row:nth-child(even) {
-    background-color: #fafafa;
-  }
+  width: 100%;
+  max-width: 1000px;
+  margin: 20px auto;
+}
+.result-table-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  resize: vertical;
+}
+.result-table__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.result-table__header-cell,
+.result-table__body-cell {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+.result-table__header-cell {
+  background-color: #f5f5f5;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.result-table__body-row:nth-child(even) {
+  background-color: #fafafa;
+}
