@@ -18,7 +18,8 @@
     "react-imask": "^7.6.1",
     "react-input-mask": "^2.0.4",
     "react-router-dom": "^6.10.0",
-    "react-datetime": "^3.0.4"
+    "react-datetime": "^3.0.4",
+    "vite": "^5.1.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -28,8 +29,8 @@
     "prettier": "^3.3.0",
     "rollup-plugin-visualizer": "^5.14.0",
     "terser": "^5.27.0",
-    "typescript": "^5.7.2",
-    "vite": "^5.1.4"
+    "typescript": "^5.7.2"
+    
   },
   "engines": {
     "node": ">=18.0.0",
