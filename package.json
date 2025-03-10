@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "node back/src/scripts/clean.js",
     "install": "cd back && npm install && cd ../front && npm install",
-    "build": "cd back && npm ci && npm run build && cd ../front && npm ci && npm run build",
+    "build": "cd back && npm run build && cd ../front && npm run build",
     "start": "cd back && npm start & cd front && npm run preview",
     "dev": "cd back && npm run dev & cd ../front && npm run dev",
     "reset": "npm run clean && npm run install && npm run build"
