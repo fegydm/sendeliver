@@ -1,63 +1,87 @@
-// File: src/components/sections/content/results/TypeFilter.tsx
-// Description: Component for filtering types with animated dropdown arrow
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { getAnimatedArrow } from "@/utils/animateArrow";
+import { SenderResultData } from "./result-table.component";
+import truckIcon from "@/assets/truck.svg";
+import vanIcon from "@/assets/van.svg";
+import lorryIcon from "@/assets/lorry.svg";
+import rigidIcon from "@/assets/rigid.svg";
 
-import React, { useState } from "react";
-import BaseDropdown from "@/components/elements/BaseDropdown";
-import { getAnimatedArrow } from "@/utils/animateArrow"; // external function for arrow animation
-import truckIcon from "src/assets/truck1-1.svg"; // example image
-
-// Map database values to display labels
-// Database values: LKW, Sólo, Dodávka, Avia
-// Mapped labels: truck 40t., rigid 12t., van 3,5t., lorry 7,5t.
+// Define filter options with updated icons
 const typeFilterOptions = [
-  { value: "LKW", label: "truck 40t.", icon: truckIcon },
-  { value: "Sólo", label: "rigid 12t.", icon: truckIcon },
-  { value: "Dodávka", label: "van 3,5t.", icon: truckIcon },
-  { value: "Avia", label: "lorry 7,5t.", icon: truckIcon },
+  { value: "all", label: "all ...", icon: null },
+  { value: "LKW", label: "truck 40t.", icon: truckIcon, mappedValue: "truck" },
+  { value: "Sólo", label: "rigid 12t.", icon: rigidIcon, mappedValue: "rigid" },
+  { value: "Dodávka", label: "van 3,5t.", icon: vanIcon, mappedValue: "van" },
+  { value: "Avia", label: "lorry 7,5t.", icon: lorryIcon, mappedValue: "lorry" },
 ];
 
-const TypeFilter: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  // 'selectedType' stores the database value (e.g., "LKW")
-  const [selectedType, setSelectedType] = useState("all");
+interface TypeFilterProps {
+  data: SenderResultData[];
+  onFilter: (filtered: SenderResultData[]) => void;
+}
 
-  // Function to render each dropdown item
-  const renderTypeItem = (item: any, meta: { isHighlighted: boolean }) => (
-    <div style={{ display: "flex", alignItems: "center" }}>
-      {/* Display the icon with fixed width */}
-      <img src={item.icon} alt={item.label} style={{ width: "24px", marginRight: "8px" }} />
-      <span>{item.label}</span>
-    </div>
-  );
+const TypeFilter = forwardRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }, TypeFilterProps>(
+  ({ data, onFilter }, ref) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [selectedType, setSelectedType] = useState("all");
 
-  // Toggle dropdown open state
-  const toggleDropdown = () => {
-    setIsOpen((prev) => !prev);
-  };
+    // Filter data based on selected vehicle type
+    const filterData = () => {
+      if (selectedType === "all") return data;
+      const selectedOption = typeFilterOptions.find(opt => opt.value === selectedType);
+      const mappedValue = selectedOption?.mappedValue || selectedType;
+      return data.filter(record => record.vehicleType.toLowerCase() === mappedValue.toLowerCase());
+    };
 
-  return (
-    <div>
-      <button
-        onClick={toggleDropdown}
-        style={{ display: "flex", alignItems: "center" }}
-      >
-        {selectedType === "all" ? "All Types" : selectedType} {/* Display selected filter */}
-        {/* Use external function to render animated arrow */}
-        {getAnimatedArrow(isOpen)}
-      </button>
-      {isOpen && (
-        <BaseDropdown
-          items={[{ value: "all", label: "All Types", icon: truckIcon }, ...typeFilterOptions]}
-          isOpen={isOpen}
-          onSelect={(item) => {
-            setSelectedType(item.value);
-            setIsOpen(false);
-          }}
-          renderItem={renderTypeItem}
-        />
-      )}
-    </div>
-  );
-};
+    useEffect(() => {
+      const filtered = filterData();
+      onFilter(filtered);
+    }, [selectedType, data]);
+
+    useImperativeHandle(ref, () => ({
+      reset: () => setIsOpen(false), // Only closes dropdown, keeps selection
+      isOpen: () => isOpen,
+      isFiltered: () => selectedType !== "all",
+    }));
+
+    return (
+      <div className="dropdown-type">
+        <div
+          className="dropdown-type__toggle"
+          onClick={() => setIsOpen(prev => !prev)}
+        >
+          <span>
+            {selectedType === "all"
+              ? "Type"
+              : typeFilterOptions.find(opt => opt.value === selectedType)?.label}
+          </span>
+          {getAnimatedArrow(isOpen)}
+        </div>
+        {isOpen && (
+          <div className="dropdown-type__content">
+            {typeFilterOptions.map((item, index) => (
+              <div
+                key={item.value}
+                className={`dropdown-type__item ${index === 0 ? "dropdown__item--grey" : ""}`}
+                onClick={() => {
+                  setSelectedType(item.value);
+                  setIsOpen(false);
+                }}
+                style={{ display: "flex", alignItems: "center" }}
+              >
+                {item.icon && (
+                  <img src={item.icon} alt={item.label} style={{ width: "24px", marginRight: "8px" }} />
+                )}
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+TypeFilter.displayName = "TypeFilter";
 
 export default TypeFilter;

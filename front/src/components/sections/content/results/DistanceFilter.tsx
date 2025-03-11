@@ -1,92 +1,80 @@
-// File: src/components/sections/content/results/DistanceFilter.tsx
-// Description: Component for filtering distance with animated dropdown arrow using BEM methodology.
-// It filters records so that "up to 20km" returns records with distance less than 20 km.
-
-import React, { useState, useEffect } from "react";
-import BaseDropdown from "@/components/elements/BaseDropdown";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { getAnimatedArrow } from "@/utils/animateArrow";
+import { SenderResultData } from "./result-table.component";
 
-// Filter options for distance
+interface DistanceFilterProps {
+  data: SenderResultData[];
+  onFilter: (filtered: SenderResultData[]) => void;
+}
+
 const distanceFilterOptions = [
-  { value: "all", label: "All" },
+  { value: "all", label: "all ..." },
   { value: "20", label: "up to 20km" },
   { value: "50", label: "up to 50km" },
   { value: "100", label: "up to 100km" },
   { value: "200", label: "up to 200km" },
 ];
 
-// Define the minimal interface for a record containing distance
-interface RecordData {
-  distance: string; // e.g., "15.4 km"
-  // other properties can be added here
-}
+const DistanceFilter = forwardRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }, DistanceFilterProps>(
+  ({ data, onFilter }, ref) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [selectedDistance, setSelectedDistance] = useState("all");
 
-interface DistanceFilterProps {
-  data: RecordData[]; // Full set of records to filter
-  onFilter: (filtered: RecordData[]) => void; // Callback returning filtered records
-}
+    // Filter data based on selected distance
+    const filterData = () => {
+      if (selectedDistance === "all") return data;
+      const threshold = parseFloat(selectedDistance);
+      return data.filter(record => {
+        const distanceNum = parseFloat(record.distance);
+        return !isNaN(distanceNum) && distanceNum < threshold;
+      });
+    };
 
-const DistanceFilter: React.FC<DistanceFilterProps> = ({ data, onFilter }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  // 'selectedDistance' stores the selected filter value, default "all" means no filter applied
-  const [selectedDistance, setSelectedDistance] = useState("all");
+    useEffect(() => {
+      const filtered = filterData();
+      onFilter(filtered);
+    }, [data, selectedDistance]);
 
-  // Filtering logic: if "all", return all records; otherwise, filter those with distance < threshold
-  const filterData = () => {
-    if (selectedDistance === "all") {
-      return data;
-    }
-    const threshold = parseFloat(selectedDistance);
-    return data.filter(record => {
-      // Assuming record.distance is like "15.4 km"
-      const distanceNum = parseFloat(record.distance);
-      return distanceNum < threshold;
-    });
-  };
+    useImperativeHandle(ref, () => ({
+      reset: () => setIsOpen(false), // Only closes dropdown, keeps selection
+      isOpen: () => isOpen,
+      isFiltered: () => selectedDistance !== "all",
+    }));
 
-  // Call onFilter whenever selectedDistance or data changes
-  useEffect(() => {
-    const filtered = filterData();
-    onFilter(filtered);
-  }, [selectedDistance, data]);
+    return (
+      <div className="dropdown-distance">
+        <div
+          className="dropdown-distance__toggle"
+          onClick={() => setIsOpen(prev => !prev)}
+        >
+          <span>
+            {selectedDistance === "all"
+              ? "Distance"
+              : distanceFilterOptions.find(opt => opt.value === selectedDistance)?.label}
+          </span>
+          {getAnimatedArrow(isOpen)}
+        </div>
+        {isOpen && (
+          <div className="dropdown-distance__content">
+            {distanceFilterOptions.map((item, index) => (
+              <div
+                key={item.value}
+                className={`dropdown-distance__item ${index === 0 ? "dropdown__item--grey" : ""}`}
+                onClick={() => {
+                  setSelectedDistance(item.value);
+                  setIsOpen(false);
+                }}
+              >
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
 
-  // Function to render each dropdown item using BEM classes
-  const renderDistanceItem = (item: any, meta: { isHighlighted: boolean }) => (
-    <div className="dropdown-distance__item" style={{ padding: "8px 12px" }}>
-      <span>{item.label}</span>
-    </div>
-  );
-
-  // Toggle dropdown open state
-  const toggleDropdown = () => {
-    setIsOpen(prev => !prev);
-  };
-
-  return (
-    <div className="dropdown-distance">
-      <button
-        onClick={toggleDropdown}
-        className="dropdown-distance__toggle"
-        style={{ display: "flex", alignItems: "center" }}
-      >
-        {selectedDistance === "all" 
-          ? "All" 
-          : distanceFilterOptions.find(opt => opt.value === selectedDistance)?.label}
-        {getAnimatedArrow(isOpen)}
-      </button>
-      {isOpen && (
-        <BaseDropdown
-          items={distanceFilterOptions}
-          isOpen={isOpen}
-          onSelect={(item) => {
-            setSelectedDistance(item.value);
-            setIsOpen(false);
-          }}
-          renderItem={renderDistanceItem}
-        />
-      )}
-    </div>
-  );
-};
+DistanceFilter.displayName = "DistanceFilter";
 
 export default DistanceFilter;

@@ -8,7 +8,7 @@
     "install": "cd back && npm install && cd ../front && npm install",
     "build": "cd back && npm run build && cd ../front && npm run build",
     "start": "cd back && npm start & cd front && npm run preview",
-    "dev": "cd back && npm run dev & cd ../front && npm run dev",
+    "dev": "node back/src/scripts/dev.js",
     "reset": "npm run clean && npm run install && npm run build"
   },
   "engines": {
