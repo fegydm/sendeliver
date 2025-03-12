@@ -1,11 +1,10 @@
 // File: src/components/sections/content/content.component.tsx
-// Last change: Both sender and hauler sections are always rendered in the wrapper
-
-import React from "react";
+// Last change: Added ExcelResultTable under ResultTable in sender section for testing
 import { Link } from "react-router-dom";
 import AIForm from "@/components/sections/content/search-forms/ai-form.component";
 import ManualForm from "@/components/sections/content/search-forms/manual-form.component";
 import ResultTable from "@/components/sections/content/results/result-table.component";
+import ExcelResultTable from "@/components/sections/content/results/excel-result-table.component";
 
 interface ContentProps {
   activeSection: "sender" | "hauler"; // Current active section for styling or logic
@@ -68,6 +67,10 @@ const Content: React.FC<ContentProps> = ({
           {/* ResultTable wrapped in a div with class corresponding to sender */}
           <div className="sender-content__result-table">
             <ResultTable type="sender" data={clientData} />
+          </div>
+          {/* ExcelResultTable added below ResultTable for testing */}
+          <div className="sender-content__excel-result-table">
+            <ExcelResultTable type="sender" data={clientData} />
           </div>
         </section>
 

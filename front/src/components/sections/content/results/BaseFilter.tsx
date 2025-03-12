@@ -1,58 +1,53 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+// File: src/components/sections/content/results/BaseFilter.tsx
+// Last modified: March 12, 2025
+import { forwardRef, useImperativeHandle } from "react";
 import { getAnimatedArrow } from "@/utils/animateArrow";
+import { getAnimatedTriangle } from "@/utils/animateTriangle";
 
 interface BaseFilterProps<T> {
   data: T[];
-  onFilter: (filtered: T[]) => void;
   label: string;
-  options: { value: string; label: string }[];
-  filterFn: (data: T[], selected: string) => T[];
+  options?: { value: string; label: string }[];
+  selected: string;
+  sortDirection: "asc" | "desc" | "none";
+  isOpen: boolean;
+  onSortClick: (e: React.MouseEvent) => void;
+  onToggleClick: () => void;
+  onOptionSelect: (value: string) => void;
 }
 
 const BaseFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   BaseFilterProps<any>
->(({ data, onFilter, label, options, filterFn }, ref) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selected, setSelected] = useState("all");
-
-  useEffect(() => {
-    const filtered = filterFn(data, selected);
-    onFilter(filtered);
-  }, [data, selected, filterFn, onFilter]);
+>(({ data, label, options = [], selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
+  const selectedLabel = options.find(opt => opt.value === selected)?.label || "all ...";
 
   useImperativeHandle(ref, () => ({
-    reset: () => setIsOpen(false),
+    reset: () => {}, // Rodič to spravuje
     isOpen: () => isOpen,
     isFiltered: () => selected !== "all",
   }));
 
   return (
-    <div className={`dropdown-${label.toLowerCase()}`}>
-      <div
-        className={`dropdown-${label.toLowerCase()}__toggle`}
-        onClick={() => setIsOpen(prev => !prev)}
-      >
-        <span>{selected === "all" ? label : options.find(opt => opt.value === selected)?.label || label}</span>
-        {getAnimatedArrow(isOpen)}
-      </div>
-      {isOpen && (
-        <div className={`dropdown-${label.toLowerCase()}__content`}>
+    <>
+      {getAnimatedTriangle(sortDirection, "sort-icon", onSortClick)}
+      <span className="column-label">{label}</span>
+      {options.length > 0 && getAnimatedArrow(isOpen, "drop-icon")}
+      {selected !== "all" && <span className="filter-value">{selectedLabel}</span>}
+      {isOpen && options.length > 0 && (
+        <div className="dropfilter__content">
           {options.map((option, index) => (
             <div
               key={option.value}
-              className={`dropdown-${label.toLowerCase()}__item ${index === 0 ? "dropdown__item--grey" : ""}`}
-              onClick={() => {
-                setSelected(option.value);
-                setIsOpen(false);
-              }}
+              className={`dropfilter__item ${index === 0 ? "dropfilter__item--grey" : ""}`}
+              onClick={() => onOptionSelect(option.value)}
             >
               {option.label}
             </div>
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 });
 

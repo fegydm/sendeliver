@@ -1,58 +1,67 @@
 // File: src/components/sections/content/results/AvailabilityFilter.tsx
-// Description: Component for filtering availability with animated dropdown arrow using BEM methodology
+// Last modified: March 12, 2025
+import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
+import BaseFilter from "./BaseFilter";
+import { SenderResultData } from "./result-table.component";
 
-import React, { useState } from "react";
-import BaseDropdown from "@/components/elements/BaseDropdown";
-import { getAnimatedArrow } from "@/utils/animateArrow";
+interface AvailabilityFilterProps {
+  data: SenderResultData[];
+  onFilter: (filtered: SenderResultData[]) => void;
+}
 
 const availabilityFilterOptions = [
-  { value: "all", label: "All" },
+  { value: "all", label: "all ..." },
   { value: "passed", label: "passed" },
   { value: "today", label: "today" },
   { value: "tomorrow", label: "tomorrow" },
 ];
 
-const AvailabilityFilter: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedAvailability, setSelectedAvailability] = useState("all");
+// Define the component type with static renderCell
+interface AvailabilityFilterComponent
+  extends ForwardRefExoticComponent<
+    AvailabilityFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
+  > {
+  renderCell?: (row: SenderResultData) => React.ReactNode;
+}
 
-  // Function to render each dropdown item
-  const renderAvailabilityItem = (item: any, meta: { isHighlighted: boolean }) => (
-    <div className="dropdown-availability__item" style={{ padding: "8px 12px" }}>
-      <span>{item.label}</span>
-    </div>
-  );
-
-  // Toggle dropdown open state
-  const toggleDropdown = () => {
-    setIsOpen(prev => !prev);
+const AvailabilityFilter = forwardRef<
+  { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
+  AvailabilityFilterProps
+>(({ data, onFilter }, ref) => {
+  const filterFn = (data: SenderResultData[], selected: string) => {
+    if (selected === "all") return data;
+    return data.filter(record => {
+      const availDate = new Date(record.availabilityTime);
+      const now = new Date();
+      if (selected === "passed") return availDate < now;
+      if (selected === "today") return availDate.toDateString() === now.toDateString();
+      if (selected === "tomorrow") {
+        const tomorrow = new Date(now);
+        tomorrow.setDate(now.getDate() + 1);
+        return availDate.toDateString() === tomorrow.toDateString();
+      }
+      return true;
+    });
   };
 
   return (
-    <div className="dropdown-availability">
-      <button
-        onClick={toggleDropdown}
-        className="dropdown-availability__toggle"
-        style={{ display: "flex", alignItems: "center" }}
-      >
-        {selectedAvailability === "all"
-          ? "All"
-          : availabilityFilterOptions.find(opt => opt.value === selectedAvailability)?.label}
-        {getAnimatedArrow(isOpen)}
-      </button>
-      {isOpen && (
-        <BaseDropdown
-          items={availabilityFilterOptions}
-          isOpen={isOpen}
-          onSelect={(item) => {
-            setSelectedAvailability(item.value);
-            setIsOpen(false);
-          }}
-          renderItem={renderAvailabilityItem}
-        />
-      )}
-    </div>
+    <BaseFilter
+      ref={ref}
+      data={data}
+      onFilter={onFilter}
+      label="Availability"
+      options={availabilityFilterOptions}
+      filterFn={filterFn}
+      className="dropfilter-availability"
+    />
   );
+}) as AvailabilityFilterComponent;
+
+AvailabilityFilter.displayName = "AvailabilityFilter";
+
+AvailabilityFilter.renderCell = (row: SenderResultData) => {
+  const availDate = new Date(row.availabilityTime);
+  return isNaN(availDate.getTime()) ? "N/A" : availDate.toLocaleDateString();
 };
 
 export default AvailabilityFilter;

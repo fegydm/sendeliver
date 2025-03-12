@@ -1,0 +1,52 @@
+/* File: src/styles/components/excel-table.css
+ * Last change: Improved Excel-like table with optimized header and faster resizing
+ */
+
+/* Base table styles */
+.excel-table { font-family: 'Segoe UI', Arial, sans-serif; width: 100%; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
+.excel-table__scroll { max-height: 400px; overflow: auto; border: 1px solid #e0e0e0; position: relative; }
+.excel-table__table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.excel-table__header { position: sticky; top: 0; z-index: 10; background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%); border-bottom: 1px solid #c0c0c0; }
+.excel-table__header-row { background-color: transparent; }
+.excel-table__header-cell { font-weight: 600; font-size: 0.85rem; color: #444; padding: 6px 8px; text-align: left; position: relative; border-right: 1px solid #d6d6d6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.excel-table__header-cell--filtered { background-color: #e3f2fd; color: #0d47a1; }
+.excel-table__header-cell--open { z-index: 100; }
+.excel-table__header-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.excel-table__header-sort { cursor: pointer; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; padding-right: 4px; }
+
+/* Body cells */
+.excel-table__body-row { border-bottom: 1px solid #e0e0e0; }
+.excel-table__body-row:nth-child(even) { background-color: #f5f5f5; }
+.excel-table__body-row:hover { background-color: #fffde7; }
+.excel-table__body-cell { padding: 6px 8px; border-right: 1px solid #e0e0e0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #333; }
+.excel-table__body-cell--number { text-align: right; }
+
+/* Filter summary section */
+.excel-table__filter-summary { background-color: #f8f9fa; padding: 8px 12px; border: 1px solid #e0e0e0; border-bottom: none; display: flex; justify-content: space-between; font-size: 0.9rem; color: #666; }
+.excel-table__reset-button { background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 3px; color: #333; padding: 3px 8px; font-size: 0.8rem; cursor: pointer; }
+.excel-table__reset-button:hover { background-color: #e0e0e0; }
+
+/* Status indicator colors */
+.status-indicator--green { color: #00b050; }
+.status-indicator--orange { color: #ff9800; }
+.status-indicator--red { color: #e53935; }
+
+/* Vehicle icons with status color */
+.vehicle-icon { width: 24px; margin-right: 8px; }
+
+/* Excel-like ratings with stars */
+.rating-cell { display: flex; align-items: center; }
+.rating-star { color: #f9a825; margin-right: 4px; }
+
+/* Excel-like empty state */
+.excel-table__empty { padding: 20px; text-align: center; color: #666; font-style: italic; background-color: #f9f9f9; }
+
+/* Resizable columns */
+.excel-table__header-cell { position: relative; }
+.excel-table__resizer { position: absolute; top: 0; right: 0; width: 5px; cursor: col-resize; user-select: none; height: 100%; background-color: transparent; z-index: 20; }
+.excel-table__resizer:hover, .excel-table__resizer--active { background-color: #0d47a1; }
+
+/* Improved dropfilter positioning */
+.excel-table .dropfilter { position: static; display: inline-block; }
+.excel-table .dropfilter__toggle { padding: 0; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
+.excel-table .dropfilter__content { position: fixed; z-index: 100; min-width: 150px; max-width: 240px; }

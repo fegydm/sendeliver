@@ -1,57 +1,55 @@
 // File: src/components/sections/content/results/RatingFilter.tsx
-// Description: Component for filtering Rating with animated dropdown arrow using BEM methodology
+// Last modified: March 12, 2025
+import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
+import BaseFilter from "./BaseFilter";
+import { SenderResultData } from "./result-table.component";
 
-import React, { useState } from "react";
-import BaseDropdown from "@/components/elements/BaseDropdown";
-import { getAnimatedArrow } from "@/utils/animateArrow";
+interface RatingFilterProps {
+  data: SenderResultData[];
+  onFilter: (filtered: SenderResultData[]) => void;
+}
 
 const ratingFilterOptions = [
+  { value: "all", label: "all ..." },
   { value: "4.5", label: "4,5 and more" },
   { value: "4.0", label: "4,0 and more" },
   { value: "3.5", label: "3,5 and more" },
 ];
 
-const RatingFilter: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  // When nothing je vybraté, zobrazíme placeholder text, napr. "Select Rating"
-  const [selectedRating, setSelectedRating] = useState("");
+// Define the component type with static renderCell
+interface RatingFilterComponent
+  extends ForwardRefExoticComponent<
+    RatingFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
+  > {
+  renderCell?: (row: SenderResultData) => React.ReactNode;
+}
 
-  // Render each dropdown item using BEM class
-  const renderRatingItem = (item: any, meta: { isHighlighted: boolean }) => (
-    <div className="dropdown-rating__item" style={{ padding: "8px 12px" }}>
-      <span>{item.label}</span>
-    </div>
-  );
-
-  const toggleDropdown = () => {
-    setIsOpen(prev => !prev);
+const RatingFilter = forwardRef<
+  { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
+  RatingFilterProps
+>(({ data, onFilter }, ref) => {
+  const filterFn = (data: SenderResultData[], selected: string) => {
+    if (selected === "all") return data;
+    const thresholdRating = parseFloat(selected);
+    return data.filter(record => record.rating !== undefined && record.rating >= thresholdRating);
   };
 
   return (
-    <div className="dropdown-rating">
-      <button
-        onClick={toggleDropdown}
-        className="dropdown-rating__toggle"
-        style={{ display: "flex", alignItems: "center" }}
-      >
-        {selectedRating === "" 
-          ? "Select Rating" 
-          : ratingFilterOptions.find(opt => opt.value === selectedRating)?.label}
-        {getAnimatedArrow(isOpen)}
-      </button>
-      {isOpen && (
-        <BaseDropdown
-          items={ratingFilterOptions}
-          isOpen={isOpen}
-          onSelect={(item) => {
-            setSelectedRating(item.value);
-            setIsOpen(false);
-          }}
-          renderItem={renderRatingItem}
-        />
-      )}
-    </div>
+    <BaseFilter
+      ref={ref}
+      data={data}
+      onFilter={onFilter}
+      label="Rating"
+      options={ratingFilterOptions}
+      filterFn={filterFn}
+      className="dropfilter-rating"
+    />
   );
-};
+}) as RatingFilterComponent;
+
+RatingFilter.displayName = "RatingFilter";
+
+RatingFilter.renderCell = (row: SenderResultData) =>
+  row.rating !== undefined ? `★ ${row.rating.toFixed(1)}` : "★ N/A";
 
 export default RatingFilter;

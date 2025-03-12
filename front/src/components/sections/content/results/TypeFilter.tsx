@@ -1,5 +1,7 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { getAnimatedArrow } from "@/utils/animateArrow";
+// File: src/components/sections/content/results/TypeFilter.tsx
+// Last modified: March 12, 2025
+import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
+import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
 import truckIcon from "@/assets/truck.svg";
 import vanIcon from "@/assets/van.svg";
@@ -20,68 +22,51 @@ interface TypeFilterProps {
   onFilter: (filtered: SenderResultData[]) => void;
 }
 
-const TypeFilter = forwardRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }, TypeFilterProps>(
-  ({ data, onFilter }, ref) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [selectedType, setSelectedType] = useState("all");
+// Define the component type with static renderCell
+interface TypeFilterComponent
+  extends ForwardRefExoticComponent<
+    TypeFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
+  > {
+  renderCell?: (row: SenderResultData) => React.ReactNode;
+}
 
-    // Filter data based on selected vehicle type
-    const filterData = () => {
-      if (selectedType === "all") return data;
-      const selectedOption = typeFilterOptions.find(opt => opt.value === selectedType);
-      const mappedValue = selectedOption?.mappedValue || selectedType;
-      return data.filter(record => record.vehicleType.toLowerCase() === mappedValue.toLowerCase());
-    };
+const TypeFilter = forwardRef<
+  { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
+  TypeFilterProps
+>(({ data, onFilter }, ref) => {
+  const filterFn = (data: SenderResultData[], selected: string) => {
+    if (selected === "all") return data;
+    const selectedOption = typeFilterOptions.find(opt => opt.value === selected);
+    const mappedValue = selectedOption?.mappedValue || selected;
+    return data.filter(record => record.vehicleType.toLowerCase() === mappedValue.toLowerCase());
+  };
 
-    useEffect(() => {
-      const filtered = filterData();
-      onFilter(filtered);
-    }, [selectedType, data]);
-
-    useImperativeHandle(ref, () => ({
-      reset: () => setIsOpen(false), // Only closes dropdown, keeps selection
-      isOpen: () => isOpen,
-      isFiltered: () => selectedType !== "all",
-    }));
-
-    return (
-      <div className="dropdown-type">
-        <div
-          className="dropdown-type__toggle"
-          onClick={() => setIsOpen(prev => !prev)}
-        >
-          <span>
-            {selectedType === "all"
-              ? "Type"
-              : typeFilterOptions.find(opt => opt.value === selectedType)?.label}
-          </span>
-          {getAnimatedArrow(isOpen)}
-        </div>
-        {isOpen && (
-          <div className="dropdown-type__content">
-            {typeFilterOptions.map((item, index) => (
-              <div
-                key={item.value}
-                className={`dropdown-type__item ${index === 0 ? "dropdown__item--grey" : ""}`}
-                onClick={() => {
-                  setSelectedType(item.value);
-                  setIsOpen(false);
-                }}
-                style={{ display: "flex", alignItems: "center" }}
-              >
-                {item.icon && (
-                  <img src={item.icon} alt={item.label} style={{ width: "24px", marginRight: "8px" }} />
-                )}
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-);
+  return (
+    <BaseFilter
+      ref={ref}
+      data={data}
+      onFilter={onFilter}
+      label="Type"
+      options={typeFilterOptions}
+      filterFn={filterFn}
+      className="dropfilter-type"
+    />
+  );
+}) as TypeFilterComponent;
 
 TypeFilter.displayName = "TypeFilter";
+
+TypeFilter.renderCell = (row: SenderResultData) => {
+  const vehicleType = row.vehicleType.toLowerCase();
+  const option = typeFilterOptions.find(opt => opt.mappedValue?.toLowerCase() === vehicleType);
+  return option?.icon ? (
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <img src={option.icon} alt={option.label} style={{ width: "24px", marginRight: "8px" }} />
+      <span>{option.label}</span>
+    </div>
+  ) : (
+    vehicleType || "N/A"
+  );
+};
 
 export default TypeFilter;
