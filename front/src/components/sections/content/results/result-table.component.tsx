@@ -1,5 +1,6 @@
 // File: src/components/sections/content/results/result-table.component.tsx
-// Last modified: March 12, 2025
+// Last modified: March 13, 2025 - Updated placeholder data with custom values
+
 import { useState, useEffect, useRef } from "react";
 import "./result-table.css";
 import DistanceFilter from "./DistanceFilter";
@@ -7,21 +8,23 @@ import TypeFilter from "./TypeFilter";
 import StatusFilter from "./StatusFilter";
 import AvailabilityFilter from "./AvailabilityFilter";
 import TransitFilter from "./TransitFilter";
-import ContactFilter from "./ContactFilter";
 import RatingFilter from "./RatingFilter";
+import ContactFilter from "./ContactFilter";
 
 export interface SenderResultData {
-  distance: string;
-  vehicleType: string;
-  availabilityTime: string;
-  eta: string;
+  distance: number;
+  type: string;
+  availability: string;
+  transit: string;
   rating?: number;
-  pp: number;
+  contact: number;
+  name_carrier?: string; // Added for carrier name
 }
 
 interface ResultTableProps {
   type: "sender" | "hauler";
   data?: SenderResultData[];
+  isLoading?: boolean;
 }
 
 interface Column {
@@ -31,47 +34,95 @@ interface Column {
   component: React.ForwardRefExoticComponent<any> & { renderCell?: (row: SenderResultData) => React.ReactNode };
   onFilter: (filtered: SenderResultData[]) => void;
   data: SenderResultData[];
-  filterFn?: (data: SenderResultData[], selected: string) => SenderResultData[];
 }
 
-const ResultTable: React.FC<ResultTableProps> = ({ type, data = [] }) => {
+// Calculate placeholder availability as now + 2 hours
+const getPlaceholderAvailability = (): string => {
+  const now = new Date();
+  const availabilityTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // now + 2 hours
+  return availabilityTime.toISOString();
+};
+
+const PLACEHOLDER_DATA: SenderResultData[] = [
+  {
+    distance: 48,
+    type: "truck",
+    availability: getPlaceholderAvailability(), // now + 2 hours
+    transit: "2,5", // Will display as 2,5 hrs
+    rating: 4.2,    // Rating of 4.2
+    contact: 1,
+    name_carrier: "OmegaTrans" // Company name for contact hover
+  }
+];
+
+const ResultTable: React.FC<ResultTableProps> = ({ type, data = [], isLoading = false }) => {
   if (type !== "sender") {
     return <div className="result-table"><p>Hauler filtering not implemented.</p></div>;
   }
 
-  const senderData = data as SenderResultData[];
-  const [distanceFilteredData, setDistanceFilteredData] = useState(senderData);
-  const [typeFilteredData, setTypeFilteredData] = useState(senderData);
-  const [statusFilteredData, setStatusFilteredData] = useState(senderData);
-  const [availabilityFilteredData, setAvailabilityFilteredData] = useState(senderData);
-  const [etaFilteredData, setEtaFilteredData] = useState(senderData);
-  const [ppFilteredData, setPpFilteredData] = useState(senderData);
-  const [ratingFilteredData, setRatingFilteredData] = useState(senderData);
+  const showPlaceholder = data.length === 0 || isLoading;
+  const initialData = showPlaceholder ? PLACEHOLDER_DATA : data;
+
+  const [distanceFilteredData, setDistanceFilteredData] = useState(initialData);
+  const [typeFilteredData, setTypeFilteredData] = useState(initialData);
+  const [statusFilteredData, setStatusFilteredData] = useState(initialData);
+  const [availabilityFilteredData, setAvailabilityFilteredData] = useState(initialData);
+  const [transitFilteredData, setTransitFilteredData] = useState(initialData);
+  const [ratingFilteredData, setRatingFilteredData] = useState(initialData);
+  const [contactFilteredData, setContactFilteredData] = useState(initialData);
   const [filterStates, setFilterStates] = useState<{
     [key: string]: { selected: string; sortDirection: "asc" | "desc" | "none"; isOpen: boolean };
   }>({});
+
+  // Propagate filter changes through the chain
+  useEffect(() => {
+    setDistanceFilteredData(initialData); // Reset to initial data
+  }, [initialData]);
+
+  useEffect(() => {
+    setTypeFilteredData(distanceFilteredData);
+  }, [distanceFilteredData]);
+
+  useEffect(() => {
+    setStatusFilteredData(typeFilteredData);
+  }, [typeFilteredData]);
+
+  useEffect(() => {
+    setAvailabilityFilteredData(statusFilteredData);
+  }, [statusFilteredData]);
+
+  useEffect(() => {
+    setTransitFilteredData(availabilityFilteredData);
+  }, [availabilityFilteredData]);
+
+  useEffect(() => {
+    setRatingFilteredData(transitFilteredData);
+  }, [transitFilteredData]);
+
+  useEffect(() => {
+    setContactFilteredData(ratingFilteredData);
+  }, [ratingFilteredData]);
 
   const distanceFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const typeFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const statusFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const availabilityFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
-  const etaFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
-  const ppFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
+  const transitFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const ratingFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
+  const contactFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const headerRef = useRef<HTMLTableSectionElement>(null);
 
   const columns: Column[] = [
-    { label: "Distance", key: "distance", ref: distanceFilterRef, component: DistanceFilter, onFilter: setDistanceFilteredData, data: senderData, filterFn: (d, s) => d.filter(item => item.distance === s) },
-    { label: "Type", key: "vehicleType", ref: typeFilterRef, component: TypeFilter, onFilter: setTypeFilteredData, data: distanceFilteredData, filterFn: (d, s) => d.filter(item => item.vehicleType === s) },
+    { label: "Distance", key: "distance", ref: distanceFilterRef, component: DistanceFilter, onFilter: setDistanceFilteredData, data: initialData },
+    { label: "Type", key: "type", ref: typeFilterRef, component: TypeFilter, onFilter: setTypeFilteredData, data: distanceFilteredData },
     { label: "Status", key: "status", ref: statusFilterRef, component: StatusFilter, onFilter: setStatusFilteredData, data: typeFilteredData },
-    { label: "Availability", key: "availabilityTime", ref: availabilityFilterRef, component: AvailabilityFilter, onFilter: setAvailabilityFilteredData, data: statusFilteredData, filterFn: (d, s) => d.filter(item => item.availabilityTime === s) },
-    { label: "Transit", key: "eta", ref: etaFilterRef, component: TransitFilter, onFilter: setEtaFilteredData, data: availabilityFilteredData, filterFn: (d, s) => d.filter(item => item.eta === s) },
-    { label: "Contact", key: "pp", ref: ppFilterRef, component: ContactFilter, onFilter: setPpFilteredData, data: etaFilteredData },
-    { label: "Rating", key: "rating", ref: ratingFilterRef, component: RatingFilter, onFilter: setRatingFilteredData, data: ppFilteredData, filterFn: (d, s) => d.filter(item => item.rating === parseInt(s)) },
+    { label: "Availability", key: "availability", ref: availabilityFilterRef, component: AvailabilityFilter, onFilter: setAvailabilityFilteredData, data: statusFilteredData },
+    { label: "Transit", key: "transit", ref: transitFilterRef, component: TransitFilter, onFilter: setTransitFilteredData, data: availabilityFilteredData },
+    { label: "Rating", key: "rating", ref: ratingFilterRef, component: RatingFilter, onFilter: setRatingFilteredData, data: transitFilteredData },
+    { label: "Contact", key: "contact", ref: contactFilterRef, component: ContactFilter, onFilter: setContactFilteredData, data: ratingFilteredData },
   ];
 
   useEffect(() => {
-    // Inicializácia stavov pre každý stĺpec
     const initialStates = columns.reduce((acc, col) => {
       acc[col.key] = { selected: "all", sortDirection: "none", isOpen: false };
       return acc;
@@ -84,16 +135,20 @@ const ResultTable: React.FC<ResultTableProps> = ({ type, data = [] }) => {
       const current = prev[key];
       const newDirection =
         current.sortDirection === "asc" ? "desc" : current.sortDirection === "desc" ? "none" : "asc";
-      const filtered = current.selected === "all" ? columns.find(c => c.key === key)!.data : columns.find(c => c.key === key)!.filterFn!(columns.find(c => c.key === key)!.data, current.selected);
+      const column = columns.find(c => c.key === key)!;
+      const filtered = current.selected === "all" ? column.data : column.data;
       const sorted = newDirection === "none" ? filtered : [...filtered].sort((a, b) => {
-        const aValue = (a as any)[key] || "";
-        const bValue = (b as any)[key] || "";
+        const aValue = (a as any)[key] ?? "";
+        const bValue = (b as any)[key] ?? "";
+        if (key === "distance") {
+          return newDirection === "asc" ? aValue - bValue : bValue - aValue;
+        }
         if (typeof aValue === "string" && typeof bValue === "string") {
           return newDirection === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
         }
         return newDirection === "asc" ? aValue - bValue : bValue - aValue;
       });
-      columns.find(c => c.key === key)!.onFilter(sorted);
+      column.onFilter(sorted);
       return { ...prev, [key]: { ...current, sortDirection: newDirection } };
     });
   };
@@ -103,17 +158,12 @@ const ResultTable: React.FC<ResultTableProps> = ({ type, data = [] }) => {
   };
 
   const handleOptionSelect = (key: string, value: string) => {
-    setFilterStates(prev => {
-      const column = columns.find(c => c.key === key)!;
-      const filtered = value === "all" ? column.data : column.filterFn ? column.filterFn(column.data, value) : column.data;
-      column.onFilter(filtered);
-      return { ...prev, [key]: { ...prev[key], selected: value, isOpen: false } };
-    });
+    setFilterStates(prev => ({ ...prev, [key]: { ...prev[key], selected: value, isOpen: false } }));
   };
 
   const resetFilters = () => {
     columns.forEach(col => {
-      col.onFilter(senderData);
+      col.ref.current?.reset();
       setFilterStates(prev => ({ ...prev, [col.key]: { selected: "all", sortDirection: "none", isOpen: false } }));
     });
   };
@@ -154,52 +204,62 @@ const ResultTable: React.FC<ResultTableProps> = ({ type, data = [] }) => {
   const appliedFilters = columns.filter(col => filterStates[col.key]?.selected !== "all").map(col => col.label);
 
   return (
-    <div className="result-table">
+    <div className={`result-table ${showPlaceholder ? 'result-table--placeholder' : ''}`}>
       <div className="result-table__filter-summary">
         <span>{appliedFilters.length > 0 ? `Filtered by ${appliedFilters.length} column(s): ${appliedFilters.join(", ")}` : "No filter is applied"}</span>
         <button className="result-table__reset-button" onClick={resetFilters}>Reset Filters</button>
       </div>
       <table className="result-table__table">
+        <colgroup>
+          {columns.map(col => (
+            <col key={col.key} className={`col-${col.key}`} />
+          ))}
+        </colgroup>
         <thead ref={headerRef} className="result-table__header">
           <tr className="result-table__header-row">
             {columns.map(col => (
               <th
                 key={col.key}
                 className={`result-table__header-cell ${filterStates[col.key]?.selected !== "all" ? "result-table__header-cell--filtered" : ""} ${filterStates[col.key]?.isOpen ? "result-table__header-cell--open" : ""}`}
-                onClick={() => handleToggle(col.key)}
               >
-                <col.component
-                  data={col.data}
-                  label={col.label}
-                  options={col.key === "distance" ? [{ value: "10", label: "10km" }, { value: "20", label: "20km" }] : undefined} // Príklad options
-                  selected={filterStates[col.key]?.selected || "all"}
-                  sortDirection={filterStates[col.key]?.sortDirection || "none"}
-                  isOpen={filterStates[col.key]?.isOpen || false}
-                  onSortClick={(e: React.MouseEvent) => handleSort(col.key)}
-                  onToggleClick={() => handleToggle(col.key)}
-                  onOptionSelect={(value: string) => handleOptionSelect(col.key, value)}
-                  ref={col.ref}
-                />
+                <div className="header-cell__content">
+                  <col.component
+                    data={col.data}
+                    onFilter={col.onFilter}
+                    ref={col.ref}
+                    label={col.label}
+                    selected={filterStates[col.key]?.selected || "all"}
+                    sortDirection={filterStates[col.key]?.sortDirection || "none"}
+                    isOpen={filterStates[col.key]?.isOpen || false}
+                    onSortClick={(e: React.MouseEvent) => { e.stopPropagation(); handleSort(col.key); }}
+                    onToggleClick={(e: React.MouseEvent) => { e.stopPropagation(); handleToggle(col.key); }}
+                    onOptionSelect={(value: string) => handleOptionSelect(col.key, value)}
+                  />
+                </div>
               </th>
             ))}
           </tr>
         </thead>
         <tbody className="result-table__body">
-          {ratingFilteredData.length === 0 ? (
+          {contactFilteredData.length === 0 ? (
             <tr className="result-table__body-row">
               <td className="result-table__body-cell" colSpan={columns.length}>Your requirements do not match any record</td>
             </tr>
-          ) : (
-            ratingFilteredData.map((row, rowIndex) => (
-              <tr key={rowIndex} className="result-table__body-row">
-                {columns.map(col => (
-                  <td key={col.key} className="result-table__body-cell">
-                    {col.component.renderCell ? col.component.renderCell(row) : (row as any)[col.key]?.toString() || "N/A"}
-                  </td>
-                ))}
-              </tr>
-            ))
-          )}
+          ) : contactFilteredData.map((row, rowIndex) => (
+            <tr key={rowIndex} className={`result-table__body-row ${showPlaceholder ? 'result-table__body-row--placeholder' : ''}`}>
+              {columns.map(col => (
+                <td key={col.key} className="result-table__body-cell">
+                  {col.component.renderCell ? (
+                    col.component.renderCell(row)
+                  ) : (
+                    col.key === "distance" && row.distance !== undefined ?
+                      `${row.distance} km` :
+                      (row[col.key as keyof SenderResultData]?.toString() || "N/A")
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>

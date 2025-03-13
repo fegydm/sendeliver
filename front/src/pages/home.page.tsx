@@ -1,12 +1,11 @@
 // File: src/pages/home.page.tsx
-// Last change: Refactored to integrate sub components inside Content component
+// Last change: Removed mock data imports and using component placeholders instead
 
 import { useState } from "react";
 import PageBanner from "@/components/sections/banners/banner.component";
 import Content from "@/components/sections/content/content.component";
 import AIChatModal from "@/components/modals/ai-chat-modal.component";
 import QuickStats from "@/components/sections/stats/quick-stats.component";
-import { mockClientData, mockCarrierData } from "@/data/mockData";
 import {
   AIRequest,
   AIResponse,
@@ -19,6 +18,10 @@ const HomePage = () => {
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [currentPrompt, setCurrentPrompt] = useState<AIRequest | null>(null);
   const [formData, setFormData] = useState<TransportFormData>(DEFAULT_TRANSPORT_FORM_DATA);
+  
+  // Empty arrays for real data that will come from API later
+  const [clientData] = useState([]);
+  const [carrierData] = useState([]);
 
   // Handle AI form response and update state
   const handleAIResponse = (type: "sender" | "hauler", response: AIResponse & { content: string }) => {
@@ -72,6 +75,16 @@ const HomePage = () => {
     setFormData(data);
   };
 
+  // Example API call function for future use
+
+  // Example API call function for future use
+
+  // useEffect to fetch data on component mount - commented out for now
+  // useEffect(() => {
+  //   fetchClientData();
+  //   fetchCarrierData();
+  // }, []);
+
   return (
     <>
       <PageBanner />
@@ -83,15 +96,15 @@ const HomePage = () => {
           onDataReceived={handleAIModalData}
         />
       )}
-      {/* Pass all required props to Content component */}
+      {/* Pass empty arrays - components will use placeholders */}
       <Content
         activeSection={activeSection}
         onSwitchSection={setActiveSection}
         onAIResponse={handleAIResponse}
         onManualSubmit={handleManualSubmit}
         formData={formData}
-        clientData={mockClientData}
-        carrierData={mockCarrierData}
+        clientData={clientData}
+        carrierData={carrierData}
       />
       <QuickStats type="sender" />
     </>

@@ -1,5 +1,6 @@
 // File: src/components/sections/content/results/AvailabilityFilter.tsx
-// Last modified: March 12, 2025
+// Last modified: March 13, 2025 - Updated date formatting to "mmm dd, hh:mm"
+
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
@@ -7,6 +8,13 @@ import { SenderResultData } from "./result-table.component";
 interface AvailabilityFilterProps {
   data: SenderResultData[];
   onFilter: (filtered: SenderResultData[]) => void;
+  label: string;
+  selected: string;
+  sortDirection: "asc" | "desc" | "none";
+  isOpen: boolean;
+  onSortClick: (e: React.MouseEvent) => void;
+  onToggleClick: (e: React.MouseEvent) => void;
+  onOptionSelect: (value: string) => void;
 }
 
 const availabilityFilterOptions = [
@@ -15,6 +23,24 @@ const availabilityFilterOptions = [
   { value: "today", label: "today" },
   { value: "tomorrow", label: "tomorrow" },
 ];
+
+// Helper function to format date in "mmm dd, hh:mm" format
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid date";
+    
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${month} ${day}, ${hours}:${minutes}`;
+  } catch (error) {
+    return "Invalid date";
+  }
+};
 
 // Define the component type with static renderCell
 interface AvailabilityFilterComponent
@@ -27,20 +53,36 @@ interface AvailabilityFilterComponent
 const AvailabilityFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   AvailabilityFilterProps
->(({ data, onFilter }, ref) => {
+>(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
   const filterFn = (data: SenderResultData[], selected: string) => {
     if (selected === "all") return data;
+    
     return data.filter(record => {
-      const availDate = new Date(record.availabilityTime);
+      if (!record || !record.availability) return false;
+      
+      const availDate = new Date(record.availability);
+      if (isNaN(availDate.getTime())) return false;
+      
       const now = new Date();
-      if (selected === "passed") return availDate < now;
-      if (selected === "today") return availDate.toDateString() === now.toDateString();
-      if (selected === "tomorrow") {
-        const tomorrow = new Date(now);
-        tomorrow.setDate(now.getDate() + 1);
-        return availDate.toDateString() === tomorrow.toDateString();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      const dayAfterTomorrow = new Date(today);
+      dayAfterTomorrow.setDate(today.getDate() + 2);
+      
+      // Reset time component for date comparisons
+      const availDateNoTime = new Date(availDate.getFullYear(), availDate.getMonth(), availDate.getDate());
+      
+      switch (selected) {
+        case "passed":
+          return availDate < now;
+        case "today":
+          return availDateNoTime.getTime() === today.getTime();
+        case "tomorrow":
+          return availDateNoTime.getTime() === tomorrow.getTime();
+        default:
+          return false;
       }
-      return true;
     });
   };
 
@@ -49,10 +91,15 @@ const AvailabilityFilter = forwardRef<
       ref={ref}
       data={data}
       onFilter={onFilter}
-      label="Availability"
+      label={label}
       options={availabilityFilterOptions}
       filterFn={filterFn}
-      className="dropfilter-availability"
+      selected={selected}
+      sortDirection={sortDirection}
+      isOpen={isOpen}
+      onSortClick={onSortClick}
+      onToggleClick={onToggleClick}
+      onOptionSelect={onOptionSelect}
     />
   );
 }) as AvailabilityFilterComponent;
@@ -60,8 +107,8 @@ const AvailabilityFilter = forwardRef<
 AvailabilityFilter.displayName = "AvailabilityFilter";
 
 AvailabilityFilter.renderCell = (row: SenderResultData) => {
-  const availDate = new Date(row.availabilityTime);
-  return isNaN(availDate.getTime()) ? "N/A" : availDate.toLocaleDateString();
+  if (!row || !row.availability) return "N/A";
+  return formatDate(row.availability);
 };
 
 export default AvailabilityFilter;

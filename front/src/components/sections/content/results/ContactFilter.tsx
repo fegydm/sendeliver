@@ -1,18 +1,86 @@
 // File: src/components/sections/content/results/ContactFilter.tsx
-// Last modified: March 12, 2025
-import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
+// Last modified: March 13, 2025 - Added support for name_carrier display
+
+import { forwardRef, ForwardRefExoticComponent, RefAttributes, useState, useEffect, useRef } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
 
 interface ContactFilterProps {
   data: SenderResultData[];
   onFilter: (filtered: SenderResultData[]) => void;
+  label: string;
+  selected: string;
+  sortDirection: "asc" | "desc" | "none";
+  isOpen: boolean;
+  onSortClick: (e: React.MouseEvent) => void;
+  onToggleClick: (e: React.MouseEvent) => void;
+  onOptionSelect: (value: string) => void;
 }
 
 const contactFilterOptions = [
   { value: "all", label: "all ..." },
   { value: "verified", label: "verified" },
 ];
+
+// Helper component for cell with hover effect
+const CellWithHover = ({ id_pp, name_carrier }: { id_pp: number; name_carrier?: string }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const handleMouseEnter = () => {
+    timerRef.current = setTimeout(() => {
+      setShowTooltip(true);
+    }, 2000); // 2 seconds delay
+  };
+  
+  const handleMouseLeave = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setShowTooltip(false);
+  };
+  
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+  
+  return (
+    <div 
+      style={{ 
+        position: "relative", 
+        display: "inline-block",
+        cursor: "default"
+      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <span>{name_carrier || `PP${id_pp}`}</span>
+      {showTooltip && name_carrier && (
+        <div style={{
+          position: "absolute",
+          bottom: "100%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          backgroundColor: "#333",
+          color: "#fff",
+          padding: "4px 8px",
+          borderRadius: "4px",
+          fontSize: "12px",
+          whiteSpace: "nowrap",
+          zIndex: 1000,
+          boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
+        }}>
+          {name_carrier}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Define the component type with static renderCell
 interface ContactFilterComponent
@@ -25,10 +93,14 @@ interface ContactFilterComponent
 const ContactFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   ContactFilterProps
->(({ data, onFilter }, ref) => {
+>(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
   const filterFn = (data: SenderResultData[], selected: string) => {
     if (selected === "all") return data;
-    return data.filter(record => selected === "verified" && record.pp > 0);
+    
+    return data.filter(record => {
+      if (!record || record.contact === undefined) return false;
+      return selected === "verified" && record.contact > 0;
+    });
   };
 
   return (
@@ -36,16 +108,36 @@ const ContactFilter = forwardRef<
       ref={ref}
       data={data}
       onFilter={onFilter}
-      label="Contact"
+      label={label}
       options={contactFilterOptions}
       filterFn={filterFn}
-      className="dropfilter-contact"
+      selected={selected}
+      sortDirection={sortDirection}
+      isOpen={isOpen}
+      onSortClick={onSortClick}
+      onToggleClick={onToggleClick}
+      onOptionSelect={onOptionSelect}
     />
   );
 }) as ContactFilterComponent;
 
 ContactFilter.displayName = "ContactFilter";
 
-ContactFilter.renderCell = (row: SenderResultData) => (row.pp > 0 ? "Verified" : "Not Verified");
+ContactFilter.renderCell = (row: SenderResultData) => {
+  if (!row || row.contact === undefined) {
+    return "N/A";
+  }
+  
+  // If name_carrier is provided directly, use it (for placeholder)
+  if (row.name_carrier) {
+    return <CellWithHover id_pp={row.contact} name_carrier={row.name_carrier} />;
+  }
+  
+  // Otherwise generate a name based on ID (for real data)
+  const id_pp = row.contact;
+  const name_carrier = `Carrier ${id_pp} Transport, Inc.`;
+  
+  return <CellWithHover id_pp={id_pp} name_carrier={name_carrier} />;
+};
 
 export default ContactFilter;

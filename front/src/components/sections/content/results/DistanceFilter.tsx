@@ -1,32 +1,56 @@
 // File: src/components/sections/content/results/DistanceFilter.tsx
-// Last modified: March 12, 2025
-import { forwardRef } from "react";
+// Last modified: Added logging to verify filter application
+
+import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
 
 interface DistanceFilterProps {
   data: SenderResultData[];
   onFilter: (filtered: SenderResultData[]) => void;
+  label: string;
+  selected: string;
+  sortDirection: "asc" | "desc" | "none";
+  isOpen: boolean;
+  onSortClick: (e: React.MouseEvent) => void;
+  onToggleClick: (e: React.MouseEvent) => void;
+  onOptionSelect: (value: string) => void;
 }
 
 const distanceFilterOptions = [
   { value: "all", label: "all ..." },
-  { value: "20", label: "up to 20km" },
-  { value: "50", label: "up to 50km" },
-  { value: "100", label: "up to 100km" },
-  { value: "200", label: "up to 200km" },
+  { value: "20", label: "up to 20 km" },
+  { value: "50", label: "up to 50 km" },
+  { value: "100", label: "up to 100 km" },
+  { value: "200", label: "up to 200 km" },
 ];
+
+interface DistanceFilterComponent
+  extends ForwardRefExoticComponent<
+    DistanceFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
+  > {
+  renderCell?: (row: SenderResultData) => React.ReactNode;
+}
 
 const DistanceFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   DistanceFilterProps
->(({ data, onFilter }, ref) => {
+>(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
   const filterFn = (data: SenderResultData[], selected: string) => {
+    if (selected === "all") return data;
+
     const threshold = parseFloat(selected);
-    return data.filter(record => {
-      const distanceNum = parseFloat(record.distance);
-      return !isNaN(distanceNum) && distanceNum < threshold;
+    if (isNaN(threshold)) return data;
+
+    const filtered = data.filter(record => {
+      if (!record || record.distance === undefined) return false;
+      const distanceNum = record.distance;
+      const passesFilter = distanceNum < threshold;
+      console.log(`Filtering: distance=${distanceNum}, threshold=${threshold}, passes=${passesFilter}`);
+      return passesFilter;
     });
+    console.log("DistanceFilter filtered:", filtered);
+    return filtered;
   };
 
   return (
@@ -34,14 +58,26 @@ const DistanceFilter = forwardRef<
       ref={ref}
       data={data}
       onFilter={onFilter}
-      label="Distance"
+      label={label}
       options={distanceFilterOptions}
       filterFn={filterFn}
-      className="dropfilter-distance"
+      selected={selected}
+      sortDirection={sortDirection}
+      isOpen={isOpen}
+      onSortClick={onSortClick}
+      onToggleClick={onToggleClick}
+      onOptionSelect={onOptionSelect}
     />
   );
-});
+}) as DistanceFilterComponent;
 
 DistanceFilter.displayName = "DistanceFilter";
+
+DistanceFilter.renderCell = (row: SenderResultData) => {
+  if (!row || row.distance === undefined) {
+    return "N/A";
+  }
+  return `${row.distance} km`;
+};
 
 export default DistanceFilter;
