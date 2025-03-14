@@ -1,6 +1,4 @@
 // File: src/components/sections/content/results/ContactFilter.tsx
-// Last modified: March 13, 2025 - Added support for name_carrier display
-
 import { forwardRef, ForwardRefExoticComponent, RefAttributes, useState, useEffect, useRef } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
@@ -22,7 +20,6 @@ const contactFilterOptions = [
   { value: "verified", label: "verified" },
 ];
 
-// Helper component for cell with hover effect
 const CellWithHover = ({ id_pp, name_carrier }: { id_pp: number; name_carrier?: string }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -30,7 +27,7 @@ const CellWithHover = ({ id_pp, name_carrier }: { id_pp: number; name_carrier?: 
   const handleMouseEnter = () => {
     timerRef.current = setTimeout(() => {
       setShowTooltip(true);
-    }, 2000); // 2 seconds delay
+    }, 2000);
   };
   
   const handleMouseLeave = () => {
@@ -82,27 +79,37 @@ const CellWithHover = ({ id_pp, name_carrier }: { id_pp: number; name_carrier?: 
   );
 };
 
-// Define the component type with static renderCell
+export const contactColumn = {
+  label: "Contact",
+  key: "contact" as const,
+  filterFn: (data: SenderResultData[], selected: string) => {
+    if (selected === "all") return data;
+    return data.filter(record => {
+      if (!record || record.contact === undefined) return false;
+      return selected === "verified" && record.contact > 0;
+    });
+  },
+  renderCell: (row: SenderResultData) => {
+    if (!row || row.contact === undefined) return "N/A";
+    if (row.name_carrier) return <CellWithHover id_pp={row.contact} name_carrier={row.name_carrier} />;
+    const id_pp = row.contact;
+    const name_carrier = `Carrier ${id_pp} Transport, Inc.`;
+    return <CellWithHover id_pp={id_pp} name_carrier={name_carrier} />;
+  },
+};
+
 interface ContactFilterComponent
   extends ForwardRefExoticComponent<
     ContactFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
   > {
-  renderCell?: (row: SenderResultData) => React.ReactNode;
+  renderCell: (row: SenderResultData) => React.ReactNode;
+  filterFn: (data: SenderResultData[], selected: string) => SenderResultData[];
 }
 
 const ContactFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   ContactFilterProps
 >(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
-  const filterFn = (data: SenderResultData[], selected: string) => {
-    if (selected === "all") return data;
-    
-    return data.filter(record => {
-      if (!record || record.contact === undefined) return false;
-      return selected === "verified" && record.contact > 0;
-    });
-  };
-
   return (
     <BaseFilter
       ref={ref}
@@ -110,7 +117,7 @@ const ContactFilter = forwardRef<
       onFilter={onFilter}
       label={label}
       options={contactFilterOptions}
-      filterFn={filterFn}
+      filterFn={contactColumn.filterFn}
       selected={selected}
       sortDirection={sortDirection}
       isOpen={isOpen}
@@ -122,22 +129,7 @@ const ContactFilter = forwardRef<
 }) as ContactFilterComponent;
 
 ContactFilter.displayName = "ContactFilter";
-
-ContactFilter.renderCell = (row: SenderResultData) => {
-  if (!row || row.contact === undefined) {
-    return "N/A";
-  }
-  
-  // If name_carrier is provided directly, use it (for placeholder)
-  if (row.name_carrier) {
-    return <CellWithHover id_pp={row.contact} name_carrier={row.name_carrier} />;
-  }
-  
-  // Otherwise generate a name based on ID (for real data)
-  const id_pp = row.contact;
-  const name_carrier = `Carrier ${id_pp} Transport, Inc.`;
-  
-  return <CellWithHover id_pp={id_pp} name_carrier={name_carrier} />;
-};
+ContactFilter.renderCell = contactColumn.renderCell;
+ContactFilter.filterFn = contactColumn.filterFn;
 
 export default ContactFilter;

@@ -1,6 +1,4 @@
 // File: src/components/sections/content/results/StatusFilter.tsx
-// Last modified: March 13, 2025 - Added special handling for placeholder status
-
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
@@ -34,12 +32,9 @@ const getStatusValue = (record: SenderResultData): string => {
   const now = new Date();
   const availTime = new Date(record.availability);
   
-  // Default loading time is now + 2 hours if transit not available
   let loadingTime: Date;
   if (record.transit) {
-    // Check if transit is already a calculation string like "2,5"
     if (typeof record.transit === 'string' && record.transit.includes(',')) {
-      // For placeholder data, always return "O" (orange) status
       return "O";
     }
     
@@ -51,13 +46,8 @@ const getStatusValue = (record: SenderResultData): string => {
     loadingTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
   }
   
-  // G - availability time minus now is negative (available now)
   if (availTime < now) return "G";
-  
-  // O - availability time minus loading time is negative (available as scheduled)
   if (availTime < loadingTime) return "O";
-  
-  // R - availability time minus loading time is positive (available later)
   return "R";
 };
 
@@ -80,44 +70,44 @@ const statusFilterOptions = [
   },
 ];
 
-// Define the component type with static renderCell
-interface StatusFilterComponent extends ForwardRefExoticComponent<StatusFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>> {
-  renderCell?: (row: SenderResultData) => React.ReactNode;
-}
-
-const StatusFilter = forwardRef<
-  { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
-  StatusFilterProps
->(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
-  const filterFn = (data: SenderResultData[], selected: string) => {
+export const statusColumn = {
+  label: "Status",
+  key: "status" as const,
+  filterFn: (data: SenderResultData[], selected: string) => {
     if (selected === "all") return data;
     return data.filter(record => getStatusValue(record) === selected);
-  };
+  },
+  renderCell: (row: SenderResultData) => {
+    if (typeof row.transit === 'string' && row.transit.includes(',')) {
+      const statusColor = "#FFA500";
+      const vehicleType = (row?.type || "truck").toLowerCase();
+      const vehicleIcon = vehicleIcons[vehicleType] || truckIcon;
+      
+      return (
+        <div>
+          <img 
+            src={vehicleIcon} 
+            alt={vehicleType}
+            style={{ 
+              width: "24px", 
+              height: "24px",
+              filter: `drop-shadow(0 0 3px ${statusColor})`,
+              fill: statusColor
+            }} 
+          />
+        </div>
+      );
+    }
 
-  return (
-    <BaseFilter
-      ref={ref}
-      data={data}
-      onFilter={onFilter}
-      label={label}
-      options={statusFilterOptions}
-      filterFn={filterFn}
-      selected={selected}
-      sortDirection={sortDirection}
-      isOpen={isOpen}
-      onSortClick={onSortClick}
-      onToggleClick={onToggleClick}
-      onOptionSelect={onOptionSelect}
-    />
-  );
-}) as StatusFilterComponent;
-
-StatusFilter.displayName = "StatusFilter";
-
-StatusFilter.renderCell = (row: SenderResultData) => {
-  // For placeholder data with transit as "2,5", force orange status
-  if (typeof row.transit === 'string' && row.transit.includes(',')) {
-    const statusColor = "#FFA500"; // Orange
+    const statusVal = getStatusValue(row);
+    let statusColor = "#999999";
+    
+    switch (statusVal) {
+      case "G": statusColor = "#00CC00"; break;
+      case "O": statusColor = "#FFA500"; break;
+      case "R": statusColor = "#FF0000"; break;
+    }
+    
     const vehicleType = (row?.type || "truck").toLowerCase();
     const vehicleIcon = vehicleIcons[vehicleType] || truckIcon;
     
@@ -135,37 +125,41 @@ StatusFilter.renderCell = (row: SenderResultData) => {
         />
       </div>
     );
-  }
-
-  // Default status calculation for non-placeholder data
-  const statusVal = getStatusValue(row);
-  let statusColor = "#999999";
-  
-  switch (statusVal) {
-    case "G": statusColor = "#00CC00"; break;
-    case "O": statusColor = "#FFA500"; break;
-    case "R": statusColor = "#FF0000"; break;
-  }
-  
-  // Use type from SenderResultData, lowercase it for matching
-  const vehicleType = (row?.type || "truck").toLowerCase();
-  // Find matching icon or default to truck
-  const vehicleIcon = vehicleIcons[vehicleType] || truckIcon;
-  
-  return (
-    <div>
-      <img 
-        src={vehicleIcon} 
-        alt={vehicleType}
-        style={{ 
-          width: "24px", 
-          height: "24px",
-          filter: `drop-shadow(0 0 3px ${statusColor})`,
-          fill: statusColor
-        }} 
-      />
-    </div>
-  );
+  },
 };
+
+interface StatusFilterComponent
+  extends ForwardRefExoticComponent<
+    StatusFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
+  > {
+  renderCell: (row: SenderResultData) => React.ReactNode;
+  filterFn: (data: SenderResultData[], selected: string) => SenderResultData[];
+}
+
+const StatusFilter = forwardRef<
+  { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
+  StatusFilterProps
+>(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
+  return (
+    <BaseFilter
+      ref={ref}
+      data={data}
+      onFilter={onFilter}
+      label={label}
+      options={statusFilterOptions}
+      filterFn={statusColumn.filterFn}
+      selected={selected}
+      sortDirection={sortDirection}
+      isOpen={isOpen}
+      onSortClick={onSortClick}
+      onToggleClick={onToggleClick}
+      onOptionSelect={onOptionSelect}
+    />
+  );
+}) as StatusFilterComponent;
+
+StatusFilter.displayName = "StatusFilter";
+StatusFilter.renderCell = statusColumn.renderCell;
+StatusFilter.filterFn = statusColumn.filterFn;
 
 export default StatusFilter;

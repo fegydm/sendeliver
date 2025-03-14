@@ -1,6 +1,4 @@
 // File: src/components/sections/content/results/DistanceFilter.tsx
-// Last modified: Added logging to verify filter application
-
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
@@ -25,23 +23,13 @@ const distanceFilterOptions = [
   { value: "200", label: "up to 200 km" },
 ];
 
-interface DistanceFilterComponent
-  extends ForwardRefExoticComponent<
-    DistanceFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
-  > {
-  renderCell?: (row: SenderResultData) => React.ReactNode;
-}
-
-const DistanceFilter = forwardRef<
-  { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
-  DistanceFilterProps
->(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
-  const filterFn = (data: SenderResultData[], selected: string) => {
+export const distanceColumn = {
+  label: "Distance",
+  key: "distance" as const,
+  filterFn: (data: SenderResultData[], selected: string) => {
     if (selected === "all") return data;
-
     const threshold = parseFloat(selected);
     if (isNaN(threshold)) return data;
-
     const filtered = data.filter(record => {
       if (!record || record.distance === undefined) return false;
       const distanceNum = record.distance;
@@ -51,8 +39,25 @@ const DistanceFilter = forwardRef<
     });
     console.log("DistanceFilter filtered:", filtered);
     return filtered;
-  };
+  },
+  renderCell: (row: SenderResultData) => {
+    if (!row || row.distance === undefined) return "N/A";
+    return `${row.distance} km`;
+  },
+};
 
+interface DistanceFilterComponent
+  extends ForwardRefExoticComponent<
+    DistanceFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
+  > {
+  renderCell: (row: SenderResultData) => React.ReactNode;
+  filterFn: (data: SenderResultData[], selected: string) => SenderResultData[];
+}
+
+const DistanceFilter = forwardRef<
+  { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
+  DistanceFilterProps
+>(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
   return (
     <BaseFilter
       ref={ref}
@@ -60,7 +65,7 @@ const DistanceFilter = forwardRef<
       onFilter={onFilter}
       label={label}
       options={distanceFilterOptions}
-      filterFn={filterFn}
+      filterFn={distanceColumn.filterFn}
       selected={selected}
       sortDirection={sortDirection}
       isOpen={isOpen}
@@ -72,12 +77,7 @@ const DistanceFilter = forwardRef<
 }) as DistanceFilterComponent;
 
 DistanceFilter.displayName = "DistanceFilter";
-
-DistanceFilter.renderCell = (row: SenderResultData) => {
-  if (!row || row.distance === undefined) {
-    return "N/A";
-  }
-  return `${row.distance} km`;
-};
+DistanceFilter.renderCell = distanceColumn.renderCell;
+DistanceFilter.filterFn = distanceColumn.filterFn;
 
 export default DistanceFilter;

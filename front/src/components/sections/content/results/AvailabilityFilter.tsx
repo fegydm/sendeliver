@@ -1,6 +1,4 @@
-// File: src/components/sections/content/results/AvailabilityFilter.tsx
-// Last modified: March 13, 2025 - Updated date formatting to "mmm dd, hh:mm"
-
+// File: .front/src/components/sections/content/results/AvailabilityFilter.tsx
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
@@ -24,37 +22,10 @@ const availabilityFilterOptions = [
   { value: "tomorrow", label: "tomorrow" },
 ];
 
-// Helper function to format date in "mmm dd, hh:mm" format
-const formatDate = (dateString: string): string => {
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "Invalid date";
-    
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const month = months[date.getMonth()];
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    
-    return `${month} ${day}, ${hours}:${minutes}`;
-  } catch (error) {
-    return "Invalid date";
-  }
-};
-
-// Define the component type with static renderCell
-interface AvailabilityFilterComponent
-  extends ForwardRefExoticComponent<
-    AvailabilityFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
-  > {
-  renderCell?: (row: SenderResultData) => React.ReactNode;
-}
-
-const AvailabilityFilter = forwardRef<
-  { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
-  AvailabilityFilterProps
->(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
-  const filterFn = (data: SenderResultData[], selected: string) => {
+export const availabilityColumn = {
+  label: "Availability",
+  key: "availability" as const,
+  filterFn: (data: SenderResultData[], selected: string) => {
     if (selected === "all") return data;
     
     return data.filter(record => {
@@ -67,10 +38,7 @@ const AvailabilityFilter = forwardRef<
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const tomorrow = new Date(today);
       tomorrow.setDate(today.getDate() + 1);
-      const dayAfterTomorrow = new Date(today);
-      dayAfterTomorrow.setDate(today.getDate() + 2);
       
-      // Reset time component for date comparisons
       const availDateNoTime = new Date(availDate.getFullYear(), availDate.getMonth(), availDate.getDate());
       
       switch (selected) {
@@ -84,8 +52,32 @@ const AvailabilityFilter = forwardRef<
           return false;
       }
     });
-  };
+  },
+  renderCell: (row: SenderResultData) => {
+    if (!row || !row.availability) return "N/A";
+    const date = new Date(row.availability);
+    if (isNaN(date.getTime())) return "Invalid date";
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${month} ${day}, ${hours}:${minutes}`;
+  },
+};
 
+interface AvailabilityFilterComponent
+  extends ForwardRefExoticComponent<
+    AvailabilityFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
+  > {
+  renderCell: (row: SenderResultData) => React.ReactNode;
+  filterFn: (data: SenderResultData[], selected: string) => SenderResultData[];
+}
+
+const AvailabilityFilter = forwardRef<
+  { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
+  AvailabilityFilterProps
+>(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
   return (
     <BaseFilter
       ref={ref}
@@ -93,7 +85,7 @@ const AvailabilityFilter = forwardRef<
       onFilter={onFilter}
       label={label}
       options={availabilityFilterOptions}
-      filterFn={filterFn}
+      filterFn={availabilityColumn.filterFn}
       selected={selected}
       sortDirection={sortDirection}
       isOpen={isOpen}
@@ -105,10 +97,7 @@ const AvailabilityFilter = forwardRef<
 }) as AvailabilityFilterComponent;
 
 AvailabilityFilter.displayName = "AvailabilityFilter";
-
-AvailabilityFilter.renderCell = (row: SenderResultData) => {
-  if (!row || !row.availability) return "N/A";
-  return formatDate(row.availability);
-};
+AvailabilityFilter.renderCell = availabilityColumn.renderCell;
+AvailabilityFilter.filterFn = availabilityColumn.filterFn;
 
 export default AvailabilityFilter;
