@@ -20,10 +20,12 @@ export interface SenderResultData {
   name_carrier?: string;
 }
 
-interface ResultTableProps {
+// Define the interface with className
+export interface ResultTableProps {
   type: "sender" | "hauler";
   data?: SenderResultData[];
   isLoading?: boolean;
+  className?: string;
 }
 
 interface Column {
@@ -56,9 +58,18 @@ const PLACEHOLDER_DATA: SenderResultData[] = [
   },
 ];
 
-const ResultTable: React.FC<ResultTableProps> = ({ type, data = [], isLoading = false }) => {
+const ResultTable: React.FC<ResultTableProps> = ({ 
+  type, 
+  data = [], 
+  isLoading = false, 
+  className = "" 
+}) => {
   if (type !== "sender") {
-    return <div className="result-table"><p>Hauler filtering not implemented.</p></div>;
+    return (
+      <div className={className}>
+        <p>Hauler filtering not implemented.</p>
+      </div>
+    );
   }
 
   const showPlaceholder = data.length === 0 || isLoading;
@@ -183,7 +194,7 @@ const ResultTable: React.FC<ResultTableProps> = ({ type, data = [], isLoading = 
   const appliedFilters = columns.filter(col => filterStates[col.key]?.selected !== "all").map(col => col.label);
 
   return (
-    <div className={`result-table ${showPlaceholder ? "result-table--placeholder" : ""}`}>
+    <div className={className}>
       <div className="result-table__filter-summary">
         <span>
           {appliedFilters.length > 0

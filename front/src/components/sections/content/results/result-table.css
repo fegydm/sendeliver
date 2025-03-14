@@ -32,3 +32,6 @@
 .result-table__header-cell, .result-table__body-cell { padding: 2px; white-space: nowrap; }
 
 
+.sender-content__excel-result-table {
+    margin-top: 50px; /* Adds 50px space above the Excel table */
+  }

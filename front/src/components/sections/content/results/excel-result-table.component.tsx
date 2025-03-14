@@ -25,6 +25,7 @@ export interface SenderResultData {
 interface ResultTableProps {
   type: "sender" | "hauler";
   data?: SenderResultData[];
+  className?: string;
 }
 
 // Interface for column definition with optional filter options and function
