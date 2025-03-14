@@ -1,10 +1,10 @@
 /* File: src/components/sections/content/results/result-table.css */
 /* Last modified: March 13, 2025 - Added styles for filter dropdown icons and fixed formatting */
 
-.result-table { width: 100%; max-width: 1000px; margin: 20px auto; position: relative; }
+.result-table { width: 100%; max-width: 1000px; margin: 20px auto; position: relative; overflow: visible; }
 .result-table__filter-summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .result-table__reset-button { padding: 5px 10px; font-size: 14px; cursor: pointer; }
-.result-table__table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.result-table__table { width: 100%; display: block; overflow-x: auto; border-collapse: collapse; table-layout: fixed; }
 .result-table__header { height: 30px; }
 .result-table__header-cell { border: 1px solid #ddd; background-color: #c9c9c9; position: sticky; z-index: 1; cursor: pointer; vertical-align: middle; }
 .result-table__header-cell--filtered { border: 1px solid #ddd; background-color: #d0e0ff; }
@@ -15,7 +15,7 @@
 .header-cell__second-row { display: flex; justify-content: center; }
 .dropfilter { position: relative; display: inline-block; }
 .drop-icon-wrapper { position: relative; display: inline-block; }
-.dropfilter__content { position: absolute; top: 100%; left: 40px; right: auto; background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); z-index: 2000; transform-origin: top right; }
+.dropfilter__content { position: absolute; top: 100%; left: 40px; right: auto; background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); z-index: 3000; transform-origin: top right; }
 .dropfilter__item { padding: 8px 12px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; font-weight: normal; }
 .dropfilter__item:hover { background-color: #f0f0f0; }
 .dropfilter__item--grey { color: grey; }
@@ -27,5 +27,8 @@
 .result-table__body-row--placeholder { background-color: #f8f8f8; color: #757575; font-style: italic; }
 .result-table__body-row--placeholder .result-table__body-cell { border-color: #e5e5e5; animation: placeholderPulse 2s infinite; }
 @keyframes placeholderPulse { 0% { opacity: 0.7; } 50% { opacity: 0.9; } 100% { opacity: 0.7; } }
-.result-table__table { table-layout: auto; width: auto; border-collapse: collapse; }
+
+
 .result-table__header-cell, .result-table__body-cell { padding: 2px; white-space: nowrap; }
+
+
