@@ -35,3 +35,54 @@
 .sender-content__excel-result-table {
     margin-top: 50px; /* Adds 50px space above the Excel table */
   }
+
+  /* Update this in your result-table.css file */
+
+/* Change this line to remove the absolute positioning */
+.dropfilter__content {
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 3000;
+    transform-origin: top left;
+    width: max-content;
+    min-width: 120px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  /* Add these styles to improve the fixed positioning */
+  .result-table {
+    width: 100%;
+    max-width: 1000px;
+    margin: 20px auto;
+    position: relative;
+    overflow: visible; /* Changed from 'auto' to 'visible' to allow dropdowns to overflow */
+  }
+  
+  /* Make sure the z-index is high enough */
+  .result-table__header-cell {
+    border: 1px solid #ddd;
+    background-color: #c9c9c9;
+    position: sticky;
+    z-index: 1;
+    cursor: pointer;
+    vertical-align: middle;
+  }
+  
+  /* Make sure the table itself doesn't interfere with the dropdowns */
+  .result-table__table {
+    width: 100%;
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    table-layout: fixed;
+    position: relative; /* Add this */
+    z-index: 1; /* Add this */
+  }
+  
+  /* Ensure the fixed dropdowns have a high z-index */
+  body .dropfilter__content {
+    z-index: 3000 !important;
+  }
