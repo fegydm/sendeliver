@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Description: Manual form component for transport request submission, fetching real vehicle data from the backend
+// Last change: Updated to handle new API response with totalCount
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import CountrySelect from "./CountrySelect";
@@ -39,6 +39,15 @@ interface Vehicle {
   };
   delivery_time: string;
   id_pp: number;
+  distance: number;
+}
+
+// API response interface
+interface VehicleSearchResponse {
+  totalCount: number;
+  withinDistance: number;
+  filtered: number;
+  vehicles: Vehicle[];
 }
 
 const DEFAULT_FORM_DATA: TransportFormData = {
@@ -63,6 +72,7 @@ export function ManualForm({
   const [isSearching, setIsSearching] = useState(false);
   const [postalFormats, setPostalFormats] = useState<Record<string, PostalFormat>>({});
   const [availableVehicles, setAvailableVehicles] = useState<SenderResultData[]>([]);
+  const [totalVehiclesCount, setTotalVehiclesCount] = useState<number>(0);
   const { items: allCountries } = useCountries();
 
   // Fetch postal code format for a given country code
@@ -117,34 +127,33 @@ export function ManualForm({
     return isValid;
   }, [localFormData.pickup]);
 
-  // Calculate distance between two points using Haversine formula
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return Math.round(R * c * 10) / 10;
+  // Helper function to format availability string
+  const formatAvailability = (deliveryTime: string): string => {
+    if (!deliveryTime) return "Unknown";
+    try {
+      const date = new Date(deliveryTime);
+      if (isNaN(date.getTime())) return "Invalid date";
+      return date.toLocaleString();
+    } catch (e) {
+      return "Date error";
+    }
   };
 
-  // Calculate estimated time of arrival (ETA)
-  const calculateETA = (distance: number, deliveryTime: string, pickupTime: string): string => {
-    const speedKmPerHour = 80; // Assumed speed in km/h
-    const travelTimeHours = distance / speedKmPerHour;
-    const travelTimeMs = travelTimeHours * 60 * 60 * 1000;
-
-    // Use deliveryTime if valid, otherwise fall back to pickupTime
-    const baseTime = deliveryTime && !isNaN(new Date(deliveryTime).getTime()) ? deliveryTime : pickupTime;
-    const baseDateTime = new Date(baseTime);
-    if (isNaN(baseDateTime.getTime())) {
-      console.warn(`[ManualForm] Invalid base time: ${baseTime}, using current time as fallback`);
-      baseDateTime.setTime(Date.now());
+  // Helper function to calculate transit time from distance
+  const calculateTransitTime = (distance: number): string => {
+    if (isNaN(distance)) return "Unknown";
+    
+    const speedKmPerHour = 80;
+    const hours = distance / speedKmPerHour;
+    
+    const fullHours = Math.floor(hours);
+    const minutes = Math.round((hours - fullHours) * 60);
+    
+    if (fullHours === 0) {
+      return `${minutes}m`;
+    } else {
+      return `${fullHours}h ${minutes}m`;
     }
-
-    const etaMs = Math.max(baseDateTime.getTime(), Date.now()) + travelTimeMs;
-    return new Date(etaMs).toISOString();
   };
 
   // Generate a random rating between 3.1 and 4.9
@@ -179,25 +188,35 @@ export function ManualForm({
         throw new Error(`Search failed: ${response.status}`);
       }
 
-      const vehicles: Vehicle[] = await response.json();
-      console.log("[ManualForm] Raw vehicles data:", JSON.stringify(vehicles, null, 2));
+      const data: VehicleSearchResponse = await response.json();
+      console.log("[ManualForm] API response:", data);
+      
+      // Save the total count for display in the footer
+      setTotalVehiclesCount(data.totalCount || 0);
+      
+      // Ensure we have an array of vehicles, even if empty
+      if (!data || !data.vehicles || !Array.isArray(data.vehicles)) {
+        console.error("[ManualForm] Invalid API response format:", data);
+        setAvailableVehicles([]);
+        return;
+      }
+      
+      console.log("[ManualForm] Raw vehicles data:", JSON.stringify(data.vehicles, null, 2));
 
-      const transformedResults: SenderResultData[] = vehicles.map((vehicle) => {
-        const distance = calculateDistance(lat, lng, vehicle.current_location.lat, vehicle.current_location.lng);
-        const eta = calculateETA(distance, vehicle.delivery_time, time);
-
+      const transformedResults: SenderResultData[] = data.vehicles.map((vehicle) => {
         return {
-          distance: `${distance} km`,
-          vehicleType: vehicle.vehicle_type || "Unknown",
-          availabilityTime: vehicle.delivery_time || "Not available",
-          eta,
-          pp: vehicle.id_pp || 0,
+          distance: vehicle.distance,
+          type: vehicle.vehicle_type || "Unknown",
+          status: "Available",
+          availability: formatAvailability(vehicle.delivery_time),
+          transit: calculateTransitTime(vehicle.distance),
           rating: generateRandomRating(),
+          contact: parseInt(vehicle.carrier_id) || 0,
+          name_carrier: vehicle.carrier_name || "Unknown Carrier"
         };
       });
 
-      const sortedResults = transformedResults.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
-      setAvailableVehicles(sortedResults);
+      setAvailableVehicles(transformedResults);
     } catch (error) {
       console.error("Error searching vehicles:", error);
       setAvailableVehicles([]);
@@ -397,7 +416,12 @@ export function ManualForm({
       {availableVehicles.length > 0 && (
         <section className="manual-form__results">
           <h3 className="manual-form__title">Available Vehicles</h3>
-          <ResultTable type={type} data={availableVehicles} />
+          <ResultTable 
+            type={type} 
+            data={availableVehicles} 
+            totalCount={totalVehiclesCount}
+            isLoading={isSearching}
+          />
         </section>
       )}
     </form>

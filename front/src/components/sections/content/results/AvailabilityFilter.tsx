@@ -1,7 +1,7 @@
-// File: .front/src/components/sections/content/results/AvailabilityFilter.tsx
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
+import { log, logAvailability } from "@/utils/logger"; // Import oboch loggerov
 
 interface AvailabilityFilterProps {
   data: SenderResultData[];
@@ -24,26 +24,61 @@ const availabilityFilterOptions = [
 
 export const availabilityColumn = {
   label: "Availability",
-  key: "availability" as const,
+  key: "availability_date" as keyof SenderResultData,
   filterFn: (data: SenderResultData[], selected: string) => {
     if (selected === "all") return data;
-    
+
     return data.filter(record => {
-      if (!record || !record.availability) return false;
-      
-      const availDate = new Date(record.availability);
-      if (isNaN(availDate.getTime())) return false;
-      
+      if (
+        !record ||
+        !record.availability_date ||
+        record.availability_date === "N/A" ||
+        !record.availability_time ||
+        record.availability_time === "N/A"
+      ) {
+        logAvailability(
+          `filterFn: Preskakujem záznam - chýbajúce alebo neplatné dáta - ` +
+          `record: ${JSON.stringify(record)}, ` +
+          `availability_date: ${record?.availability_date}, ` +
+          `availability_time: ${record?.availability_time}`
+        );
+        return false;
+      }
+
+      const availDateTime = new Date(`${record.availability_date}T${record.availability_time}Z`);
+      if (isNaN(availDateTime.getTime())) {
+        logAvailability(
+          `filterFn: Neplatný dátum - ` +
+          `availability_date: ${record.availability_date}, ` +
+          `availability_time: ${record.availability_time}, ` +
+          `vytvorený reťazec: ${record.availability_date}T${record.availability_time}Z`
+        );
+        return false;
+      }
+
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const tomorrow = new Date(today);
       tomorrow.setDate(today.getDate() + 1);
-      
-      const availDateNoTime = new Date(availDate.getFullYear(), availDate.getMonth(), availDate.getDate());
-      
+
+      const availDateNoTime = new Date(
+        availDateTime.getFullYear(),
+        availDateTime.getMonth(),
+        availDateTime.getDate()
+      );
+
+      logAvailability(
+        `filterFn: Spracovávam záznam - ` +
+        `availDateTime: ${availDateTime.toISOString()}, ` +
+        `selected: ${selected}, ` +
+        `now: ${now.toISOString()}, ` +
+        `today: ${today.toISOString()}, ` +
+        `tomorrow: ${tomorrow.toISOString()}`
+      );
+
       switch (selected) {
         case "passed":
-          return availDate < now;
+          return availDateTime < now;
         case "today":
           return availDateNoTime.getTime() === today.getTime();
         case "tomorrow":
@@ -54,14 +89,46 @@ export const availabilityColumn = {
     });
   },
   renderCell: (row: SenderResultData) => {
-    if (!row || !row.availability) return "N/A";
-    const date = new Date(row.availability);
-    if (isNaN(date.getTime())) return "Invalid date";
+    if (
+      !row ||
+      !row.availability_date ||
+      row.availability_date === "N/A" ||
+      !row.availability_time ||
+      row.availability_time === "N/A"
+    ) {
+      logAvailability(
+        `renderCell: Chýbajúce alebo neplatné dáta - ` +
+        `row: ${JSON.stringify(row)}, ` +
+        `availability_date: ${row?.availability_date}, ` +
+        `availability_time: ${row?.availability_time}`
+      );
+      return "N/A";
+    }
+
+    const date = new Date(`${row.availability_date}T${row.availability_time}Z`);
+    logAvailability(
+      `renderCell: Vytváram dátum - ` +
+      `availability_date: ${row.availability_date}, ` +
+      `availability_time: ${row.availability_time}, ` +
+      `vytvorený reťazec: ${row.availability_date}T${row.availability_time}Z, ` +
+      `výsledný dátum: ${date.toISOString()}`
+    );
+
+    if (isNaN(date.getTime())) {
+      logAvailability(
+        `renderCell: Neplatný dátum - ` +
+        `availability_date: ${row.availability_date}, ` +
+        `availability_time: ${row.availability_time}`
+      );
+      return "Invalid date";
+    }
+
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const month = months[date.getMonth()];
     const day = date.getDate();
     const hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+
     return `${month} ${day}, ${hours}:${minutes}`;
   },
 };

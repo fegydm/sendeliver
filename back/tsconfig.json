@@ -1,4 +1,5 @@
 {
+  "name": "back/tsconfig",
   "compilerOptions": {
     "target": "ES2022",
     "module": "NodeNext",
@@ -14,12 +15,7 @@
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "baseUrl": "./",
-    "paths": {
-      "@types/*": ["src/types/*"]
-    },
-    "typeRoots": ["./node_modules/@types", "./src/types"],
-    "types": ["node"] 
+    "types": ["node", "express"]
   },
   "include": ["src/**/*"],
   "exclude": [

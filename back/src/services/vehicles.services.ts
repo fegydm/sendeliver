@@ -1,5 +1,5 @@
-// File: .back/src/services/vehicles.services.ts
-// Last change: Added explicit type for delivery parameter in map function
+// File: src/services/vehicles.services.ts
+// Last change: Return separate date and time fields for frontend compatibility
 
 import { pool } from "../configs/db.js";
 
@@ -26,6 +26,7 @@ interface VehicleSearchParams {
   };
 }
 
+// Updated Vehicle interface to separate date and time
 interface Vehicle {
   id: string;
   vehicle_type: string;
@@ -40,11 +41,12 @@ interface Vehicle {
     country_code: string;
     city: string;
   };
-  delivery_time: string;
+  delivery_date: string; // e.g., "2025-03-11"
+  delivery_time: string; // e.g., "14:00:00"
   id_pp: number;
 }
 
-// Define interface for delivery record from database
+// Define interface for delivery record from database (unchanged)
 interface DeliveryRecord {
   id: number;
   delivery_id?: string;
@@ -63,22 +65,20 @@ interface DeliveryRecord {
   longitude?: number;
 }
 
-// Query to fetch vehicle records from yesterday with coordinates
-export const GET_RECENT_DELIVERIES_WITH_COORDINATES_QUERY = `
+// Query remains unchanged
+export const GET_ALL_RECENT_DELIVERIES_QUERY = `
 SELECT DISTINCT ON (d.id)
     d.id,
+    d.vehicle_type,
     d.delivery_id,
     d.delivery_date,
     d.delivery_time,
-    d.delivery_type,
     d.delivery_country,
-    d.delivery_zip,
     d.delivery_city,
     d.weight,
     d.id_pp,
     d.id_carrier,
     d.name_carrier,
-    d.vehicle_type,
     p.latitude,
     p.longitude
 FROM 
@@ -88,7 +88,8 @@ INNER JOIN
     ON d.delivery_country = p.country_code 
     AND d.delivery_zip = p.postal_code
 WHERE 
-    d.delivery_date >= CURRENT_DATE - 1
+    d.delivery_date >= NOW() - INTERVAL '40 hours'
+    AND (d.delivery_date > NOW() - INTERVAL '40 hours' OR d.delivery_time::time >= NOW()::time)
 ORDER BY 
     d.id, d.delivery_date DESC, d.delivery_time DESC;
 `;
@@ -110,7 +111,6 @@ export class VehicleService {
     return VehicleService.instance;
   }
 
-  // Check database connection health
   private async checkHealth(): Promise<void> {
     console.log("🔍 Starting database health check for vehicle service");
     try {
@@ -124,35 +124,32 @@ export class VehicleService {
     }
   }
 
-  // Fetch vehicles from yesterday from the database
   public async searchVehicles(params: VehicleSearchParams): Promise<Vehicle[]> {
     try {
       if (!this.isHealthy) {
         await this.checkHealth();
       }
 
-      console.log("🔍 Fetching vehicles from yesterday from database");
-
-      const result = await pool.query(GET_RECENT_DELIVERIES_WITH_COORDINATES_QUERY);
+      console.log("🔍 Fetching all vehicles from last 40 hours");
+      const result = await pool.query(GET_ALL_RECENT_DELIVERIES_QUERY);
       const deliveries = result.rows;
+      console.log(`📊 Query returned ${deliveries.length} raw delivery records`);
+
+      if (deliveries.length === 0) {
+        console.warn("⚠️ No deliveries found in the last 40 hours");
+        return [];
+      }
 
       const vehicles: Vehicle[] = deliveries.map((delivery: DeliveryRecord) => {
-        // Format date and time correctly into ISO string (YYYY-MM-DDTHH:MM:SSZ)
+        // Format date as YYYY-MM-DD
         const datePart = delivery.delivery_date
-          ? String(delivery.delivery_date).trim() // Ensure no extra spaces
+          ? delivery.delivery_date.toISOString().split("T")[0] // Convert Date to "YYYY-MM-DD"
           : new Date().toISOString().split("T")[0]; // Fallback to today
+
+        // Ensure time is in HH:MM:SS format, trim if necessary
         const timePart = delivery.delivery_time
           ? String(delivery.delivery_time).padEnd(8, ":00").substring(0, 8) // Ensure HH:MM:SS
           : "00:00:00"; // Fallback if null
-        const deliveryTime = `${datePart}T${timePart}Z`;
-
-        // Validate the constructed delivery_time
-        const parsedDate = new Date(deliveryTime);
-        if (isNaN(parsedDate.getTime())) {
-          console.error(
-            `[VehicleService] Invalid delivery_time constructed: ${deliveryTime}, date: ${datePart}, time: ${timePart}`
-          );
-        }
 
         return {
           id: delivery.id.toString(),
@@ -168,13 +165,14 @@ export class VehicleService {
             country_code: delivery.delivery_country || "N/A",
             city: delivery.delivery_city || "N/A",
           },
-          delivery_time: deliveryTime,
+          delivery_date: datePart, // Separate date field
+          delivery_time: timePart, // Separate time field
           id_pp: delivery.id_pp || 0,
         };
       });
 
-      console.log(`[VehicleService] Found ${vehicles.length} vehicles from yesterday:`, JSON.stringify(vehicles, null, 2));
-      return vehicles; // Return records from yesterday, filtering < 500 km happens in frontend
+      console.log(`[VehicleService] Processed ${vehicles.length} vehicles from last 40 hours`);
+      return vehicles;
     } catch (error) {
       console.error("❌ Failed to fetch vehicles:", error);
       throw error;

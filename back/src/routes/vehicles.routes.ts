@@ -1,13 +1,28 @@
-// File: .back/src/routes/vehicles.routes.ts
-// Last change: Fixed TypeScript errors and improved type safety
-
 import { Router } from "express";
 import { VehicleService } from "../services/vehicles.services.js";
+import * as fs from "fs/promises";
+import { fileURLToPath } from "url";
+import * as path from "path";
 
 const router = Router();
 const vehicleService = VehicleService.getInstance();
 
-// Define interfaces for better type safety
+const MAX_DISTANCE = 500;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const logFilePath = path.join(__dirname, "vehicle_search_logs.txt");
+
+async function logToFile(message: string) {
+  const timestamp = new Date().toISOString();
+  const logEntry = `[${timestamp}] ${message}\n`;
+  try {
+    await fs.appendFile(logFilePath, logEntry);
+  } catch (err) {
+    console.error("Failed to write to log file:", err);
+  }
+}
+
 interface CountryInfo {
   cc: string;
   flag: string;
@@ -33,26 +48,165 @@ interface SearchRequestBody {
   cargo?: Partial<CargoData>;
 }
 
-// Handler pre vyhľadávanie vozidiel
+interface Vehicle {
+  id: string;
+  vehicle_type: string;
+  registration_number: string;
+  carrier_id: string;
+  carrier_name: string;
+  capacity: number;
+  max_weight: number;
+  current_location: {
+    lat: number;
+    lng: number;
+    country_code: string;
+    city: string;
+  };
+  delivery_date: string;
+  delivery_time: string;
+  id_pp: number;
+}
+
+interface ExtendedVehicle {
+  id: string;
+  vehicle_type: string;
+  registration_number: string;
+  carrier_id: string;
+  carrier_name: string;
+  capacity: number;
+  max_weight: number;
+  current_location: {
+    lat: number;
+    lng: number;
+    country_code: string;
+    city: string;
+  };
+  availability_date: string; // Premenované
+  availability_time: string; // Premenované
+  id_pp: number;
+  distance: number;
+}
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function deg2rad(deg: number): number {
+  return deg * (Math.PI / 180);
+}
+
+function filterVehiclesByFormCriteria(vehicles: Vehicle[], params: SearchRequestBody): ExtendedVehicle[] {
+  if (!Array.isArray(vehicles)) {
+    const errorMessage = "❌ filterVehiclesByFormCriteria: Expected array, got: " + typeof vehicles;
+    console.error(errorMessage);
+    logToFile(errorMessage);
+    return [];
+  }
+
+  const withDistances = vehicles.map(vehicle => {
+    let distance = 0;
+    if (
+      params.pickup?.lat !== undefined &&
+      params.pickup?.lng !== undefined &&
+      vehicle.current_location?.lat !== undefined &&
+      vehicle.current_location?.lng !== undefined
+    ) {
+      distance = calculateDistance(
+        params.pickup.lat,
+        params.pickup.lng,
+        vehicle.current_location.lat,
+        vehicle.current_location.lng
+      );
+    }
+    // Premenujeme polia v odpovedi
+    return {
+      ...vehicle,
+      distance: Math.round(distance),
+      availability_date: vehicle.delivery_date,
+      availability_time: vehicle.delivery_time,
+    } as ExtendedVehicle;
+  });
+
+  const withinDistance = withDistances.filter(vehicle => vehicle.distance <= MAX_DISTANCE);
+
+  return withinDistance.filter(vehicle => {
+    if (
+      params.cargo?.pallets !== undefined &&
+      params.cargo.pallets > 0 &&
+      vehicle.capacity < params.cargo.pallets
+    ) {
+      return false;
+    }
+
+    if (
+      params.cargo?.weight !== undefined &&
+      params.cargo.weight > 0 &&
+      vehicle.max_weight < params.cargo.weight
+    ) {
+      return false;
+    }
+
+    // Filtrácia podľa času
+    if (params.pickup?.time && vehicle.availability_date && vehicle.availability_time) {
+      const pickupTime = new Date(params.pickup.time);
+      const vehicleAvailTime = new Date(`${vehicle.availability_date}T${vehicle.availability_time}Z`);
+      if (vehicleAvailTime > pickupTime) return false;
+    }
+
+    return true;
+  });
+}
+
 const handleSearchVehicles = async (req: any, res: any): Promise<void> => {
   try {
-    // Zaloguj celé telo požiadavky na ladenie
-    console.log('🚚 Prijatá požiadavka na vyhľadanie vozidiel:', JSON.stringify(req.body, null, 2));
+    console.log("🔍 Received vehicle search request");
+    await logToFile(`Received request body: ${JSON.stringify(req.body, null, 2)}`);
 
-    // Extrahuj parametre z tela požiadavky (z frontendu)
+    if (!req.body) {
+      const errorMsg = "Request body is missing";
+      console.error(`❌ ${errorMsg}`);
+      await logToFile(`❌ ${errorMsg}`);
+      res.status(400).json({ error: errorMsg });
+      return;
+    }
+
     const { pickup, delivery, cargo } = req.body as SearchRequestBody;
 
-    // Over, či máme potrebné údaje
-    if (!pickup || !pickup.lat || !pickup.lng) {
-      console.warn("⚠️ Chýbajú súradnice miesta vyzdvihnutia");
-      res.status(400).json({ 
-        error: "Chýbajúce súradnice vyzdvihnutia", 
-        message: "Miesto vyzdvihnutia musí obsahovať zemepisnú šírku a dĺžku" 
+    if (!pickup) {
+      const errorMsg = "Missing pickup data in request";
+      console.error(`❌ ${errorMsg}`);
+      await logToFile(`❌ ${errorMsg}`);
+      res.status(400).json({ error: errorMsg });
+      return;
+    }
+
+    if (!pickup.lat || !pickup.lng) {
+      const warnLog = "⚠️ Missing pickup location coordinates";
+      console.warn(warnLog);
+      await logToFile(warnLog);
+      res.status(400).json({
+        error: "Missing pickup coordinates",
+        message: "Pickup location must include latitude and longitude",
       });
       return;
     }
 
-    // Priprav parametre pre službu
+    console.log("📋 Search with parameters:", {
+      pickup: {
+        coords: `${pickup.lat},${pickup.lng}`,
+        country: pickup.country?.cc,
+        city: pickup.city,
+      },
+      cargo: cargo,
+    });
+
     const searchParams = {
       pickup: {
         country: pickup.country || { cc: "", flag: "" },
@@ -76,26 +230,67 @@ const handleSearchVehicles = async (req: any, res: any): Promise<void> => {
       },
     };
 
-    console.log(`🔍 Vyhľadávam vozidlá s parametrami: LAT=${pickup.lat}, LNG=${pickup.lng}`);
+    console.log(`🔍 Searching vehicles with MAX_DISTANCE=${MAX_DISTANCE}km`);
 
-    // Načítaj reálne vozidlá z databázy cez VehicleService
-    const vehicles = await vehicleService.searchVehicles(searchParams);
+    try {
+      const vehiclesResult = await vehicleService.searchVehicles(searchParams);
+      console.log(`✅ Service returned ${vehiclesResult.length} total vehicles`);
 
-    // Zaloguj počet nájdených vozidiel
-    console.log(`📊 Nájdených ${vehicles.length} vozidiel`);
+      const vehicles = Array.isArray(vehiclesResult) ? vehiclesResult : [];
 
-    // Vráť odpoveď klientovi
-    res.json(vehicles);
+      if (vehicles.length === 0) {
+        console.log("⚠️ No vehicles found in the database");
+        res.json({
+          totalCount: 0,
+          filtered: 0,
+          vehicles: [],
+        });
+        return;
+      }
 
+      const totalVehiclesCount = vehicles.length;
+      const filteredVehicles = filterVehiclesByFormCriteria(vehicles, req.body);
+      const vehiclesWithinDistance = vehicles.filter(vehicle => {
+        const distance = calculateDistance(
+          pickup.lat!,
+          pickup.lng!,
+          vehicle.current_location.lat,
+          vehicle.current_location.lng
+        );
+        return distance <= MAX_DISTANCE;
+      }).length;
+
+      filteredVehicles.sort((a, b) => a.distance - b.distance);
+
+      const summaryLog = `📊 Found ${totalVehiclesCount} total vehicles, ${vehiclesWithinDistance} within ${MAX_DISTANCE}km, ${filteredVehicles.length} after all filters`;
+      console.log(summaryLog);
+      await logToFile(summaryLog);
+
+      res.json({
+        totalCount: totalVehiclesCount,
+        withinDistance: vehiclesWithinDistance,
+        filtered: filteredVehicles.length,
+        vehicles: filteredVehicles,
+      });
+    } catch (serviceError) {
+      const errorMessage = serviceError instanceof Error ? serviceError.message : "Unknown service error";
+      const errorLog = `❌ Vehicle service error: ${errorMessage}`;
+      console.error(errorLog);
+      console.error(serviceError);
+      await logToFile(errorLog);
+      res.status(500).json({ error: `Vehicle service error: ${errorMessage}` });
+    }
   } catch (error: unknown) {
-    // Zaloguj a spracuj chyby
-    console.error("❌ Vyhľadávanie vozidiel zlyhalo:", error);
-    const chybovaSprava = error instanceof Error ? error.message : "Neznáma chyba";
-    res.status(500).json({ error: `Nepodarilo sa vyhľadať vozidlá: ${chybovaSprava}` });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorTrace = error instanceof Error && error.stack ? error.stack : "No stack trace";
+    const errorLog = `❌ Vehicle search failed: ${errorMessage}`;
+    console.error(errorLog);
+    console.error(errorTrace);
+    await logToFile(`${errorLog}\nStack: ${errorTrace}`);
+    res.status(500).json({ error: `Failed to search for vehicles: ${errorMessage}` });
   }
 };
 
-// Registruj trasu pre vyhľadávanie
 router.post("/search", handleSearchVehicles);
 
 export default router;
