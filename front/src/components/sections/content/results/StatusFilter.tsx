@@ -1,5 +1,5 @@
 // File: src/components/sections/content/results/StatusFilter.tsx
-// Last modified: March 26, 2025 - Added shortened labels for second row display
+// Last modified: March 26, 2025 - Fixed shortLabel not propagating to second row
 
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
@@ -65,7 +65,7 @@ const statusFilterOptions = [
   { 
     value: "O", 
     label: "(orange) available as scheduled", 
-    shortLabel: "avail. as scheduled",
+    shortLabel: "avail. on time",
     icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='7' fill='%23FFA500' /></svg>" 
   },
   { 
@@ -152,12 +152,8 @@ const StatusFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   StatusFilterProps
 >(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
-  // Replace standard BaseFilter options with options that include shortLabel
-  const optionsWithShortLabels = statusFilterOptions.map(option => ({
-    value: option.value,
-    label: option.label,
-    icon: option.icon
-  }));
+  // OPRAVA: Už nepoužívame transformáciu, ktorá by strácala shortLabel hodnoty
+  // Priamo použijeme originálne statusFilterOptions
 
   // Create custom selected label formatter for second row display
   const getSelectedLabel = (selected: string) => {
@@ -170,7 +166,7 @@ const StatusFilter = forwardRef<
       data={data}
       onFilter={onFilter}
       label={label}
-      options={optionsWithShortLabels}
+      options={statusFilterOptions} // Použijeme pôvodné options so všetkými vlastnosťami
       filterFn={statusColumn.filterFn}
       selected={selected}
       sortDirection={sortDirection}
