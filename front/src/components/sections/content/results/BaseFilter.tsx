@@ -1,4 +1,5 @@
 // File: src/components/sections/content/results/BaseFilter.tsx
+// Last modified: March 26, 2025 - Added dynamic width calculation for dropdown based on content
 
 import { forwardRef, useImperativeHandle, useRef, useEffect, useState } from "react";
 import { getAnimatedArrow } from "@/utils/animateArrow";
@@ -16,19 +17,24 @@ interface BaseFilterProps<T> {
   onFilter: (filtered: T[]) => void;
   onOptionSelect: (value: string) => void;
   filterFn?: (data: T[], selected: string) => T[];
+  getSelectedLabel?: (value: string) => string; // Custom formatter for selected value display
 }
 
 const BaseFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   BaseFilterProps<any>
->(({ data, label, options = [], selected, sortDirection, isOpen, onSortClick, onToggleClick, onFilter, onOptionSelect, filterFn }, ref) => {
-  const selectedLabel = options.find(opt => opt.value === selected)?.label || "all ...";
+>(({ data, label, options = [], selected, sortDirection, isOpen, onSortClick, onToggleClick, onFilter, onOptionSelect, filterFn, getSelectedLabel }, ref) => {
+  // Use custom formatted label if provided, otherwise find from options
+  const selectedLabel = getSelectedLabel 
+    ? getSelectedLabel(selected)
+    : options.find(opt => opt.value === selected)?.label || "all ...";
+    
   const headerRef = useRef<HTMLDivElement>(null);
   const dropdownIdRef = useRef(`dropdown-${label.replace(/\s+/g, '-').toLowerCase()}-${Math.random().toString(36).substring(2, 9)}`);
   const [dropdownPosition, setDropdownPosition] = useState({
     top: '0px',
     left: '0px',
-    width: '120px',
+    width: '180px', // Default wider width
     display: 'none',
   });
 
@@ -48,6 +54,37 @@ const BaseFilter = forwardRef<
     onOptionSelect(value);
   };
 
+  // Calculate the width needed for the widest option
+  const calculateMaxWidth = () => {
+    // Create a temporary span to measure text width
+    const tempSpan = document.createElement('span');
+    tempSpan.style.visibility = 'hidden';
+    tempSpan.style.position = 'absolute';
+    tempSpan.style.whiteSpace = 'nowrap';
+    tempSpan.style.font = '14px Arial, sans-serif'; // Match your dropdown font
+    tempSpan.style.padding = '8px 12px'; // Match your dropdown padding
+    
+    document.body.appendChild(tempSpan);
+    
+    // Find the widest option
+    let maxWidth = 120; // Minimum width
+    
+    options.forEach(option => {
+      tempSpan.textContent = option.label;
+      const width = tempSpan.offsetWidth;
+      
+      // Add extra width for icons if present
+      const iconWidth = option.icon ? 28 : 0; // icon width + margin
+      
+      maxWidth = Math.max(maxWidth, width + iconWidth);
+    });
+    
+    document.body.removeChild(tempSpan);
+    
+    // Add some padding to prevent tight fit
+    return `${maxWidth + 10}px`;
+  };
+
   // Create and manage container for all dropdowns
   useEffect(() => {
     // Make sure we have a container for our dropdowns
@@ -65,19 +102,21 @@ const BaseFilter = forwardRef<
   useEffect(() => {
     if (isOpen && headerRef.current) {
       const rect = headerRef.current.getBoundingClientRect();
-      const width = Math.max(rect.width, 120);
+      const calculatedWidth = calculateMaxWidth();
       
       // Handle potential overflow to the right
       const viewportWidth = window.innerWidth;
       let left = rect.left;
-      if (left + width > viewportWidth) {
-        left = Math.max(0, viewportWidth - width - 10);
+      const numericWidth = parseInt(calculatedWidth, 10);
+      
+      if (left + numericWidth > viewportWidth) {
+        left = Math.max(0, viewportWidth - numericWidth - 10);
       }
       
       setDropdownPosition({
         top: `${rect.bottom}px`,
         left: `${left}px`,
-        width: `${width}px`,
+        width: calculatedWidth,
         display: 'block',
       });
     } else {
@@ -86,7 +125,7 @@ const BaseFilter = forwardRef<
         display: 'none'
       }));
     }
-  }, [isOpen]);
+  }, [isOpen, options]); // Added options dependency to recalculate when options change
 
   // Create/update/remove dropdown element in DOM
   useEffect(() => {

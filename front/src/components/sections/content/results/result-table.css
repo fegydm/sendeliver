@@ -1,88 +1,37 @@
 /* File: src/components/sections/content/results/result-table.css */
-/* Last modified: March 13, 2025 - Added styles for filter dropdown icons and fixed formatting */
+/* Last modified: March 26, 2025 - Updated dropdown and table width handling */
 
 .result-table { width: 100%; max-width: 1000px; margin: 20px auto; position: relative; overflow: visible; }
 .result-table__filter-summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .result-table__reset-button { padding: 5px 10px; font-size: 14px; cursor: pointer; }
-.result-table__table { width: 100%; display: block; overflow-x: auto; border-collapse: collapse; table-layout: fixed; }
+.result-table__reset-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.result-table__table { width: 100%; table-layout: auto; border-collapse: collapse; overflow-x: auto; }
 .result-table__header { height: 30px; }
-.result-table__header-cell { border: 1px solid #ddd; background-color: #c9c9c9; position: sticky; z-index: 1; cursor: pointer; vertical-align: middle; }
-.result-table__header-cell--filtered { border: 1px solid #ddd; background-color: #d0e0ff; }
+.result-table__header-cell { border: 1px solid #ddd; background-color: #c9c9c9; position: sticky; z-index: 1; cursor: pointer; vertical-align: middle; padding: 2px; white-space: nowrap; }
+.result-table__header-cell--filtered { background-color: #d0e0ff; }
 .result-table__header-cell--open { background-color: #e0e0e0; }
-.result-table__body-cell { padding: 4px; border: 1px solid #ddd; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.result-table__body-cell { padding: 2px; border: 1px solid #ddd; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .result-table__body-row:nth-child(even) { background-color: #fafafa; }
+.result-table__body-row--placeholder { background-color: #f8f8f8; color: #757575; font-style: italic; }
+.result-table__body-row--placeholder .result-table__body-cell { border-color: #e5e5e5; animation: placeholderPulse 2s infinite; }
 .header-cell__first-row { display: flex; justify-content: center; }
 .header-cell__second-row { display: flex; justify-content: center; }
-.dropfilter { position: relative; display: inline-block; }
+.column-label { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filter-value { font-size: 10px; color: #666; }
 .drop-icon-wrapper { position: relative; display: inline-block; }
-.dropfilter__content { position: absolute; top: 100%; left: 40px; right: auto; background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); z-index: 3000; transform-origin: top right; }
+.dropfilter__content { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 3000 !important; transform-origin: top left; width: max-content; min-width: 120px; border: 1px solid #ddd; border-radius: 4px; max-height: 300px; overflow-y: auto; }
 .dropfilter__item { padding: 8px 12px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; font-weight: normal; }
 .dropfilter__item:hover { background-color: #f0f0f0; }
 .dropfilter__item--grey { color: grey; }
 .dropfilter__item-with-icon { display: flex; align-items: center; width: 100%; }
 .dropfilter__item-icon { width: 20px; height: 20px; margin-right: 8px; flex-shrink: 0; }
-.dropfilter-distance .dropfilter__content, .dropfilter-type .dropfilter__content, .dropfilter-status .dropfilter__content, .dropfilter-availability .dropfilter__content, .dropfilter-transit .dropfilter__content, .dropfilter-rating .dropfilter__content, .dropfilter-contact .dropfilter__content { max-height: 200px; overflow-y: auto; }
-.column-label { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.filter-value { font-size: 10px; color: #666; }
-.result-table__body-row--placeholder { background-color: #f8f8f8; color: #757575; font-style: italic; }
-.result-table__body-row--placeholder .result-table__body-cell { border-color: #e5e5e5; animation: placeholderPulse 2s infinite; }
-@keyframes placeholderPulse { 0% { opacity: 0.7; } 50% { opacity: 0.9; } 100% { opacity: 0.7; } }
+.sender-content__excel-result-table { margin-top: 50px; }
 
+/* Responsive table container */
+.result-table { overflow-x: auto; }
 
-.result-table__header-cell, .result-table__body-cell { padding: 2px; white-space: nowrap; }
-
-
-.sender-content__excel-result-table {
-    margin-top: 50px; /* Adds 50px space above the Excel table */
-  }
-
-  /* Update this in your result-table.css file */
-
-/* Change this line to remove the absolute positioning */
-.dropfilter__content {
-    background: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 3000;
-    transform-origin: top left;
-    width: max-content;
-    min-width: 120px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    max-height: 300px;
-    overflow-y: auto;
-  }
-  
-  /* Add these styles to improve the fixed positioning */
-  .result-table {
-    width: 100%;
-    max-width: 1000px;
-    margin: 20px auto;
-    position: relative;
-    overflow: visible; /* Changed from 'auto' to 'visible' to allow dropdowns to overflow */
-  }
-  
-  /* Make sure the z-index is high enough */
-  .result-table__header-cell {
-    border: 1px solid #ddd;
-    background-color: #c9c9c9;
-    position: sticky;
-    z-index: 1;
-    cursor: pointer;
-    vertical-align: middle;
-  }
-  
-  /* Make sure the table itself doesn't interfere with the dropdowns */
-  .result-table__table {
-    width: 100%;
-    display: block;
-    overflow-x: auto;
-    border-collapse: collapse;
-    table-layout: fixed;
-    position: relative; /* Add this */
-    z-index: 1; /* Add this */
-  }
-  
-  /* Ensure the fixed dropdowns have a high z-index */
-  body .dropfilter__content {
-    z-index: 3000 !important;
-  }
+@keyframes placeholderPulse { 
+  0% { opacity: 0.7; } 
+  50% { opacity: 0.9; } 
+  100% { opacity: 0.7; } 
+}

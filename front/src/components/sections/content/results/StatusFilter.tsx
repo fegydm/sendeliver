@@ -1,4 +1,6 @@
 // File: src/components/sections/content/results/StatusFilter.tsx
+// Last modified: March 26, 2025 - Added shortened labels for second row display
+
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
@@ -51,24 +53,34 @@ const getStatusValue = (record: SenderResultData): string => {
   return "R";
 };
 
+// Option definitions with both full and short labels
 const statusFilterOptions = [
-  { value: "all", label: "all ...", icon: null },
+  { value: "all", label: "all ...", shortLabel: "all", icon: null },
   { 
     value: "G", 
     label: "(green) available now", 
+    shortLabel: "avail. now",
     icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='7' fill='%2300CC00' /></svg>" 
   },
   { 
     value: "O", 
     label: "(orange) available as scheduled", 
+    shortLabel: "avail. as scheduled",
     icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='7' fill='%23FFA500' /></svg>" 
   },
   { 
     value: "R", 
     label: "(red) available later", 
+    shortLabel: "avail. later",
     icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><circle cx='8' cy='8' r='7' fill='%23FF0000' /></svg>" 
   },
 ];
+
+// Function to get short label based on the selected value
+const getShortLabel = (value: string): string => {
+  const option = statusFilterOptions.find(opt => opt.value === value);
+  return option?.shortLabel || value;
+};
 
 export const statusColumn = {
   label: "Status",
@@ -140,13 +152,25 @@ const StatusFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   StatusFilterProps
 >(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
+  // Replace standard BaseFilter options with options that include shortLabel
+  const optionsWithShortLabels = statusFilterOptions.map(option => ({
+    value: option.value,
+    label: option.label,
+    icon: option.icon
+  }));
+
+  // Create custom selected label formatter for second row display
+  const getSelectedLabel = (selected: string) => {
+    return getShortLabel(selected);
+  };
+
   return (
     <BaseFilter
       ref={ref}
       data={data}
       onFilter={onFilter}
       label={label}
-      options={statusFilterOptions}
+      options={optionsWithShortLabels}
       filterFn={statusColumn.filterFn}
       selected={selected}
       sortDirection={sortDirection}
@@ -154,6 +178,7 @@ const StatusFilter = forwardRef<
       onSortClick={onSortClick}
       onToggleClick={onToggleClick}
       onOptionSelect={onOptionSelect}
+      getSelectedLabel={getSelectedLabel} // Pass custom formatter to BaseFilter
     />
   );
 }) as StatusFilterComponent;

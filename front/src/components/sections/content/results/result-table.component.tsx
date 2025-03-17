@@ -1,4 +1,6 @@
 // File: src/components/sections/content/results/result-table.component.tsx
+// Last modified: March 26, 2025 - Implemented cascading filters and optimized performance
+
 import { useState, useEffect, useRef, useMemo } from "react";
 import "./result-table.css";
 import DistanceFilter, { distanceColumn } from "./DistanceFilter";
@@ -20,7 +22,6 @@ export interface SenderResultData {
   name_carrier?: string;
 }
 
-// Define the interface with className
 export interface ResultTableProps {
   type: "sender" | "hauler";
   data?: SenderResultData[];
@@ -36,9 +37,9 @@ interface Column {
     renderCell: (row: SenderResultData) => React.ReactNode;
     filterFn: (data: SenderResultData[], selected: string) => SenderResultData[];
   };
-  data: SenderResultData[];
 }
 
+// Generate placeholder data for loading state
 const getPlaceholderAvailability = (): string => {
   const now = new Date();
   const availabilityTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
@@ -66,15 +67,17 @@ const ResultTable: React.FC<ResultTableProps> = ({
 }) => {
   if (type !== "sender") {
     return (
-      <div className={className}>
+      <div className={`result-table ${className}`}>
         <p>Hauler filtering not implemented.</p>
       </div>
     );
   }
 
+  // Use placeholder data when loading or when no data is available
   const showPlaceholder = data.length === 0 || isLoading;
   const initialData = showPlaceholder ? PLACEHOLDER_DATA : data;
 
+  // Create refs for all filter components
   const distanceFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const typeFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const statusFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
@@ -84,19 +87,21 @@ const ResultTable: React.FC<ResultTableProps> = ({
   const contactFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const headerRef = useRef<HTMLTableSectionElement>(null);
 
+  // Define column configuration 
   const columns: Column[] = useMemo(
     () => [
-      { ...distanceColumn, ref: distanceFilterRef, component: DistanceFilter, data: initialData },
-      { ...typeColumn, ref: typeFilterRef, component: TypeFilter, data: initialData },
-      { ...statusColumn, ref: statusFilterRef, component: StatusFilter, data: initialData },
-      { ...availabilityColumn, ref: availabilityFilterRef, component: AvailabilityFilter, data: initialData },
-      { ...transitColumn, ref: transitFilterRef, component: TransitFilter, data: initialData },
-      { ...ratingColumn, ref: ratingFilterRef, component: RatingFilter, data: initialData },
-      { ...contactColumn, ref: contactFilterRef, component: ContactFilter, data: initialData },
+      { ...distanceColumn, ref: distanceFilterRef, component: DistanceFilter },
+      { ...typeColumn, ref: typeFilterRef, component: TypeFilter },
+      { ...statusColumn, ref: statusFilterRef, component: StatusFilter },
+      { ...availabilityColumn, ref: availabilityFilterRef, component: AvailabilityFilter },
+      { ...transitColumn, ref: transitFilterRef, component: TransitFilter },
+      { ...ratingColumn, ref: ratingFilterRef, component: RatingFilter },
+      { ...contactColumn, ref: contactFilterRef, component: ContactFilter },
     ],
-    [initialData]
+    []
   );
 
+  // Initialize filter states for each column
   const [filterStates, setFilterStates] = useState<{
     [key: string]: { selected: string; sortDirection: "asc" | "desc" | "none"; isOpen: boolean };
   }>(() =>
@@ -106,8 +111,11 @@ const ResultTable: React.FC<ResultTableProps> = ({
     }, {} as any)
   );
 
+  // Calculate filtered and sorted data using useMemo for performance
   const filteredData = useMemo(() => {
     let result = [...initialData];
+    
+    // Apply all filters in sequence
     columns.forEach(col => {
       const state = filterStates[col.key];
       if (state?.selected && state.selected !== "all") {
@@ -115,25 +123,32 @@ const ResultTable: React.FC<ResultTableProps> = ({
       }
     });
 
-    const sortKey = columns.find(col => filterStates[col.key]?.sortDirection !== "none")?.key;
-    if (sortKey) {
+    // Apply sorting if any column has a sort direction
+    const sortedColumn = columns.find(col => filterStates[col.key]?.sortDirection !== "none");
+    if (sortedColumn) {
+      const sortKey = sortedColumn.key;
       const sortDirection = filterStates[sortKey].sortDirection;
+      
       result.sort((a, b) => {
-        const aValue = (a as any)[sortKey] ?? "";
-        const bValue = (b as any)[sortKey] ?? "";
-        if (sortKey === "distance" || sortKey === "rating" || sortKey === "contact") {
+        const aValue = a[sortKey];
+        const bValue = b[sortKey];
+        
+        // Numeric sorting for numeric columns
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
           return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
         }
-        if (typeof aValue === "string" && typeof bValue === "string") {
-          return sortDirection === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-        }
-        return 0;
+        
+        // String sorting for string columns
+        const aStr = String(aValue || '');
+        const bStr = String(bValue || '');
+        return sortDirection === "asc" ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
       });
     }
 
     return result;
-  }, [filterStates, initialData]);
+  }, [initialData, columns, filterStates]);
 
+  // Handle sorting when clicking a column header
   const handleSort = (key: string) => {
     setFilterStates(prev => {
       const current = prev[key];
@@ -143,34 +158,44 @@ const ResultTable: React.FC<ResultTableProps> = ({
     });
   };
 
+  // Toggle filter dropdown open/closed
   const handleToggle = (key: string) => {
-    setFilterStates(prev => ({ ...prev, [key]: { ...prev[key], isOpen: !prev[key].isOpen } }));
+    setFilterStates(prev => {
+      // Close all other dropdowns
+      const updated = { ...prev };
+      Object.keys(updated).forEach(k => {
+        if (k !== key && updated[k].isOpen) {
+          updated[k] = { ...updated[k], isOpen: false };
+        }
+      });
+      // Toggle the clicked dropdown
+      return { ...updated, [key]: { ...updated[key], isOpen: !updated[key].isOpen } };
+    });
   };
 
+  // Handle filter option selection
   const handleOptionSelect = (key: string, value: string) => {
     setFilterStates(prev => ({ ...prev, [key]: { ...prev[key], selected: value, isOpen: false } }));
   };
 
+  // Reset all filters to default state
   const resetFilters = () => {
     columns.forEach(col => {
-      col.ref.current?.reset();
-      setFilterStates(prev => ({ ...prev, [col.key]: { selected: "all", sortDirection: "none", isOpen: false } }));
+      if (col.ref.current) {
+        col.ref.current.reset();
+      }
     });
+    
+    setFilterStates(
+      columns.reduce((acc, col) => {
+        acc[col.key] = { selected: "all", sortDirection: "none", isOpen: false };
+        return acc;
+      }, {} as any)
+    );
   };
 
+  // Close all dropdowns when pressing Escape
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
-        setFilterStates(prev => {
-          const updated = { ...prev };
-          Object.keys(updated).forEach(key => {
-            if (updated[key].isOpen) updated[key].isOpen = false;
-          });
-          return updated;
-        });
-      }
-    };
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setFilterStates(prev => {
@@ -183,34 +208,42 @@ const ResultTable: React.FC<ResultTableProps> = ({
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleKeyDown);
+    
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
-  const appliedFilters = columns.filter(col => filterStates[col.key]?.selected !== "all").map(col => col.label);
+  // Get names of columns with active filters for the summary
+  const appliedFilters = columns
+    .filter(col => filterStates[col.key]?.selected !== "all")
+    .map(col => col.label);
 
   return (
-    <div className={className}>
+    <div className={`result-table ${className}`}>
       <div className="result-table__filter-summary">
         <span>
           {appliedFilters.length > 0
             ? `Filtered by ${appliedFilters.length} column(s): ${appliedFilters.join(", ")}`
             : "No filter is applied"}
         </span>
-        <button className="result-table__reset-button" onClick={resetFilters}>
+        <button 
+          className="result-table__reset-button" 
+          onClick={resetFilters}
+          disabled={appliedFilters.length === 0}
+        >
           Reset Filters
         </button>
       </div>
+      
       <table className="result-table__table">
         <colgroup>
           {columns.map(col => (
             <col key={col.key} className={`col-${col.key}`} />
           ))}
         </colgroup>
+        
         <thead ref={headerRef} className="result-table__header">
           <tr className="result-table__header-row">
             {columns.map(col => (
@@ -222,8 +255,8 @@ const ResultTable: React.FC<ResultTableProps> = ({
               >
                 <div className="header-cell__content">
                   <col.component
-                    data={col.data}
-                    onFilter={() => {}} // Kept for compatibility
+                    data={initialData}
+                    onFilter={() => {}} // Kept for compatibility with BaseFilter
                     ref={col.ref}
                     label={col.label}
                     selected={filterStates[col.key]?.selected || "all"}
@@ -244,6 +277,7 @@ const ResultTable: React.FC<ResultTableProps> = ({
             ))}
           </tr>
         </thead>
+        
         <tbody className="result-table__body">
           {filteredData.length === 0 ? (
             <tr className="result-table__body-row">
