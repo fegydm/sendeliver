@@ -1,4 +1,6 @@
-// File: src/components/sections/content/results/ContactFilter.tsx
+// File: ./front/src/components/sections/content/results/ContactFilter.tsx
+// Last change: Updated tooltip position to appear above the table cell or table
+
 import { forwardRef, ForwardRefExoticComponent, RefAttributes, useState, useEffect, useRef } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
@@ -22,14 +24,29 @@ const contactFilterOptions = [
 
 const CellWithHover = ({ id_pp, name_carrier }: { id_pp: number; name_carrier?: string }) => {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const cellRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  
-  const handleMouseEnter = () => {
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
     timerRef.current = setTimeout(() => {
       setShowTooltip(true);
-    }, 2000);
+      
+      // Get cell position relative to viewport
+      if (cellRef.current) {
+        const cellRect = cellRef.current.getBoundingClientRect();
+        
+        // Position tooltip centered horizontally over the cell
+        // and vertically above the table row
+        setTooltipPosition({
+          x: cellRect.left + cellRect.width / 2,
+          y: cellRect.top - 10 // 10px above the top of the cell
+        });
+      }
+    }, 1600); // 300ms delay for hover
   };
-  
+
   const handleMouseLeave = () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -37,7 +54,7 @@ const CellWithHover = ({ id_pp, name_carrier }: { id_pp: number; name_carrier?: 
     }
     setShowTooltip(false);
   };
-  
+
   useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -45,34 +62,41 @@ const CellWithHover = ({ id_pp, name_carrier }: { id_pp: number; name_carrier?: 
       }
     };
   }, []);
-  
+
   return (
-    <div 
-      style={{ 
-        position: "relative", 
-        display: "inline-block",
-        cursor: "default"
+    <div
+      ref={cellRef}
+      style={{
+        position: "relative",
+        display: "inline-block", 
+        width: "100%",
+        height: "100%",
+        cursor: "default",
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <span>{name_carrier || `PP${id_pp}`}</span>
+      <span>{id_pp}</span> {/* Display only id_pp in the table cell */}
       {showTooltip && name_carrier && (
-        <div style={{
-          position: "absolute",
-          bottom: "100%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          backgroundColor: "#333",
-          color: "#fff",
-          padding: "4px 8px",
-          borderRadius: "4px",
-          fontSize: "12px",
-          whiteSpace: "nowrap",
-          zIndex: 1000,
-          boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
-        }}>
-          {name_carrier}
+        <div
+          ref={tooltipRef}
+          style={{
+            position: "fixed", // Fixed position relative to viewport
+            top: tooltipPosition.y,
+            left: tooltipPosition.x,
+            transform: "translateX(-50%)", // Center horizontally
+            backgroundColor: "#333",
+            color: "#fff",
+            padding: "4px 8px",
+            borderRadius: "4px",
+            fontSize: "12px",
+            whiteSpace: "nowrap",
+            zIndex: 1000, // Ensure it's above the table
+            boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+            pointerEvents: "none", // Prevents tooltip from interfering with mouse events
+          }}
+        >
+          {name_carrier} {/* Show name_carrier on hover */}
         </div>
       )}
     </div>
@@ -81,19 +105,18 @@ const CellWithHover = ({ id_pp, name_carrier }: { id_pp: number; name_carrier?: 
 
 export const contactColumn = {
   label: "Contact",
-  key: "contact" as const,
+  key: "id_pp" as const, // Changed from "contact" to "id_pp" to match dataset
   filterFn: (data: SenderResultData[], selected: string) => {
     if (selected === "all") return data;
     return data.filter(record => {
-      if (!record || record.contact === undefined) return false;
-      return selected === "verified" && record.contact > 0;
+      if (!record || record.id_pp === undefined) return false;
+      return selected === "verified" && record.id_pp > 0; // Filter based on id_pp
     });
   },
   renderCell: (row: SenderResultData) => {
-    if (!row || row.contact === undefined) return "N/A";
-    if (row.name_carrier) return <CellWithHover id_pp={row.contact} name_carrier={row.name_carrier} />;
-    const id_pp = row.contact;
-    const name_carrier = `Carrier ${id_pp} Transport, Inc.`;
+    if (!row || row.id_pp === undefined) return "N/A";
+    const id_pp = row.id_pp;
+    const name_carrier = row.name_carrier || `Carrier ${id_pp} Transport, Inc.`; // Fallback name
     return <CellWithHover id_pp={id_pp} name_carrier={name_carrier} />;
   },
 };

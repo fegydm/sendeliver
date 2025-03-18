@@ -1,7 +1,10 @@
 // File: src/components/sections/content/results/TransitFilter.tsx
+// Last change: Updated transit calculation to work with availability time
+
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
+import { SEARCH_CONSTANTS } from "@/constants/search.constants";
 
 interface TransitFilterProps {
   data: SenderResultData[];
@@ -23,16 +26,12 @@ const transitFilterOptions = [
 ];
 
 const calculateTransitHours = (row: SenderResultData): number => {
-  if (!row || !row.availability) return 0;
+  if (!row || !row.availability_date || !row.availability_time) {
+    console.warn(`Transit calculation: Missing data for row`, row);
+    return 0;
+  }
   
-  const now = new Date();
-  const availTime = new Date(row.availability);
-  if (isNaN(availTime.getTime())) return 0;
-  
-  const timeDiffMinutes = availTime > now 
-    ? (availTime.getTime() - now.getTime()) / (1000 * 60) 
-    : 0;
-  
+  // Parse distance
   let distanceKm = 0;
   if (row.distance) {
     const distanceMatch = row.distance.toString().match(/\d+(\.\d+)?/);
@@ -41,9 +40,51 @@ const calculateTransitHours = (row: SenderResultData): number => {
     }
   }
   
+  // Convert distance to minutes (1km = 1min, assuming 60km/h average speed)
   const distanceMinutes = distanceKm;
-  const totalTransitMinutes = timeDiffMinutes + distanceMinutes;
-  return totalTransitMinutes / 60;
+  
+  // Get availability time from the same source as AvailabilityFilter
+  try {
+    // Create delivery_dt from dataset
+    const deliveryDt = new Date(`${row.availability_date}T${row.availability_time}`);
+    if (isNaN(deliveryDt.getTime())) {
+      console.warn(`Transit calculation: Invalid delivery_dt - ${row.availability_date}T${row.availability_time}`);
+      return distanceMinutes / 60; // Fallback to just distance-based transit time
+    }
+
+    // Calculate available_dt as delivery_dt + offset hours (same as in AvailabilityFilter)
+    const availableDt = new Date(deliveryDt);
+    availableDt.setHours(deliveryDt.getHours() + SEARCH_CONSTANTS.AVAILABILITY_OFFSET_HOURS);
+    
+    // Get loading time - either from the form data or use default offset
+    // In this case, we assume it's not directly available and use the default offset
+    const now = new Date();
+    const loadingDt = new Date(now);
+    loadingDt.setHours(now.getHours() + SEARCH_CONSTANTS.DEFAULT_LOADING_TIME_OFFSET_HOURS);
+    
+    // Calculate time difference in minutes
+    const timeDiffMinutes = (loadingDt.getTime() - availableDt.getTime()) / (1000 * 60);
+    
+    let transitMinutes = 0;
+    
+    if (timeDiffMinutes >= 0) {
+      // If loading time is after or equal to availability time
+      // Transit time is just the distance in minutes
+      transitMinutes = distanceMinutes;
+      console.log(`Transit calculation: loading after availability - distance only: ${transitMinutes/60} hours`);
+    } else {
+      // If loading time is before availability time
+      // Transit time is distance in minutes plus the wait time (absolute value of negative difference)
+      transitMinutes = distanceMinutes + Math.abs(timeDiffMinutes);
+      console.log(`Transit calculation: loading before availability - distance + wait time: ${transitMinutes/60} hours`);
+    }
+    
+    // Convert to hours and return
+    return transitMinutes / 60;
+  } catch (e) {
+    console.error(`Transit calculation error:`, e);
+    return distanceMinutes / 60; // Fallback to just distance-based transit time
+  }
 };
 
 const formatTransitTime = (hours: number): string => {

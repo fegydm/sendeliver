@@ -1,5 +1,5 @@
-// File: src/components/sections/content/results/StatusFilter.tsx
-// Last modified: March 26, 2025 - Fixed shortLabel not propagating to second row
+// File: .front/src/components/sections/content/results/StatusFilter.tsx
+// Last change: Updated status logic with O as base, G as subset, and icon coloring
 
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
@@ -19,6 +19,7 @@ interface StatusFilterProps {
   onSortClick: (e: React.MouseEvent) => void;
   onToggleClick: (e: React.MouseEvent) => void;
   onOptionSelect: (value: string) => void;
+  loadingDt?: string; // Added for loading datetime
 }
 
 const vehicleIcons: { [key: string]: string } = {
@@ -28,32 +29,24 @@ const vehicleIcons: { [key: string]: string } = {
   rigid: rigidIcon,
 };
 
-const getStatusValue = (record: SenderResultData): string => {
-  if (!record || !record.availability) return "R";
-  
+const getStatusValue = (record: SenderResultData, loadingDt?: string): string => {
+  if (!record || !record.availability_date || !record.availability_time) return "R";
+
   const now = new Date();
-  const availTime = new Date(record.availability);
-  
-  let loadingTime: Date;
-  if (record.transit) {
-    if (typeof record.transit === 'string' && record.transit.includes(',')) {
-      return "O";
+  const availableDt = new Date(`${record.availability_date}T${record.availability_time}Z`);
+  const loadingDateTime = loadingDt ? new Date(loadingDt) : new Date(now.getTime() + 3 * 60 * 60 * 1000); // Fallback: now + 3h
+  const nowMinusOneHour = new Date(now.getTime() - 60 * 60 * 1000);
+  const loadingMinusOneHour = new Date(loadingDateTime.getTime() - 60 * 60 * 1000);
+
+  if (availableDt < loadingMinusOneHour) { // O: available before loading_dt - 1h
+    if (availableDt < nowMinusOneHour) { // G: subset of O, available before now - 1h
+      return "G";
     }
-    
-    loadingTime = new Date(record.transit);
-    if (isNaN(loadingTime.getTime())) {
-      loadingTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-    }
-  } else {
-    loadingTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    return "O";
   }
-  
-  if (availTime < now) return "G";
-  if (availTime < loadingTime) return "O";
-  return "R";
+  return "R"; // R: available after loading_dt - 1h
 };
 
-// Option definitions with both full and short labels
 const statusFilterOptions = [
   { value: "all", label: "all ...", shortLabel: "all", icon: null },
   { 
@@ -76,7 +69,6 @@ const statusFilterOptions = [
   },
 ];
 
-// Function to get short label based on the selected value
 const getShortLabel = (value: string): string => {
   const option = statusFilterOptions.find(opt => opt.value === value);
   return option?.shortLabel || value;
@@ -84,45 +76,24 @@ const getShortLabel = (value: string): string => {
 
 export const statusColumn = {
   label: "Status",
-  key: "status" as const,
-  filterFn: (data: SenderResultData[], selected: string) => {
+  key: "status" as keyof SenderResultData,
+  filterFn: (data: SenderResultData[], selected: string, loadingDt?: string) => {
     if (selected === "all") return data;
-    return data.filter(record => getStatusValue(record) === selected);
+    return data.filter(record => getStatusValue(record, loadingDt) === selected);
   },
-  renderCell: (row: SenderResultData) => {
-    if (typeof row.transit === 'string' && row.transit.includes(',')) {
-      const statusColor = "#FFA500";
-      const vehicleType = (row?.type || "truck").toLowerCase();
-      const vehicleIcon = vehicleIcons[vehicleType] || truckIcon;
-      
-      return (
-        <div>
-          <img 
-            src={vehicleIcon} 
-            alt={vehicleType}
-            style={{ 
-              width: "24px", 
-              height: "24px",
-              filter: `drop-shadow(0 0 3px ${statusColor})`,
-              fill: statusColor
-            }} 
-          />
-        </div>
-      );
+  renderCell: (row: SenderResultData, loadingDt?: string) => {
+    const statusVal = getStatusValue(row, loadingDt);
+    let statusColor = "#999999"; // Default grey
+
+    switch (statusVal) {
+      case "G": statusColor = "#00CC00"; break; // Green
+      case "O": statusColor = "#FFA500"; break; // Orange
+      case "R": statusColor = "#FF0000"; break; // Red
     }
 
-    const statusVal = getStatusValue(row);
-    let statusColor = "#999999";
-    
-    switch (statusVal) {
-      case "G": statusColor = "#00CC00"; break;
-      case "O": statusColor = "#FFA500"; break;
-      case "R": statusColor = "#FF0000"; break;
-    }
-    
     const vehicleType = (row?.type || "truck").toLowerCase();
     const vehicleIcon = vehicleIcons[vehicleType] || truckIcon;
-    
+
     return (
       <div>
         <img 
@@ -132,7 +103,6 @@ export const statusColumn = {
             width: "24px", 
             height: "24px",
             filter: `drop-shadow(0 0 3px ${statusColor})`,
-            fill: statusColor
           }} 
         />
       </div>
@@ -144,18 +114,14 @@ interface StatusFilterComponent
   extends ForwardRefExoticComponent<
     StatusFilterProps & RefAttributes<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>
   > {
-  renderCell: (row: SenderResultData) => React.ReactNode;
-  filterFn: (data: SenderResultData[], selected: string) => SenderResultData[];
+  renderCell: (row: SenderResultData, loadingDt?: string) => React.ReactNode;
+  filterFn: (data: SenderResultData[], selected: string, loadingDt?: string) => SenderResultData[];
 }
 
 const StatusFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   StatusFilterProps
->(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
-  // OPRAVA: Už nepoužívame transformáciu, ktorá by strácala shortLabel hodnoty
-  // Priamo použijeme originálne statusFilterOptions
-
-  // Create custom selected label formatter for second row display
+>(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect, loadingDt }, ref) => {
   const getSelectedLabel = (selected: string) => {
     return getShortLabel(selected);
   };
@@ -164,17 +130,17 @@ const StatusFilter = forwardRef<
     <BaseFilter
       ref={ref}
       data={data}
-      onFilter={onFilter}
+      onFilter={(filtered) => onFilter(filtered)}
       label={label}
-      options={statusFilterOptions} // Použijeme pôvodné options so všetkými vlastnosťami
-      filterFn={statusColumn.filterFn}
+      options={statusFilterOptions}
+      filterFn={(data, selected) => statusColumn.filterFn(data, selected, loadingDt)}
       selected={selected}
       sortDirection={sortDirection}
       isOpen={isOpen}
       onSortClick={onSortClick}
       onToggleClick={onToggleClick}
       onOptionSelect={onOptionSelect}
-      getSelectedLabel={getSelectedLabel} // Pass custom formatter to BaseFilter
+      getSelectedLabel={getSelectedLabel}
     />
   );
 }) as StatusFilterComponent;

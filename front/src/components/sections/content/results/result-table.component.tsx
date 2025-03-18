@@ -1,3 +1,6 @@
+// File: src/components/sections/content/results/result-table.component.tsx
+// Last change: Updated to pass loadingDt to StatusFilter
+
 import { useState, useEffect, useRef, useMemo } from "react";
 import "./result-table.css";
 import DistanceFilter, { distanceColumn } from "./DistanceFilter";
@@ -16,7 +19,7 @@ export interface SenderResultData {
   availability_time: string;
   transit: string;
   rating?: number;
-  contact: number;
+  id_pp: number;
   name_carrier?: string;
 }
 
@@ -26,6 +29,7 @@ export interface ResultTableProps {
   isLoading?: boolean;
   className?: string;
   totalCount?: number;
+  loadingDt?: string;
 }
 
 interface Column {
@@ -33,22 +37,19 @@ interface Column {
   key: keyof SenderResultData;
   ref: React.RefObject<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>;
   component: React.ForwardRefExoticComponent<any> & {
-    renderCell: (row: SenderResultData) => React.ReactNode;
-    filterFn: (data: SenderResultData[], selected: string) => SenderResultData[];
+    renderCell: (row: SenderResultData, loadingDt?: string) => React.ReactNode;
+    filterFn: (data: SenderResultData[], selected: string, loadingDt?: string) => SenderResultData[];
   };
+  loadingDt?: string;
 }
 
 const getPlaceholderAvailability = () => {
   const now = new Date();
-  const availabilityTime = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 hours from now
-  const result = {
-    date: availabilityTime.toISOString().split("T")[0], // "YYYY-MM-DD"
-    time: `${availabilityTime.getHours().toString().padStart(2, "0")}:${availabilityTime
-      .getMinutes()
-      .toString()
-      .padStart(2, "0")}:00`, // "HH:MM:SS"
+  const availabilityTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  return {
+    date: availabilityTime.toISOString().split("T")[0],
+    time: `${availabilityTime.getHours().toString().padStart(2, "0")}:${availabilityTime.getMinutes().toString().padStart(2, "0")}:00`,
   };
-  return result;
 };
 
 const PLACEHOLDER_DATA: SenderResultData[] = [
@@ -60,7 +61,7 @@ const PLACEHOLDER_DATA: SenderResultData[] = [
     availability_time: getPlaceholderAvailability().time,
     transit: "2,5",
     rating: 4.2,
-    contact: 1,
+    id_pp: 1045789,
     name_carrier: "OmegaTrans",
   },
 ];
@@ -71,6 +72,7 @@ const ResultTable: React.FC<ResultTableProps> = ({
   isLoading = false,
   className = "",
   totalCount = 0,
+  loadingDt,
 }) => {
   if (type !== "sender") {
     return (
@@ -90,19 +92,18 @@ const ResultTable: React.FC<ResultTableProps> = ({
   const transitFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const ratingFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const contactFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
-  const headerRef = useRef<HTMLTableSectionElement>(null);
 
   const columns: Column[] = useMemo(
     () => [
       { ...distanceColumn, ref: distanceFilterRef, component: DistanceFilter },
       { ...typeColumn, ref: typeFilterRef, component: TypeFilter },
-      { ...statusColumn, ref: statusFilterRef, component: StatusFilter },
+      { ...statusColumn, ref: statusFilterRef, component: StatusFilter, loadingDt }, // Pass loadingDt to Status
       { ...availabilityColumn, key: "availability_date", ref: availabilityFilterRef, component: AvailabilityFilter },
       { ...transitColumn, ref: transitFilterRef, component: TransitFilter },
       { ...ratingColumn, ref: ratingFilterRef, component: RatingFilter },
       { ...contactColumn, ref: contactFilterRef, component: ContactFilter },
     ],
-    []
+    [loadingDt]
   );
 
   const [filterStates, setFilterStates] = useState<{
@@ -119,7 +120,7 @@ const ResultTable: React.FC<ResultTableProps> = ({
     columns.forEach(col => {
       const state = filterStates[col.key];
       if (state?.selected && state.selected !== "all") {
-        result = col.component.filterFn(result, state.selected);
+        result = col.component.filterFn(result, state.selected, col.loadingDt);
       }
     });
     const sortedColumn = columns.find(col => filterStates[col.key]?.sortDirection !== "none");
@@ -220,7 +221,7 @@ const ResultTable: React.FC<ResultTableProps> = ({
               <col key={col.key} className={`col-${col.key}`} />
             ))}
           </colgroup>
-          <thead ref={headerRef} className="result-table__header">
+          <thead className="result-table__header">
             <tr className="result-table__header-row">
               {columns.map(col => (
                 <th
@@ -247,6 +248,7 @@ const ResultTable: React.FC<ResultTableProps> = ({
                         handleToggle(col.key);
                       }}
                       onOptionSelect={(value: string) => handleOptionSelect(col.key, value)}
+                      loadingDt={col.loadingDt}
                     />
                   </div>
                 </th>
@@ -267,7 +269,7 @@ const ResultTable: React.FC<ResultTableProps> = ({
                   className={`result-table__body-row ${showPlaceholder ? "result-table__body-row--placeholder" : ""}`}
                 >
                   {columns.map(col => {
-                    const cellContent = col.component.renderCell(row);
+                    const cellContent = col.component.renderCell(row, col.loadingDt);
                     return (
                       <td key={col.key} className="result-table__body-cell">
                         {cellContent}

@@ -1,7 +1,8 @@
-// File: src/services/vehicles.services.ts
-// Last change: Return separate date and time fields for frontend compatibility
+// File: ./back/src/services/vehicles.services.ts
+// Last change: Enhanced debug logging for raw DB values
 
 import { pool } from "../configs/db.js";
+import { SEARCH_CONSTANTS } from "../constants/vehicle.constants.js";
 
 interface VehicleSearchParams {
   pickup: {
@@ -26,7 +27,6 @@ interface VehicleSearchParams {
   };
 }
 
-// Updated Vehicle interface to separate date and time
 interface Vehicle {
   id: string;
   vehicle_type: string;
@@ -41,12 +41,11 @@ interface Vehicle {
     country_code: string;
     city: string;
   };
-  delivery_date: string; // e.g., "2025-03-11"
-  delivery_time: string; // e.g., "14:00:00"
+  delivery_date: string;
+  delivery_time: string;
   id_pp: number;
 }
 
-// Define interface for delivery record from database (unchanged)
 interface DeliveryRecord {
   id: number;
   delivery_id?: string;
@@ -65,7 +64,6 @@ interface DeliveryRecord {
   longitude?: number;
 }
 
-// Query remains unchanged
 export const GET_ALL_RECENT_DELIVERIES_QUERY = `
 SELECT DISTINCT ON (d.id)
     d.id,
@@ -88,8 +86,8 @@ INNER JOIN
     ON d.delivery_country = p.country_code 
     AND d.delivery_zip = p.postal_code
 WHERE 
-    d.delivery_date >= NOW() - INTERVAL '40 hours'
-    AND (d.delivery_date > NOW() - INTERVAL '40 hours' OR d.delivery_time::time >= NOW()::time)
+    d.delivery_date >= NOW() - INTERVAL '${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours'
+    AND (d.delivery_date > NOW() - INTERVAL '${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours' OR d.delivery_time::time >= NOW()::time)
 ORDER BY 
     d.id, d.delivery_date DESC, d.delivery_time DESC;
 `;
@@ -130,26 +128,26 @@ export class VehicleService {
         await this.checkHealth();
       }
 
-      console.log("🔍 Fetching all vehicles from last 40 hours");
+      console.log(`🔍 Fetching all vehicles from last ${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours`);
       const result = await pool.query(GET_ALL_RECENT_DELIVERIES_QUERY);
       const deliveries = result.rows;
-      console.log(`📊 Query returned ${deliveries.length} raw delivery records`);
+      console.log(`[VehicleService] Query returned ${deliveries.length} raw delivery records`);
 
       if (deliveries.length === 0) {
-        console.warn("⚠️ No deliveries found in the last 40 hours");
+        console.warn(`⚠️ No deliveries found in the last ${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours`);
         return [];
       }
 
       const vehicles: Vehicle[] = deliveries.map((delivery: DeliveryRecord) => {
-        // Format date as YYYY-MM-DD
         const datePart = delivery.delivery_date
-          ? delivery.delivery_date.toISOString().split("T")[0] // Convert Date to "YYYY-MM-DD"
-          : new Date().toISOString().split("T")[0]; // Fallback to today
-
-        // Ensure time is in HH:MM:SS format, trim if necessary
+  ? `${delivery.delivery_date.getFullYear()}-${String(delivery.delivery_date.getMonth() + 1).padStart(2, '0')}-${String(delivery.delivery_date.getDate()).padStart(2, '0')}`
+  : new Date().toISOString().split("T")[0];
         const timePart = delivery.delivery_time
-          ? String(delivery.delivery_time).padEnd(8, ":00").substring(0, 8) // Ensure HH:MM:SS
-          : "00:00:00"; // Fallback if null
+          ? String(delivery.delivery_time).padEnd(8, ":00").substring(0, 8)
+          : "00:00:00";
+
+        console.log(`[VehicleService] Raw DB - id_pp: ${delivery.id_pp}, delivery_date: ${delivery.delivery_date}, delivery_time: ${delivery.delivery_time}`);
+        console.log(`[VehicleService] Processed - id_pp: ${delivery.id_pp}, delivery_date: ${datePart}, delivery_time: ${timePart}`);
 
         return {
           id: delivery.id.toString(),
@@ -165,13 +163,13 @@ export class VehicleService {
             country_code: delivery.delivery_country || "N/A",
             city: delivery.delivery_city || "N/A",
           },
-          delivery_date: datePart, // Separate date field
-          delivery_time: timePart, // Separate time field
+          delivery_date: datePart,
+          delivery_time: timePart,
           id_pp: delivery.id_pp || 0,
         };
       });
 
-      console.log(`[VehicleService] Processed ${vehicles.length} vehicles from last 40 hours`);
+      console.log(`[VehicleService] Processed ${vehicles.length} vehicles from last ${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours`);
       return vehicles;
     } catch (error) {
       console.error("❌ Failed to fetch vehicles:", error);

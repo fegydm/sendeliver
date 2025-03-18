@@ -1,8 +1,11 @@
-import { vehicleTypes } from "../constants/vehicle-types.js";
+// File: ./back/src/utils/vehicle-utils.ts
+// Utility for calculating suitable vehicles based on weight and pallet count
+
+import { VEHICLE_TYPES, AVERAGE_PALLET_WEIGHT_KG } from "../constants/vehicle.constants.js";
 
 export const calculateSuitableVehicles = (
   input: { weight?: number; palletCount?: number },
-  weightPerPallet: number = 200
+  weightPerPallet: number = AVERAGE_PALLET_WEIGHT_KG // Use constant instead of hard-coded value
 ) => {
   let calculatedWeight = input.weight || 0;
   let calculatedPallets = input.palletCount || 0;
@@ -15,7 +18,7 @@ export const calculateSuitableVehicles = (
     calculatedPallets = Math.ceil(calculatedWeight / weightPerPallet);
   }
 
-  const suitableVehicles = vehicleTypes.filter(
+  const suitableVehicles = VEHICLE_TYPES.filter(
     (vehicle) =>
       calculatedPallets >= vehicle.minPallets &&
       calculatedPallets <= vehicle.maxPallets &&

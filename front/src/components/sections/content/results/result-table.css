@@ -15,7 +15,7 @@
 }
 
 .result-table__table { width: 100%; table-layout: auto; border-collapse: collapse; }
-.result-table__header { position: sticky; top: 0; z-index: 10; }
+.result-table__header { position: sticky; top: 0; z-index: 10; min-height: 50px !important; height: 40px; }
 .result-table__header-cell { border: 1px solid #ddd; background-color: #c9c9c9; vertical-align: middle; padding: 2px; white-space: nowrap; }
 .result-table__header-cell--filtered { background-color: #d0e0ff; }
 .result-table__header-cell--open { background-color: #e0e0e0; }

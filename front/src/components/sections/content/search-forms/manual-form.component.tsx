@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Updated to handle new API response with totalCount
+// Last change: Simplified availability logic with loading_dt fallback to now + 3 hours
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import CountrySelect from "./CountrySelect";
@@ -37,12 +37,12 @@ interface Vehicle {
     country_code: string;
     city: string;
   };
-  delivery_time: string;
+  availability_date: string; // Added for API compatibility
+  availability_time: string; // Added for API compatibility
   id_pp: number;
   distance: number;
 }
 
-// API response interface
 interface VehicleSearchResponse {
   totalCount: number;
   withinDistance: number;
@@ -51,7 +51,7 @@ interface VehicleSearchResponse {
 }
 
 const DEFAULT_FORM_DATA: TransportFormData = {
-  pickup: { country: { cc: "", flag: "" }, psc: "", city: "", time: new Date().toISOString(), lat: 0, lng: 0 },
+  pickup: { country: { cc: "", flag: "" }, psc: "", city: "", time: "", lat: 0, lng: 0 },
   delivery: { country: { cc: "", flag: "" }, psc: "", city: "", time: "", lat: 0, lng: 0 },
   cargo: { pallets: 0, weight: 0 },
 };
@@ -75,7 +75,6 @@ export function ManualForm({
   const [totalVehiclesCount, setTotalVehiclesCount] = useState<number>(0);
   const { items: allCountries } = useCountries();
 
-  // Fetch postal code format for a given country code
   const fetchPostalFormat = useCallback(async (cc: string) => {
     try {
       const response = await fetch(`/api/geo/country_formats?cc=${cc}`);
@@ -100,7 +99,6 @@ export function ManualForm({
     }
   }, []);
 
-  // Warn about postal format mismatch in development mode
   useEffect(() => {
     if (!isDevMode) return;
     const countryCount = allCountries.length;
@@ -112,68 +110,48 @@ export function ManualForm({
     }
   }, [allCountries, postalFormats]);
 
-  // Validate pickup data
   const validatePickup = useCallback(() => {
     const pickup = localFormData.pickup;
     const isValid =
       pickup.country.cc !== "" &&
       pickup.psc !== "" &&
-      pickup.city !== "" &&
-      pickup.time !== "" &&
-      pickup.lat !== 0 &&
-      pickup.lng !== 0;
+      pickup.city !== "";
     console.log("[ManualForm] Validating pickup:", { pickup, isValid });
     setIsPickupValid(isValid);
     return isValid;
   }, [localFormData.pickup]);
 
-  // Helper function to format availability string
-  const formatAvailability = (deliveryTime: string): string => {
-    if (!deliveryTime) return "Unknown";
-    try {
-      const date = new Date(deliveryTime);
-      if (isNaN(date.getTime())) return "Invalid date";
-      return date.toLocaleString();
-    } catch (e) {
-      return "Date error";
-    }
-  };
-
-  // Helper function to calculate transit time from distance
   const calculateTransitTime = (distance: number): string => {
     if (isNaN(distance)) return "Unknown";
-    
     const speedKmPerHour = 80;
     const hours = distance / speedKmPerHour;
-    
     const fullHours = Math.floor(hours);
     const minutes = Math.round((hours - fullHours) * 60);
-    
-    if (fullHours === 0) {
-      return `${minutes}m`;
-    } else {
-      return `${fullHours}h ${minutes}m`;
-    }
+    return fullHours === 0 ? `${minutes}m` : `${fullHours}h ${minutes}m`;
   };
 
-  // Generate a random rating between 3.1 and 4.9
   const generateRandomRating = (): number => {
     return Math.round((3.1 + Math.random() * (4.9 - 3.1)) * 10) / 10;
   };
 
-  // Search for available vehicles from the backend
-  const searchAvailableVehicles = useCallback(async () => {
+  const searchAvailableVehicles = useCallback(async (): Promise<string> => {
     try {
       setIsSearching(true);
-
-      const { lat, lng, time } = localFormData.pickup;
-      if (!lat || !lng || !time) {
-        console.error("[ManualForm] Missing pickup coordinates or time");
-        return;
+  
+      const { lat, lng } = localFormData.pickup;
+      if (!lat || !lng) {
+        console.error("[ManualForm] Missing pickup coordinates");
+        const now = new Date();
+        return new Date(now.getTime() + 3 * 60 * 60 * 1000).toISOString(); // Fallback return
       }
-
-      console.log(`[ManualForm] Searching vehicles with pickup: LAT=${lat}, LNG=${lng}, TIME=${time}`);
-
+  
+      const now = new Date();
+      const loadingDt = localFormData.pickup.time
+        ? new Date(localFormData.pickup.time)
+        : new Date(now.getTime() + 3 * 60 * 60 * 1000); // Fallback: now + 3 hours
+  
+      console.log(`[ManualForm] Searching vehicles with pickup: LAT=${lat}, LNG=${lng}, loading_dt=${loadingDt.toISOString()}`);
+  
       const response = await fetch("/api/vehicles/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -183,54 +161,56 @@ export function ManualForm({
           cargo: localFormData.cargo,
         }),
       });
-
+  
       if (!response.ok) {
         throw new Error(`Search failed: ${response.status}`);
       }
-
+  
       const data: VehicleSearchResponse = await response.json();
       console.log("[ManualForm] API response:", data);
-      
-      // Save the total count for display in the footer
+  
       setTotalVehiclesCount(data.totalCount || 0);
-      
-      // Ensure we have an array of vehicles, even if empty
+  
       if (!data || !data.vehicles || !Array.isArray(data.vehicles)) {
         console.error("[ManualForm] Invalid API response format:", data);
         setAvailableVehicles([]);
-        return;
+        return loadingDt.toISOString(); // Return loadingDt even on invalid response
       }
-      
+  
       console.log("[ManualForm] Raw vehicles data:", JSON.stringify(data.vehicles, null, 2));
-
+  
       const transformedResults: SenderResultData[] = data.vehicles.map((vehicle) => {
         return {
           distance: vehicle.distance,
           type: vehicle.vehicle_type || "Unknown",
           status: "Available",
-          availability: formatAvailability(vehicle.delivery_time),
+          availability_date: vehicle.availability_date, // Direct from BE
+          availability_time: vehicle.availability_time, // Direct from BE
           transit: calculateTransitTime(vehicle.distance),
           rating: generateRandomRating(),
-          contact: parseInt(vehicle.carrier_id) || 0,
-          name_carrier: vehicle.carrier_name || "Unknown Carrier"
+          id_pp: vehicle.id_pp,
+          name_carrier: vehicle.carrier_name || "Unknown Carrier",
         };
       });
-
+  
+      console.log("[ManualForm] Transformed vehicles:", transformedResults);
       setAvailableVehicles(transformedResults);
+  
+      return loadingDt.toISOString(); // Successful return
     } catch (error) {
       console.error("Error searching vehicles:", error);
       setAvailableVehicles([]);
+      const now = new Date();
+      return new Date(now.getTime() + 3 * 60 * 60 * 1000).toISOString(); // Fallback return on error
     } finally {
       setIsSearching(false);
     }
   }, [localFormData]);
 
-  // Validate pickup data on change
   useEffect(() => {
     validatePickup();
   }, [localFormData.pickup, validatePickup]);
 
-  // Handle country selection
   const handleCountrySelect = useCallback(
     (locationType: LocationType, cc: string, flag: string) => {
       console.log(`[ManualForm] Country selected for ${locationType}:`, cc, flag);
@@ -243,12 +223,10 @@ export function ManualForm({
     [fetchPostalFormat]
   );
 
-  // Focus postal code input based on location type
   const focusPostalCode = useCallback((locationType: LocationType) => {
     (locationType === LocationType.PICKUP ? pickupPscRef : deliveryPscRef).current?.focus();
   }, []);
 
-  // Handle location selection
   const handleLocationSelect = useCallback(
     (locationType: LocationType, location: Omit<LocationSuggestion, "priority">) => {
       console.log(`[ManualForm] Location selected for ${locationType}:`, location);
@@ -266,7 +244,6 @@ export function ManualForm({
     [localFormData]
   );
 
-  // Handle date and time change
   const handleDateTimeChange = useCallback((locationType: LocationType, date: Date) => {
     setLocalFormData((prev) => ({
       ...prev,
@@ -274,7 +251,6 @@ export function ManualForm({
     }));
   }, []);
 
-  // Handle cargo field changes
   const handleCargoChange = useCallback((field: "pallets" | "weight", value: number) => {
     setLocalFormData((prev) => ({
       ...prev,
@@ -282,15 +258,16 @@ export function ManualForm({
     }));
   }, []);
 
-  // Handle form submission
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       console.log("Submitting form data:", localFormData);
 
       if (validatePickup()) {
-        await searchAvailableVehicles();
-        onSubmit(localFormData);
+        const loadingDt = await searchAvailableVehicles();
+        if (loadingDt) {
+          onSubmit({ ...localFormData, pickup: { ...localFormData.pickup, time: loadingDt } });
+        }
       } else {
         console.warn("Pickup data is invalid, cannot submit");
       }
@@ -421,6 +398,7 @@ export function ManualForm({
             data={availableVehicles} 
             totalCount={totalVehiclesCount}
             isLoading={isSearching}
+            loadingDt={localFormData.pickup.time || new Date(new Date().getTime() + 3 * 60 * 60 * 1000).toISOString()}
           />
         </section>
       )}

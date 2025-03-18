@@ -1,7 +1,17 @@
+// File: ./front/src/components/sections/content/results/AvailabilityFilter.tsx
+// Last change: Added time difference check for available_dt calculation
+
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
-import { log, logAvailability } from "@/utils/logger"; // Import oboch loggerov
+import { logAvailability } from "@/utils/logger";
+import { SEARCH_CONSTANTS } from "@/constants/search.constants";
+
+// Function to calculate difference between two dates in hours
+function getTimeDifferenceInHours(date1: Date, date2: Date): number {
+  const diffInMs = date2.getTime() - date1.getTime();
+  return diffInMs / (1000 * 60 * 60); // milisekundy na hodiny
+}
 
 interface AvailabilityFilterProps {
   data: SenderResultData[];
@@ -28,57 +38,28 @@ export const availabilityColumn = {
   filterFn: (data: SenderResultData[], selected: string) => {
     if (selected === "all") return data;
 
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
     return data.filter(record => {
-      if (
-        !record ||
-        !record.availability_date ||
-        record.availability_date === "N/A" ||
-        !record.availability_time ||
-        record.availability_time === "N/A"
-      ) {
-        logAvailability(
-          `filterFn: Preskakujem záznam - chýbajúce alebo neplatné dáta - ` +
-          `record: ${JSON.stringify(record)}, ` +
-          `availability_date: ${record?.availability_date}, ` +
-          `availability_time: ${record?.availability_time}`
-        );
+      if (!record || !record.availability_date) {
+        logAvailability(`filterFn: Missing data - record: ${JSON.stringify(record)}`);
         return false;
       }
 
-      const availDateTime = new Date(`${record.availability_date}T${record.availability_time}Z`);
-      if (isNaN(availDateTime.getTime())) {
-        logAvailability(
-          `filterFn: Neplatný dátum - ` +
-          `availability_date: ${record.availability_date}, ` +
-          `availability_time: ${record.availability_time}, ` +
-          `vytvorený reťazec: ${record.availability_date}T${record.availability_time}Z`
-        );
+      const availDate = new Date(record.availability_date);
+      if (isNaN(availDate.getTime())) {
+        logAvailability(`filterFn: Invalid date - ${record.availability_date}`);
         return false;
       }
 
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-
-      const availDateNoTime = new Date(
-        availDateTime.getFullYear(),
-        availDateTime.getMonth(),
-        availDateTime.getDate()
-      );
-
-      logAvailability(
-        `filterFn: Spracovávam záznam - ` +
-        `availDateTime: ${availDateTime.toISOString()}, ` +
-        `selected: ${selected}, ` +
-        `now: ${now.toISOString()}, ` +
-        `today: ${today.toISOString()}, ` +
-        `tomorrow: ${tomorrow.toISOString()}`
-      );
+      const availDateNoTime = new Date(availDate.getFullYear(), availDate.getMonth(), availDate.getDate());
 
       switch (selected) {
         case "passed":
-          return availDateTime < now;
+          return availDate < today;
         case "today":
           return availDateNoTime.getTime() === today.getTime();
         case "tomorrow":
@@ -89,45 +70,38 @@ export const availabilityColumn = {
     });
   },
   renderCell: (row: SenderResultData) => {
-    if (
-      !row ||
-      !row.availability_date ||
-      row.availability_date === "N/A" ||
-      !row.availability_time ||
-      row.availability_time === "N/A"
-    ) {
-      logAvailability(
-        `renderCell: Chýbajúce alebo neplatné dáta - ` +
-        `row: ${JSON.stringify(row)}, ` +
-        `availability_date: ${row?.availability_date}, ` +
-        `availability_time: ${row?.availability_time}`
-      );
+    if (!row || !row.availability_date || !row.availability_time || row.id_pp === undefined) {
+      logAvailability(`renderCell: Missing data - row: ${JSON.stringify(row)}`);
       return "N/A";
     }
 
-    const date = new Date(`${row.availability_date}T${row.availability_time}Z`);
-    logAvailability(
-      `renderCell: Vytváram dátum - ` +
-      `availability_date: ${row.availability_date}, ` +
-      `availability_time: ${row.availability_time}, ` +
-      `vytvorený reťazec: ${row.availability_date}T${row.availability_time}Z, ` +
-      `výsledný dátum: ${date.toISOString()}`
-    );
+    // Log raw dataset values
+    logAvailability(`Dataset - id_pp: ${row.id_pp}, Date: ${row.availability_date}, Time: ${row.availability_time}`);
 
-    if (isNaN(date.getTime())) {
-      logAvailability(
-        `renderCell: Neplatný dátum - ` +
-        `availability_date: ${row.availability_date}, ` +
-        `availability_time: ${row.availability_time}`
-      );
+    // Create delivery_dt from dataset
+    const deliveryDt = new Date(`${row.availability_date}T${row.availability_time}`);
+    if (isNaN(deliveryDt.getTime())) {
+      logAvailability(`renderCell: Invalid delivery_dt - id_pp: ${row.id_pp}, ${row.availability_date}T${row.availability_time}`);
       return "Invalid date";
     }
 
+    // Calculate available_dt as delivery_dt + 1 hour
+    const availableDt = new Date(deliveryDt);
+    availableDt.setHours(deliveryDt.getHours() + SEARCH_CONSTANTS.AVAILABILITY_OFFSET_HOURS);
+
+    // Verify the difference is exactly 1 hour
+    const timeDiff = getTimeDifferenceInHours(deliveryDt, availableDt);
+    if (timeDiff !== 1) {
+      logAvailability(`Warning: Time difference is ${timeDiff} hours instead of 1 - id_pp: ${row.id_pp}`);
+    }
+
+    logAvailability(`Delivery: ${deliveryDt.toISOString()}, Available: ${availableDt.toISOString()}, id_pp: ${row.id_pp}`);
+
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const month = months[date.getMonth()];
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const month = months[availableDt.getMonth()];
+    const day = availableDt.getDate();
+    const hours = availableDt.getHours();
+    const minutes = availableDt.getMinutes().toString().padStart(2, "0");
 
     return `${month} ${day}, ${hours}:${minutes}`;
   },
@@ -149,7 +123,7 @@ const AvailabilityFilter = forwardRef<
     <BaseFilter
       ref={ref}
       data={data}
-      onFilter={onFilter}
+      onFilter={(filtered) => onFilter(filtered)}
       label={label}
       options={availabilityFilterOptions}
       filterFn={availabilityColumn.filterFn}

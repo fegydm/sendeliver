@@ -1,18 +1,21 @@
+// File: ./back/src/routes/vehicles.routes.ts
+// Router for vehicle search API endpoint, updated with centralized constants
+
 import { Router } from "express";
 import { VehicleService } from "../services/vehicles.services.js";
 import * as fs from "fs/promises";
 import { fileURLToPath } from "url";
 import * as path from "path";
+import { SEARCH_CONSTANTS } from "../constants/vehicle.constants.js"; // Import centralized constants
 
 const router = Router();
 const vehicleService = VehicleService.getInstance();
-
-const MAX_DISTANCE = 500;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logFilePath = path.join(__dirname, "vehicle_search_logs.txt");
 
+// Function to append log entries to a file
 async function logToFile(message: string) {
   const timestamp = new Date().toISOString();
   const logEntry = `[${timestamp}] ${message}\n`;
@@ -81,14 +84,15 @@ interface ExtendedVehicle {
     country_code: string;
     city: string;
   };
-  availability_date: string; // Premenované
-  availability_time: string; // Premenované
+  availability_date: string;
+  availability_time: string;
   id_pp: number;
   distance: number;
 }
 
+// Calculate distance between two points using Haversine formula
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
+  const R = 6371; // Earth's radius in kilometers
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
   const a =
@@ -98,10 +102,12 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
+// Convert degrees to radians
 function deg2rad(deg: number): number {
   return deg * (Math.PI / 180);
 }
 
+// Filter vehicles based on form criteria (distance, capacity, weight, time)
 function filterVehiclesByFormCriteria(vehicles: Vehicle[], params: SearchRequestBody): ExtendedVehicle[] {
   if (!Array.isArray(vehicles)) {
     const errorMessage = "❌ filterVehiclesByFormCriteria: Expected array, got: " + typeof vehicles;
@@ -125,7 +131,6 @@ function filterVehiclesByFormCriteria(vehicles: Vehicle[], params: SearchRequest
         vehicle.current_location.lng
       );
     }
-    // Premenujeme polia v odpovedi
     return {
       ...vehicle,
       distance: Math.round(distance),
@@ -134,7 +139,7 @@ function filterVehiclesByFormCriteria(vehicles: Vehicle[], params: SearchRequest
     } as ExtendedVehicle;
   });
 
-  const withinDistance = withDistances.filter(vehicle => vehicle.distance <= MAX_DISTANCE);
+  const withinDistance = withDistances.filter(vehicle => vehicle.distance <= SEARCH_CONSTANTS.MAX_DISTANCE_KM);
 
   return withinDistance.filter(vehicle => {
     if (
@@ -153,7 +158,6 @@ function filterVehiclesByFormCriteria(vehicles: Vehicle[], params: SearchRequest
       return false;
     }
 
-    // Filtrácia podľa času
     if (params.pickup?.time && vehicle.availability_date && vehicle.availability_time) {
       const pickupTime = new Date(params.pickup.time);
       const vehicleAvailTime = new Date(`${vehicle.availability_date}T${vehicle.availability_time}Z`);
@@ -164,6 +168,7 @@ function filterVehiclesByFormCriteria(vehicles: Vehicle[], params: SearchRequest
   });
 }
 
+// Handle vehicle search request
 const handleSearchVehicles = async (req: any, res: any): Promise<void> => {
   try {
     console.log("🔍 Received vehicle search request");
@@ -230,7 +235,7 @@ const handleSearchVehicles = async (req: any, res: any): Promise<void> => {
       },
     };
 
-    console.log(`🔍 Searching vehicles with MAX_DISTANCE=${MAX_DISTANCE}km`);
+    console.log(`🔍 Searching vehicles with MAX_DISTANCE=${SEARCH_CONSTANTS.MAX_DISTANCE_KM}km`);
 
     try {
       const vehiclesResult = await vehicleService.searchVehicles(searchParams);
@@ -257,12 +262,12 @@ const handleSearchVehicles = async (req: any, res: any): Promise<void> => {
           vehicle.current_location.lat,
           vehicle.current_location.lng
         );
-        return distance <= MAX_DISTANCE;
+        return distance <= SEARCH_CONSTANTS.MAX_DISTANCE_KM;
       }).length;
 
       filteredVehicles.sort((a, b) => a.distance - b.distance);
 
-      const summaryLog = `📊 Found ${totalVehiclesCount} total vehicles, ${vehiclesWithinDistance} within ${MAX_DISTANCE}km, ${filteredVehicles.length} after all filters`;
+      const summaryLog = `📊 Found ${totalVehiclesCount} total vehicles, ${vehiclesWithinDistance} within ${SEARCH_CONSTANTS.MAX_DISTANCE_KM}km, ${filteredVehicles.length} after all filters`;
       console.log(summaryLog);
       await logToFile(summaryLog);
 
