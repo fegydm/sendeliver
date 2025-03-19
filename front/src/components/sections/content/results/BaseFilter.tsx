@@ -183,6 +183,9 @@ const BaseFilter = forwardRef<
             icon.src = option.icon;
             icon.alt = '';
             icon.className = 'dropfilter__item-icon';
+            icon.style.height = '18px'; 
+            icon.style.width = 'auto';
+            icon.style.verticalAlign = 'middle';
             iconContainer.appendChild(icon);
             
             if (option.label.includes("(")) {

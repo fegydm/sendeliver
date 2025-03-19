@@ -23,6 +23,5 @@ export const VEHICLE_TYPES: VehicleType[] = [
 
 export const SEARCH_CONSTANTS = {
   MAX_DISTANCE_KM: 300, // Maximum distance for vehicle search in kilometers
-  MAX_PAST_TIME_HOURS: 40, // Maximum time in the past to filter vehicles from database
-  DEFAULT_LOADING_TIME_OFFSET_HOURS: 3, // Default offset for loading_dt if not provided (now + 3h)
-} as const;
+  MAX_PAST_TIME_HOURS: 15, // Maximum time in the past to filter vehicles from database
+  } as const;

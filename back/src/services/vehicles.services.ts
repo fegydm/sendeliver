@@ -81,7 +81,7 @@ SELECT DISTINCT ON (d.id)
     p.longitude
 FROM 
     deliveries d
-INNER JOIN 
+LEFT JOIN 
     geo.postal_codes p 
     ON d.delivery_country = p.country_code 
     AND d.delivery_zip = p.postal_code
@@ -90,6 +90,7 @@ WHERE
     AND (d.delivery_date > NOW() - INTERVAL '${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours' OR d.delivery_time::time >= NOW()::time)
 ORDER BY 
     d.id, d.delivery_date DESC, d.delivery_time DESC;
+
 `;
 
 export class VehicleService {

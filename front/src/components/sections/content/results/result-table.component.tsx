@@ -1,6 +1,3 @@
-// File: src/components/sections/content/results/result-table.component.tsx
-// Last change: Updated to pass loadingDt to StatusFilter
-
 import { useState, useEffect, useRef, useMemo } from "react";
 import "./result-table.css";
 import DistanceFilter, { distanceColumn } from "./DistanceFilter";
@@ -10,6 +7,7 @@ import AvailabilityFilter, { availabilityColumn } from "./AvailabilityFilter";
 import TransitFilter, { transitColumn } from "./TransitFilter";
 import RatingFilter, { ratingColumn } from "./RatingFilter";
 import ContactFilter, { contactColumn } from "./ContactFilter";
+import { SEARCH_CONSTANTS } from "@/constants/search.constants";
 
 export interface SenderResultData {
   distance: number;
@@ -286,12 +284,11 @@ const ResultTable: React.FC<ResultTableProps> = ({
                 <div className="result-table__footer-content">
                   <div className="result-table__stats">
                     <span className="result-table__stat-item">
-                      Showing <strong>{filteredData.length}</strong> of <strong>{initialData.length}</strong> matching
-                      vehicles
+                      Showing <strong>{filteredData.length}</strong> of <strong>{initialData.length}</strong> matching vehicles
                     </span>
                     {totalCount > 0 && (
-                      <span className="result-table__stat-item">
-                        Total deliveries in last 40h: <strong>{totalCount}</strong>
+                      <span className="result-table__stat-item total-deliveries">
+                        Total deliveries in last {SEARCH_CONSTANTS.DEFAULT_LOADING_TIME_OFFSET_HOURS}h: <strong>{totalCount}</strong>
                       </span>
                     )}
                   </div>

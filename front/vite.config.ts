@@ -46,6 +46,12 @@ export default defineConfig({
   server: {
     port: 3000,
     strictPort: true,
+    fs: {
+      allow: [
+        path.resolve(__dirname), // allow front-end project root
+        path.resolve(__dirname, "../back/src") // allow back-end source folder
+      ]
+    },
     proxy: {
       "/api": {
         target: "http://localhost:5000",
@@ -95,6 +101,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
+      "back": path.resolve(__dirname, "../back/src")
     },
   },
 

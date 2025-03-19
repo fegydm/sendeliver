@@ -1,13 +1,13 @@
-// File: .front/src/components/sections/content/results/StatusFilter.tsx
-// Last change: Updated status logic with O as base, G as subset, and icon coloring
+// File: src/components/sections/content/results/StatusFilter.tsx
+// Last change: Show vehicle icon based on type field and color it according to availability
 
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
-import truckIcon from "@/assets/truck.svg";
-import vanIcon from "@/assets/van.svg";
-import lorryIcon from "@/assets/lorry.svg";
-import rigidIcon from "@/assets/rigid.svg";
+import truckWebp from "@/assets/truck.webp";
+import vanWebp from "@/assets/van.webp";
+import lorryWebp from "@/assets/lorry.webp";
+import rigidWebp from "@/assets/rigid.webp";
 
 interface StatusFilterProps {
   data: SenderResultData[];
@@ -19,14 +19,24 @@ interface StatusFilterProps {
   onSortClick: (e: React.MouseEvent) => void;
   onToggleClick: (e: React.MouseEvent) => void;
   onOptionSelect: (value: string) => void;
-  loadingDt?: string; // Added for loading datetime
+  loadingDt?: string;
 }
 
-const vehicleIcons: { [key: string]: string } = {
-  truck: truckIcon,
-  van: vanIcon,
-  lorry: lorryIcon,
-  rigid: rigidIcon,
+// Mapovanie typov vozidiel na ikony
+const vehicleIconMap: { [key: string]: string } = {
+  van: vanWebp,
+  dodávka: vanWebp,
+  dodavka: vanWebp,
+  
+  lorry: lorryWebp,
+  avia: lorryWebp,
+  
+  rigid: rigidWebp,
+  sólo: rigidWebp,
+  solo: rigidWebp,
+  
+  truck: truckWebp,
+  lkw: truckWebp
 };
 
 const getStatusValue = (record: SenderResultData, loadingDt?: string): string => {
@@ -69,6 +79,26 @@ const statusFilterOptions = [
   },
 ];
 
+// Funkcia na získanie ikony vozidla podľa typu
+const getVehicleIcon = (vehicleType: string): string => {
+  const normalizedType = vehicleType.toLowerCase().trim();
+  
+  // Skúsime nájsť presnú zhodu
+  if (vehicleIconMap[normalizedType]) {
+    return vehicleIconMap[normalizedType];
+  }
+  
+  // Skúsime nájsť čiastočnú zhodu (keď typ obsahuje kľúčové slovo)
+  for (const [key, icon] of Object.entries(vehicleIconMap)) {
+    if (normalizedType.includes(key)) {
+      return icon;
+    }
+  }
+  
+  // Predvolená ikona
+  return truckWebp;
+};
+
 const getShortLabel = (value: string): string => {
   const option = statusFilterOptions.find(opt => opt.value === value);
   return option?.shortLabel || value;
@@ -82,6 +112,7 @@ export const statusColumn = {
     return data.filter(record => getStatusValue(record, loadingDt) === selected);
   },
   renderCell: (row: SenderResultData, loadingDt?: string) => {
+    // Zistíme status (G, O, R) a podľa toho nastavíme farbu
     const statusVal = getStatusValue(row, loadingDt);
     let statusColor = "#999999"; // Default grey
 
@@ -91,8 +122,9 @@ export const statusColumn = {
       case "R": statusColor = "#FF0000"; break; // Red
     }
 
-    const vehicleType = (row?.type || "truck").toLowerCase();
-    const vehicleIcon = vehicleIcons[vehicleType] || truckIcon;
+    // Získame ikonu podľa typu vozidla v stĺpci 'type'
+    const vehicleType = (row?.type || "truck");
+    const vehicleIcon = getVehicleIcon(vehicleType);
 
     return (
       <div>
@@ -100,9 +132,9 @@ export const statusColumn = {
           src={vehicleIcon} 
           alt={vehicleType}
           style={{ 
-            width: "24px", 
-            height: "24px",
-            filter: `drop-shadow(0 0 3px ${statusColor})`,
+            height: "20px", // Pevná výška
+            width: "auto", // Automatická šírka podľa pomeru strán
+            filter: `drop-shadow(0 0 3px ${statusColor})`, // Zafarbenie podľa stavu dostupnosti
           }} 
         />
       </div>

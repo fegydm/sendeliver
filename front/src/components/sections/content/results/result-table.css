@@ -1,19 +1,10 @@
 /* File: src/components/sections/content/results/result-table.css */
 /* Last change: Added scrollable container and simplified footer */
-
 .result-table { width: 100%; max-width: 1000px; margin: 20px auto; position: relative; overflow: visible; }
 .result-table__filter-summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .result-table__reset-button { padding: 5px 10px; font-size: 14px; cursor: pointer; }
 .result-table__reset-button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Scrollable table container */
-.result-table__scroll-container {
-  max-height: 400px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
+.result-table__scroll-container { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; }
 .result-table__table { width: 100%; table-layout: auto; border-collapse: collapse; }
 .result-table__header { position: sticky; top: 0; z-index: 10; min-height: 50px !important; height: 40px; }
 .result-table__header-cell { border: 1px solid #ddd; background-color: #c9c9c9; vertical-align: middle; padding: 2px; white-space: nowrap; }
@@ -35,22 +26,9 @@
 .dropfilter__item-with-icon { display: flex; align-items: center; width: 100%; }
 .dropfilter__item-icon { width: 20px; height: 20px; margin-right: 8px; flex-shrink: 0; }
 .sender-content__excel-result-table { margin-top: 50px; }
-
-/* Footer styles */
-.result-table__footer { position: sticky; bottom: 0; z-index: 10; }
-.result-table__footer-cell { padding: 8px; background-color: #f5f5f5; border-top: 2px solid #ddd; }
+.result-table__footer { position: sticky; bottom: 0; z-index: 10; min-height: 30px !important; height: 30px; }
+.result-table__footer-cell { border: 1px solid #ddd; background-color: #c9c9c9; vertical-align: middle; padding: 2px; white-space: nowrap; font-size: 13px; }
 .result-table__footer-content { display: flex; justify-content: space-between; align-items: center; }
-.result-table__stats { display: flex; gap: 15px; }
-.result-table__stat-item { font-size: 12px; color: #555; }
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .result-table__footer-content { flex-direction: column; gap: 10px; }
-  .result-table__stats { flex-wrap: wrap; justify-content: center; }
-}
-
-@keyframes placeholderPulse { 
-  0% { opacity: 0.7; } 
-  50% { opacity: 0.9; } 
-  100% { opacity: 0.7; } 
-}
+.result-table__stats { display: flex; width: 100%; }
+.result-table__stat-item.total-deliveries { margin-left: auto; text-align: right; } 
+@keyframes placeholderPulse { 0% { opacity: 0.7; } 50% { opacity: 0.9; } 100% { opacity: 0.7; } }

@@ -1,18 +1,20 @@
 // File: src/components/sections/content/results/TypeFilter.tsx
+// Last change: Removed icon from table cells, kept only text, icons shown only in dropdown
+
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
-import truckIcon from "@/assets/truck.svg";
-import vanIcon from "@/assets/van.svg";
-import lorryIcon from "@/assets/lorry.svg";
-import rigidIcon from "@/assets/rigid.svg";
+import truckWebp from "@/assets/truck.webp";
+import vanWebp from "@/assets/van.webp";
+import lorryWebp from "@/assets/lorry.webp";
+import rigidWebp from "@/assets/rigid.webp";
 
 const typeFilterOptions = [
   { value: "all", label: "all ...", icon: null, mappedValue: "all" },
-  { value: "Dodávka", label: "van 3,5t.", icon: vanIcon, mappedValue: "Van" },
-  { value: "Avia", label: "lorry 7,5t.", icon: lorryIcon, mappedValue: "Lorry" },
-  { value: "Sólo", label: "rigid 12t.", icon: rigidIcon, mappedValue: "Rigid" },
-  { value: "LKW", label: "truck 40t.", icon: truckIcon, mappedValue: "Truck" },
+  { value: "Dodávka", label: "van 3,5t.", icon: vanWebp, mappedValue: "Van" },
+  { value: "Avia", label: "lorry 7,5t.", icon: lorryWebp, mappedValue: "Lorry" },
+  { value: "Sólo", label: "rigid 12t.", icon: rigidWebp, mappedValue: "Rigid" },
+  { value: "LKW", label: "truck 40t.", icon: truckWebp, mappedValue: "Truck" },
 ];
 
 export const typeColumn = {
@@ -31,18 +33,27 @@ export const typeColumn = {
     });
   },
   renderCell: (row: SenderResultData) => {
+    // Len zobrazíme text bez ikony
     const vehicleType = (row?.type || "truck").toLowerCase();
-    const matchingOption = typeFilterOptions.find(
-      opt => opt.value === vehicleType || opt.value.toLowerCase() === vehicleType
+    
+    // Najprv skúsime nájsť zhodu podľa value
+    let matchingOption = typeFilterOptions.find(
+      opt => opt.value.toLowerCase() === vehicleType
     );
-    if (matchingOption) return matchingOption.mappedValue;
-    const mappedOption = typeFilterOptions.find(
-      opt => opt.mappedValue?.toLowerCase() === vehicleType
-    );
-    return (
-      mappedOption?.mappedValue ||
-      vehicleType.charAt(0).toUpperCase() + vehicleType.slice(1)
-    );
+    
+    // Ak nenájdeme, skúsime podľa mappedValue
+    if (!matchingOption) {
+      matchingOption = typeFilterOptions.find(
+        opt => opt.mappedValue?.toLowerCase() === vehicleType
+      );
+    }
+    
+    if (matchingOption) {
+      return matchingOption.mappedValue;
+    }
+    
+    // Fallback na zobrazenie len textu s veľkým prvým písmenom
+    return vehicleType.charAt(0).toUpperCase() + vehicleType.slice(1);
   },
 };
 
@@ -70,13 +81,26 @@ const TypeFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   TypeFilterProps
 >(({ data, onFilter, label, selected, sortDirection, isOpen, onSortClick, onToggleClick, onOptionSelect }, ref) => {
+  // Upravíme options pre BaseFilter aby obsahovali výškovo upravené ikony
+  const optionsWithSizedIcons = typeFilterOptions.map(option => {
+    if (!option.icon) {
+      return option;
+    }
+    
+    // Ikona s nastavenou výškou 18px pre dropdown
+    return {
+      ...option,
+      icon: option.icon
+    };
+  });
+
   return (
     <BaseFilter
       ref={ref}
       data={data}
       onFilter={onFilter}
       label={label}
-      options={typeFilterOptions}
+      options={optionsWithSizedIcons}
       filterFn={typeColumn.filterFn}
       selected={selected}
       sortDirection={sortDirection}

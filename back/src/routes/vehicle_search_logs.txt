@@ -868,3 +868,931 @@
   }
 }
 [2025-03-18T20:45:17.678Z] 📊 Found 288 total vehicles, 80 within 300km, 39 after all filters
+[2025-03-19T07:58:01.588Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T07:58:01.772Z] 📊 Found 301 total vehicles, 54 within 300km, 54 after all filters
+[2025-03-19T11:55:22.980Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T11:55:23.417Z] 📊 Found 295 total vehicles, 50 within 300km, 50 after all filters
+[2025-03-19T11:56:20.368Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T11:56:20.461Z] 📊 Found 295 total vehicles, 50 within 300km, 50 after all filters
+[2025-03-19T12:18:08.482Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T12:18:09.605Z] 📊 Found 296 total vehicles, 51 within 300km, 51 after all filters
+[2025-03-19T13:48:38.563Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T13:48:38.729Z] 📊 Found 322 total vehicles, 55 within 300km, 55 after all filters
+[2025-03-19T13:50:30.761Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T13:50:30.864Z] 📊 Found 322 total vehicles, 55 within 300km, 55 after all filters
+[2025-03-19T14:04:46.621Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T14:04:46.823Z] 📊 Found 327 total vehicles, 55 within 300km, 55 after all filters
+[2025-03-19T14:36:01.350Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T14:36:01.615Z] 📊 Found 398 total vehicles, 57 within 300km, 57 after all filters
+[2025-03-19T15:10:06.995Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "PL",
+      "flag": "/flags/4x3/optimized/pl.svg"
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:10:08.013Z] 📊 Found 287 total vehicles, 42 within 300km, 42 after all filters
+[2025-03-19T15:14:47.505Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "PL",
+      "flag": "/flags/4x3/optimized/pl.svg"
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:14:49.682Z] 📊 Found 287 total vehicles, 42 within 300km, 42 after all filters
+[2025-03-19T15:15:16.383Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "PL",
+      "flag": "/flags/4x3/optimized/pl.svg"
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:15:17.282Z] 📊 Found 287 total vehicles, 42 within 300km, 42 after all filters
+[2025-03-19T15:15:59.628Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:15:59.738Z] 📊 Found 287 total vehicles, 42 within 300km, 42 after all filters
+[2025-03-19T15:17:28.126Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:17:28.400Z] 📊 Found 287 total vehicles, 42 within 300km, 42 after all filters
+[2025-03-19T15:24:17.822Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:24:18.055Z] 📊 Found 289 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:24:23.895Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:24:24.046Z] 📊 Found 289 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:27:45.351Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:27:46.409Z] 📊 Found 289 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:32:46.738Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:32:47.665Z] 📊 Found 290 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:33:22.098Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:33:22.225Z] 📊 Found 291 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:33:24.830Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:33:24.916Z] 📊 Found 291 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:33:25.917Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:33:26.087Z] 📊 Found 291 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:35:45.838Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:35:47.587Z] 📊 Found 292 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:37:35.658Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:37:35.757Z] 📊 Found 292 total vehicles, 43 within 300km, 43 after all filters
+[2025-03-19T15:37:48.121Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:37:48.986Z] 📊 Found 292 total vehicles, 43 within 300km, 43 after all filters
+[2025-03-19T15:38:25.698Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "2025-03-19T15:40:00.000Z",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:38:25.801Z] 📊 Found 292 total vehicles, 43 within 300km, 0 after all filters
+[2025-03-19T15:38:26.881Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "2025-03-19T15:40:00.000Z",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:38:26.969Z] 📊 Found 292 total vehicles, 43 within 300km, 0 after all filters
+[2025-03-19T15:38:50.643Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:38:50.742Z] 📊 Found 292 total vehicles, 43 within 300km, 43 after all filters
+[2025-03-19T15:45:29.898Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:45:29.989Z] 📊 Found 293 total vehicles, 44 within 300km, 44 after all filters
+[2025-03-19T15:49:03.184Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:49:03.304Z] 📊 Found 293 total vehicles, 44 within 300km, 44 after all filters
+[2025-03-19T15:49:41.606Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:49:41.702Z] 📊 Found 293 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:49:44.469Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:49:44.556Z] 📊 Found 293 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:49:45.511Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:49:45.594Z] 📊 Found 293 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-19T15:49:48.991Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "",
+    "lat": "48.453000",
+    "lng": "12.356000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-19T15:49:49.159Z] 📊 Found 293 total vehicles, 0 within undefinedkm, 0 after all filters

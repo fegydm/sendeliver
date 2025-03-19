@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Simplified availability logic with loading_dt fallback to now + 3 hours
+// Last change: Updated to use webp icons instead of svg
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import CountrySelect from "./CountrySelect";
@@ -7,8 +7,8 @@ import PostalCitySelect from "./PostalCitySelect";
 import { DateTimeSelect } from "./DateTimeSelect";
 import { TransportFormData, LocationType, LocationSuggestion } from "@/types/transport-forms.types";
 import { useCountries } from "@/hooks/useCountries";
-import loadIcon from "@/assets/load-icon.svg";
-import deliverIcon from "@/assets/deliver-icon.svg";
+import loadIconWebp from "@/assets/icon-load.webp"; // Zmenené na webp
+import deliverIconWebp from "@/assets/icon-del.webp"; // Zmenené na webp
 import ResultTable, { SenderResultData } from "@/components/sections/content/results/result-table.component";
 
 interface ManualFormProps {
@@ -302,7 +302,11 @@ export function ManualForm({
             />
           </div>
           <div className="manual-form__load-img">
-            <img src={loadIcon} alt="Loading icon" />
+            <img 
+              src={loadIconWebp} 
+              alt="Loading icon" 
+              style={{ height: "50px", width: "auto" }} 
+            />
           </div>
           <div className="manual-form__datetime">
             <label className="manual-form__label">Loading Date/Time</label>
@@ -341,7 +345,11 @@ export function ManualForm({
             />
           </div>
           <div className="manual-form__deliver-img">
-            <img src={deliverIcon} alt="Delivery icon" />
+            <img 
+              src={deliverIconWebp} 
+              alt="Delivery icon" 
+              style={{ height: "45px", width: "auto" }} 
+            />
           </div>
           <div className="manual-form__datetime">
             <label className="manual-form__label">Delivery Date/Time</label>
