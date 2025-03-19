@@ -665,3 +665,206 @@
   }
 }
 [2025-03-18T12:50:38.371Z] 📊 Found 264 total vehicles, 68 within 300km, 68 after all filters
+[2025-03-18T20:33:18.523Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "02991",
+    "city": "Leippe-Torno",
+    "time": "",
+    "lat": "51.425000",
+    "lng": "14.075000"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-18T20:33:19.322Z] 📊 Found 218 total vehicles, 45 within 300km, 45 after all filters
+[2025-03-18T20:35:06.681Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "CZ",
+      "flag": "/flags/4x3/optimized/cz.svg"
+    },
+    "psc": "53012",
+    "city": "Pardubice",
+    "time": "2025-03-18T21:35:00.000Z",
+    "lat": "50.040800",
+    "lng": "15.776600"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-18T20:35:07.216Z] 📊 Found 218 total vehicles, 64 within 300km, 0 after all filters
+[2025-03-18T20:35:13.296Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "CZ",
+      "flag": "/flags/4x3/optimized/cz.svg"
+    },
+    "psc": "53012",
+    "city": "Pardubice",
+    "time": "2025-03-18T21:35:00.000Z",
+    "lat": "50.040800",
+    "lng": "15.776600"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-18T20:35:13.539Z] 📊 Found 218 total vehicles, 64 within 300km, 0 after all filters
+[2025-03-18T20:35:16.349Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "CZ",
+      "flag": "/flags/4x3/optimized/cz.svg"
+    },
+    "psc": "53012",
+    "city": "Pardubice",
+    "time": "2025-03-18T21:35:00.000Z",
+    "lat": "50.040800",
+    "lng": "15.776600"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-18T20:35:16.605Z] 📊 Found 218 total vehicles, 64 within 300km, 0 after all filters
+[2025-03-18T20:36:14.902Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "CZ",
+      "flag": "/flags/4x3/optimized/cz.svg"
+    },
+    "psc": "53012",
+    "city": "Pardubice",
+    "time": "2025-03-19T10:35:00.000Z",
+    "lat": "50.040800",
+    "lng": "15.776600"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "2025-03-19T22:30:00.000Z",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-18T20:36:16.003Z] 📊 Found 218 total vehicles, 64 within 300km, 22 after all filters
+[2025-03-18T20:40:30.136Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "CZ",
+      "flag": "/flags/4x3/optimized/cz.svg"
+    },
+    "psc": "53012",
+    "city": "Pardubice",
+    "time": "2025-03-18T21:40:00.000Z",
+    "lat": "50.040800",
+    "lng": "15.776600"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-18T20:40:30.560Z] 📊 Found 288 total vehicles, 80 within 300km, 16 after all filters
+[2025-03-18T20:45:16.222Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "CZ",
+      "flag": "/flags/4x3/optimized/cz.svg"
+    },
+    "psc": "53012",
+    "city": "Pardubice",
+    "time": "2025-03-19T11:40:00.000Z",
+    "lat": "50.040800",
+    "lng": "15.776600"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-18T20:45:17.678Z] 📊 Found 288 total vehicles, 80 within 300km, 39 after all filters
