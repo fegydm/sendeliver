@@ -1796,3 +1796,32 @@
   }
 }
 [2025-03-19T15:49:49.159Z] 📊 Found 293 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-20T14:01:37.955Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "SK",
+      "flag": "/flags/4x3/optimized/sk.svg"
+    },
+    "psc": "07661",
+    "city": "Bačkov",
+    "time": "",
+    "lat": "48.739900",
+    "lng": "21.623200"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-20T14:01:39.119Z] 📊 Found 393 total vehicles, 19 within 300km, 19 after all filters
