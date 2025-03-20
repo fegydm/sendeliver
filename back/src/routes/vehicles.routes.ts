@@ -6,7 +6,7 @@ import { VehicleService } from "../services/vehicles.services.js";
 import * as fs from "fs/promises";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { SEARCH_CONSTANTS } from "../constants/vehicle.constants.js"; // Import centralized constants
+import { DELIVERY_CONSTANTS } from "../constants/vehicle.constants.js"; // Import centralized constants
 
 const router = Router();
 const vehicleService = VehicleService.getInstance();
@@ -139,7 +139,7 @@ function filterVehiclesByFormCriteria(vehicles: Vehicle[], params: SearchRequest
     } as ExtendedVehicle;
   });
 
-  const withinDistance = withDistances.filter(vehicle => vehicle.distance <= SEARCH_CONSTANTS.MAX_DISTANCE_KM);
+  const withinDistance = withDistances.filter(vehicle => vehicle.distance <= DELIVERY_CONSTANTS.MAX_DISTANCE_KM);
 
   return withinDistance.filter(vehicle => {
     if (
@@ -235,7 +235,7 @@ const handleSearchVehicles = async (req: any, res: any): Promise<void> => {
       },
     };
 
-    console.log(`🔍 Searching vehicles with MAX_DISTANCE=${SEARCH_CONSTANTS.MAX_DISTANCE_KM}km`);
+    console.log(`🔍 Searching vehicles with MAX_DISTANCE=${DELIVERY_CONSTANTS.MAX_DISTANCE_KM}km`);
 
     try {
       const vehiclesResult = await vehicleService.searchVehicles(searchParams);
@@ -262,12 +262,12 @@ const handleSearchVehicles = async (req: any, res: any): Promise<void> => {
           vehicle.current_location.lat,
           vehicle.current_location.lng
         );
-        return distance <= SEARCH_CONSTANTS.MAX_DISTANCE_KM;
+        return distance <= DELIVERY_CONSTANTS.MAX_DISTANCE_KM;
       }).length;
 
       filteredVehicles.sort((a, b) => a.distance - b.distance);
 
-      const summaryLog = `📊 Found ${totalVehiclesCount} total vehicles, ${vehiclesWithinDistance} within ${SEARCH_CONSTANTS.MAX_DISTANCE_KM}km, ${filteredVehicles.length} after all filters`;
+      const summaryLog = `📊 Found ${totalVehiclesCount} total vehicles, ${vehiclesWithinDistance} within ${DELIVERY_CONSTANTS.MAX_DISTANCE_KM}km, ${filteredVehicles.length} after all filters`;
       console.log(summaryLog);
       await logToFile(summaryLog);
 

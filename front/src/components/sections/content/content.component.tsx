@@ -1,12 +1,15 @@
 // File: src/components/sections/content/content.component.tsx
+// Last change: Added vehicle data handling from manual form to ResultTable
+
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import AIForm from "@/components/sections/content/search-forms/ai-form.component";
 import ManualForm from "@/components/sections/content/search-forms/manual-form.component";
-import ResultTable from "@/components/sections/content/results/result-table.component";
-import ExcelResultTable from "@/components/sections/content/results/excel-result-table.component";
+import ResultTable, { SenderResultData } from "@/components/sections/content/results/result-table.component";
+import { TransportFormData } from "@/types/transport-forms.types";
 
 interface ContentProps {
-  activeSection: "sender" | "hauler"; // Current active section for styling or logic
+  activeSection: "sender" | "hauler"; 
   onSwitchSection: (section: "sender" | "hauler") => void;
   onAIResponse: (type: "sender" | "hauler", response: any) => void;
   onManualSubmit: (type: "sender" | "hauler", data: any) => void;
@@ -24,6 +27,43 @@ const Content: React.FC<ContentProps> = ({
   clientData,
   carrierData,
 }) => {
+  // State to track if search request has been confirmed/processed
+  const [isRequestConfirmed, setIsRequestConfirmed] = useState(false);
+  
+  // State for holding vehicle data found by the form
+  const [senderVehicles, setSenderVehicles] = useState<SenderResultData[]>([]);
+  const [haulerVehicles, setHaulerVehicles] = useState<SenderResultData[]>([]);
+  
+  // State for total vehicle counts
+  const [senderTotalCount, setSenderTotalCount] = useState(0);
+  const [haulerTotalCount, setHaulerTotalCount] = useState(0);
+  
+  // State for loading datetime
+  const [senderLoadingDt, setSenderLoadingDt] = useState<string | undefined>(undefined);
+  const [haulerLoadingDt, setHaulerLoadingDt] = useState<string | undefined>(undefined);
+  
+  // Handle vehicle data received from ManualForm
+  const handleVehiclesFound = (type: "sender" | "hauler", vehicles: SenderResultData[], totalCount: number, loadingDt: string) => {
+    console.log(`[Content] Received ${vehicles.length} vehicles for ${type}`, vehicles);
+    setIsRequestConfirmed(true);
+    
+    if (type === "sender") {
+      setSenderVehicles(vehicles);
+      setSenderTotalCount(totalCount);
+      setSenderLoadingDt(loadingDt);
+    } else {
+      setHaulerVehicles(vehicles);
+      setHaulerTotalCount(totalCount);
+      setHaulerLoadingDt(loadingDt);
+    }
+  };
+
+  // Handle form submission
+  const handleManualSubmit = (type: "sender" | "hauler", data: TransportFormData) => {
+    console.log(`[Content] Form submitted for ${type}`, data);
+    onManualSubmit(type, data);
+  };
+
   return (
     <div className="content">
       {/* Navigation */}
@@ -51,33 +91,30 @@ const Content: React.FC<ContentProps> = ({
         <section className={`content__sender ${activeSection === "sender" ? "active" : ""}`}>
           <h2 className="content__title">Client Area</h2>
           
-          {/* Directly assign class for AI form */}
           <AIForm
             type="sender"
             onAIRequest={(response: any) => onAIResponse("sender", response)}
             className="sender-content__ai-form"
           />
           
-          {/* Directly assign class for Manual form */}
           <ManualForm
             type="sender"
-            onSubmit={(data: any) => onManualSubmit("sender", data)}
+            onSubmit={(data: TransportFormData) => handleManualSubmit("sender", data)}
+            onVehiclesFound={(vehicles, totalCount, loadingDt) => 
+              handleVehiclesFound("sender", vehicles, totalCount, loadingDt)
+            }
             formData={formData}
             className="sender-content__manual-form"
           />
           
-          {/* Apply all three classes directly to ResultTable */}
           <ResultTable 
             type="sender" 
-            data={clientData} 
+            // Use searched vehicles if available, otherwise fall back to clientData
+            data={senderVehicles.length > 0 ? senderVehicles : clientData} 
+            totalCount={senderTotalCount || 0}
+            loadingDt={senderLoadingDt}
             className="result-table result-table--sender sender-content__result-table" 
-          />
-          
-          {/* Testing ExcelResultTable with 50px margin-top in the CSS */}
-          <ExcelResultTable 
-            type="sender" 
-            data={clientData} 
-            className="result-table result-table--sender sender-content__excel-result-table" 
+            isConfirmed={isRequestConfirmed}
           />
         </section>
 
@@ -92,15 +129,22 @@ const Content: React.FC<ContentProps> = ({
           
           <ManualForm
             type="hauler"
-            onSubmit={(data: any) => onManualSubmit("hauler", data)}
+            onSubmit={(data: TransportFormData) => handleManualSubmit("hauler", data)}
+            onVehiclesFound={(vehicles, totalCount, loadingDt) => 
+              handleVehiclesFound("hauler", vehicles, totalCount, loadingDt)
+            }
             formData={formData}
             className="hauler-content__manual-form"
           />
           
           <ResultTable 
             type="hauler" 
-            data={carrierData} 
+            // Use searched vehicles if available, otherwise fall back to carrierData
+            data={haulerVehicles.length > 0 ? haulerVehicles : carrierData} 
+            totalCount={haulerTotalCount || 0}
+            loadingDt={haulerLoadingDt}
             className="result-table result-table--hauler hauler-content__result-table" 
+            isConfirmed={isRequestConfirmed}
           />
         </section>
       </div>

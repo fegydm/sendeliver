@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Updated to use webp icons instead of svg
+// Last change: Removed ResultTable rendering and added callback for found vehicles
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import CountrySelect from "./CountrySelect";
@@ -7,12 +7,13 @@ import PostalCitySelect from "./PostalCitySelect";
 import { DateTimeSelect } from "./DateTimeSelect";
 import { TransportFormData, LocationType, LocationSuggestion } from "@/types/transport-forms.types";
 import { useCountries } from "@/hooks/useCountries";
-import loadIconWebp from "@/assets/icon-load.webp"; // Zmenené na webp
-import deliverIconWebp from "@/assets/icon-del.webp"; // Zmenené na webp
-import ResultTable, { SenderResultData } from "@/components/sections/content/results/result-table.component";
+import loadIconWebp from "@/assets/icon-load.webp"; 
+import deliverIconWebp from "@/assets/icon-del.webp"; 
+import { SenderResultData } from "@/components/sections/content/results/result-table.component";
 
 interface ManualFormProps {
   onSubmit: (data: TransportFormData) => void;
+  onVehiclesFound?: (vehicles: SenderResultData[], totalCount: number, loadingDt: string) => void;
   formData?: TransportFormData;
   type: "sender" | "hauler";
   className?: string;
@@ -37,8 +38,8 @@ interface Vehicle {
     country_code: string;
     city: string;
   };
-  availability_date: string; // Added for API compatibility
-  availability_time: string; // Added for API compatibility
+  availability_date: string;
+  availability_time: string;
   id_pp: number;
   distance: number;
 }
@@ -60,6 +61,7 @@ const isDevMode = process.env.NODE_ENV === "development";
 
 export function ManualForm({
   onSubmit,
+  onVehiclesFound,
   formData = DEFAULT_FORM_DATA,
   type = "sender",
   className = "",
@@ -184,8 +186,8 @@ export function ManualForm({
           distance: vehicle.distance,
           type: vehicle.vehicle_type || "Unknown",
           status: "Available",
-          availability_date: vehicle.availability_date, // Direct from BE
-          availability_time: vehicle.availability_time, // Direct from BE
+          availability_date: vehicle.availability_date,
+          availability_time: vehicle.availability_time,
           transit: calculateTransitTime(vehicle.distance),
           rating: generateRandomRating(),
           id_pp: vehicle.id_pp,
@@ -266,13 +268,22 @@ export function ManualForm({
       if (validatePickup()) {
         const loadingDt = await searchAvailableVehicles();
         if (loadingDt) {
-          onSubmit({ ...localFormData, pickup: { ...localFormData.pickup, time: loadingDt } });
+          // Submit form data
+          onSubmit({
+            ...localFormData,
+            pickup: { ...localFormData.pickup, time: loadingDt }
+          });
+          
+          // Notify parent about found vehicles
+          if (onVehiclesFound && availableVehicles.length > 0) {
+            onVehiclesFound(availableVehicles, totalVehiclesCount, loadingDt);
+          }
         }
       } else {
         console.warn("Pickup data is invalid, cannot submit");
       }
     },
-    [localFormData, validatePickup, searchAvailableVehicles, onSubmit]
+    [localFormData, validatePickup, searchAvailableVehicles, onSubmit, onVehiclesFound, availableVehicles, totalVehiclesCount]
   );
 
   return (
@@ -397,19 +408,6 @@ export function ManualForm({
       >
         {isSearching ? "Searching vehicles..." : "Confirm Transport Request"}
       </button>
-
-      {availableVehicles.length > 0 && (
-        <section className="manual-form__results">
-          <h3 className="manual-form__title">Available Vehicles</h3>
-          <ResultTable 
-            type={type} 
-            data={availableVehicles} 
-            totalCount={totalVehiclesCount}
-            isLoading={isSearching}
-            loadingDt={localFormData.pickup.time || new Date(new Date().getTime() + 3 * 60 * 60 * 1000).toISOString()}
-          />
-        </section>
-      )}
     </form>
   );
 }

@@ -21,7 +21,7 @@ export const VEHICLE_TYPES: VehicleType[] = [
   { id: "artic", name: "Articulated Truck", minPallets: 33, maxPallets: 33, maxPayloadKg: 24000, totalWeightKg: 40000, emptyWeightKg: 16000 },
 ] as const;
 
-export const SEARCH_CONSTANTS = {
+export const DELIVERY_CONSTANTS = {
   MAX_DISTANCE_KM: 300, // Maximum distance for vehicle search in kilometers
   MAX_PAST_TIME_HOURS: 15, // Maximum time in the past to filter vehicles from database
   } as const;

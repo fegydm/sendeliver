@@ -2,7 +2,7 @@
 // Last change: Enhanced debug logging for raw DB values
 
 import { pool } from "../configs/db.js";
-import { SEARCH_CONSTANTS } from "../constants/vehicle.constants.js";
+import { DELIVERY_CONSTANTS } from "../constants/vehicle.constants.js";
 
 interface VehicleSearchParams {
   pickup: {
@@ -77,19 +77,25 @@ SELECT DISTINCT ON (d.id)
     d.id_pp,
     d.id_carrier,
     d.name_carrier,
-    p.latitude,
-    p.longitude
-FROM 
-    deliveries d
-LEFT JOIN 
-    geo.postal_codes p 
-    ON d.delivery_country = p.country_code 
-    AND d.delivery_zip = p.postal_code
+    COALESCE(p.latitude, NULL) AS latitude,
+    COALESCE(p.longitude, NULL) AS longitude
+FROM deliveries d
+LEFT JOIN LATERAL (
+    SELECT latitude, longitude
+    FROM geo.postal_codes p
+    WHERE p.country_code = d.delivery_country 
+      AND p.postal_code = d.delivery_zip
+    ORDER BY latitude DESC
+    LIMIT 1
+) p ON TRUE
 WHERE 
-    d.delivery_date >= NOW() - INTERVAL '${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours'
-    AND (d.delivery_date > NOW() - INTERVAL '${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours' OR d.delivery_time::time >= NOW()::time)
+    (d.delivery_date::timestamp + d.delivery_time::interval) > (NOW() AT TIME ZONE 'UTC' - INTERVAL '${DELIVERY_CONSTANTS.MAX_PAST_TIME_HOURS} hours')
 ORDER BY 
     d.id, d.delivery_date DESC, d.delivery_time DESC;
+
+
+
+
 
 `;
 
@@ -129,13 +135,13 @@ export class VehicleService {
         await this.checkHealth();
       }
 
-      console.log(`🔍 Fetching all vehicles from last ${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours`);
+      console.log(`🔍 Fetching all vehicles from last ${DELIVERY_CONSTANTS.MAX_PAST_TIME_HOURS} hours`);
       const result = await pool.query(GET_ALL_RECENT_DELIVERIES_QUERY);
       const deliveries = result.rows;
       console.log(`[VehicleService] Query returned ${deliveries.length} raw delivery records`);
 
       if (deliveries.length === 0) {
-        console.warn(`⚠️ No deliveries found in the last ${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours`);
+        console.warn(`⚠️ No deliveries found in the last ${DELIVERY_CONSTANTS.MAX_PAST_TIME_HOURS} hours`);
         return [];
       }
 
@@ -170,7 +176,7 @@ export class VehicleService {
         };
       });
 
-      console.log(`[VehicleService] Processed ${vehicles.length} vehicles from last ${SEARCH_CONSTANTS.MAX_PAST_TIME_HOURS} hours`);
+      console.log(`[VehicleService] Processed ${vehicles.length} vehicles from last ${DELIVERY_CONSTANTS.MAX_PAST_TIME_HOURS} hours`);
       return vehicles;
     } catch (error) {
       console.error("❌ Failed to fetch vehicles:", error);
