@@ -1,9 +1,10 @@
-// ./src/components/ui/button.ui.tsx
+// File: .front/src/components/ui/button.ui.tsx
 
 import React from "react";
+
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "close" | "ghost";
+  variant?: "primary" | "secondary" | "cancel" | "close" | "ghost"; // Added "cancel"
   size?: "default" | "small" | "large" | "icon";
   fullWidth?: boolean;
 }
@@ -16,7 +17,6 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   ...props
 }) => {
-  // Combine classes logically
   const buttonClasses = [
     "btn",
     `btn-${variant}`,

@@ -13,6 +13,8 @@ import {
   DEFAULT_TRANSPORT_FORM_DATA,
 } from "@/types/transport-forms.types";
 
+// import "@/components/modals/general.modal.css";
+
 const HomePage = () => {
   const [activeSection, setActiveSection] = useState<"sender" | "hauler">("sender");
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);

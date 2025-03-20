@@ -1,6 +1,7 @@
-// File: src/components/ui/modals/general.modal.tsx
+// File: .front/src/components/modals/general.modal.tsx
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button.ui";
+import "./general.modal.css";
 
 interface GeneralModalProps {
   isOpen: boolean;
@@ -8,8 +9,9 @@ interface GeneralModalProps {
   children?: React.ReactNode;
   actions?: React.ReactNode;
   title?: string;
-  variant?: "default" | "danger" | "info"; // Optional style variants
-  closeOnBackdropClick?: boolean; // Optional backdrop behavior
+  variant?: "default" | "danger" | "info" | "success" | "warning";
+  closeOnBackdropClick?: boolean;
+  className?: string; // Pridané className
 }
 
 const GeneralModal: React.FC<GeneralModalProps> = ({
@@ -20,6 +22,7 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
   title,
   variant = "default",
   closeOnBackdropClick = true,
+  className, // Pridané do destrukturovania
 }) => {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -47,31 +50,23 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
       />
       <div className={`modal__container modal__container--${variant}`}>
         <div
-          className="modal__content"
+          className={`modal__content ${className || ""}`} // Použitie className
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
         >
-          {/* Modal Header */}
-          <button
+          <Button
+            variant="close"
+            size="icon"
             onClick={onClose}
             aria-label="Close modal"
-            className="modal__close-button"
+            className="modal__close"
           >
-            <span>&times;</span>
-          </button>
+            ×
+          </Button>
           {title && <h2 className="modal__title">{title}</h2>}
-
-          {/* Modal Body */}
           <div className="modal__body">{children}</div>
-
-          {/* Modal Actions */}
-          <div className="modal__actions">
-            <Button variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            {actions}
-          </div>
+          {actions && <div className="modal__actions">{actions}</div>}
         </div>
       </div>
     </>

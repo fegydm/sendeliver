@@ -1,0 +1,87 @@
+/* File: .front/src/components/modals/general.modal.css */
+/* Toto zachovaj, ostatné štýly vymaž */
+
+:root {
+  --modal-top-offset: 10vh;
+  --modal-max-width: 32rem;
+  --modal-padding: 1.5rem;
+  --modal-gap: 1rem;
+  --modal-radius: 0.75rem;
+  --modal-shadow: 0 8px 16px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06);
+  --modal-backdrop: rgba(0,0,0,0.5);
+  --modal-light-bg: #ffffff;
+  --modal-light-text: #000000;
+  --modal-light-hover: #f1f5f9;
+  --modal-dark-bg: #1e293b;
+  --modal-dark-text: #ffffff;
+  --modal-dark-hover: #334155;
+  --muted-foreground: #94a3b8;
+  --foreground: #ffffff;
+}
+
+.modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: var(--modal-backdrop);
+  backdrop-filter: blur(4px);
+  z-index: 998;
+}
+
+.modal__container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: var(--modal-max-width);
+  padding: 0 1rem;
+  z-index: 999;
+}
+
+.modal__content {
+  background-color: var(--modal-light-bg);
+  border-radius: var(--modal-radius);
+  box-shadow: var(--modal-shadow);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  padding: var(--modal-padding);
+  color: var(--modal-light-text);
+}
+
+.modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.modal__title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: var(--modal-gap);
+  color: var(--modal-light-text);
+}
+
+.modal__body {
+  margin-top: var(--modal-gap);
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--modal-gap);
+  margin-top: var(--modal-gap);
+}
+
+.dark .modal__content {
+  background-color: var(--modal-dark-bg);
+  color: var(--modal-dark-text);
+}
+
+.dark .text-muted-foreground {
+  color: var(--muted-foreground);
+}
+
+.dark .text-foreground {
+  color: var(--foreground);
+}
