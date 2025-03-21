@@ -1,4 +1,4 @@
-// File: .front/src/components/modals/general.modal.tsx
+// File: ./front/src/components/modals/general.modal.tsx
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button.ui";
 import "./general.modal.css";
@@ -6,34 +6,31 @@ import "./general.modal.css";
 interface GeneralModalProps {
   isOpen: boolean;
   onClose: () => void;
+  title?: string;
+  description?: string | React.ReactNode;
   children?: React.ReactNode;
   actions?: React.ReactNode;
-  title?: string;
   variant?: "default" | "danger" | "info" | "success" | "warning";
-  closeOnBackdropClick?: boolean;
-  className?: string; // Pridané className
+  className?: string;
 }
 
 const GeneralModal: React.FC<GeneralModalProps> = ({
   isOpen,
   onClose,
+  title,
+  description,
   children,
   actions,
-  title,
   variant = "default",
-  closeOnBackdropClick = true,
-  className, // Pridané do destrukturovania
+  className,
 }) => {
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+    const handleEsc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
 
     if (isOpen) {
       document.body.classList.add("no-scroll");
       window.addEventListener("keydown", handleEsc);
     }
-
     return () => {
       document.body.classList.remove("no-scroll");
       window.removeEventListener("keydown", handleEsc);
@@ -44,17 +41,9 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
 
   return (
     <>
-      <div
-        className="modal__backdrop"
-        onClick={closeOnBackdropClick ? onClose : undefined}
-      />
+      <div className="modal__backdrop" onClick={onClose} />
       <div className={`modal__container modal__container--${variant}`}>
-        <div
-          className={`modal__content ${className || ""}`} // Použitie className
-          onClick={(e) => e.stopPropagation()}
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className={`modal__content ${className || ""}`}>
           <Button
             variant="close"
             size="icon"
@@ -65,6 +54,7 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
             ×
           </Button>
           {title && <h2 className="modal__title">{title}</h2>}
+          {description && <p className="modal__description">{description}</p>}
           <div className="modal__body">{children}</div>
           {actions && <div className="modal__actions">{actions}</div>}
         </div>

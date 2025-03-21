@@ -1,6 +1,5 @@
 // File: .front/src/components/modals/LoginModal.tsx
 import React, { useState } from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button.ui";
 import { Input } from "@/components/ui/input.ui";
 import GeneralModal from "@/components/modals/general.modal";
@@ -8,9 +7,10 @@ import GeneralModal from "@/components/modals/general.modal";
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isDarkMode?: boolean; // Pridané
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
+export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, isDarkMode = false }) => {
   const [isLoading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -32,73 +32,61 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       isOpen={isOpen}
       onClose={onClose}
       title="Login"
-      variant="default"
-      className="dark"
+      description="Enter your email below to login to your account"
+      className={isDarkMode ? "dark" : "light"} // Dynamicky podľa isDarkMode
     >
-      <div className={cn("flex flex-col gap-6")}>
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground">
-            Enter your email below to login to your account
-          </p>
+      <form id="login-form" onSubmit={handleSubmit}>
+        <div className="login-modal__field">
+          <label htmlFor="email" className="login-modal__label">
+            Email
+          </label>
+          <Input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="m@example.com"
+            required
+          />
         </div>
-        <form id="login-form" className="flex flex-col gap-6" onSubmit={handleSubmit}>
-          <div className="grid gap-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
+        <div className="login-modal__field">
+          <div className="login-modal__password-header">
+            <label htmlFor="password" className="login-modal__label">
+              Password
             </label>
-            <Input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="m@example.com"
-              required
-            />
-          </div>
-          <div className="grid gap-2">
-            <div className="flex items-center">
-              <label htmlFor="password" className="text-sm font-medium">
-                Password
-              </label>
-              <a
-                href="#"
-                className="ml-auto text-sm underline-offset-4 hover:underline text-muted-foreground"
-              >
-                Forgot your password?
-              </a>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              name="password"
-              required
-            />
-          </div>
-          <div className="modal__actions">
-            <Button variant="cancel" onClick={onClose} disabled={isLoading}>
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              type="submit"
-              form="login-form"
-              disabled={isLoading}
-            >
-              {isLoading ? "Logging in..." : "Login"}
-            </Button>
-          </div>
-        </form>
-        <div className="flex flex-col gap-4">
-          <Button variant="secondary" className="w-full" disabled>
-            Login with Google
-          </Button>
-          <div className="text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <a href="#" className="underline underline-offset-4 hover:text-foreground">
-              Sign up
+            <a href="#" className="login-modal__forgot-link">
+              Forgot your password?
             </a>
           </div>
+          <Input
+            id="password"
+            type="password"
+            name="password"
+            required
+          />
         </div>
-      </div>
+        <div className="modal__actions">
+          <Button variant="cancel" onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            form="login-form"
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Login"}
+          </Button>
+        </div>
+      </form>
+      <Button variant="secondary" fullWidth disabled>
+        Login with Google
+      </Button>
+      <p className="login-modal__signup">
+        Don't have an account?{" "}
+        <a href="#" className="login-modal__signup-link">
+          Sign up
+        </a>
+      </p>
     </GeneralModal>
   );
 };

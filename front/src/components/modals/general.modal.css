@@ -1,6 +1,4 @@
 /* File: .front/src/components/modals/general.modal.css */
-/* Toto zachovaj, ostatné štýly vymaž */
-
 :root {
   --modal-top-offset: 10vh;
   --modal-max-width: 32rem;
@@ -9,10 +7,10 @@
   --modal-radius: 0.75rem;
   --modal-shadow: 0 8px 16px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06);
   --modal-backdrop: rgba(0,0,0,0.5);
-  --modal-light-bg: #ffffff;
+  --modal-light-bg: #eeeff5;
   --modal-light-text: #000000;
   --modal-light-hover: #f1f5f9;
-  --modal-dark-bg: #1e293b;
+  --modal-dark-bg: #22232c;
   --modal-dark-text: #ffffff;
   --modal-dark-hover: #334155;
   --muted-foreground: #94a3b8;
@@ -22,19 +20,18 @@
 .modal__backdrop {
   position: fixed;
   inset: 0;
+  backdrop-filter: blur(2px);
   background-color: var(--modal-backdrop);
-  backdrop-filter: blur(4px);
   z-index: 998;
 }
 
 .modal__container {
   position: fixed;
-  top: 50%;
+  top: 100px;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   width: 100%;
   max-width: var(--modal-max-width);
-  padding: 0 1rem;
   z-index: 999;
 }
 
@@ -59,11 +56,19 @@
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: var(--modal-gap);
-  color: var(--modal-light-text);
+  color: var(--modal-light-text); /* Explicitne pre light mód */
+}
+
+.modal__description {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin-bottom: var(--modal-gap);
 }
 
 .modal__body {
-  margin-top: var(--modal-gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--modal-gap);
 }
 
 .modal__actions {
@@ -73,9 +78,67 @@
   margin-top: var(--modal-gap);
 }
 
+.login-modal__field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.login-modal__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.login-modal__password-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.login-modal__forgot-link {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  text-decoration: underline;
+}
+
+.login-modal__signup {
+  font-size: 0.875rem;
+  text-align: center;
+  color: var(--muted-foreground);
+}
+
+.login-modal__signup-link {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+
+/* Dark mode */
 .dark .modal__content {
   background-color: var(--modal-dark-bg);
   color: var(--modal-dark-text);
+}
+
+.dark .modal__title {
+  color: var(--modal-dark-text);
+}
+
+.dark .modal__description {
+  color: var(--muted-foreground);
+}
+
+.dark .login-modal__label {
+  color: var(--modal-dark-text);
+}
+
+.dark .login-modal__forgot-link {
+  color: var(--muted-foreground);
+}
+
+.dark .login-modal__signup {
+  color: var(--muted-foreground);
+}
+
+.dark .login-modal__signup-link {
+  color: var(--foreground);
 }
 
 .dark .text-muted-foreground {

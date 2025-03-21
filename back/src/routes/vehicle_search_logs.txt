@@ -1796,3 +1796,61 @@
   }
 }
 [2025-03-19T15:49:49.159Z] 📊 Found 293 total vehicles, 0 within undefinedkm, 0 after all filters
+[2025-03-21T00:53:37.492Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "SK",
+      "flag": "/flags/4x3/optimized/sk.svg"
+    },
+    "psc": "04001",
+    "city": "Košice-Juh",
+    "time": "",
+    "lat": "48.710000",
+    "lng": "21.256200"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-21T00:53:38.360Z] 📊 Found 351 total vehicles, 27 within 300km, 27 after all filters
+[2025-03-21T00:53:47.133Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "SK",
+      "flag": "/flags/4x3/optimized/sk.svg"
+    },
+    "psc": "04001",
+    "city": "Košice-Juh",
+    "time": "",
+    "lat": "48.710000",
+    "lng": "21.256200"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-21T00:53:47.465Z] 📊 Found 351 total vehicles, 27 within 300km, 27 after all filters
