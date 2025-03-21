@@ -1,4 +1,5 @@
 // File: front/src/components/navbars/navbar.component.tsx
+// Last change: Fixed typo in handleDotsSelectionChange
 
 import { useState, FC } from "react";
 import NavbarHamburger from "./NavbarHamburger";
@@ -57,7 +58,7 @@ const Navbar: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
       if (index !== -1) newTopDots[index] = components.dots[top];
     }
     if (bottom) {
-      const index = ["anonymous", "cookies", "registered"].indexOf(bottom);
+      const index = ["anonymous", "cookies", "registered"].indexOf(bottom); // Fixed typo: 'custom' → 'bottom'
       if (index !== -1) newBottomDots[index] = components.dots[bottom];
     }
 
