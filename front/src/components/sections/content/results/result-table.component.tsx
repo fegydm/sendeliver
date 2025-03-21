@@ -1,5 +1,5 @@
 // File: ./front/src/components/sections/content/results/result-table.component.tsx
-// Last change: Fixed type issues and added labeled logging for better debug filtering
+// Last change: Added extensive debug logging for anchor-based scroll position
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import "./result-table.css";
@@ -133,10 +133,18 @@ const ResultTable: React.FC<ResultTableProps> = ({
   const contactFilterRef = useRef<{ reset: () => void; isOpen: () => boolean; isFiltered: () => boolean }>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const resultTableRef = useRef<HTMLDivElement>(null);
 
   // State for column widths and resizing
   const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>({});
   const [isResizing, setIsResizing] = useState<string | null>(null);
+  
+  // References for scroll handling
+  const prevScrollPosRef = useRef<number>(0);
+  const prevTableOffsetTopRef = useRef<number>(0);
+  const prevDataLengthRef = useRef<number>(0);
+  const prevTableHeightRef = useRef<number>(0);
+  const isFilteringRef = useRef<boolean>(false);
 
   // Define columns with their properties
   const columns: Column[] = useMemo(
@@ -242,6 +250,156 @@ const ResultTable: React.FC<ResultTableProps> = ({
     
     return result;
   }, [initialData, columns, filterStates, instanceId]);
+
+ // Pridaj tieto referencie medzi ostatné useRef deklarácie v komponente
+const prevScrollYRef = useRef<number>(0);
+const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+// Pridaj tento useEffect medzi ostatné useEffect
+useEffect(() => {
+  // Zachyť pozíciu pred zmenou filtrov
+  const captureScrollPosition = () => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    prevScrollYRef.current = window.scrollY;
+    console.log(`[SCROLL_SIMPLE] Captured scroll position: ${prevScrollYRef.current}`);
+  };
+  
+  // Zavolaj pri každej zmene filtrov
+  captureScrollPosition();
+  
+  return () => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+  };
+}, [filterStates]);
+
+// Pridaj tento druhý useEffect spolu s prvým
+useEffect(() => {
+  // Počkaj trochu po filtrovaní a obnovení dát, aby DOM mal čas sa aktualizovať
+  if (scrollTimeoutRef.current) {
+    clearTimeout(scrollTimeoutRef.current);
+  }
+  
+  scrollTimeoutRef.current = setTimeout(() => {
+    console.log(`[SCROLL_SIMPLE] Restoring scroll position: ${prevScrollYRef.current}`);
+    window.scrollTo({
+      top: prevScrollYRef.current,
+      behavior: 'auto'
+    });
+  }, 50); // Krátky timeout pre istotu, že DOM bude aktualizovaný
+  
+  return () => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+  };
+}, [filteredData]);
+  
+  // Restore scroll position after filteredData changes
+  useEffect(() => {
+    if (!isFilteringRef.current) {
+      console.log(`[SCROLL_DEBUG] SKIPPED Initial render:`, {
+        scrollAction: 'Skip initial render',
+        instanceId
+      });
+      return;
+    }
+    
+    // Function to restore scroll position
+    const restoreScrollPosition = () => {
+      if (!resultTableRef.current) {
+        console.log(`[SCROLL_DEBUG] ERROR Table ref missing:`, {
+          scrollAction: 'Table ref missing, cannot restore',
+          instanceId
+        });
+        return;
+      }
+      
+      // Get current table metrics
+      const currentTableRect = resultTableRef.current.getBoundingClientRect();
+      const currentTableOffsetTop = currentTableRect.top + window.scrollY;
+      const currentTableHeight = currentTableRect.height;
+      
+      // Calculate how much the table offset has changed
+      const tableOffsetDiff = currentTableOffsetTop - prevTableOffsetTopRef.current;
+      const tableHeightDiff = currentTableHeight - prevTableHeightRef.current;
+      const dataLengthDiff = filteredData.length - prevDataLengthRef.current;
+      
+      console.log(`[SCROLL_DEBUG] CALCULATE Current metrics:`, {
+        prevScrollY: prevScrollPosRef.current,
+        currentScrollY: window.scrollY,
+        prevTableOffsetTop: prevTableOffsetTopRef.current,
+        currentTableOffsetTop,
+        tableOffsetDiff,
+        prevTableHeight: prevTableHeightRef.current,
+        currentTableHeight,
+        tableHeightDiff,
+        prevDataLength: prevDataLengthRef.current,
+        currentDataLength: filteredData.length,
+        dataLengthDiff,
+        instanceId
+      });
+      
+      // Determine new scroll position
+      const newScrollPosition = prevScrollPosRef.current;
+      
+      console.log(`[SCROLL_DEBUG] ADJUST Scroll position:`, {
+        scrollAction: 'Adjusting scroll position',
+        from: window.scrollY,
+        to: newScrollPosition,
+        adjustment: newScrollPosition - window.scrollY,
+        instanceId
+      });
+      
+      // Apply scroll (don't use smooth behavior to avoid animation conflicts)
+      window.scrollTo({
+        top: newScrollPosition,
+        behavior: 'auto'
+      });
+      
+      // Reset filtering flag after adjustment
+      isFilteringRef.current = false;
+    };
+    
+    // Use double requestAnimationFrame to ensure DOM is updated
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        try {
+          restoreScrollPosition();
+        } catch (error) {
+          console.error(`[SCROLL_DEBUG] ERROR Exception in scroll restoration:`, {
+            error,
+            instanceId
+          });
+        }
+      });
+    });
+    
+    // Fallback timeout in case requestAnimationFrame doesn't work as expected
+    const fallbackTimeout = setTimeout(() => {
+      if (isFilteringRef.current) {
+        console.log(`[SCROLL_DEBUG] FALLBACK Timeout triggered:`, {
+          scrollAction: 'RAF may have failed, using fallback',
+          instanceId
+        });
+        try {
+          restoreScrollPosition();
+        } catch (error) {
+          console.error(`[SCROLL_DEBUG] ERROR Exception in fallback:`, {
+            error,
+            instanceId
+          });
+        }
+      }
+    }, 100);
+    
+    return () => {
+      clearTimeout(fallbackTimeout);
+    };
+  }, [filteredData, instanceId]);
 
   // Handle column sorting (cycles between asc, desc, none)
   const handleSort = (key: string) => {
@@ -398,7 +556,7 @@ const ResultTable: React.FC<ResultTableProps> = ({
   });
 
   return (
-    <div className={`result-table ${className}`}>
+    <div className={`result-table ${className}`} ref={resultTableRef}>
       <div className="result-table__filter-summary">
         <span>
           {appliedFilters.length > 0

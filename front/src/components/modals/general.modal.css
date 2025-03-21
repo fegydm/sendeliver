@@ -56,7 +56,7 @@
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: var(--modal-gap);
-  color: var(--modal-light-text); /* Explicitne pre light mód */
+  color: var(--modal-light-text); 
 }
 
 .modal__description {
