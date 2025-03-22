@@ -15,7 +15,7 @@
     "node": "22.x"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
+    "@types/express": "^5.0.1",
     "@types/node": "^22.13.9"
   }
 }

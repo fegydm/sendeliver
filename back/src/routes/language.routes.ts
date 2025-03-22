@@ -1,27 +1,28 @@
 // File: back/src/routes/language.routes.ts
-// Last change: Created new router for language-related endpoints
+// Last change: Fixed imports for esModuleInterop and TypeScript 5.7.3
 
-import { Router } from "express";
+import express from "express";
+import type { Request, Response } from "express";
 
-const languageRouter = Router();
+const languageRouter = express.Router();
 
 // Get all languages
-languageRouter.get("/languages", async (_req, res) => {
+languageRouter.get("/languages", async (_req: Request, res: Response) => {
   try {
-    const languages = []; // Placeholder: Replace with DB query, e.g., pool.query("SELECT * FROM geo.languages")
+    const languages: unknown[] = [];
     res.json(languages);
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({ error: "Failed to fetch languages" });
   }
 });
 
 // Get language for a country code
-languageRouter.get("/country-language/:countryCode", async (req, res) => {
+languageRouter.get("/country-language/:countryCode", async (req: Request, res: Response) => {
   try {
     const { countryCode } = req.params;
-    const language = "en"; // Placeholder: Replace with DB query, e.g., pool.query("SELECT l.code FROM geo.languages l JOIN geo.country_language cl ON cl.language_id = l.id WHERE cl.country_code = UPPER($1)", [countryCode])
+    const language: string = "en";
     res.json({ language });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({ error: "Failed to fetch country language" });
   }
 });

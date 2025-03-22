@@ -5,7 +5,7 @@ import { OpenAI } from "openai";
 import { AIRequest, AIResponse } from "../types/ai.types.js";
 import { AI_CONFIG } from "../configs/openai.config.js";
 import { GeocodingService } from "./geocoding.services.js";
-import fs from "fs";
+import * as fs from "fs";
 
 interface AIData {
   pickupLocation: string;
