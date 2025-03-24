@@ -1,0 +1,58 @@
+[2025-03-22T17:35:00.442Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "45877",
+    "city": "Agentur für Arbeit Gelsenkirchen-Buer",
+    "time": "2025-03-22T17:35:00.000Z",
+    "lat": "51.574800",
+    "lng": "7.057500"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-22T17:35:02.175Z] 📊 Found 273 total vehicles, 72 within 300km, 5 after all filters
+[2025-03-22T17:35:03.723Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "45877",
+    "city": "Agentur für Arbeit Gelsenkirchen-Buer",
+    "time": "2025-03-22T17:35:00.000Z",
+    "lat": "51.574800",
+    "lng": "7.057500"
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-03-22T17:35:04.066Z] 📊 Found 273 total vehicles, 72 within 300km, 5 after all filters

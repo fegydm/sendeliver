@@ -1,6 +1,5 @@
 // ./front/src/hooks/useLanguage.ts
 import { useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
 import { getIPLocation } from '../utils/geo';
 
 interface LanguageState {
@@ -9,6 +8,24 @@ interface LanguageState {
   translations: Record<string, string>;
   isLoading: boolean;
 }
+
+// Helper functions to work with localStorage instead of cookies
+const saveLanguage = (language: string): void => {
+  try {
+    localStorage.setItem('lastLanguage', language);
+  } catch (error) {
+    console.error('Failed to save language to localStorage:', error);
+  }
+};
+
+const getLanguage = (): string | null => {
+  try {
+    return localStorage.getItem('lastLanguage');
+  } catch (error) {
+    console.error('Failed to get language from localStorage:', error);
+    return null;
+  }
+};
 
 export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: string; secondaryLanguage?: string } }) {
   const [state, setState] = useState<LanguageState>({
@@ -32,8 +49,8 @@ export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: 
           primaryLang = user.settings?.primaryLanguage || 'en';
           secondaryLang = user.settings?.secondaryLanguage || ipLang;
         } else {
-          const cookieLang = Cookies.get('lastLanguage');
-          secondaryLang = cookieLang || ipLang;
+          const storedLang = getLanguage();
+          secondaryLang = storedLang || ipLang;
         }
 
         const [enResponse, nativeResponse] = await Promise.all([
@@ -69,7 +86,7 @@ export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: 
     secondaryLanguage: state.secondaryLanguage,
     t,
     setLanguages: (primary: string, secondary: string) => {
-      Cookies.set('lastLanguage', primary, { expires: 365 });
+      saveLanguage(primary); // Save to localStorage instead of cookies
       setState((prev) => ({
         ...prev,
         primaryLanguage: primary,
