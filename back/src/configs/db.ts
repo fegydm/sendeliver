@@ -1,3 +1,6 @@
+// File: ./back/configs/db.ts
+// Last change: Simplified logging system using console-based methods
+
 import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from "dotenv";
