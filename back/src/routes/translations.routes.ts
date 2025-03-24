@@ -1,15 +1,27 @@
-// File: src/routes/translations.routes.ts
 import express from 'express';
-import type { Request, Response, Router } from 'express';
 import translationsServices from '../services/translations.services.js';
 
-const translationsRouter: Router = express.Router();
+// Custom interface definitions
+interface Params {
+  languageCode?: string;
+}
 
-// Generic async handler that supports any response type
-const asyncHandler = <TRequest extends Request, TResponse extends Response>(
-  fn: (req: TRequest, res: TResponse) => Promise<any>
+interface Req {
+  params: Params;
+}
+
+interface Res {
+  json: (data: any) => void;
+  status: (code: number) => Res;
+}
+
+const translationsRouter = express.Router();
+
+// Generic async handler with custom types
+const asyncHandler = (
+  fn: (req: Req, res: Res) => Promise<any>
 ) => {
-  return async (req: TRequest, res: TResponse) => {
+  return async (req: Req, res: Res) => {
     try {
       await fn(req, res);
     } catch (error: any) {
@@ -25,7 +37,7 @@ const asyncHandler = <TRequest extends Request, TResponse extends Response>(
 // GET /api/translations/:languageCode
 translationsRouter.get(
   '/:languageCode',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Req, res: Res) => {
     const { languageCode } = req.params;
     console.log(`Processing /api/translations/${languageCode} request`);
 
@@ -36,7 +48,7 @@ translationsRouter.get(
     }
 
     const translations = await translationsServices.getTranslations(languageCode);
-    console.log(`Retrieved ${Object.keys(translations).length} translations for ${languageCode}`);
+    console.log(`Retrieved ${Object.keys(translations || {}).length} translations for ${languageCode}`);
 
     res.json(translations ?? {});
   })

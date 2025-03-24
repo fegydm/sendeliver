@@ -1,12 +1,10 @@
 import express from 'express';
-import type { Request, Response } from 'express';
 
 const router = express.Router();
 
-const asyncHandler = <TRequest extends Request, TResponse extends Response>(
-  fn: (req: TRequest, res: TResponse) => Promise<any>
-) => {
-  return async (req: TRequest, res: TResponse) => {
+// Simple async handler without type annotations
+const asyncHandler = (fn: any) => {
+  return async (req: any, res: any) => {
     try {
       await fn(req, res);
     } catch (error: any) {
@@ -17,7 +15,7 @@ const asyncHandler = <TRequest extends Request, TResponse extends Response>(
 
 router.get(
   '/test',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: any, res: { json: (arg0: { success: boolean; }) => void; }) => {
     res.json({ success: true });
   })
 );
