@@ -14,6 +14,7 @@ import geoRouter from "./routes/geo.routes.js";
 import deliveryRouter from "./routes/delivery.routes.js";
 import vehiclesRouter from "./routes/vehicles.routes.js";
 import languageRouter from "./routes/language.routes.js";
+import translationsRouter from "./routes/translations.routes.js";
 
 // Custom type definitions to avoid importing from Express
 interface Req {
@@ -97,7 +98,9 @@ app.use("/api/ai", aiRouter);
 app.use("/api/geo", geoRouter);
 app.use("/api/vehicles", vehiclesRouter);
 app.use("/api", deliveryRouter);
-app.use("/api", languageRouter);
+app.use("/api/languages", languageRouter);
+app.use("/api/translations", translationsRouter);
+
 
 // SPA fallback route
 app.get("*", (req: Req, res: Res) => {

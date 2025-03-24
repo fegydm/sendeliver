@@ -1,22 +1,25 @@
-// File: back/src/routes/test.routes.ts
-import express from "express";
+import express from 'express';
+import type { Request, Response } from 'express';
 
 const router = express.Router();
 
-interface Params {
-  id: string;
-}
-interface Req {
-  params: Params;
-}
-interface Res {
-  json: (data: any) => void;
-  status: (code: number) => Res;
-}
+const asyncHandler = <TRequest extends Request, TResponse extends Response>(
+  fn: (req: TRequest, res: TResponse) => Promise<any>
+) => {
+  return async (req: TRequest, res: TResponse) => {
+    try {
+      await fn(req, res);
+    } catch (error: any) {
+      res.status(500).json({ error: 'fail', message: error.message });
+    }
+  };
+};
 
-router.get("/test/:id", (req: Req, res: Res) => {
-  const id = req.params.id;
-  res.json({ id });
-});
+router.get(
+  '/test',
+  asyncHandler(async (req: Request, res: Response) => {
+    res.json({ success: true });
+  })
+);
 
 export default router;

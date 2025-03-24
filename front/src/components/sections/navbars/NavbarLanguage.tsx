@@ -3,13 +3,13 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { BaseDropdown } from "@/components/elements/BaseDropdown";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useUINavigation } from "@/hooks/useUINavigation";
 
 interface Language {
   code: string;
   name_en: string;
   native_name: string;
   is_rtl: boolean;
+  flag_url?: string;
   group?: "primary" | "secondary" | "recent" | "other";
 }
 
@@ -18,29 +18,31 @@ const MissingTranslation: React.FC<{ text: string }> = ({ text }) => (
   <span style={{ color: 'red' }}>{text}</span>
 );
 
+// Default fallback languages in case API fails
+const DEFAULT_LANGUAGES: Language[] = [
+  { code: "en", name_en: "English", native_name: "English", is_rtl: false, flag_url: "/flags/4x3/optimized/gb.svg" },
+  { code: "sk", name_en: "Slovak", native_name: "Slovenčina", is_rtl: false, flag_url: "/flags/4x3/optimized/sk.svg" }
+];
+
 const NavbarLanguage: React.FC = () => {
   // State management
   const [search, setSearch] = useState("");
-  const [languages, setLanguageList] = useState<Language[]>([]);
+  const [languages, setLanguageList] = useState<Language[]>(DEFAULT_LANGUAGES);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [recentLanguages, setRecentLanguages] = useState<string[]>([]);
   const [ipBasedLanguage, setIpBasedLanguage] = useState<string>("en");
   const [isOpen, setIsOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(20);
-  const [isDropdownHovered, setIsDropdownHovered] = useState(false);
   
   // Refs
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
-  const itemsRef = useRef<(HTMLElement | null)[]>([]);
-
+  
   // Get language context
   const { currentLanguage, secondaryLanguage, setLanguages } = useLanguage();
 
   // Use fallbacks if currentLanguage or secondaryLanguage are undefined
   const primaryLang = currentLanguage || 'en';
-  const secondaryLang = secondaryLanguage || ipBasedLanguage || 'en';
+  const secondaryLang = secondaryLanguage || ipBasedLanguage || 'sk';
 
   // Load country-based language from IP
   useEffect(() => {
@@ -50,10 +52,17 @@ const NavbarLanguage: React.FC = () => {
         // For now, we're using a simpler approach - detect based on browser locale
         const browserLocale = navigator.language.split('-')[1]?.toLowerCase() || 'us';
         
-        const response = await fetch(`/api/country-language/${browserLocale}`);
+        console.log("Fetching language for country:", browserLocale);
+        // Updated direct endpoint /api/languages/:countryCode
+        const response = await fetch(`/api/languages/${browserLocale}`);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log("Country language data:", data);
           setIpBasedLanguage(data.language || 'en');
+        } else {
+          console.error("Error fetching country language, status:", response.status);
+          setIpBasedLanguage('en');
         }
       } catch (error) {
         console.error('Error fetching country language:', error);
@@ -69,27 +78,34 @@ const NavbarLanguage: React.FC = () => {
   useEffect(() => {
     const fetchLanguages = async () => {
       setIsLoading(true);
+      setLoadError(null);
       try {
+        console.log("Fetching languages from API");
+        // Main endpoint /api/languages
         const response = await fetch('/api/languages');
-        if (!response.ok) throw new Error('Failed to load languages');
+        console.log("API response status:", response.status);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load languages: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log("Languages data received:", data);
         
         // Check if data is in the expected format and not empty
         if (Array.isArray(data) && data.length > 0) {
+          console.log(`Successfully loaded ${data.length} languages`);
           setLanguageList(data);
+          setLoadError(null);
         } else {
           console.error('API returned empty or invalid data', data);
-          // Set fallback to English only
-          setLanguageList([
-            { code: 'en', name_en: 'English', native_name: 'English', is_rtl: false },
-          ]);
+          setLoadError("No languages returned from API");
+          // Keep using default languages
         }
       } catch (error) {
         console.error('Error loading languages:', error);
-        // Set fallback to English only
-        setLanguageList([
-          { code: 'en', name_en: 'English', native_name: 'English', is_rtl: false },
-        ]);
+        setLoadError(error instanceof Error ? error.message : "Unknown error loading languages");
+        // Keep using default languages
       } finally {
         setIsLoading(false);
       }
@@ -102,15 +118,17 @@ const NavbarLanguage: React.FC = () => {
   useEffect(() => {
     try {
       const stored = localStorage.getItem('recentLanguages');
-      setRecentLanguages(stored ? JSON.parse(stored) : []);
+      const parsed = stored ? JSON.parse(stored) : [];
+      console.log("Loaded recent languages from localStorage:", parsed);
+      setRecentLanguages(parsed);
     } catch (error) {
       console.error('Error parsing recentLanguages from localStorage:', error);
       setRecentLanguages([]);
     }
   }, []);
 
-  // Filter and group languages based on search term
-  const filteredAndGroupedLanguages = useMemo(() => {
+  // Group and filter languages based on search term
+  const groupedLanguages = useMemo(() => {
     // First assign groups to all languages
     const grouped = languages.map(lang => ({
       ...lang,
@@ -129,35 +147,16 @@ const NavbarLanguage: React.FC = () => {
     );
 
     // Group into categories
-    const primary = filtered.filter(l => l.group === "primary");
-    const secondary = filtered.filter(l => l.group === "secondary");
-    const recent = filtered.filter(l => l.group === "recent")
-      .sort((a, b) => recentLanguages.indexOf(a.code) - recentLanguages.indexOf(b.code));
-    const others = filtered.filter(l => l.group === "other")
-      .sort((a, b) => a.native_name.localeCompare(b.native_name));
-
     return {
-      primary,
-      secondary,
-      recent,
-      others,
-      // Slice for virtual scrolling
-      visible: [...primary, ...secondary, ...recent, ...others].slice(0, visibleCount),
-      total: filtered.length
+      primary: filtered.filter(l => l.group === "primary"),
+      secondary: filtered.filter(l => l.group === "secondary"),
+      recent: filtered.filter(l => l.group === "recent")
+        .sort((a, b) => recentLanguages.indexOf(a.code) - recentLanguages.indexOf(b.code)),
+      others: filtered.filter(l => l.group === "other")
+        .sort((a, b) => a.native_name.localeCompare(b.native_name))
     };
-  }, [languages, primaryLang, secondaryLang, recentLanguages, search, visibleCount]);
+  }, [languages, primaryLang, secondaryLang, recentLanguages, search]);
 
-  // UI Navigation hook for keyboard navigation
-  const { highlightedIndex, setHighlightedIndex, handleKeyDown: handleUINavKeyDown } = useUINavigation({
-    items: filteredAndGroupedLanguages.visible,
-    isOpen,
-    onSelect: (lang) => handleSelectLanguage(lang.code),
-    pageSize: 20,
-    onLoadMore: () => setVisibleCount(prev => prev + 20),
-    inputRef,
-  });
-
-  // Handle selecting a language
   const handleSelectLanguage = useCallback((code: string) => {
     if (code === primaryLang) return;
     
@@ -189,73 +188,32 @@ const NavbarLanguage: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [handleClickOutside]);
 
-  // Search input handlers
-  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
-    setVisibleCount(20); // Reset visible count when search changes
-  }, []);
-
-  const handleSearchFocus = useCallback(() => {
-    setIsOpen(true);
-  }, []);
-
-  // Keyboard navigation within dropdown
-  const handleDropdownNavigation = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      handleUINavKeyDown(event);
-      if (dropdownRef.current && highlightedIndex !== null && itemsRef.current[highlightedIndex]) {
-        requestAnimationFrame(() => {
-          const dropdown = dropdownRef.current;
-          const item = itemsRef.current[highlightedIndex];
-          if (item && dropdown) {
-            const dropdownRect = dropdown.getBoundingClientRect();
-            const itemRect = item.getBoundingClientRect();
-            const buffer = 20;
-            const visibleTop = dropdownRect.top + buffer;
-            const visibleBottom = dropdownRect.bottom - buffer;
-
-            const isAboveView = itemRect.top < visibleTop;
-            const isBelowView = itemRect.bottom > visibleBottom;
-
-            if (isAboveView) {
-              dropdown.scrollTop -= (visibleTop - itemRect.top);
-            } else if (isBelowView) {
-              dropdown.scrollTop += (itemRect.bottom - visibleBottom);
-            }
-          }
-        });
-      }
-    } else if (event.key === "Escape") {
-      setIsOpen(false);
-      inputRef.current?.focus();
-    }
-  }, [handleUINavKeyDown, highlightedIndex]);
-
-  // Dropdown hover event handlers
-  const handleDropdownMouseEnter = useCallback(() => {
-    setIsDropdownHovered(true);
-  }, []);
-
-  const handleDropdownMouseLeave = useCallback(() => {
-    setIsDropdownHovered(false);
-  }, []);
-
-  // Get current flag image
+  // Get current flag image from language data if available
   const getCurrentFlag = useCallback(() => {
+    const currentLanguage = languages.find(lang => lang.code === primaryLang);
+    if (currentLanguage?.flag_url) {
+      return currentLanguage.flag_url;
+    }
     return `/flags/4x3/optimized/${primaryLang.toLowerCase()}.svg`;
-  }, [primaryLang]);
+  }, [primaryLang, languages]);
 
   // Toggle dropdown open/closed
   const toggleDropdown = useCallback(() => {
     setIsOpen(!isOpen);
-    if (!isOpen) {
-      // When opening, focus the search input
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 0);
-    }
   }, [isOpen]);
+
+  // Debug info
+  console.log("NavbarLanguage render state:", {
+    primaryLang,
+    secondaryLang,
+    isLoading,
+    languagesCount: languages.length,
+    hasError: !!loadError
+  });
+
+  // Prepare all items for the dropdown
+  const { primary, secondary, recent, others } = groupedLanguages;
+  const allFilteredLanguages = [...primary, ...secondary, ...recent, ...others];
 
   return (
     <div className="navbar-language-container" ref={componentRef}>
@@ -277,39 +235,35 @@ const NavbarLanguage: React.FC = () => {
       {isOpen && (
         <div className="language-dropdown">
           <input
-            ref={inputRef}
             type="text"
             placeholder="Search language..."
             className="language-search"
             value={search}
-            onChange={handleSearchChange}
-            onFocus={handleSearchFocus}
+            onChange={(e) => setSearch(e.target.value)}
             autoFocus
           />
           
           {isLoading ? (
             <div className="language-loading">Loading languages...</div>
-          ) : languages.length === 0 ? (
+          ) : loadError ? (
             <div className="language-error">
-              <MissingTranslation text="missing data" />
+              <MissingTranslation text={`Error: ${loadError}`} />
+            </div>
+          ) : allFilteredLanguages.length === 0 ? (
+            <div className="language-error">
+              <MissingTranslation text="No languages found" />
             </div>
           ) : (
             <BaseDropdown
-              items={filteredAndGroupedLanguages.visible}
+              items={allFilteredLanguages}
               isOpen={true}
               onSelect={(lang) => handleSelectLanguage(lang.code)}
               variant="language"
               position="right"
-              totalItems={filteredAndGroupedLanguages.total}
-              pageSize={20}
-              onLoadMore={() => setVisibleCount(prev => prev + 20)}
               renderItem={(lang, { isHighlighted }) => (
-                <div 
-                  className={`language-item ${isHighlighted ? 'language-item--highlighted' : ''} ${lang.group}`}
-                  ref={(el) => (itemsRef.current[filteredAndGroupedLanguages.visible.indexOf(lang)] = el)}
-                >
+                <div className={`language-item ${isHighlighted ? 'language-item--highlighted' : ''} ${lang.group}`}>
                   <img 
-                    src={`/flags/4x3/optimized/${lang.code.toLowerCase()}.svg`}
+                    src={lang.flag_url || `/flags/4x3/optimized/${lang.code.toLowerCase()}.svg`}
                     alt={`${lang.code} flag`} 
                     className="language-item-flag" 
                     onError={(e) => { e.currentTarget.src = "/flags/4x3/optimized/gb.svg"; }}
@@ -328,11 +282,6 @@ const NavbarLanguage: React.FC = () => {
               ariaLabel="Language options"
               className="language-selector-dropdown"
               noResultsText="No languages found"
-              loadMoreText="Load more languages..."
-              ref={dropdownRef}
-              onKeyDown={isDropdownHovered ? handleDropdownNavigation : undefined}
-              onMouseEnter={handleDropdownMouseEnter}
-              onMouseLeave={handleDropdownMouseLeave}
             />
           )}
         </div>

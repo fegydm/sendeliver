@@ -9,21 +9,33 @@ interface LanguageState {
   isLoading: boolean;
 }
 
+// Fallback translations (minimum set)
+const fallbackTranslations = {
+  "welcome": "Welcome",
+  "about": "About",
+  "login": "Log in",
+  "register": "Register"
+};
+
 // Helper functions to work with localStorage instead of cookies
-const saveLanguage = (language: string): void => {
+const saveLanguages = (primary: string, secondary: string): void => {
   try {
-    localStorage.setItem('lastLanguage', language);
+    localStorage.setItem('primaryLanguage', primary);
+    localStorage.setItem('secondaryLanguage', secondary);
   } catch (error) {
-    console.error('Failed to save language to localStorage:', error);
+    console.error('Failed to save languages to localStorage:', error);
   }
 };
 
-const getLanguage = (): string | null => {
+const getSavedLanguages = (): { primary: string | null, secondary: string | null } => {
   try {
-    return localStorage.getItem('lastLanguage');
+    return {
+      primary: localStorage.getItem('primaryLanguage'),
+      secondary: localStorage.getItem('secondaryLanguage')
+    };
   } catch (error) {
-    console.error('Failed to get language from localStorage:', error);
-    return null;
+    console.error('Failed to get languages from localStorage:', error);
+    return { primary: null, secondary: null };
   }
 };
 
@@ -44,31 +56,74 @@ export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: 
       let translations: Record<string, string> = {};
 
       try {
-        const ipLang = await getIPLocation();
-        if (user?.id) {
-          primaryLang = user.settings?.primaryLanguage || 'en';
-          secondaryLang = user.settings?.secondaryLanguage || ipLang;
+        // Step 1: Try to get languages from user settings (DB)
+        if (user?.id && user?.settings) {
+          primaryLang = user.settings.primaryLanguage || 'en';
+          secondaryLang = user.settings.secondaryLanguage || 'en';
+          console.log('Using languages from user settings:', primaryLang, secondaryLang);
         } else {
-          const storedLang = getLanguage();
-          secondaryLang = storedLang || ipLang;
+          // Step 2: Try to get languages from localStorage
+          const savedLangs = getSavedLanguages();
+          if (savedLangs.primary || savedLangs.secondary) {
+            primaryLang = savedLangs.primary || 'en';
+            secondaryLang = savedLangs.secondary || 'en';
+            console.log('Using languages from localStorage:', primaryLang, secondaryLang);
+          } else {
+            // Step 3: Use IP address only for secondary language
+            try {
+              const ipLang = await getIPLocation();
+              primaryLang = 'en';
+              secondaryLang = ipLang;
+              console.log('Using languages from IP:', primaryLang, secondaryLang);
+            } catch (error) {
+              console.warn('Failed to get language from IP, using defaults:', 'en', 'en');
+              primaryLang = 'en';
+              secondaryLang = 'en';
+            }
+          }
         }
 
-        const [enResponse, nativeResponse] = await Promise.all([
-          fetch('/api/translations/en'),
-          secondaryLang !== 'en' ? fetch(`/api/translations/${secondaryLang}`) : null,
-        ]);
+        // Load translations from API
+        try {
+          // Always load EN translations
+          const enResponse = await fetch('/api/translations/en');
 
-        if (!enResponse.ok) throw new Error('EN translations failed');
-        translations = await enResponse.json();
+          if (enResponse.ok) {
+            translations = await enResponse.json();
+            console.log('EN translations loaded successfully');
+          } else {
+            console.warn('Failed to load EN translations, using fallback');
+            translations = { ...fallbackTranslations };
+          }
 
-        if (nativeResponse && nativeResponse.ok) {
-          Object.assign(translations, await nativeResponse.json());
+          // If secondary language is not EN, load its translations too
+          if (secondaryLang !== 'en') {
+            try {
+              const secondaryResponse = await fetch(`/api/translations/${secondaryLang}`);
+              if (secondaryResponse.ok) {
+                const secondaryTranslations = await secondaryResponse.json();
+                Object.assign(translations, secondaryTranslations);
+                console.log(`${secondaryLang} translations loaded successfully`);
+              } else {
+                console.warn(`Failed to load ${secondaryLang} translations, using EN only`);
+              }
+            } catch (error) {
+              console.warn(`Error loading ${secondaryLang} translations:`, error);
+            }
+          }
+        } catch (error) {
+          console.info('Failed to load translations, using English fallback only');
+          translations = { ...fallbackTranslations };
         }
       } catch (error) {
-        console.info('Failed to load translations, using EN only');
-        const enResponse = await fetch('/api/translations/en');
-        translations = enResponse.ok ? await enResponse.json() : {};
+        console.error('Failed to initialize language system:', error);
+        primaryLang = 'en';
+        secondaryLang = 'en';
+        translations = { ...fallbackTranslations };
       }
+
+      // Save selected languages to localStorage
+      saveLanguages(primaryLang, secondaryLang);
 
       setState({
         primaryLanguage: primaryLang,
@@ -86,7 +141,7 @@ export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: 
     secondaryLanguage: state.secondaryLanguage,
     t,
     setLanguages: (primary: string, secondary: string) => {
-      saveLanguage(primary); // Save to localStorage instead of cookies
+      saveLanguages(primary, secondary);
       setState((prev) => ({
         ...prev,
         primaryLanguage: primary,
@@ -97,8 +152,9 @@ export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: 
 }
 
 function useTranslations(state: LanguageState) {
-  const t = (key: string): string | null => {
-    return state.translations[key] || null;
+  // Function t() returns translation or "missing data" if translation doesn't exist
+  const t = (key: string): string => {
+    return state.translations[key] || "missing data"; 
   };
   return { t };
 }
