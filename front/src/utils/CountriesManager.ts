@@ -73,7 +73,8 @@ class CountriesManager {
     const timerLabel = 'fetch-languages-time';
     try {
       console.time(timerLabel);
-      const response = await fetch('/api/languages');
+      // Changed endpoint to /api/geo/languages to match the route mapping
+      const response = await fetch('/api/geo/languages');
       if (!response.ok) throw new Error('Failed to fetch languages');
       const data = await response.json();
       
@@ -110,17 +111,18 @@ class CountriesManager {
     return `/flags/4x3/optimized/${code.toLowerCase()}.svg`;
   }
 
-  private preloadData() {
-    // Use direct promises instead of requestIdleCallback for faster loading
-    Promise.all([this.getCountries(), this.getLanguages()])
-      .then(() => {
-        console.log('Preloaded data successfully, starting flag preloading');
-        this.preloadFlags();
-      })
-      .catch(error => {
-        console.error('Error preloading data:', error);
-      });
-  }
+// Disable flag preloading for testing purposes
+private preloadData() {
+  Promise.all([this.getCountries(), this.getLanguages()])
+    .then(() => {
+      console.log('Preloaded data successfully');
+      // Temporarily disable flag preloading
+      // this.preloadFlags();
+    })
+    .catch(error => {
+      console.error('Error preloading data:', error);
+    });
+}
 
   private preloadFlags() {
     const countryFlags = this.countries.filter(c => c.cc).map(c => c.cc);

@@ -5,9 +5,7 @@ export const GET_LANGUAGES_QUERY = `
     name_en,
     native_name,
     is_rtl,
-    primary_country_code,
-    created_at,
-    updated_at
+    primary_country_code
   FROM 
     geo.languages
   ORDER BY 

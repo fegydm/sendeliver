@@ -1,4 +1,4 @@
-// ./front/src/hooks/useLanguage.ts
+// File: ./front/src/hooks/useLanguage.ts
 import { useState, useEffect, useCallback } from 'react';
 import { getIPLocation } from '../utils/geo';
 
@@ -50,7 +50,8 @@ export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: 
   // Load translations for a specific language
   const loadTranslationsForLanguage = useCallback(async (langCode: string): Promise<Record<string, string>> => {
     try {
-      const response = await fetch(`/api/translations/${langCode}`);
+      // Updated URL endpoint to /api/geo/translations/ since BE routes translations in geo
+      const response = await fetch(`/api/geo/translations/${langCode}`);
       if (response.ok) {
         const translationsData = await response.json();
         console.log(`${langCode} translations loaded successfully`);
