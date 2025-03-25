@@ -1,4 +1,4 @@
-// File: ./front/src/components/sections/content/search-forms/BaseDropdown.tsx
+// File: ./front/src/components/elements/BaseDropdown.tsx
 // Last change: Added itemsRef forwarding and mouse event props
 
 import React, { useRef, useCallback, useEffect, useState, forwardRef } from "react";

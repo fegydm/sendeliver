@@ -1,5 +1,5 @@
 // File: server.ts
-// Fixed version with root path handling
+// Fixed version with root path handling and unified geo API
 
 import express from "express";
 import cors from "cors";
@@ -10,11 +10,9 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import * as dotenv from "dotenv";
 import aiRouter from "./routes/ai.routes.js";
-import geoRouter from "./routes/geo.routes.js";
+import geoRouter from "./routes/geo.routes.js";  
 import deliveryRouter from "./routes/delivery.routes.js";
 import vehiclesRouter from "./routes/vehicles.routes.js";
-import languageRouter from "./routes/language.routes.js";
-import translationsRouter from "./routes/translations.routes.js";
 
 // Custom type definitions
 interface Req {
@@ -86,11 +84,9 @@ staticRoutes.forEach((route) => app.use(route.url, express.static(route.path)));
 
 // API routes
 app.use("/api/ai", aiRouter);
-app.use("/api/geo", geoRouter);
+app.use("/api/geo", geoRouter); 
 app.use("/api/vehicles", vehiclesRouter);
 app.use("/api", deliveryRouter);
-app.use("/api/languages", languageRouter);
-app.use("/api/translations", translationsRouter);
 
 // Health check
 app.get("/api/health", (_req: Req, res: Res) => {

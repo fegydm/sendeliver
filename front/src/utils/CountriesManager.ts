@@ -1,18 +1,19 @@
-/* File: src/utils/CountriesManager.ts */
-/* Singleton for managing countries data with optimized loading */
+// File: src/utils/CountriesManager.ts
+// Last change: Fixed timer issue and improved error handling
 
 import type { Country } from '@/types/transport-forms.types';
+import type { Language } from '@/types/language.types';
+import { DEFAULT_LANGUAGES } from '@/types/language.types';
 
-export class CountriesManager {
+class CountriesManager {
   private static instance: CountriesManager;
-  private countries: Country[] | null = null;
-  private fetchPromise: Promise<Country[]> | null = null;
-  private subscribers = new Set<(countries: Country[]) => void>();
-  private fetchStartTime: number = 0;
-  private flagsMap: Record<string, string> = {};
+  private countries: Country[] = [];
+  private languages: Language[] = [];
+  private countrySubscribers = new Set<(countries: Country[]) => void>();
+  private languageSubscribers = new Set<(languages: Language[]) => void>();
 
   private constructor() {
-    console.log('🔧 CountriesManager instance created');
+    this.preloadData();
   }
 
   static getInstance(): CountriesManager {
@@ -22,107 +23,148 @@ export class CountriesManager {
     return CountriesManager.instance;
   }
 
-  private async fetchCountries(): Promise<Country[]> {
-    this.fetchStartTime = performance.now();
-    console.log('🚀 Starting countries fetch from /api/geo/countries');
-    try {
-      const response = await fetch('/api/geo/countries');
-      console.log(`📡 Response status: ${response.status} ${response.statusText}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch countries: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      console.log(`📦 Data received: ${data.length} countries`);
-      const transformedData = data.map((country: any) => {
-        const { code_2, ...rest } = country;
-        return { ...rest, cc: code_2 };
-      });
-      const duration = Math.round(performance.now() - this.fetchStartTime);
-      console.log(`✅ Countries fetched successfully: ${transformedData.length} items in ${duration}ms`);
-      return transformedData;
-    } catch (error) {
-      const duration = Math.round(performance.now() - this.fetchStartTime);
-      console.error(`❌ Countries fetch failed after ${duration}ms:`, error instanceof Error ? error.message : error);
-      console.warn('⚠️ Using empty array as fallback due to fetch failure');
-      return []; // Fallback to empty array
-    }
-  }
-
-  subscribe(callback: (countries: Country[]) => void): () => void {
-    console.log('📥 New subscription request to CountriesManager');
-    if (this.countries) {
-      console.log(`✅ Returning cached countries to subscriber: ${this.countries.length}`);
-      callback(this.countries);
-      return () => {};
-    }
-    this.subscribers.add(callback);
-    console.log(`➕ Subscriber added, total: ${this.subscribers.size}`);
-    if (!this.fetchPromise) {
-      console.log('🔄 Initiating fetch due to new subscriber');
-      this.getCountries().catch(error => console.error('Failed to fetch countries in subscribe:', error));
-    }
-    return () => {
-      this.subscribers.delete(callback);
-      console.log(`➖ Subscriber removed, total: ${this.subscribers.size}`);
-    };
-  }
-
-  private notify() {
-    if (this.countries) {
-      console.log(`📢 Notifying ${this.subscribers.size} subscribers about countries`);
-      this.subscribers.forEach(callback => callback(this.countries!));
-    } else {
-      console.warn('⚠️ No countries to notify subscribers about');
-    }
-  }
-
   async getCountries(): Promise<Country[]> {
-    if (this.countries) {
-      console.log(`✅ Using cached countries: ${this.countries.length}`);
-      return this.countries;
+    if (this.countries.length > 0) return this.countries;
+    
+    const timerLabel = 'fetch-countries-time';
+    try {
+      console.time(timerLabel);
+      const response = await fetch('/api/geo/countries');
+      if (!response.ok) throw new Error('Failed to fetch countries');
+      const data = await response.json();
+      
+      // Log the first raw country data to see the actual structure
+      if (data && data.length > 0) {
+        console.log('Raw country data sample:', data[0]);
+      }
+      
+      // Map API response to Country type - fixing the code_2 to cc mapping
+      this.countries = data.map((c: any) => ({
+        // Use code_2 as cc, fallback to country_code or a placeholder
+        cc: c.code_2 || c.country_code || c.cc || '',
+        name_en: c.name_en || c.name || 'Unknown',
+        name_local: c.name_local || '',
+        code_3: c.code_3 || ''
+      }));
+      
+      // Log the mapped data to verify transformation
+      if (this.countries && this.countries.length > 0) {
+        console.log('Mapped country data sample:', this.countries[0]);
+      }
+
+      console.timeEnd(timerLabel);
+    } catch (error) {
+      console.error('Countries fetch error:', error);
+      this.countries = [];
+      try {
+        console.timeEnd(timerLabel);
+      } catch (e) {
+        // Ignore timer error
+      }
     }
-    if (this.fetchPromise) {
-      console.log('🔄 Using existing fetch promise for countries');
-      return this.fetchPromise;
-    }
-    console.log('🚀 Starting new countries fetch');
-    this.fetchPromise = this.fetchCountries()
-      .then(data => {
-        this.countries = data;
-        console.log(`📥 Countries cached: ${data.length}`);
-        
-        // Build flags map as we receive country data
-        data.forEach(country => {
-          if (country.cc) {
-            const flagUrl = `/flags/4x3/optimized/${country.cc.toLowerCase()}.svg`;
-            this.flagsMap[country.cc.toLowerCase()] = flagUrl;
-            
-            // Preload flag images in background
-            console.log(`🏳️ Preloading flag for ${country.cc}`);
-            const img = new Image();
-            img.src = flagUrl;
-          }
-        });
-        
-        this.notify();
-        return data;
-      })
-      .finally(() => {
-        console.log('🏁 Countries fetch promise completed');
-        this.fetchPromise = null;
-      });
-    return this.fetchPromise;
+    
+    this.notifyCountries();
+    return this.countries;
   }
-  
-  // Get flag URL for a country or language code
+
+  async getLanguages(): Promise<Language[]> {
+    if (this.languages.length > 0) return this.languages;
+    
+    const timerLabel = 'fetch-languages-time';
+    try {
+      console.time(timerLabel);
+      const response = await fetch('/api/languages');
+      if (!response.ok) throw new Error('Failed to fetch languages');
+      const data = await response.json();
+      
+      // Map API response to Language type - ensuring proper property mapping
+      this.languages = data.map((lang: any) => ({
+        // Map code_2 to lc for language codes
+        lc: lang.code_2 || lang.cc || '',
+        cc: lang.cc || lang.code_2 || '', // Keep cc for backward compatibility
+        name_en: lang.name_en || 'Unknown',
+        native_name: lang.native_name || lang.name_en || 'Unknown',
+        is_rtl: !!lang.is_rtl,
+        primary_country_code: lang.primary_country_code || '',
+        created_at: lang.created_at || new Date().toISOString(),
+        updated_at: lang.updated_at || new Date().toISOString()
+      }));
+      
+      console.timeEnd(timerLabel);
+    } catch (error) {
+      console.error('Languages fetch error:', error);
+      this.languages = DEFAULT_LANGUAGES;
+      try {
+        console.timeEnd(timerLabel);
+      } catch (e) {
+        // Ignore timer error
+      }
+    }
+    
+    this.notifyLanguages();
+    return this.languages;
+  }
+
   getFlagUrl(code: string): string {
-    const lowerCode = code.toLowerCase();
-    return this.flagsMap[lowerCode] || `/flags/4x3/optimized/${lowerCode}.svg`;
+    if (!code) return '/flags/4x3/optimized/xx.svg'; // Fallback for missing codes
+    return `/flags/4x3/optimized/${code.toLowerCase()}.svg`;
   }
-  
-  // Get all available flag URLs
-  getFlagsMap(): Record<string, string> {
-    return { ...this.flagsMap };
+
+  private preloadData() {
+    // Use direct promises instead of requestIdleCallback for faster loading
+    Promise.all([this.getCountries(), this.getLanguages()])
+      .then(() => {
+        console.log('Preloaded data successfully, starting flag preloading');
+        this.preloadFlags();
+      })
+      .catch(error => {
+        console.error('Error preloading data:', error);
+      });
+  }
+
+  private preloadFlags() {
+    const countryFlags = this.countries.filter(c => c.cc).map(c => c.cc);
+    const languageFlags = this.languages.filter(l => l.lc || l.cc).map(l => l.lc || l.cc);
+    const allFlags = [...countryFlags, ...languageFlags].filter(Boolean);
+    
+    console.log(`Preloading ${allFlags.length} flags`);
+    
+    // Use a throttled approach to avoid too many simultaneous requests
+    let index = 0;
+    const preloadNextBatch = () => {
+      const batch = allFlags.slice(index, index + 10);
+      batch.forEach(code => {
+        const img = new Image();
+        img.src = this.getFlagUrl(code);
+      });
+      
+      index += 10;
+      if (index < allFlags.length) {
+        setTimeout(preloadNextBatch, 100);
+      }
+    };
+    
+    preloadNextBatch();
+  }
+
+  subscribeCountries(callback: (countries: Country[]) => void): () => void {
+    this.countrySubscribers.add(callback);
+    if (this.countries.length > 0) callback(this.countries);
+    return () => this.countrySubscribers.delete(callback);
+  }
+
+  subscribeLanguages(callback: (languages: Language[]) => void): () => void {
+    this.languageSubscribers.add(callback);
+    if (this.languages.length > 0) callback(this.languages);
+    return () => this.languageSubscribers.delete(callback);
+  }
+
+  private notifyCountries() {
+    this.countrySubscribers.forEach(cb => cb(this.countries));
+  }
+
+  private notifyLanguages() {
+    this.languageSubscribers.forEach(cb => cb(this.languages));
   }
 }
 

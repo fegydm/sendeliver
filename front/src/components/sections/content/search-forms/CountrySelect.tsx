@@ -1,8 +1,8 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Update: Synchronization of inputValue with initialValue and dynamic flag updates
+// Last change: Added debugging and fixed filtering issue
 
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
-import { BaseDropdown } from "../../../elements/BaseDropdown";
+import { BaseDropdown } from "@/components/elements/BaseDropdown";
 import type { Country } from "@/types/transport-forms.types";
 import { useCountriesPreload } from "@/hooks/useCountriesPreload";
 import { useUINavigation } from "@/hooks/useUINavigation";
@@ -31,37 +31,78 @@ export function CountrySelect({
   const componentRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLElement | null)[]>([]);
 
-  // Fixed: Changed 'items' to 'countries'
-  const { countries: allCountries } = useCountriesPreload();
+  const { countries: allCountries, isLoading } = useCountriesPreload();
 
-  // Synchronize inputValue with initialValue
+  // Debug logging for countries data
   useEffect(() => {
-    console.log(`[CountrySelect] ${locationType} initialValue changed to:`, initialValue);
+    console.log(`[CountrySelect] allCountries:`, allCountries);
+    console.log(`[CountrySelect] isLoading:`, isLoading);
+  }, [allCountries, isLoading]);
+
+  // Sync inputValue with initialValue
+  useEffect(() => {
     if (initialValue !== inputValue) {
-      setInputValue(initialValue); // Always update inputValue to initialValue
+      setInputValue(initialValue);
       if (inputRef.current && initialValue !== inputRef.current.value) {
-        inputRef.current.value = initialValue; // Update DOM
+        inputRef.current.value = initialValue;
       }
-      // If initialValue is a valid country code, update flag
       if (initialValue.length === 2) {
         const flagUrl = `/flags/4x3/optimized/${initialValue.toLowerCase()}.svg`;
-        onCountrySelect(initialValue, flagUrl); // Inform parent
+        onCountrySelect(initialValue, flagUrl);
       }
     }
   }, [initialValue, locationType, onCountrySelect, inputValue]);
 
   const filteredItems = useMemo(() => {
-    if (!inputValue) return allCountries;
-    // Fixed: Added explicit type for 'c' parameter
-    return allCountries.filter((c: Country) => c.cc?.startsWith(inputValue.toUpperCase()));
-  }, [inputValue, allCountries]);
-  
+    // Important: Log what's coming in
+    console.log(`[CountrySelect] Filtering with input: "${inputValue}"`, { 
+      allCountries: allCountries?.length || 0, 
+      isLoading 
+    });
+
+    if (isLoading) return [];
+    
+    // Handle case when allCountries might be empty or undefined
+    if (!allCountries || !Array.isArray(allCountries) || allCountries.length === 0) {
+      console.warn('[CountrySelect] No countries data available:', allCountries);
+      return [];
+    }
+    
+    // Log sample of data to verify structure
+    if (allCountries.length > 0) {
+      console.log('[CountrySelect] Sample country:', allCountries[0]);
+    }
+    
+    // When no input, return all valid countries
+    if (!inputValue) {
+      const validCountries = allCountries.filter(c => c && typeof c === 'object' && c.cc);
+      console.log(`[CountrySelect] All valid countries: ${validCountries.length}`);
+      return validCountries;
+    }
+    
+    // Filter by input value
+    const upperValue = inputValue.toUpperCase();
+    const filtered = allCountries.filter((c: Country) => {
+      // Only include countries with a valid cc property that starts with our input
+      return c && typeof c === 'object' && c.cc && 
+             typeof c.cc === 'string' && 
+             c.cc.toUpperCase().startsWith(upperValue);
+    });
+    
+    console.log(`[CountrySelect] Filtered ${filtered.length} countries with "${upperValue}"`);
+    return filtered;
+  }, [inputValue, allCountries, isLoading]);
+
+  // Debug for filtered results
+  useEffect(() => {
+    console.log(`[CountrySelect] filteredItems:`, filteredItems);
+  }, [filteredItems]);
+
   const visibleItems = useMemo(() => filteredItems.slice(0, visibleCount), [filteredItems, visibleCount]);
 
   const { highlightedIndex, setHighlightedIndex, handleKeyDown: handleUINavKeyDown } = useUINavigation({
     items: visibleItems,
     isOpen,
-    // Fixed: Added type casting to handle 'unknown' type
     onSelect: (country) => handleSelect(country as Country),
     pageSize: 20,
     onLoadMore: () => setVisibleCount(prev => prev + 20),
@@ -88,8 +129,7 @@ export function CountrySelect({
       onCountrySelect("", "");
       setVisibleCount(20);
     } else if (upperValue.length === 2) {
-      // Fixed: Added explicit type for 'c' parameter
-      const exactMatch = allCountries.find((c: Country) => c.cc === upperValue);
+      const exactMatch = allCountries && allCountries.find((c: Country) => c && c.cc === upperValue);
       if (exactMatch) {
         const flagUrl = `/flags/4x3/optimized/${exactMatch.cc.toLowerCase()}.svg`;
         onCountrySelect(exactMatch.cc, flagUrl);
@@ -100,7 +140,7 @@ export function CountrySelect({
   }, [allCountries, onCountrySelect, onNextFieldFocus]);
 
   const handleSelect = useCallback((selected: Country) => {
-    if (!selected.cc) return;
+    if (!selected || !selected.cc) return;
     setInputValue(selected.cc);
     const flagUrl = `/flags/4x3/optimized/${selected.cc.toLowerCase()}.svg`;
     onCountrySelect(selected.cc, flagUrl);
@@ -109,34 +149,27 @@ export function CountrySelect({
   }, [onCountrySelect, onNextFieldFocus]);
 
   const handleFocus = useCallback(() => {
-    setIsOpen(true);
-  }, []);
+    console.log('[CountrySelect] Focus', { isLoading, countriesCount: allCountries?.length || 0 });
+    if (!isLoading) {
+      setIsOpen(true);
+    }
+  }, [isLoading, allCountries]);
 
   const handleInputClick = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
-    setIsOpen(true);
-  }, []);
+    console.log('[CountrySelect] Click', { isLoading, countriesCount: allCountries?.length || 0 });
+    if (!isLoading) {
+      setIsOpen(true);
+    }
+  }, [isLoading, allCountries]);
 
   const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") {
-      if (document.activeElement === inputRef.current) { // Check if input is focused
+      if (document.activeElement === inputRef.current || isInputHovered) {
         event.preventDefault();
-        if (!isOpen) setIsOpen(true);
-        if (highlightedIndex === null) {
-          setHighlightedIndex(0); // Go to first item if none selected
-        }
-        dropdownRef.current?.focus(); // Move focus to dropdown
-      } else if (isInputHovered) {
-        event.preventDefault();
-        if (!isOpen) setIsOpen(true);
-        if (highlightedIndex === null) {
-          setHighlightedIndex(0);
-        }
+        if (!isOpen && !isLoading) setIsOpen(true);
+        if (highlightedIndex === null) setHighlightedIndex(0);
         dropdownRef.current?.focus();
-      }
-    } else if (event.key === "ArrowUp") {
-      if (isInputHovered && isOpen) {
-        event.preventDefault();
       }
     } else if (event.key === "Escape") {
       setIsOpen(false);
@@ -148,7 +181,7 @@ export function CountrySelect({
       setIsOpen(true);
       inputRef.current?.focus();
     }
-  }, [inputValue, isOpen, isInputHovered, highlightedIndex, setHighlightedIndex]);
+  }, [inputValue, isOpen, isInputHovered, highlightedIndex, setHighlightedIndex, isLoading]);
 
   const handleDropdownNavigation = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -182,23 +215,11 @@ export function CountrySelect({
     }
   }, [handleUINavKeyDown, highlightedIndex]);
 
-  const handleInputMouseEnter = useCallback(() => {
-    setIsInputHovered(true);
-  }, []);
+  const handleInputMouseEnter = useCallback(() => setIsInputHovered(true), []);
+  const handleInputMouseLeave = useCallback(() => setIsInputHovered(false), []);
+  const handleDropdownMouseEnter = useCallback(() => setIsDropdownHovered(true), []);
+  const handleDropdownMouseLeave = useCallback(() => setIsDropdownHovered(false), []);
 
-  const handleInputMouseLeave = useCallback(() => {
-    setIsInputHovered(false);
-  }, []);
-
-  const handleDropdownMouseEnter = useCallback(() => {
-    setIsDropdownHovered(true);
-  }, []);
-
-  const handleDropdownMouseLeave = useCallback(() => {
-    setIsDropdownHovered(false);
-  }, []);
-
-  // Get the correct flag source based on inputValue
   const flagSrc = useMemo(() => {
     if (inputValue.length === 2) {
       return `/flags/4x3/optimized/${inputValue.toLowerCase()}.svg`;
@@ -206,16 +227,35 @@ export function CountrySelect({
     return "/flags/4x3/optimized/gb.svg";
   }, [inputValue]);
 
+  // Render a message while loading
+  if (isLoading) {
+    return <div>Loading countries...</div>;
+  }
+
+  // Create a function that generates unique keys
+  const getItemKeyFn = (item: Country) => {
+    if (!item || !item.cc) {
+      // Generate a unique ID for items without a cc code
+      return `unknown-${Math.random().toString(36).substr(2, 9)}`;
+    }
+    return item.cc;
+  };
+
+  // Add debug info for when we're showing the dropdown but have no items
+  console.log('[CountrySelect] Render with', {
+    isOpen,
+    visibleItemsCount: visibleItems.length,
+    filteredItemsCount: filteredItems.length,
+    allCountriesCount: allCountries?.length || 0
+  });
+
   return (
     <div ref={componentRef} className={`country-select country-select--${locationType}`}>
       <img 
         src={flagSrc} 
         className={`country-select__flag ${inputValue.length !== 2 ? 'country-select__flag--inactive' : ''}`} 
         alt="Country flag" 
-        onError={(e) => {
-          console.error(`[CountrySelect] Error loading flag:`, flagSrc);
-          e.currentTarget.src = "/flags/4x3/optimized/gb.svg";
-        }}
+        onError={(e) => (e.currentTarget.src = "/flags/4x3/optimized/gb.svg")}
       />
       <input
         ref={inputRef}
@@ -243,18 +283,35 @@ export function CountrySelect({
         totalItems={filteredItems.length}
         pageSize={20}
         onLoadMore={() => setVisibleCount(prev => prev + 20)}
-        renderItem={(country: Country, { isHighlighted }: { isHighlighted: boolean }) => (
-          <div
-            className={`dropdown__item ${isHighlighted ? 'dropdown--highlighted' : ''}`}
-            ref={(el) => (itemsRef.current[visibleItems.indexOf(country)] = el)}
-          >
-            <img src={`/flags/4x3/optimized/${country.cc.toLowerCase()}.svg`} alt={`${country.cc} flag`} className="dropdown__item-flag" />
-            <span className="dropdown__item-code">{country.cc}</span>
-            <span className="dropdown__item-name">{country.name_en}</span>
-            <span className="dropdown__item-local-name">({country.name_local})</span>
-          </div>
-        )}
-        getItemKey={(item: Country) => item.cc || ''}
+        renderItem={(country: Country, { isHighlighted }: { isHighlighted: boolean }) => {
+          // Guard against undefined country.cc
+          if (!country || !country.cc) {
+            return (
+              <div className={`dropdown__item ${isHighlighted ? 'dropdown--highlighted' : ''}`}>
+                <span className="dropdown__item-code">?</span>
+                <span className="dropdown__item-name">Unknown country</span>
+              </div>
+            );
+          }
+          
+          return (
+            <div
+              className={`dropdown__item ${isHighlighted ? 'dropdown--highlighted' : ''}`}
+              ref={(el) => (itemsRef.current[visibleItems.indexOf(country)] = el)}
+            >
+              <img 
+                src={`/flags/4x3/optimized/${country.cc.toLowerCase()}.svg`} 
+                alt={`${country.cc} flag`} 
+                className="dropdown__item-flag"
+                onError={(e) => (e.currentTarget.src = "/flags/4x3/optimized/gb.svg")}
+              />
+              <span className="dropdown__item-code">{country.cc}</span>
+              <span className="dropdown__item-name">{country.name_en || 'Unknown'}</span>
+              <span className="dropdown__item-local-name">({country.name_local || 'N/A'})</span>
+            </div>
+          );
+        }}
+        getItemKey={getItemKeyFn}
         ariaLabel="Country options"
         loadMoreText="Load more countries..."
         className="country-select__dropdown"
@@ -262,6 +319,15 @@ export function CountrySelect({
         onKeyDown={isDropdownHovered ? handleDropdownNavigation : undefined}
         onMouseEnter={handleDropdownMouseEnter}
         onMouseLeave={handleDropdownMouseLeave}
+        // Custom prop for no results message
+        noResultsText="Loading countries data..."
+        onNoResults={() => (
+          <div className="dropdown__no-results">
+            {allCountries && allCountries.length > 0 
+              ? `No matching countries for "${inputValue}"`
+              : "Loading countries data..."}
+          </div>
+        )}
       />
     </div>
   );

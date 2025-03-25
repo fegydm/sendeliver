@@ -1,11 +1,10 @@
-// File: .back/src/routes/geo.routes.ts
-// Last change: Fixed type issues for Express and query parsing types
-
+// File: ./back/src/routes/geo.routes.ts
 import { Router } from "express";
-import { GeoService } from "../services/geo.services.js";
+import countriesService from "../services/countries.services.js";
+import languagesService from "../services/languages.services.js";
+import translationsService from "../services/translations.services.js";
 import { DEFAULT_FETCH_SIZE, MAX_QUERY_SIZE } from "../constants/geo.constants.js";
 
-// Define our own interfaces instead of extending ParsedQs
 interface LocationQuery {
   psc?: string;
   city?: string;
@@ -17,16 +16,14 @@ interface LocationQuery {
 }
 
 const router = Router();
-const geoService = GeoService.getInstance();
 
-// Handler for getting countries list
+// Countries: Get all countries
 const handleGetCountries = async (req: any, res: any): Promise<void> => {
   try {
     const { q } = req.query;
-    const countries = await geoService.getCountries();
+    const countries = await countriesService.getCountries();
 
     if (!countries) {
-      console.error("❌ No countries data received");
       res.status(500).json({ error: "Failed to fetch countries" });
       return;
     }
@@ -37,24 +34,20 @@ const handleGetCountries = async (req: any, res: any): Promise<void> => {
       const searchTerm = q.toLowerCase();
       result = countries.filter((country: any) =>
         country.name_en.toLowerCase().includes(searchTerm) ||
-        country.name_sk.toLowerCase().includes(searchTerm)
+        (country.name_sk && country.name_sk.toLowerCase().includes(searchTerm))
       );
     }
 
     result.sort((a: any, b: any) => a.name_en.localeCompare(b.name_en));
-
-    console.log("✅ Countries fetched:", result.length);
     res.json(result);
   } catch (error: unknown) {
-    console.error("❌ Error fetching countries:", error);
     res.status(500).json({ error: "Failed to fetch countries" });
   }
 };
 
-// Handler for getting locations
+// Countries: Search locations
 const handleGetLocation = async (req: any, res: any): Promise<void> => {
   try {
-    // Cast query to our interface for better typing
     const {
       psc,
       city,
@@ -65,23 +58,14 @@ const handleGetLocation = async (req: any, res: any): Promise<void> => {
       checkExists
     } = req.query as LocationQuery;
 
-    // Log incoming parameters for debugging
-    console.log('🔍 Search params:', {
-      psc: psc === 'empty' ? undefined : psc,
-      city: city === 'empty' ? undefined : city,
-      cc: cc === 'empty' ? undefined : cc
-    });
-
-    // Validate checkExists parameter
     const checkExistsBoolean = checkExists === 'true';
     if (checkExists !== undefined && checkExists !== 'true' && checkExists !== 'false') {
       res.status(400).json({ error: "Invalid checkExists value" });
       return;
     }
 
-    // Handle existence check if requested
     if (checkExistsBoolean) {
-      const exists = await geoService.checkLocationExists(
+      const exists = await countriesService.checkLocationExists(
         psc === 'empty' ? undefined : psc,
         city === 'empty' ? undefined : city,
         cc === 'empty' ? undefined : cc
@@ -90,7 +74,6 @@ const handleGetLocation = async (req: any, res: any): Promise<void> => {
       return;
     }
 
-    // Validate and parse limit parameter
     const limitValue = parseInt(limit, 10);
     if (isNaN(limitValue) || limitValue <= 0 || limitValue > MAX_QUERY_SIZE) {
       res.status(400).json({ 
@@ -99,7 +82,6 @@ const handleGetLocation = async (req: any, res: any): Promise<void> => {
       return;
     }
 
-    // Validate input parameters
     if (psc && typeof psc !== 'string') {
       res.status(400).json({ error: "Invalid postal code (psc) value" });
       return;
@@ -113,7 +95,6 @@ const handleGetLocation = async (req: any, res: any): Promise<void> => {
       return;
     }
 
-    // Create normalized search parameters
     const searchParams = {
       psc: psc === 'empty' ? undefined : psc,
       city: city === 'empty' ? undefined : city,
@@ -125,27 +106,21 @@ const handleGetLocation = async (req: any, res: any): Promise<void> => {
       }
     };
 
-    // Execute search
-    const searchResults = await geoService.searchLocations(searchParams);
-
-    // Calculate hasMore flag - only for empty search
+    const searchResults = await countriesService.searchLocations(searchParams);
     const hasMore = (!searchParams.psc && !searchParams.city) 
       ? searchResults.results.length === limitValue
       : false;
-
-    console.log(`📊 Found ${searchResults.results.length} locations`);
 
     res.json({ 
       results: searchResults.results,
       hasMore
     });
   } catch (error: unknown) {
-    console.error("❌ Search failed:", error);
     res.status(500).json({ error: "Failed to search locations" });
   }
 };
 
-// Handler for getting postal format for a country
+// Countries: Get postal format
 const handleGetCountryPostalFormat = async (req: any, res: any): Promise<void> => {
   try {
     const { cc } = req.query;
@@ -155,7 +130,7 @@ const handleGetCountryPostalFormat = async (req: any, res: any): Promise<void> =
       return;
     }
 
-    const postalFormat = await geoService.getCountryPostalFormat(cc);
+    const postalFormat = await countriesService.getCountryPostalFormat(cc);
 
     if (!postalFormat) {
       res.status(404).json({ error: "Postal format not found for given country code" });
@@ -164,13 +139,82 @@ const handleGetCountryPostalFormat = async (req: any, res: any): Promise<void> =
 
     res.json(postalFormat);
   } catch (error: unknown) {
-    console.error("❌ Failed to get country postal format:", error);
     res.status(500).json({ error: "Failed to retrieve postal format" });
+  }
+};
+
+// Languages: Get all languages with mapping for "ls"
+const handleGetLanguages = async (req: any, res: any): Promise<void> => {
+  try {
+    const languages = await languagesService.getAllLanguages();
+    // Map "ls" as equivalent to "cc" (geo.languages.code_2)
+    const mappedLanguages = languages.map((lang: any) => ({
+      ...lang,
+      ls: lang.code_2 || lang.cc
+    }));
+    res.json(mappedLanguages);
+  } catch (error: unknown) {
+    res.status(500).json({ error: "Failed to fetch languages" });
+  }
+};
+
+// Languages: Get country language
+const handleGetCountryLanguage = async (req: any, res: any): Promise<void> => {
+  try {
+    const { cc } = req.query;
+
+    if (!cc || typeof cc !== 'string') {
+      res.status(400).json({ error: "Invalid or missing country code" });
+      return;
+    }
+
+    const languageCode = await languagesService.getCountryLanguage(cc);
+    res.json({ language: languageCode });
+  } catch (error: unknown) {
+    res.status(500).json({ error: "Failed to fetch country language" });
+  }
+};
+
+// Languages: Get language details
+const handleGetLanguageDetails = async (req: any, res: any): Promise<void> => {
+  try {
+    const { cc } = req.params;
+
+    if (!cc || typeof cc !== 'string') {
+      res.status(400).json({ error: "Invalid or missing language code" });
+      return;
+    }
+
+    const languageDetails = await languagesService.getLanguageDetails(cc);
+    res.json(languageDetails);
+  } catch (error: unknown) {
+    res.status(500).json({ error: "Failed to fetch language details" });
+  }
+};
+
+// Translations: Get translations
+const handleGetTranslations = async (req: any, res: any): Promise<void> => {
+  try {
+    const { languageCode } = req.params;
+
+    if (!languageCode || typeof languageCode !== 'string') {
+      res.status(400).json({ error: "Invalid or missing language code" });
+      return;
+    }
+
+    const translations = await translationsService.getTranslations(languageCode);
+    res.json(translations);
+  } catch (error: unknown) {
+    res.status(500).json({ error: "Failed to fetch translations" });
   }
 };
 
 router.get("/countries", handleGetCountries);
 router.get("/location", handleGetLocation);
-router.get("/country_formats", handleGetCountryPostalFormat); // New route
+router.get("/country_formats", handleGetCountryPostalFormat);
+router.get("/languages", handleGetLanguages);
+router.get("/languages/country", handleGetCountryLanguage);
+router.get("/languages/:cc", handleGetLanguageDetails);
+router.get("/translations/:languageCode", handleGetTranslations);
 
 export default router;
