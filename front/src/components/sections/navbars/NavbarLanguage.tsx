@@ -3,162 +3,110 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { BaseDropdown } from "@/components/elements/BaseDropdown";
 import { useLanguage } from "@/hooks/useLanguage";
-
-interface Language {
-  code: string;
-  name_en: string;
-  native_name: string;
-  is_rtl: boolean;
-  flag_url?: string;
-  group?: "primary" | "secondary" | "recent" | "other";
-}
-
-// Component for rendering missing translations
-const MissingTranslation: React.FC<{ text: string }> = ({ text }) => (
-  <span style={{ color: 'red' }}>{text}</span>
-);
-
-// Default fallback languages in case API fails
-const DEFAULT_LANGUAGES: Language[] = [
-  { code: "en", name_en: "English", native_name: "English", is_rtl: false, flag_url: "/flags/4x3/optimized/gb.svg" },
-  { code: "sk", name_en: "Slovak", native_name: "Slovenčina", is_rtl: false, flag_url: "/flags/4x3/optimized/sk.svg" }
-];
+import { useLanguagesPreload } from "@/hooks/useLanguagesPreload";
+import type { Language } from "@/types/language.types";
+import "./navbar.component.css";
 
 const NavbarLanguage: React.FC = () => {
   // State management
-  const [search, setSearch] = useState("");
-  const [languages, setLanguageList] = useState<Language[]>(DEFAULT_LANGUAGES);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [recentLanguages, setRecentLanguages] = useState<string[]>([]);
-  const [ipBasedLanguage, setIpBasedLanguage] = useState<string>("en");
-  const [isOpen, setIsOpen] = useState(false);
+  const [filterValue, setFilterValue] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   
   // Refs
   const componentRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Get language context
   const { currentLanguage, secondaryLanguage, setLanguages } = useLanguage();
+  
+  // Get languages with the simplified hook
+  const { 
+    languages, 
+    isLoading, 
+    loadLanguages
+  } = useLanguagesPreload();
 
   // Use fallbacks if currentLanguage or secondaryLanguage are undefined
   const primaryLang = currentLanguage || 'en';
-  const secondaryLang = secondaryLanguage || ipBasedLanguage || 'sk';
+  const secondaryLang = secondaryLanguage || 'sk';
 
-  // Load country-based language from IP
-  useEffect(() => {
-    const fetchCountryLanguage = async () => {
-      try {
-        // This would typically use geolocation or IP-based API
-        // For now, we're using a simpler approach - detect based on browser locale
-        const browserLocale = navigator.language.split('-')[1]?.toLowerCase() || 'us';
-        
-        console.log("Fetching language for country:", browserLocale);
-        // Updated direct endpoint /api/languages/:countryCode
-        const response = await fetch(`/api/languages/${browserLocale}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Country language data:", data);
-          setIpBasedLanguage(data.language || 'en');
-        } else {
-          console.error("Error fetching country language, status:", response.status);
-          setIpBasedLanguage('en');
-        }
-      } catch (error) {
-        console.error('Error fetching country language:', error);
-        // Fallback to English if there's an error
-        setIpBasedLanguage('en');
-      }
-    };
-
-    fetchCountryLanguage();
-  }, []);
-
-  // Load languages from API
-  useEffect(() => {
-    const fetchLanguages = async () => {
-      setIsLoading(true);
-      setLoadError(null);
-      try {
-        console.log("Fetching languages from API");
-        // Main endpoint /api/languages
-        const response = await fetch('/api/languages');
-        console.log("API response status:", response.status);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to load languages: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("Languages data received:", data);
-        
-        // Check if data is in the expected format and not empty
-        if (Array.isArray(data) && data.length > 0) {
-          console.log(`Successfully loaded ${data.length} languages`);
-          setLanguageList(data);
-          setLoadError(null);
-        } else {
-          console.error('API returned empty or invalid data', data);
-          setLoadError("No languages returned from API");
-          // Keep using default languages
-        }
-      } catch (error) {
-        console.error('Error loading languages:', error);
-        setLoadError(error instanceof Error ? error.message : "Unknown error loading languages");
-        // Keep using default languages
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchLanguages();
-  }, []);
-
-  // Load recent languages from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('recentLanguages');
-      const parsed = stored ? JSON.parse(stored) : [];
-      console.log("Loaded recent languages from localStorage:", parsed);
-      setRecentLanguages(parsed);
-    } catch (error) {
-      console.error('Error parsing recentLanguages from localStorage:', error);
-      setRecentLanguages([]);
-    }
-  }, []);
-
-  // Group and filter languages based on search term
-  const groupedLanguages = useMemo(() => {
-    // First assign groups to all languages
-    const grouped = languages.map(lang => ({
-      ...lang,
-      group: 
-        lang.code === primaryLang ? "primary" :
-        lang.code === secondaryLang ? "secondary" :
-        recentLanguages.includes(lang.code) ? "recent" : "other"
-    }));
-
-    // Then filter based on search term
-    const filtered = grouped.filter(lang => 
-      search === "" || 
-      lang.code.toLowerCase().includes(search.toLowerCase()) ||
-      lang.name_en.toLowerCase().includes(search.toLowerCase()) ||
-      lang.native_name.toLowerCase().includes(search.toLowerCase())
+  // Filter languages based on search term
+  const filteredLanguages = useMemo(() => {
+    if (!filterValue) return languages;
+    
+    // Manual filtering
+    return languages.filter(lang => 
+      lang.code.toLowerCase().includes(filterValue.toLowerCase()) || 
+      lang.name_en.toLowerCase().includes(filterValue.toLowerCase()) || 
+      lang.native_name.toLowerCase().includes(filterValue.toLowerCase())
     );
-
-    // Group into categories
-    return {
-      primary: filtered.filter(l => l.group === "primary"),
-      secondary: filtered.filter(l => l.group === "secondary"),
-      recent: filtered.filter(l => l.group === "recent")
-        .sort((a, b) => recentLanguages.indexOf(a.code) - recentLanguages.indexOf(b.code)),
-      others: filtered.filter(l => l.group === "other")
-        .sort((a, b) => a.native_name.localeCompare(b.native_name))
-    };
-  }, [languages, primaryLang, secondaryLang, recentLanguages, search]);
+  }, [languages, filterValue]);
+  
+  // Create final dropdown items with proper ordering
+  const dropdownItems = useMemo(() => {
+    // Find primary and secondary language objects
+    const primaryLanguage = languages.find(lang => lang.code === primaryLang);
+    const secondaryLanguage = languages.find(lang => lang.code === secondaryLang);
+    
+    // Filter out primary and secondary from other languages
+    const otherLanguages = filteredLanguages.filter(
+      lang => lang.code !== primaryLang && lang.code !== secondaryLang
+    );
+    
+    // Combine languages in the specified order:
+    // 1. Special divider item for search row
+    // 2. Primary language
+    // 3. Secondary language
+    // 4. Other languages
+    const result: Array<Language & { isSearchRow?: boolean; isPrimary?: boolean; isSecondary?: boolean }> = [];
+    
+    // Search row is not a real language, it's a special item for rendering
+    if (filterValue) {
+      result.push({
+        code: '__search__',
+        name_en: 'Search Results',
+        native_name: 'Search Results',
+        is_rtl: false,
+        isSearchRow: true
+      } as Language & { isSearchRow: boolean });
+    }
+    
+    // Add primary language if it exists and passes the filter
+    if (primaryLanguage && (
+      !filterValue || 
+      primaryLanguage.code.toLowerCase().includes(filterValue.toLowerCase()) ||
+      primaryLanguage.name_en.toLowerCase().includes(filterValue.toLowerCase()) ||
+      primaryLanguage.native_name.toLowerCase().includes(filterValue.toLowerCase())
+    )) {
+      result.push({
+        ...primaryLanguage,
+        isPrimary: true
+      });
+    }
+    
+    // Add secondary language if it exists and passes the filter
+    if (secondaryLanguage && secondaryLanguage.code !== primaryLang && (
+      !filterValue || 
+      secondaryLanguage.code.toLowerCase().includes(filterValue.toLowerCase()) ||
+      secondaryLanguage.name_en.toLowerCase().includes(filterValue.toLowerCase()) ||
+      secondaryLanguage.native_name.toLowerCase().includes(filterValue.toLowerCase())
+    )) {
+      result.push({
+        ...secondaryLanguage,
+        isSecondary: true
+      });
+    }
+    
+    // Add all other languages
+    result.push(...otherLanguages);
+    
+    return result;
+  }, [languages, primaryLang, secondaryLang, filteredLanguages, filterValue]);
 
   const handleSelectLanguage = useCallback((code: string) => {
-    if (code === primaryLang) return;
+    // Don't do anything for search row or if we're selecting the current primary language
+    if (code === '__search__' || code === primaryLang) return;
     
     if (code === secondaryLang) {
       // Swap primary and secondary
@@ -166,20 +114,17 @@ const NavbarLanguage: React.FC = () => {
     } else {
       // New primary, old primary becomes secondary
       setLanguages(code, primaryLang);
-      
-      // Update recent languages
-      const newRecent = [code, ...recentLanguages.filter(c => c !== code && c !== primaryLang)].slice(0, 3);
-      setRecentLanguages(newRecent);
-      localStorage.setItem('recentLanguages', JSON.stringify(newRecent));
     }
     
-    setIsOpen(false);
-  }, [primaryLang, secondaryLang, setLanguages, recentLanguages]);
+    setIsDropdownOpen(false);
+    setFilterValue("");
+  }, [primaryLang, secondaryLang, setLanguages]);
 
   // Handle clicking outside the component
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
-      setIsOpen(false);
+      setIsDropdownOpen(false);
+      setFilterValue("");
     }
   }, []);
 
@@ -199,90 +144,128 @@ const NavbarLanguage: React.FC = () => {
 
   // Toggle dropdown open/closed
   const toggleDropdown = useCallback(() => {
-    setIsOpen(!isOpen);
-  }, [isOpen]);
+    const newState = !isDropdownOpen;
+    setIsDropdownOpen(newState);
+    
+    // Load languages and focus search input when opening
+    if (newState) {
+      console.log('Opening dropdown, loading languages...');
+      // Load languages data if dropdown is opened
+      loadLanguages().then(data => {
+        console.log(`Loaded ${data.length} languages`);
+      });
+      
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 0);
+    } else {
+      setFilterValue("");
+    }
+  }, [isDropdownOpen, loadLanguages]);
 
-  // Debug info
-  console.log("NavbarLanguage render state:", {
-    primaryLang,
-    secondaryLang,
-    isLoading,
-    languagesCount: languages.length,
-    hasError: !!loadError
-  });
+  // Handle search input keydown events
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setIsDropdownOpen(false);
+      setFilterValue("");
+    }
+  }, []);
 
-  // Prepare all items for the dropdown
-  const { primary, secondary, recent, others } = groupedLanguages;
-  const allFilteredLanguages = [...primary, ...secondary, ...recent, ...others];
+  // Handle hover states
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
+
+  // Auto-focus search input when dropdown opens
+  useEffect(() => {
+    if (isDropdownOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isDropdownOpen]);
 
   return (
-    <div className="navbar-language-container" ref={componentRef}>
+    <div 
+      className="navbar-language-container" 
+      ref={componentRef}
+    >
       <button 
         onClick={toggleDropdown} 
         className="navbar__language" 
         aria-label="Change language"
-        aria-expanded={isOpen}
+        aria-expanded={isDropdownOpen}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <span className="navbar-language-code">{primaryLang}</span>
         <img 
           src={getCurrentFlag()} 
           alt="Selected language" 
-          className="navbar-language-icon"
+          className={`navbar-language-icon ${isHovered ? 'navbar-language-icon--colored' : 'navbar-language-icon--gray'}`}
           onError={(e) => { e.currentTarget.src = "/flags/4x3/optimized/gb.svg"; }}
         />
       </button>
       
-      {isOpen && (
+      {isDropdownOpen && (
         <div className="language-dropdown">
-          <input
-            type="text"
-            placeholder="Search language..."
-            className="language-search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autoFocus
-          />
+          {/* First row: Search input */}
+          <div className="language-search-row">
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search language..."
+              className="language-search"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+            />
+          </div>
+          
+          {/* Debug output */}
+          <div style={{padding: '8px', backgroundColor: '#f0f0f0', color: '#333', fontSize: '12px'}}>
+            Found {languages.length} languages | Displaying {dropdownItems.length} items
+          </div>
           
           {isLoading ? (
             <div className="language-loading">Loading languages...</div>
-          ) : loadError ? (
-            <div className="language-error">
-              <MissingTranslation text={`Error: ${loadError}`} />
-            </div>
-          ) : allFilteredLanguages.length === 0 ? (
-            <div className="language-error">
-              <MissingTranslation text="No languages found" />
-            </div>
+          ) : languages.length === 0 ? (
+            <div className="language-empty">No languages loaded</div>
           ) : (
-            <BaseDropdown
-              items={allFilteredLanguages}
-              isOpen={true}
-              onSelect={(lang) => handleSelectLanguage(lang.code)}
-              variant="language"
-              position="right"
-              renderItem={(lang, { isHighlighted }) => (
-                <div className={`language-item ${isHighlighted ? 'language-item--highlighted' : ''} ${lang.group}`}>
+            <div style={{maxHeight: '300px', overflow: 'auto'}}>
+              {/* Show first 10 languages for debugging */}
+              {languages.slice(0, 10).map(lang => (
+                <div 
+                  key={lang.code} 
+                  style={{
+                    padding: '8px', 
+                    borderBottom: '1px solid #eee',
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => handleSelectLanguage(lang.code)}
+                >
                   <img 
                     src={lang.flag_url || `/flags/4x3/optimized/${lang.code.toLowerCase()}.svg`}
-                    alt={`${lang.code} flag`} 
-                    className="language-item-flag" 
-                    onError={(e) => { e.currentTarget.src = "/flags/4x3/optimized/gb.svg"; }}
+                    alt={lang.code} 
+                    style={{width: '20px', height: '20px', marginRight: '8px'}}
                   />
-                  <span className="language-item-code">{lang.code}</span>
-                  <span className="language-item-name">{lang.native_name}</span>
-                  {lang.group === "primary" && (
-                    <span className="language-current-indicator">✓</span>
-                  )}
-                  {lang.group === "secondary" && (
-                    <span className="language-secondary-indicator">2</span>
-                  )}
+                  <span style={{fontWeight: lang.code === primaryLang ? 'bold' : 'normal'}}>
+                    {lang.code}: {lang.native_name}
+                  </span>
+                </div>
+              ))}
+              
+              {/* Show a message if there are more languages */}
+              {languages.length > 10 && (
+                <div style={{padding: '8px', textAlign: 'center', color: '#666'}}>
+                  ...and {languages.length - 10} more languages
                 </div>
               )}
-              getItemKey={(lang) => lang.code}
-              ariaLabel="Language options"
-              className="language-selector-dropdown"
-              noResultsText="No languages found"
-            />
+            </div>
           )}
         </div>
       )}

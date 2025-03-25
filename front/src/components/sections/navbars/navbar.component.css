@@ -1,0 +1,214 @@
+/* 
+  navbar.component.css - Styles for the language selector component in the navbar
+*/
+
+.navbar-language-container {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  
+  .navbar__language {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .navbar__language:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .navbar-language-code {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+    text-transform: uppercase;
+  }
+  
+  .navbar-language-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    transition: filter 0.2s ease, transform 0.2s ease;
+  }
+  
+  .navbar-language-icon--gray {
+    filter: grayscale(100%);
+  }
+  
+  .navbar-language-icon--colored {
+    filter: grayscale(0%);
+  }
+  
+  .navbar__language:hover .navbar-language-icon {
+    transform: scale(1.1);
+  }
+  
+  /* Dropdown styles */
+  .language-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 300px;
+    max-height: 400px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Dark mode support */
+  :root.dark .language-dropdown {
+    background-color: #1f2937;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  
+  .language-search-row {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  :root.dark .language-search-row {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .language-search {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+  
+  .language-search:focus {
+    border-color: #4f46e5;
+  }
+  
+  :root.dark .language-search {
+    background-color: #374151;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f3f4f6;
+  }
+  
+  :root.dark .language-search:focus {
+    border-color: #6366f1;
+  }
+  
+  .language-selector-dropdown {
+    overflow-y: auto;
+    max-height: 350px;
+  }
+  
+  .language-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  
+  .language-item:hover, 
+  .language-item--highlighted {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  :root.dark .language-item:hover,
+  :root.dark .language-item--highlighted {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .language-item--primary {
+    background-color: rgba(79, 70, 229, 0.1);
+  }
+  
+  .language-item--secondary {
+    background-color: rgba(79, 70, 229, 0.05);
+  }
+  
+  :root.dark .language-item--primary {
+    background-color: rgba(99, 102, 241, 0.2);
+  }
+  
+  :root.dark .language-item--secondary {
+    background-color: rgba(99, 102, 241, 0.1);
+  }
+  
+  .language-item-flag {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    margin-right: 0.75rem;
+    object-fit: cover;
+  }
+  
+  .language-item-code {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-right: 0.75rem;
+    min-width: 2rem;
+  }
+  
+  .language-item-name {
+    font-size: 0.9rem;
+    flex: 1;
+  }
+  
+  .language-current-indicator {
+    margin-left: 0.5rem;
+    font-weight: 700;
+    color: #4f46e5;
+  }
+  
+  .language-secondary-indicator {
+    margin-left: 0.5rem;
+    font-weight: 700;
+    color: #6b7280;
+  }
+  
+  :root.dark .language-current-indicator {
+    color: #818cf8;
+  }
+  
+  :root.dark .language-secondary-indicator {
+    color: #9ca3af;
+  }
+  
+  .language-search-result-label {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  :root.dark .language-search-result-label {
+    color: #9ca3af;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .language-loading, 
+  .language-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #6b7280;
+  }
+  
+  :root.dark .language-loading,
+  :root.dark .language-empty {
+    color: #9ca3af;
+  }

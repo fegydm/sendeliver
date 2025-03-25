@@ -1,4 +1,4 @@
-// File: src/types/transport-forms.types.ts
+// File: .front/src/types/transport-forms.types.ts
 // Last change: Updated LocationSuggestion to support both front-end and API formats
 
 // Request sent to AI API

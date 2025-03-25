@@ -1,10 +1,10 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Úprava: Synchronizácia inputValue s initialValue a dynamická aktualizácia flag
+// Update: Synchronization of inputValue with initialValue and dynamic flag updates
 
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "../../../elements/BaseDropdown";
 import type { Country } from "@/types/transport-forms.types";
-import { useCountries } from "@/hooks/useCountries";
+import { useCountriesPreload } from "@/hooks/useCountriesPreload";
 import { useUINavigation } from "@/hooks/useUINavigation";
 
 interface CountrySelectProps {
@@ -31,34 +31,38 @@ export function CountrySelect({
   const componentRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLElement | null)[]>([]);
 
-  const { items: allCountries } = useCountries();
+  // Fixed: Changed 'items' to 'countries'
+  const { countries: allCountries } = useCountriesPreload();
 
-  // Synchronizácia inputValue s initialValue
+  // Synchronize inputValue with initialValue
   useEffect(() => {
     console.log(`[CountrySelect] ${locationType} initialValue changed to:`, initialValue);
     if (initialValue !== inputValue) {
-      setInputValue(initialValue); // Vždy aktualizuj inputValue na initialValue
+      setInputValue(initialValue); // Always update inputValue to initialValue
       if (inputRef.current && initialValue !== inputRef.current.value) {
-        inputRef.current.value = initialValue; // Aktualizuj DOM
+        inputRef.current.value = initialValue; // Update DOM
       }
-      // Ak je initialValue platný kód krajiny, aktualizuj flag
+      // If initialValue is a valid country code, update flag
       if (initialValue.length === 2) {
         const flagUrl = `/flags/4x3/optimized/${initialValue.toLowerCase()}.svg`;
-        onCountrySelect(initialValue, flagUrl); // Informuj rodiča
+        onCountrySelect(initialValue, flagUrl); // Inform parent
       }
     }
-  }, [initialValue, locationType, onCountrySelect]);
+  }, [initialValue, locationType, onCountrySelect, inputValue]);
 
   const filteredItems = useMemo(() => {
     if (!inputValue) return allCountries;
-    return allCountries.filter(c => c.cc?.startsWith(inputValue.toUpperCase()));
+    // Fixed: Added explicit type for 'c' parameter
+    return allCountries.filter((c: Country) => c.cc?.startsWith(inputValue.toUpperCase()));
   }, [inputValue, allCountries]);
+  
   const visibleItems = useMemo(() => filteredItems.slice(0, visibleCount), [filteredItems, visibleCount]);
 
   const { highlightedIndex, setHighlightedIndex, handleKeyDown: handleUINavKeyDown } = useUINavigation({
     items: visibleItems,
     isOpen,
-    onSelect: (country) => handleSelect(country),
+    // Fixed: Added type casting to handle 'unknown' type
+    onSelect: (country) => handleSelect(country as Country),
     pageSize: 20,
     onLoadMore: () => setVisibleCount(prev => prev + 20),
     inputRef,
@@ -84,7 +88,8 @@ export function CountrySelect({
       onCountrySelect("", "");
       setVisibleCount(20);
     } else if (upperValue.length === 2) {
-      const exactMatch = allCountries.find(c => c.cc === upperValue);
+      // Fixed: Added explicit type for 'c' parameter
+      const exactMatch = allCountries.find((c: Country) => c.cc === upperValue);
       if (exactMatch) {
         const flagUrl = `/flags/4x3/optimized/${exactMatch.cc.toLowerCase()}.svg`;
         onCountrySelect(exactMatch.cc, flagUrl);

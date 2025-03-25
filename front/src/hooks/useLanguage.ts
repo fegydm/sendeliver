@@ -1,5 +1,5 @@
 // ./front/src/hooks/useLanguage.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getIPLocation } from '../utils/geo';
 
 interface LanguageState {
@@ -47,13 +47,71 @@ export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: 
     isLoading: true,
   });
 
-  const { t } = useTranslations(state);
+  // Load translations for a specific language
+  const loadTranslationsForLanguage = useCallback(async (langCode: string): Promise<Record<string, string>> => {
+    try {
+      const response = await fetch(`/api/translations/${langCode}`);
+      if (response.ok) {
+        const translationsData = await response.json();
+        console.log(`${langCode} translations loaded successfully`);
+        return translationsData;
+      } else {
+        console.warn(`Failed to load ${langCode} translations`);
+        return {};
+      }
+    } catch (error) {
+      console.warn(`Error loading ${langCode} translations:`, error);
+      return {};
+    }
+  }, []);
+
+  // Function to update languages and reload translations
+  const setLanguages = useCallback(async (primary: string, secondary: string) => {
+    // Save to localStorage
+    saveLanguages(primary, secondary);
+    
+    // Update state with loading flag
+    setState(prev => ({
+      ...prev,
+      primaryLanguage: primary,
+      secondaryLanguage: secondary,
+      isLoading: true
+    }));
+    
+    // Load new translations
+    try {
+      // Always load English first as fallback
+      let translations = { ...fallbackTranslations };
+      
+      // Load primary language translations
+      const primaryTranslations = await loadTranslationsForLanguage(primary);
+      translations = { ...translations, ...primaryTranslations };
+      
+      // If secondary is different from primary, load it too
+      if (secondary !== primary) {
+        const secondaryTranslations = await loadTranslationsForLanguage(secondary);
+        translations = { ...translations, ...secondaryTranslations };
+      }
+      
+      // Update state with new translations
+      setState(prev => ({
+        ...prev,
+        translations,
+        isLoading: false
+      }));
+    } catch (error) {
+      console.error('Failed to load translations:', error);
+      setState(prev => ({
+        ...prev,
+        isLoading: false
+      }));
+    }
+  }, [loadTranslationsForLanguage]);
 
   useEffect(() => {
     const loadLanguageData = async () => {
       let primaryLang = 'en';
       let secondaryLang = 'en';
-      let translations: Record<string, string> = {};
 
       try {
         // Step 1: Try to get languages from user settings (DB)
@@ -64,8 +122,8 @@ export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: 
         } else {
           // Step 2: Try to get languages from localStorage
           const savedLangs = getSavedLanguages();
-          if (savedLangs.primary || savedLangs.secondary) {
-            primaryLang = savedLangs.primary || 'en';
+          if (savedLangs.primary) {
+            primaryLang = savedLangs.primary;
             secondaryLang = savedLangs.secondary || 'en';
             console.log('Using languages from localStorage:', primaryLang, secondaryLang);
           } else {
@@ -73,7 +131,7 @@ export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: 
             try {
               const ipLang = await getIPLocation();
               primaryLang = 'en';
-              secondaryLang = ipLang;
+              secondaryLang = ipLang || 'en';
               console.log('Using languages from IP:', primaryLang, secondaryLang);
             } catch (error) {
               console.warn('Failed to get language from IP, using defaults:', 'en', 'en');
@@ -83,78 +141,34 @@ export function useLanguage(user?: { id: string; settings?: { primaryLanguage?: 
           }
         }
 
-        // Load translations from API
-        try {
-          // Always load EN translations
-          const enResponse = await fetch('/api/translations/en');
-
-          if (enResponse.ok) {
-            translations = await enResponse.json();
-            console.log('EN translations loaded successfully');
-          } else {
-            console.warn('Failed to load EN translations, using fallback');
-            translations = { ...fallbackTranslations };
-          }
-
-          // If secondary language is not EN, load its translations too
-          if (secondaryLang !== 'en') {
-            try {
-              const secondaryResponse = await fetch(`/api/translations/${secondaryLang}`);
-              if (secondaryResponse.ok) {
-                const secondaryTranslations = await secondaryResponse.json();
-                Object.assign(translations, secondaryTranslations);
-                console.log(`${secondaryLang} translations loaded successfully`);
-              } else {
-                console.warn(`Failed to load ${secondaryLang} translations, using EN only`);
-              }
-            } catch (error) {
-              console.warn(`Error loading ${secondaryLang} translations:`, error);
-            }
-          }
-        } catch (error) {
-          console.info('Failed to load translations, using English fallback only');
-          translations = { ...fallbackTranslations };
-        }
+        // Load translations
+        await setLanguages(primaryLang, secondaryLang);
       } catch (error) {
         console.error('Failed to initialize language system:', error);
-        primaryLang = 'en';
-        secondaryLang = 'en';
-        translations = { ...fallbackTranslations };
+        setState({
+          primaryLanguage: 'en',
+          secondaryLanguage: 'en',
+          translations: { ...fallbackTranslations },
+          isLoading: false,
+        });
       }
-
-      // Save selected languages to localStorage
-      saveLanguages(primaryLang, secondaryLang);
-
-      setState({
-        primaryLanguage: primaryLang,
-        secondaryLanguage: secondaryLang,
-        translations,
-        isLoading: false,
-      });
     };
 
     loadLanguageData();
-  }, [user]);
+  }, [user, setLanguages]);
+
+  // Translation function
+  const t = useCallback((key: string): string => {
+    return state.translations[key] || key || "missing data";
+  }, [state.translations]);
 
   return {
     currentLanguage: state.primaryLanguage,
     secondaryLanguage: state.secondaryLanguage,
     t,
-    setLanguages: (primary: string, secondary: string) => {
-      saveLanguages(primary, secondary);
-      setState((prev) => ({
-        ...prev,
-        primaryLanguage: primary,
-        secondaryLanguage: secondary,
-      }));
-    },
+    setLanguages,
+    isLoading: state.isLoading
   };
 }
 
-function useTranslations(state: LanguageState) {
-  // Function t() returns translation or "missing data" if translation doesn't exist
-  const t = (key: string): string => {
-    return state.translations[key] || "missing data"; 
-  };
-  return { t };
-}
+export default useLanguage;

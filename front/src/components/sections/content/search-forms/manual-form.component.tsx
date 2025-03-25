@@ -6,7 +6,7 @@ import CountrySelect from "./CountrySelect";
 import PostalCitySelect from "./PostalCitySelect";
 import { DateTimeSelect } from "./DateTimeSelect";
 import { TransportFormData, LocationType, LocationSuggestion } from "@/types/transport-forms.types";
-import { useCountries } from "@/hooks/useCountries";
+import { useCountriesPreload } from "@/hooks/useCountriesPreload";
 import loadIconWebp from "@/assets/icon-load.webp"; 
 import deliverIconWebp from "@/assets/icon-del.webp"; 
 import { SenderResultData } from "@/components/sections/content/results/result-table.component";
@@ -75,7 +75,7 @@ export function ManualForm({
   const [postalFormats, setPostalFormats] = useState<Record<string, PostalFormat>>({});
   const [availableVehicles, setAvailableVehicles] = useState<SenderResultData[]>([]);
   const [totalVehiclesCount, setTotalVehiclesCount] = useState<number>(0);
-  const { items: allCountries } = useCountries();
+  const { countries: allCountries } = useCountriesPreload();
 
   const fetchPostalFormat = useCallback(async (cc: string) => {
     try {

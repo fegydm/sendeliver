@@ -20,6 +20,8 @@ import RegisterModal from "@/components/modals/register-modal.component";
 import { components } from "@/constants/colors/components";
 import type { TopRowType, BottomRowType, DotsArray } from "@/types/dots";
 
+import "./navbar.component.css";
+
 type ModalType = "about" | "login" | "register" | "dots" | "avatar" | null;
 
 interface NavigationProps {
