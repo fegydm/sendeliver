@@ -1,5 +1,5 @@
 // File: src/components/sections/content/results/BaseFilter.tsx
-// Last modified: March 26, 2025 - Added dynamic width calculation for dropdown based on content
+// Last modified: March 26, 2025 - Updated to use "result-table-dropdown-container" and remove duplicate empty elements
 
 import { forwardRef, useImperativeHandle, useRef, useEffect, useState } from "react";
 import { getAnimatedArrow } from "@/utils/animateArrow";
@@ -23,258 +23,292 @@ interface BaseFilterProps<T> {
 const BaseFilter = forwardRef<
   { reset: () => void; isOpen: () => boolean; isFiltered: () => boolean },
   BaseFilterProps<any>
->(({ data, label, options = [], selected, sortDirection, isOpen, onSortClick, onToggleClick, onFilter, onOptionSelect, filterFn, getSelectedLabel }, ref) => {
-  // Use custom formatted label if provided, otherwise find from options
-  const selectedLabel = getSelectedLabel 
-    ? getSelectedLabel(selected)
-    : options.find(opt => opt.value === selected)?.label || "all ...";
-    
-  const headerRef = useRef<HTMLDivElement>(null);
-  const dropdownIdRef = useRef(`dropdown-${label.replace(/\s+/g, '-').toLowerCase()}-${Math.random().toString(36).substring(2, 9)}`);
-  const [dropdownPosition, setDropdownPosition] = useState({
-    top: '0px',
-    left: '0px',
-    width: '180px', // Default wider width
-    display: 'none',
-  });
+>(
+  (
+    {
+      data,
+      label,
+      options = [],
+      selected,
+      sortDirection,
+      isOpen,
+      onSortClick,
+      onToggleClick,
+      onFilter,
+      onOptionSelect,
+      filterFn,
+      getSelectedLabel,
+    },
+    ref
+  ) => {
+    // Use custom formatted label if provided, otherwise find from options
+    const selectedLabel = getSelectedLabel
+      ? getSelectedLabel(selected)
+      : options.find((opt) => opt.value === selected)?.label || "all ...";
 
-  useImperativeHandle(ref, () => ({
-    reset: () => onFilter(data),
-    isOpen: () => isOpen,
-    isFiltered: () => selected !== "all",
-  }));
-
-  const handleOptionSelect = (value: string) => {
-    if (value === "all") {
-      onFilter(data);
-    } else if (filterFn) {
-      const filtered = filterFn(data, value);
-      onFilter(filtered);
-    }
-    onOptionSelect(value);
-  };
-
-  // Calculate the width needed for the widest option
-  const calculateMaxWidth = () => {
-    // Create a temporary span to measure text width
-    const tempSpan = document.createElement('span');
-    tempSpan.style.visibility = 'hidden';
-    tempSpan.style.position = 'absolute';
-    tempSpan.style.whiteSpace = 'nowrap';
-    tempSpan.style.font = '14px Arial, sans-serif'; // Match your dropdown font
-    tempSpan.style.padding = '8px 12px'; // Match your dropdown padding
-    
-    document.body.appendChild(tempSpan);
-    
-    // Find the widest option
-    let maxWidth = 120; // Minimum width
-    
-    options.forEach(option => {
-      tempSpan.textContent = option.label;
-      const width = tempSpan.offsetWidth;
-      
-      // Add extra width for icons if present
-      const iconWidth = option.icon ? 28 : 0; // icon width + margin
-      
-      maxWidth = Math.max(maxWidth, width + iconWidth);
+    const headerRef = useRef<HTMLDivElement>(null);
+    const dropdownIdRef = useRef(
+      `dropdown-${label.replace(/\s+/g, "-").toLowerCase()}-${Math.random()
+        .toString(36)
+        .substring(2, 9)}`
+    );
+    const [dropdownPosition, setDropdownPosition] = useState({
+      top: "0px",
+      left: "0px",
+      width: "180px", // Default wider width
+      display: "none",
     });
-    
-    document.body.removeChild(tempSpan);
-    
-    // Add some padding to prevent tight fit
-    return `${maxWidth + 10}px`;
-  };
 
-  // Create and manage container for all dropdowns
-  useEffect(() => {
-    // Make sure we have a container for our dropdowns
-    let container = document.getElementById('filter-dropdowns-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'filter-dropdowns-container';
-      document.body.appendChild(container);
-    }
-    
-    // No cleanup needed for the container - it stays for the life of the app
-  }, []);
+    useImperativeHandle(ref, () => ({
+      reset: () => onFilter(data),
+      isOpen: () => isOpen,
+      isFiltered: () => selected !== "all",
+    }));
 
-  // Handle position update when dropdown opens/closes
-  useEffect(() => {
-    if (isOpen && headerRef.current) {
-      const rect = headerRef.current.getBoundingClientRect();
-      const calculatedWidth = calculateMaxWidth();
-      
-      // Handle potential overflow to the right
-      const viewportWidth = window.innerWidth;
-      let left = rect.left;
-      const numericWidth = parseInt(calculatedWidth, 10);
-      
-      if (left + numericWidth > viewportWidth) {
-        left = Math.max(0, viewportWidth - numericWidth - 10);
+    const handleOptionSelect = (value: string) => {
+      if (value === "all") {
+        onFilter(data);
+      } else if (filterFn) {
+        const filtered = filterFn(data, value);
+        onFilter(filtered);
       }
-      
-      setDropdownPosition({
-        top: `${rect.bottom}px`,
-        left: `${left}px`,
-        width: calculatedWidth,
-        display: 'block',
-      });
-    } else {
-      setDropdownPosition(prev => ({
-        ...prev,
-        display: 'none'
-      }));
-    }
-  }, [isOpen, options]); // Added options dependency to recalculate when options change
+      onOptionSelect(value);
+    };
 
-  // Create/update/remove dropdown element in DOM
-  useEffect(() => {
-    const dropdownId = dropdownIdRef.current;
-    const container = document.getElementById('filter-dropdowns-container');
-    
-    // Create new dropdown element
-    let dropdownElement = document.getElementById(dropdownId);
-    if (!dropdownElement && container) {
-      dropdownElement = document.createElement('div');
-      dropdownElement.id = dropdownId;
-      dropdownElement.className = 'dropfilter__content';
-      
-      // Set initial styles
-      Object.assign(dropdownElement.style, {
-        position: 'fixed',
-        zIndex: '9999',
-        display: 'none',
-        backgroundColor: '#fff',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-        border: '1px solid #ddd',
-        borderRadius: '4px',
-        maxHeight: '300px',
-        overflowY: 'auto'
+    // Calculate the width needed for the widest option
+    const calculateMaxWidth = () => {
+      // Create a temporary span to measure text width
+      const tempSpan = document.createElement("span");
+      tempSpan.style.visibility = "hidden";
+      tempSpan.style.position = "absolute";
+      tempSpan.style.whiteSpace = "nowrap";
+      tempSpan.style.font = "14px Arial, sans-serif"; // Match your dropdown font
+      tempSpan.style.padding = "8px 12px"; // Match your dropdown padding
+
+      document.body.appendChild(tempSpan);
+
+      let maxWidth = 120; // Minimum width
+
+      options.forEach((option) => {
+        tempSpan.textContent = option.label;
+        const width = tempSpan.offsetWidth;
+
+        // Add extra width for icons if present
+        const iconWidth = option.icon ? 28 : 0; // icon width + margin
+
+        maxWidth = Math.max(maxWidth, width + iconWidth);
       });
-      
-      container.appendChild(dropdownElement);
-    }
-    
-    // Update dropdown content and position
-    if (dropdownElement) {
-      // Update position
+
+      document.body.removeChild(tempSpan);
+
+      // Add some padding to prevent a tight fit
+      return `${maxWidth + 10}px`;
+    };
+
+    // Check if the dropdown container exists.
+    // We expect the container to be statically defined in App.tsx as "result-table-dropdown-container"
+    useEffect(() => {
+      const container = document.getElementById("result-table-dropdown-container");
+      if (!container) {
+        console.warn(
+          'Dropdown container (#result-table-dropdown-container) not found. Please add it in App.tsx under <main>.'
+        );
+      }
+    }, []);
+
+    // Update the dropdown position relative to the container
+    useEffect(() => {
+      if (isOpen && headerRef.current) {
+        // Get the bounding rectangle of the header element (viewport coordinates)
+        const headerRect = headerRef.current.getBoundingClientRect();
+        // Get the container's bounding rectangle to compute the relative position
+        const container = document.getElementById("result-table-dropdown-container");
+        let containerRect = { top: 0, left: 0 };
+        if (container) {
+          containerRect = container.getBoundingClientRect();
+        }
+
+        const calculatedWidth = calculateMaxWidth();
+        // Calculate the left position relative to the container
+        let left = headerRect.left - containerRect.left;
+        const numericWidth = parseInt(calculatedWidth, 10);
+        const viewportWidth = window.innerWidth;
+        // Adjust left if dropdown overflows the viewport
+        if (headerRect.left + numericWidth > viewportWidth) {
+          left = Math.max(0, viewportWidth - containerRect.left - numericWidth - 10);
+        }
+
+        // Set the position relative to the container using the difference between header and container
+        setDropdownPosition({
+          top: `${headerRect.bottom - containerRect.top}px`,
+          left: `${left}px`,
+          width: calculatedWidth,
+          display: "block",
+        });
+      } else {
+        setDropdownPosition((prev) => ({
+          ...prev,
+          display: "none",
+        }));
+      }
+    }, [isOpen, options]);
+
+    // Create, update, or remove the dropdown element in the DOM.
+    // We remove the element when the filter is closed, so no duplicate or empty element remains.
+    useEffect(() => {
+      const dropdownId = dropdownIdRef.current;
+      const container = document.getElementById("result-table-dropdown-container");
+      if (!container) return;
+
+      // If the filter is not open, remove the dropdown element if it exists
+      if (!isOpen) {
+        const existingDropdown = document.getElementById(dropdownId);
+        if (existingDropdown) {
+          container.removeChild(existingDropdown);
+        }
+        return;
+      }
+
+      // If open and the dropdown element doesn't exist, create it
+      let dropdownElement = document.getElementById(dropdownId);
+      if (!dropdownElement) {
+        dropdownElement = document.createElement("div");
+        dropdownElement.id = dropdownId;
+        dropdownElement.className = "dropfilter__content";
+
+        // Set initial styles with absolute positioning so it moves with the container
+        Object.assign(dropdownElement.style, {
+          position: "absolute",
+          zIndex: "3000",
+          display: "block",
+          backgroundColor: "#fff",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+          border: "1px solid #ddd",
+          borderRadius: "4px",
+          maxHeight: "300px",
+          overflowY: "auto",
+        });
+
+        container.appendChild(dropdownElement);
+      }
+
+      // Update dropdown element's position and display style based on state
       Object.assign(dropdownElement.style, {
         top: dropdownPosition.top,
         left: dropdownPosition.left,
         width: dropdownPosition.width,
-        display: dropdownPosition.display
+        display: dropdownPosition.display,
       });
-      
-      // Only update content if dropdown is visible
+
+      // If filter is open, update the content of the dropdown
       if (isOpen) {
-        // Clear current content
-        dropdownElement.innerHTML = '';
-        
-        // Add new options
+        dropdownElement.innerHTML = "";
         options.forEach((option, index) => {
-          const item = document.createElement('div');
-          item.className = `dropfilter__item ${index === 0 ? "dropfilter__item--grey" : ""}`;
-          
+          const item = document.createElement("div");
+          item.className = `dropfilter__item ${
+            index === 0 ? "dropfilter__item--grey" : ""
+          }`;
+
           if (option.icon) {
-            const iconContainer = document.createElement('div');
-            iconContainer.className = 'dropfilter__item-with-icon';
-            
-            const icon = document.createElement('img');
+            const iconContainer = document.createElement("div");
+            iconContainer.className = "dropfilter__item-with-icon";
+
+            const icon = document.createElement("img");
             icon.src = option.icon;
-            icon.alt = '';
-            icon.className = 'dropfilter__item-icon';
-            icon.style.height = '18px'; 
-            icon.style.width = 'auto';
-            icon.style.verticalAlign = 'middle';
+            icon.alt = "";
+            icon.className = "dropfilter__item-icon";
+            icon.style.height = "18px";
+            icon.style.width = "auto";
+            icon.style.verticalAlign = "middle";
             iconContainer.appendChild(icon);
-            
+
             if (option.label.includes("(")) {
-              const spanElement = document.createElement('span');
-              const greyPart = document.createElement('span');
-              greyPart.style.color = 'grey';
+              const spanElement = document.createElement("span");
+              const greyPart = document.createElement("span");
+              greyPart.style.color = "grey";
               greyPart.textContent = option.label.substring(0, option.label.indexOf(")") + 1);
-              
+
               const remainingText = document.createTextNode(
                 option.label.substring(option.label.indexOf(")") + 1)
               );
-              
+
               spanElement.appendChild(greyPart);
               spanElement.appendChild(remainingText);
               iconContainer.appendChild(spanElement);
             } else {
               const textNode = document.createTextNode(option.label);
-              const span = document.createElement('span');
+              const span = document.createElement("span");
               span.appendChild(textNode);
               iconContainer.appendChild(span);
             }
-            
+
             item.appendChild(iconContainer);
           } else {
             item.textContent = option.label;
           }
-          
-          // Use closure to capture current option value
+
+          // Capture current option value and add click event handler
           const optionValue = option.value;
-          item.addEventListener('click', function() {
+          item.addEventListener("click", function () {
             handleOptionSelect(optionValue);
           });
-          
+
           dropdownElement.appendChild(item);
         });
-        
-        // Add click outside handler
+
+        // Add click-outside handler to close the dropdown
         const handleOutsideClick = (e: MouseEvent) => {
           if (
-            dropdownElement && 
+            dropdownElement &&
             !dropdownElement.contains(e.target as Node) &&
-            headerRef.current && 
+            headerRef.current &&
             !headerRef.current.contains(e.target as Node)
           ) {
             onToggleClick(e as unknown as React.MouseEvent);
           }
         };
-        
-        document.addEventListener('mousedown', handleOutsideClick);
+
+        document.addEventListener("mousedown", handleOutsideClick);
         return () => {
-          document.removeEventListener('mousedown', handleOutsideClick);
+          document.removeEventListener("mousedown", handleOutsideClick);
         };
       }
-    }
-    
-    // Cleanup function when component unmounts
-    return () => {
-      const container = document.getElementById('filter-dropdowns-container');
-      const dropdownElement = document.getElementById(dropdownId);
-      
-      if (container && dropdownElement && container.contains(dropdownElement)) {
-        try {
-          container.removeChild(dropdownElement);
-        } catch (error) {
-          console.log('Dropdown already removed:', dropdownId);
-        }
-      }
-    };
-  }, [isOpen, options, dropdownPosition, handleOptionSelect, onToggleClick]);
 
-  return (
-    <>
-      <div className="header-cell__first-row" ref={headerRef}>
-        {getAnimatedTriangle(sortDirection, "sort-icon", onSortClick)}
-        <span className="column-label">{label}</span>
-        {options.length > 0 && (
-          <div className="drop-icon-wrapper">
-            {getAnimatedArrow(isOpen, "drop-icon", onToggleClick)}
+      // Cleanup: remove only our dropdown element when component unmounts
+      return () => {
+        if (container) {
+          const existingDropdown = document.getElementById(dropdownId);
+          if (existingDropdown && container.contains(existingDropdown)) {
+            try {
+              container.removeChild(existingDropdown);
+            } catch (error) {
+              console.log("Dropdown already removed:", dropdownId);
+            }
+          }
+        }
+      };
+    }, [isOpen, options, dropdownPosition, handleOptionSelect, onToggleClick]);
+
+    return (
+      <>
+        <div className="header-cell__first-row" ref={headerRef}>
+          {getAnimatedTriangle(sortDirection, "sort-icon", onSortClick)}
+          <span className="column-label">{label}</span>
+          {options.length > 0 && (
+            <div className="drop-icon-wrapper">
+              {getAnimatedArrow(isOpen, "drop-icon", onToggleClick)}
+            </div>
+          )}
+        </div>
+        {selected !== "all" && (
+          <div className="header-cell__second-row">
+            <span className="filter-value">{selectedLabel}</span>
           </div>
         )}
-      </div>
-      {selected !== "all" && (
-        <div className="header-cell__second-row">
-          <span className="filter-value">{selectedLabel}</span>
-        </div>
-      )}
-    </>
-  );
-});
+      </>
+    );
+  }
+);
 
 BaseFilter.displayName = "BaseFilter";
 

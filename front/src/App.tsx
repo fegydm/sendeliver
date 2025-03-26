@@ -87,6 +87,7 @@ const App: React.FC = () => {
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        <div id="result-table-dropdown-container" style={{ position: "relative" }}></div>
       </main>
 
       {!isTestPageWithoutHeaderFooter && (

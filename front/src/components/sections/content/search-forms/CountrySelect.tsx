@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Added debugging and fixed filtering issue
+// Last change: Fixed filtering for single-character input and restored original input behavior
 
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "@/components/elements/BaseDropdown";
@@ -122,22 +122,45 @@ export function CountrySelect({
 
   const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const upperValue = event.target.value.toUpperCase();
+    
+    // Aktualizácia hodnoty inputu
     setInputValue(upperValue);
-    setIsOpen(true);
+    
+    // Zaistíme, že dropdown je otvorený pri zmene textu
+    if (!isOpen) {
+      setIsOpen(true);
+    }
 
+    // Prázdny input - vyresetujeme all hodnoty
     if (!upperValue) {
       onCountrySelect("", "");
       setVisibleCount(20);
-    } else if (upperValue.length === 2) {
-      const exactMatch = allCountries && allCountries.find((c: Country) => c && c.cc === upperValue);
-      if (exactMatch) {
-        const flagUrl = `/flags/4x3/optimized/${exactMatch.cc.toLowerCase()}.svg`;
-        onCountrySelect(exactMatch.cc, flagUrl);
-        setIsOpen(false);
-        onNextFieldFocus();
+      return;
+    } 
+    
+    // Jednoznakový input - filtrujeme podľa tohto znaku
+    if (upperValue.length === 1) {
+      // Obnovená funkčnosť pre jednoznakový vstup
+      if (allCountries && allCountries.some((c: Country) => c && c.cc && c.cc.startsWith(upperValue))) {
+        onCountrySelect(upperValue, "");
       }
+      return;
+    } 
+    
+    // Dvojznakový input - kontrolujeme, či takýto kód existuje
+    if (upperValue.length === 2) {
+      const exactMatch = allCountries && allCountries.find((c: Country) => c && c.cc === upperValue);
+      if (!exactMatch) {
+        // Obnovená funkcionalita - ak druhý znak neexistuje v žiadnej krajine, zachovaj len prvý znak
+        setInputValue(upperValue.charAt(0));
+        return;
+      }
+      const flagUrl = `/flags/4x3/optimized/${exactMatch.cc.toLowerCase()}.svg`;
+      onCountrySelect(exactMatch.cc, flagUrl);
+      setIsOpen(false);
+      onNextFieldFocus();
     }
-  }, [allCountries, onCountrySelect, onNextFieldFocus]);
+  }, [allCountries, onCountrySelect, onNextFieldFocus, isOpen]);
 
   const handleSelect = useCallback((selected: Country) => {
     if (!selected || !selected.cc) return;
@@ -171,16 +194,15 @@ export function CountrySelect({
         if (highlightedIndex === null) setHighlightedIndex(0);
         dropdownRef.current?.focus();
       }
+    } else if (event.key === "ArrowUp") {
+      if (isInputHovered && isOpen) {
+        event.preventDefault();
+      }
     } else if (event.key === "Escape") {
       setIsOpen(false);
       inputRef.current?.focus();
-    } else if (event.key === "Backspace" || event.key === "Delete") {
-      event.preventDefault();
-      const newValue = event.key === "Backspace" ? inputValue.slice(0, -1) : inputValue.slice(1);
-      setInputValue(newValue.toUpperCase());
-      setIsOpen(true);
-      inputRef.current?.focus();
     }
+    // Odstránime preventDefault pre Delete a Backspace - nechceme brániť štandardnému správaniu
   }, [inputValue, isOpen, isInputHovered, highlightedIndex, setHighlightedIndex, isLoading]);
 
   const handleDropdownNavigation = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {

@@ -5,6 +5,26 @@
     "typescript": "javascript",
     "typescriptreact": "javascript"
   },
+
+"multiCommand.commands": [
+  {
+    "command": "multiCommand.findCurrentFileReferences",
+    "sequence": [
+      "editor.action.copyFileName",
+      {
+        "command": "workbench.action.findInFiles",
+        "args": {
+          "triggerSearch": true,
+          "matchWholeWord": false,
+          "isCaseSensitive": false,
+          "isRegexp": false
+        }
+      },
+      "editor.action.clipboardPasteAction"
+    ]
+  }
+],
+
   "workbench.panel.defaultLocation": "right",
   "workbench.view.remote.panel.visible": true,
   "remote.autoForwardPortsSource": "output",

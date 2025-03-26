@@ -2,7 +2,7 @@
 // Last change: Added extensive debug logging for anchor-based scroll position
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import "./result-table.css";
+// import "./result-table.css";
 import DistanceFilter, { distanceColumn } from "./DistanceFilter";
 import TypeFilter, { typeColumn } from "./TypeFilter";
 import StatusFilter, { statusColumn } from "./StatusFilter";
