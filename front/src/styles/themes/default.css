@@ -1,6 +1,6 @@
 /* File: src/styles/themes/default.css */
 
-/* Import default variables 
+/* Import default variables */
 @import '../base/_variables-default.css';
 
 /* Import the basic layout and structure styles */
@@ -9,14 +9,10 @@
 /*Import components 
 @import '../sections/manual-form.content.css';*/
 @import '../sections/_content.css';
-/* @import '../components/ui/ui-components.css'; */
+
 /* @import '../components/ui/ui-components.css'; */
 /* @import '../components/_modals.css'; */
 
-/* Default theme styles */
-body { background-color: var(--body-background-color-default, #f4f4f4); }
-header { background-color: var(--header-background-color-default, #ffffff); }
-footer { background-color: var(--footer-background-color-default, #ffffff); }
 
 
 

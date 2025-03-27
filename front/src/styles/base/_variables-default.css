@@ -13,8 +13,19 @@
     --color-delivery-section: #62a58f;
     --logo-1-color: #dc1ff0;
     --logo-2-color: #57cc32;
+    --sender-primary: #a93ab5;
+    --sender-light: #f7d8ff;
+    --sender-medium: #e975f6;
+    --sender-dark: #a913b3;
+    --hauler-primary: #4c9f32;
+    --hauler-light: #e0ffda;
+    --hauler-medium: #8adf6f;
+    --hauler-dark: #418f26;
 
     
+
+
+
     /* Heights */
     --height-header: 100px; /* Header height */
     --height-footer: 200px; /* Footer height */
@@ -33,4 +44,12 @@
     --spacing-sm: 8px; /* Small spacing */
     --spacing-md: 16px; /* Medium spacing */
     --spacing-lg: 24px; /* Large spacing */
+
+/* priradit */
+    --border-radius: 8px;
+    --common-spacing: 1rem;
+    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.15);
+    --transition-speed: 0.2s;
+
 }

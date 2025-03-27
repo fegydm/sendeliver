@@ -1,15 +1,37 @@
 /* File: front/src/styles/base/_layout.css */
-.body { margin:10px 0; padding-left:10px; }
+.navbar__primary, .navbar { display: flex; flex-wrap: wrap; height: var(--navbar-height); align-items: center; gap: 1rem; }
+.navbar { background-color: var(--navbar-bg-color, rgb(255,233,233)); }
 
-.navbar__primary, .navbar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; min-height: var(--navbar-height); }
-.navbar { justify-content: space-between; background-color: var(--navbar-bg-color, rgb(255,233,233)); padding: 0 20px; }
-.navbar__primary { flex: 1 1 300px; }
-
-.banner { display: flex; padding: 10px; height: var(--banner-height); background-color: var(--banner-bg-color, rgb(255,200,200)); color: #D1D5DB; align-items: center; gap: 1rem; }
+.banner { height: var(--banner-height); background-color: var(--banner-bg-color, rgb(255,200,200)); color: #D1D5DB; }
 .banner__left, .banner__right { flex: 1; }
 
-.content__navigation { text-align: center; }
-.content__wrapper { display: flex; flex-wrap: wrap; justify-content: space-between; max-width: var(--max-content-width); width: 100%; margin: 0 auto; }
+
+.content__navigation {
+    display: flex;
+    width: 100%;
+    justify-content: center; /* Centruje obsah, ale tlačidlá sa budú dotýkať */
+  }
+  
+  /* Odstránime flex: 1 z <a>, aby nezaberalo celú polovicu */
+  .content__navigation a {
+    display: inline-block; /* Odkaz sa prispôsobí šírke tlačidla */
+    text-decoration: none; /* Zruší podčiarknutie */
+  }
+  
+  /* Zarovnanie tlačidiel tak, aby sa dotýkali v strede */
+  .content__navigation .button--left {
+    margin-right: 0; /* Žiadna medzera vpravo od ľavého tlačidla */
+  }
+  
+  .content__navigation .button--right {
+    margin-left: 0; /* Žiadna medzera vľavo od pravého tlačidla */
+  }
+  
+  /* Pre istotu */
+  .button {
+    display: inline-block; /* Zaisťuje, že tlačidlo má svoju prirodzenú šírku */
+  }
+.content__wrapper { display: flex; flex-wrap: wrap; max-width: var(--max-content-width); margin: 0 auto; }
 .content__sender, .content__hauler { flex: 1 1 calc(50% - 0.5rem); min-width: var(--min-content-width); padding: 20px; box-sizing: border-box; }
 
 .quick-stats { display: flex; padding: 10px; background-color: var(--banner-bg-color, rgb(255,200,200)); color: #D1D5DB; align-items: center; gap: 1rem; }

@@ -572,17 +572,17 @@ useEffect(() => {
         </button>
       </div>
       <div className="result-table__scroll-container" ref={scrollContainerRef}>
-        <table className="result-table__table" ref={tableRef}>
-          <colgroup>
-            {columns.map(col => (
-              <col
-                key={col.key}
-                data-key={col.key}
-                className={col.cssClass}
-                style={{ width: `${columnWidths[col.key] || col.width || 100}px` }}
-              />
-            ))}
-          </colgroup>
+      <table className="result-table__table" ref={tableRef} style={{ tableLayout: "fixed" }}>
+      <colgroup>
+        {columns.map(col => (
+          <col
+            key={col.key}
+            data-key={col.key}
+            className={col.cssClass}
+            
+          />
+        ))}
+      </colgroup>
           <thead className="result-table__header">
             <tr className="result-table__header-row">
               {columns.map(col => (

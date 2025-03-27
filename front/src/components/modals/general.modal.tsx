@@ -1,7 +1,7 @@
 // File: ./front/src/components/modals/general.modal.tsx
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button.ui";
-import "./general.modal.css";
+// import "./general.modal.css";
 
 interface GeneralModalProps {
   isOpen: boolean;

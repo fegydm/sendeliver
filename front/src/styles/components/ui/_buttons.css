@@ -1,27 +1,114 @@
-.btn-primary {
-  padding: 0.5rem 1rem;
-  background-color: #ffffff; 
-  color: #000000;
+/* File: ./front/src/styles/components/ui/_buttons.css */
+
+/* Base styles for the button component */
+.button {
+  padding: 0.8rem 1.5rem; /* Base padding */
+  font-size: 1rem;       /* Base font size */
+  font-weight: 600;      /* Bold text */
   border: none;
+  border-radius: var(--border-radius, 0.5rem); /* Using CSS variable for border-radius */
   cursor: pointer;
-  border-radius: var(--radius, 0.5rem);
-  transition: background-color 200ms;
+  transition: all var(--transition-speed, 200ms) ease; /* Transition speed variable */
 }
 
-.btn-primary:hover {
-  background-color: #e5e7eb;
+/* Primary variant styles */
+.button-primary {
+  background-color: var(--primary-bg, #ffffff); /* Default primary bg */
+  color: var(--primary-color, #000000);         /* Default primary text color */
 }
 
-.btn-secondary {
-  padding: 0.5rem 1rem;
+.button-primary:hover {
+  background-color: var(--primary-hover, #e5e7eb);
+}
+
+/* Secondary variant styles */
+.button-secondary {
   background-color: transparent;
-  border: 1px solid #4b5563; 
-  color: #ffffff;
-  cursor: pointer;
-  border-radius: var(--radius, 0.5rem);
-  transition: background-color 200ms;
+  border: 1px solid var(--secondary-border, #4b5563);
+  color: var(--secondary-color, #ffffff);
 }
 
-.btn-secondary:hover {
-  background-color: #374151;
+.button-secondary:hover {
+  background-color: var(--secondary-hover, #374151);
+}
+
+/* Cancel variant styles */
+.button-cancel {
+  background-color: var(--cancel-bg, #f44336);
+  color: var(--cancel-color, #ffffff);
+}
+
+.button-cancel:hover {
+  background-color: var(--cancel-hover, #d32f2f);
+}
+
+/* Close variant styles */
+.button-close {
+  background-color: transparent;
+  color: var(--close-color, #000000);
+}
+
+.button-close:hover {
+  background-color: var(--close-hover, #e0e0e0);
+}
+
+/* Ghost variant styles */
+.button-ghost {
+  background-color: transparent;
+  border: 1px solid var(--ghost-border, #cccccc);
+  color: var(--ghost-color, #000000);
+}
+
+.button-ghost:hover {
+  background-color: var(--ghost-hover, #f5f5f5);
+}
+
+/* Left variant for sender-specific buttons */
+.button--left {
+  background-color: var(--sender-primary);
+  color: white;
+}
+
+.button--left:hover {
+  background-color: var(--sender-dark);
+}
+
+/* Right variant for hauler-specific buttons */
+.button--right {
+  background-color: var(--hauler-primary);
+  color: white;
+}
+
+.button--right:hover {
+  background-color: var(--hauler-dark);
+}
+
+/* Full width button */
+.button-full-width {
+  width: 100%;
+}
+
+/* Size variants */
+/* Small button styles */
+.button-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Large button styles */
+.button-large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+/* Icon button styles */
+.button-icon {
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Active state for buttons */
+.button.active {
+  /* Add your active state styles here, e.g.: */
+  opacity: 0.8; /* Example style, adjust as needed */
 }
