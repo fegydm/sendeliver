@@ -34,6 +34,7 @@ const Content: React.FC<ContentProps> = ({
   const [senderLoadingDt, setSenderLoadingDt] = useState<string | undefined>(undefined);
   const [haulerLoadingDt, setHaulerLoadingDt] = useState<string | undefined>(undefined);
 
+  // Handle vehicles found from ManualForm
   const handleVehiclesFound = (type: "sender" | "hauler", vehicles: SenderResultData[], totalCount: number, loadingDt: string) => {
     console.log(`[Content] Received ${vehicles.length} vehicles for ${type}`, vehicles);
     setIsRequestConfirmed(true);
@@ -48,92 +49,88 @@ const Content: React.FC<ContentProps> = ({
     }
   };
 
+  // Handle manual form submission
   const handleManualSubmit = (type: "sender" | "hauler", data: TransportFormData) => {
     console.log(`[Content] Form submitted for ${type}`, data);
     onManualSubmit(type, data);
   };
 
+  // Centralized switching logic with BEM naming
+  const sections = [
+    {
+      type: "sender" as const,
+      navigationClass: "content__navigation--sender",
+      wrapperClass: "content--sender",
+      title: "Client Area",
+      position: "left" as const, // Button aligned to the left in sender section
+      vehicles: senderVehicles,
+      totalCount: senderTotalCount,
+      loadingDt: senderLoadingDt,
+      defaultData: clientData,
+    },
+    {
+      type: "hauler" as const,
+      navigationClass: "content__navigation--hauler",
+      wrapperClass: "content--hauler",
+      title: "Carrier Area",
+      position: "right" as const, // Button aligned to the right in hauler section
+      vehicles: haulerVehicles,
+      totalCount: haulerTotalCount,
+      loadingDt: haulerLoadingDt,
+      defaultData: carrierData,
+    },
+  ];
+
   return (
     <div className="content">
       <div className="content__navigation">
-        <div className="content__navigation-left">
-          <Link to="/sender">
-            <Button
-              variant="primary"
-              position="left"
-              active={activeSection === "sender"}
-              onClick={() => onSwitchSection("sender")}
-            >
-              Client Dashboard
-            </Button>
-          </Link>
-        </div>
-        <div className="content__navigation-right">
-          <Link to="/hauler">
-            <Button
-              variant="primary"
-              position="right"
-              active={activeSection === "hauler"}
-              onClick={() => onSwitchSection("hauler")}
-            >
-              Carrier Dashboard
-            </Button>
-          </Link>
-        </div>
+        {sections.map((section) => (
+          <div
+            key={section.type}
+            className={`${section.navigationClass} ${activeSection === section.type ? "active" : ""}`}
+          >
+            <Link to={`/${section.type}`}>
+              <Button
+                variant="primary"
+                position={section.position} // Use position for alignment
+                active={activeSection === section.type}
+                onClick={() => onSwitchSection(section.type)}
+              >
+                {section.type === "sender" ? "Client Dashboard" : "Carrier Dashboard"}
+              </Button>
+            </Link>
+          </div>
+        ))}
       </div>
 
       <div className="content__wrapper">
-        <section className={`content__sender ${activeSection === "sender" ? "active" : ""}`}>
-          <h2 className="content__title">Client Area</h2>
-          <AIForm
-            type="sender"
-            onAIRequest={(response: any) => onAIResponse("sender", response)}
-            className="sender-content__ai-form"
-          />
-          <ManualForm
-            type="sender"
-            onSubmit={(data: TransportFormData) => handleManualSubmit("sender", data)}
-            onVehiclesFound={(vehicles, totalCount, loadingDt) =>
-              handleVehiclesFound("sender", vehicles, totalCount, loadingDt)
-            }
-            formData={formData}
-            className="sender-content__manual-form"
-          />
-          <ResultTable
-            type="sender"
-            data={senderVehicles.length > 0 ? senderVehicles : clientData}
-            totalCount={senderTotalCount || 0}
-            loadingDt={senderLoadingDt}
-            className="result-table result-table--sender sender-content__result-table"
-            isConfirmed={isRequestConfirmed}
-          />
-        </section>
-
-        <section className={`content__hauler ${activeSection === "hauler" ? "active" : ""}`}>
-          <h2 className="content__title">Carrier Area</h2>
-          <AIForm
-            type="hauler"
-            onAIRequest={(response: any) => onAIResponse("hauler", response)}
-            className="hauler-content__ai-form"
-          />
-          <ManualForm
-            type="hauler"
-            onSubmit={(data: TransportFormData) => handleManualSubmit("hauler", data)}
-            onVehiclesFound={(vehicles, totalCount, loadingDt) =>
-              handleVehiclesFound("hauler", vehicles, totalCount, loadingDt)
-            }
-            formData={formData}
-            className="hauler-content__manual-form"
-          />
-          <ResultTable
-            type="hauler"
-            data={haulerVehicles.length > 0 ? haulerVehicles : carrierData}
-            totalCount={haulerTotalCount || 0}
-            loadingDt={haulerLoadingDt}
-            className="result-table result-table--hauler hauler-content__result-table"
-            isConfirmed={isRequestConfirmed}
-          />
-        </section>
+        {sections.map((section) => (
+          <section
+            key={section.type}
+            className={`${section.wrapperClass} ${activeSection === section.type ? "active" : ""}`}
+          >
+            <h2 className="content__title">{section.title}</h2>
+            <AIForm
+              type={section.type}
+              onAIRequest={(response: any) => onAIResponse(section.type, response)}
+            />
+            <ManualForm
+              type={section.type}
+              onSubmit={(data: TransportFormData) => handleManualSubmit(section.type, data)}
+              onVehiclesFound={(vehicles, totalCount, loadingDt) =>
+                handleVehiclesFound(section.type, vehicles, totalCount, loadingDt)
+              }
+              formData={formData}
+            />
+            <ResultTable
+              type={section.type}
+              data={section.vehicles.length > 0 ? section.vehicles : section.defaultData}
+              totalCount={section.totalCount || 0}
+              loadingDt={section.loadingDt}
+              isConfirmed={isRequestConfirmed}
+            />
+          </section>
+        ))}
       </div>
     </div>
   );

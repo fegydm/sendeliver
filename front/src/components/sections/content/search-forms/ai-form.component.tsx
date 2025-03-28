@@ -95,7 +95,7 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = '' }) =>
         onChange={(e) => setPrompt(e.target.value)}
         rows={4}
       />
-      <button type="submit" className="ai-form__button">
+      <button type="submit" className="button ai-form__button">
         {type === "sender" ? "Ask AI" : "Find Requests"}
       </button>
 

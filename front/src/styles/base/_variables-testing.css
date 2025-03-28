@@ -9,6 +9,16 @@
     --color-modal-bg: #333333;
     --color-text-primary: #ffffff;
     --color-text-secondary: #bbbbbb;
+    --logo-1-color: rgb(220, 31, 240);
+    --logo-2-color: #57cc32;
+    --sender-primary: rgb(151, 64, 157);
+    --sender-light: rgb(240, 229, 242);
+    --sender-medium: rgb(231, 212, 233);
+    --sender-dark: #bf70c4;
+    --hauler-primary: #4c9f32;
+    --hauler-light: #e0ffda;
+    --hauler-medium: #8adf6f;
+    --hauler-dark: #418f26;
 
     /* Heights - Testing variations for layout */
     --height-header: 120px;
@@ -28,4 +38,11 @@
     --spacing-sm: 12px;
     --spacing-md: 20px;
     --spacing-lg: 28px;
+
+/* priradit */
+--border-radius: 8px;
+--common-spacing: 1rem;
+--shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+--shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.15);
+--transition-speed: 0.2s;
 }

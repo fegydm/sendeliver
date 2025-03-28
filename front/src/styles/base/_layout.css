@@ -5,13 +5,12 @@
 .banner { height: var(--banner-height); background-color: var(--banner-bg-color, rgb(255,200,200)); color: #D1D5DB; }
 .banner__left, .banner__right { flex: 1; }
 
-.content__navigation { display: flex; gap: 1rem;}
-.content__navigation-right {  flex: 1;   display: flex; justify-content: flex-start;}
-.content__navigation-left {  flex: 1;   display: flex; justify-content: flex-end; }
+.content__navigation { display: flex; gap: 1rem; padding: 10px;}
+.content__navigation--hauler {  flex: 1;   display: flex; justify-content: flex-start;}
+.content__navigation--sender {  flex: 1;   display: flex; justify-content: flex-end; }
 .content__navigation a { display: inline-block;  text-decoration: none; }
 .content__wrapper { display: flex; flex-wrap: wrap; padding: 1rem; max-width: var(--max-content-width); margin: 0 auto; gap: 1rem;}
-.content__sender, .content__hauler { flex: 1 ; min-width: var(--min-content-width); padding: 1.0rem; box-sizing: border-box; border-radius: var(--border-radius);
-  box-shadow: var(--shadow-medium);}
+.content--sender, .content--hauler { flex: 1 ; min-width: var(--min-content-width); }
 
 .quick-stats { display: flex; padding: 10px; background-color: var(--banner-bg-color, rgb(255,200,200)); color: #D1D5DB; align-items: center; gap: 1rem; }
 

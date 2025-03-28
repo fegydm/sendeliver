@@ -1,4 +1,4 @@
-// File: src/components/sections/content/search-forms/manual-form.component.tsx
+// File: .front/src/components/sections/content/search-forms/manual-form.component.tsx
 // Last change: Removed ResultTable rendering and added callback for found vehicles
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
