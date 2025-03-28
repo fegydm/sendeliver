@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import AIForm from "@/components/sections/content/search-forms/ai-form.component";
 import ManualForm from "@/components/sections/content/search-forms/manual-form.component";
 import ResultTable, { SenderResultData } from "@/components/sections/content/results/result-table.component";
-import Button from "@/components/ui/button.ui"; // Import custom Button component
+import Button from "@/components/ui/button.ui";
 import { TransportFormData } from "@/types/transport-forms.types";
 
 interface ContentProps {
@@ -26,7 +26,6 @@ const Content: React.FC<ContentProps> = ({
   clientData,
   carrierData,
 }) => {
-  // State to track if search request has been confirmed/processed
   const [isRequestConfirmed, setIsRequestConfirmed] = useState(false);
   const [senderVehicles, setSenderVehicles] = useState<SenderResultData[]>([]);
   const [haulerVehicles, setHaulerVehicles] = useState<SenderResultData[]>([]);
@@ -35,7 +34,6 @@ const Content: React.FC<ContentProps> = ({
   const [senderLoadingDt, setSenderLoadingDt] = useState<string | undefined>(undefined);
   const [haulerLoadingDt, setHaulerLoadingDt] = useState<string | undefined>(undefined);
 
-  // Handle vehicle data received from ManualForm
   const handleVehiclesFound = (type: "sender" | "hauler", vehicles: SenderResultData[], totalCount: number, loadingDt: string) => {
     console.log(`[Content] Received ${vehicles.length} vehicles for ${type}`, vehicles);
     setIsRequestConfirmed(true);
@@ -50,7 +48,6 @@ const Content: React.FC<ContentProps> = ({
     }
   };
 
-  // Handle form submission
   const handleManualSubmit = (type: "sender" | "hauler", data: TransportFormData) => {
     console.log(`[Content] Form submitted for ${type}`, data);
     onManualSubmit(type, data);
@@ -58,31 +55,33 @@ const Content: React.FC<ContentProps> = ({
 
   return (
     <div className="content">
-      {/* Navigation */}
       <div className="content__navigation">
-        <Link to="/sender">
-          <Button
-            variant="primary"
-            position="left" // Using position property for left alignment
-            active={activeSection === "sender"} // Active state for sender
-            onClick={() => onSwitchSection("sender")}
-          >
-            Client Dashboard
-          </Button>
-        </Link>
-        <Link to="/hauler">
-          <Button
-            variant="primary"
-            position="right" // Using position property for right alignment
-            active={activeSection === "hauler"} // Active state for hauler
-            onClick={() => onSwitchSection("hauler")}
-          >
-            Carrier Dashboard
-          </Button>
-        </Link>
+        <div className="content__navigation-left">
+          <Link to="/sender">
+            <Button
+              variant="primary"
+              position="left"
+              active={activeSection === "sender"}
+              onClick={() => onSwitchSection("sender")}
+            >
+              Client Dashboard
+            </Button>
+          </Link>
+        </div>
+        <div className="content__navigation-right">
+          <Link to="/hauler">
+            <Button
+              variant="primary"
+              position="right"
+              active={activeSection === "hauler"}
+              onClick={() => onSwitchSection("hauler")}
+            >
+              Carrier Dashboard
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      {/* Wrapper set as flex container with two columns */}
       <div className="content__wrapper">
         <section className={`content__sender ${activeSection === "sender" ? "active" : ""}`}>
           <h2 className="content__title">Client Area</h2>

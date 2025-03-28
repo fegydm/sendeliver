@@ -67,6 +67,7 @@
 .button--left {
   background-color: var(--sender-primary);
   color: white;
+  
 }
 
 .button--left:hover {

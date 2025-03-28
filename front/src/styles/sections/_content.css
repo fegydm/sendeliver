@@ -1,28 +1,46 @@
 /* File: ./front/src/styles/sections/_content.css 
-
 @import '../components/dropdown.css'; */
-
 @import '../components/ui/ui-components.css'; 
-
-
 /* Global content container styling */
 .content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;}
+.content__sender {
+  background: linear-gradient(to bottom right, white, var(--sender-light));
+  border: 1px solid var(--sender-primary);
+  border-left: 4px solid var(--sender-primary);}
+.content__hauler {
+  background: linear-gradient(to bottom left, white, var(--hauler-light));
+  border: 1px solid var(--hauler-primary);
+  border-right: 4px solid var(--hauler-primary);} 
+/* Titles styling for content sections */
+.content__title {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  position: relative;}
+.content__sender .content__title {
+  color: var(--sender-dark);
+  border-bottom: 2px solid var(--sender-primary);}
+.content__hauler .content__title {
+  color: var(--hauler-dark);
+  border-bottom: 2px solid var(--hauler-primary);
+}
+.sender-content__section,
+.hauler-content__section {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  background-color: white;
+  box-shadow: var(--shadow-light);
 }
 
-
-/* Separator between sender a hauler sekciami */
-.content__wrapper::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  background: linear-gradient(to bottom, var(--sender-primary), var(--hauler-primary));
-  transform: translateX(-50%);
+/* Override h3 in sections to be non-bold */
+.sender-content__section h3,
+.hauler-content__section h3 {
+  margin-bottom: 1rem;
+  color: #000000;
+  font-weight: normal; /* Upravené na normálnu váhu */
 }
-
-
