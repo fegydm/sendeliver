@@ -88,15 +88,13 @@ const Content: React.FC<ContentProps> = ({
           <div
             key={section.type}
             className={`${section.navigationClass} ${activeSection === section.type ? "active" : ""}`}
-          >
-            <Link to={`/${section.type}`}>
+          > <Link to={`/${section.type}`}>
               <Button
                 variant="primary"
                 position={section.position} // Use position for alignment
                 active={activeSection === section.type}
                 onClick={() => onSwitchSection(section.type)}
-              >
-                {section.type === "sender" ? "Client Dashboard" : "Carrier Dashboard"}
+              > {section.type === "sender" ? "Client Dashboard" : "Carrier Dashboard"}
               </Button>
             </Link>
           </div>

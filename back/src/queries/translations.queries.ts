@@ -1,22 +1,14 @@
 // File: ./back/src/queries/translations.queries.ts
+// Last change: Clean translations queries for new schema
+
 export const GET_TRANSLATIONS_QUERY = `
   SELECT 
     key, 
-    text,
-    namespace
+    text
   FROM 
     geo.translations
   WHERE 
-    language_id = $1
-`;
-
-export const GET_LANGUAGE_ID_QUERY = `
-  SELECT 
-    id 
-  FROM 
-    geo.languages 
-  WHERE 
-    code_2 = $1
+    language_code = $1
 `;
 
 export const CHECK_TRANSLATIONS_TABLE_QUERY = `
@@ -24,5 +16,5 @@ export const CHECK_TRANSLATIONS_TABLE_QUERY = `
     SELECT FROM information_schema.tables 
     WHERE table_schema = 'geo' 
     AND table_name = 'translations'
-  )
+  ) as exists
 `;

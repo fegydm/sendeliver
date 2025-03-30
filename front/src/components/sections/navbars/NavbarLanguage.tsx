@@ -1,8 +1,9 @@
 // File: ./front/src/components/navbars/NavbarLanguage.tsx
-// Component for language selection in navbar, using cached data from CountriesManager
+// Last change: Updated to use optimizedUseLanguage hook with improved caching
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { BaseDropdown } from "@/components/elements/BaseDropdown";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/optimizedUseLanguage"; // Changed import to optimized version
 import { useLanguagesPreload } from "@/hooks/useLanguagesPreload";
 import type { Language } from "@/types/language.types";
 import "./navbar.component.css";
@@ -15,7 +16,15 @@ const NavbarLanguage: React.FC = () => {
   const componentRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   
-  const { currentLanguage, secondaryLanguage, setLanguages } = useLanguage();
+  // Updated to use new hook properties
+  const { 
+    currentLanguageCode: currentLanguage, 
+    secondaryLanguageCode: secondaryLanguage,
+    changeLanguage,
+    setSecondaryLanguage,
+    isLoading: translationsLoading
+  } = useLanguage();
+  
   const { languages, isLoading, getFlagUrl } = useLanguagesPreload();
 
   const primaryLang = currentLanguage || 'en';
@@ -49,19 +58,22 @@ const NavbarLanguage: React.FC = () => {
     return result;
   }, [languages, primaryLang, secondaryLang, filteredLanguages]);
 
+  // Updated to use new language setter functions
   const handleSelectLanguage = useCallback((language: Language, index: number) => {
     const cc = language.cc;
     if (cc === primaryLang) return;
     
     if (cc === secondaryLang) {
-      setLanguages(secondaryLang, primaryLang);
+      // Will swap primary and secondary
+      changeLanguage(cc);
     } else {
-      setLanguages(cc, primaryLang);
+      // Set new primary, keep existing secondary
+      changeLanguage(cc);
     }
     
     setIsDropdownOpen(false);
     setFilterValue("");
-  }, [primaryLang, secondaryLang, setLanguages]);
+  }, [primaryLang, secondaryLang, changeLanguage]);
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
@@ -127,6 +139,9 @@ const NavbarLanguage: React.FC = () => {
 
   const getItemKey = useCallback((item: Language) => item.cc, []);
 
+  // Combined loading state from both hooks
+  const isDataLoading = isLoading || translationsLoading;
+
   return (
     <div className="navbar-language-container" ref={componentRef}>
       <button 
@@ -161,7 +176,7 @@ const NavbarLanguage: React.FC = () => {
             />
           </div>
           
-          {isLoading ? (
+          {isDataLoading ? (
             <div className="navbar-language-loading">Loading languages...</div>
           ) : languages.length === 0 ? (
             <div className="navbar-language-empty">No languages loaded</div>

@@ -1,5 +1,5 @@
 // File: src/utils/CountriesManager.ts
-// Last change: Fixed timer issue and improved error handling
+// Last change: Fixed timer issues and improved caching with hasFetched flags
 
 import type { Country } from '@/types/transport-forms.types';
 import type { Language } from '@/types/language.types';
@@ -11,9 +11,12 @@ class CountriesManager {
   private languages: Language[] = [];
   private countrySubscribers = new Set<(countries: Country[]) => void>();
   private languageSubscribers = new Set<(languages: Language[]) => void>();
+  private hasFetchedCountries = false;
+  private hasFetchedLanguages = false;
 
   private constructor() {
-    this.preloadData();
+    // Preloading is optional — enable manually if needed
+    // this.preloadData();
   }
 
   static getInstance(): CountriesManager {
@@ -24,19 +27,17 @@ class CountriesManager {
   }
 
   async getCountries(): Promise<Country[]> {
-    if (this.countries.length > 0) return this.countries;
-    
-    const timerLabel = 'fetch-countries-time';
+    if (this.hasFetchedCountries && this.countries.length > 0) {
+      console.log('[CountriesManager] Using cached countries');
+      return this.countries;
+    }
+  
+    const timerLabel = '[CountriesManager] fetch-countries';
     try {
       console.time(timerLabel);
       const response = await fetch('/api/geo/countries');
       if (!response.ok) throw new Error('Failed to fetch countries');
       const data = await response.json();
-      
-      // Log the first raw country data to see the actual structure
-      if (data && data.length > 0) {
-        console.log('Raw country data sample:', data[0]);
-      }
       
       // Map API response to Country type - fixing the code_2 to cc mapping
       this.countries = data.map((c: any) => ({
@@ -47,15 +48,13 @@ class CountriesManager {
         code_3: c.code_3 || ''
       }));
       
-      // Log the mapped data to verify transformation
-      if (this.countries && this.countries.length > 0) {
-        console.log('Mapped country data sample:', this.countries[0]);
-      }
-
+      this.hasFetchedCountries = true;
+      console.log(`[CountriesManager] Loaded ${this.countries.length} countries`);
       console.timeEnd(timerLabel);
     } catch (error) {
-      console.error('Countries fetch error:', error);
+      console.error('[CountriesManager] Countries fetch error:', error);
       this.countries = [];
+      this.hasFetchedCountries = true;
       try {
         console.timeEnd(timerLabel);
       } catch (e) {
@@ -68,9 +67,12 @@ class CountriesManager {
   }
 
   async getLanguages(): Promise<Language[]> {
-    if (this.languages.length > 0) return this.languages;
+    if (this.hasFetchedLanguages && this.languages.length > 0) {
+      console.log('[CountriesManager] Using cached languages');
+      return this.languages;
+    }
     
-    const timerLabel = 'fetch-languages-time';
+    const timerLabel = '[CountriesManager] fetch-languages';
     try {
       console.time(timerLabel);
       // Changed endpoint to /api/geo/languages to match the route mapping
@@ -91,10 +93,14 @@ class CountriesManager {
         updated_at: lang.updated_at || new Date().toISOString()
       }));
       
+      this.hasFetchedLanguages = true;
+      console.log(`[CountriesManager] Loaded ${this.languages.length} languages`);
       console.timeEnd(timerLabel);
     } catch (error) {
-      console.error('Languages fetch error:', error);
+      console.error('[CountriesManager] Languages fetch error:', error);
+      // Use DEFAULT_LANGUAGES when fetch fails to ensure we have fallback values
       this.languages = DEFAULT_LANGUAGES;
+      this.hasFetchedLanguages = true;
       try {
         console.timeEnd(timerLabel);
       } catch (e) {
@@ -111,25 +117,25 @@ class CountriesManager {
     return `/flags/4x3/optimized/${code.toLowerCase()}.svg`;
   }
 
-// Disable flag preloading for testing purposes
-private preloadData() {
-  Promise.all([this.getCountries(), this.getLanguages()])
-    .then(() => {
-      console.log('Preloaded data successfully');
-      // Temporarily disable flag preloading
-      // this.preloadFlags();
-    })
-    .catch(error => {
-      console.error('Error preloading data:', error);
-    });
-}
+  // Keep these methods even if unused to preserve the original API
+  private preloadData() {
+    Promise.all([this.getCountries(), this.getLanguages()])
+      .then(() => {
+        console.log('[CountriesManager] Preloaded data successfully');
+        // Temporarily disable flag preloading
+        // this.preloadFlags();
+      })
+      .catch(error => {
+        console.error('[CountriesManager] Error preloading data:', error);
+      });
+  }
 
   private preloadFlags() {
     const countryFlags = this.countries.filter(c => c.cc).map(c => c.cc);
     const languageFlags = this.languages.filter(l => l.lc || l.cc).map(l => l.lc || l.cc);
     const allFlags = [...countryFlags, ...languageFlags].filter(Boolean);
     
-    console.log(`Preloading ${allFlags.length} flags`);
+    console.log(`[CountriesManager] Preloading ${allFlags.length} flags`);
     
     // Use a throttled approach to avoid too many simultaneous requests
     let index = 0;

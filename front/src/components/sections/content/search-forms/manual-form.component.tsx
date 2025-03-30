@@ -287,7 +287,7 @@ export function ManualForm({
   );
 
   return (
-    <form className={`manual-form manual-form--${type} ${className}`} onSubmit={handleSubmit}>
+      <form className={`manual-form manual-form--${type} ${className}`} onSubmit={handleSubmit}>
       <section className={`manual-form__pickup ${isPickupValid ? "manual-form__pickup--valid" : ""}`}>
         <h3 className="manual-form__title">Pickup Details</h3>
         <div className="manual-form__grid">

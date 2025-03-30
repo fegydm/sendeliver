@@ -19,6 +19,7 @@
   color: var(--hauler-dark);
   border-bottom:2px solid transparent;
   border-image:linear-gradient(to right, transparent, var(--hauler-primary), transparent) 1;}
+
 /* Form Styling */
 .ai-form,
 .manual-form,
@@ -30,6 +31,9 @@
   margin:2rem 0;
   border-radius: var(--border-radius);
   box-shadow:2px 4px 6px rgba(0, 0, 0, 0.10);}
+
+
+/* Sender Styling */
 .ai-form--sender,
 .manual-form--sender,
 .result-table {

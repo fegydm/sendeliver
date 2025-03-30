@@ -1,6 +1,9 @@
 // File: src/App.tsx
+// Last change: Added LanguageProvider to prevent multiple useLanguage initializations
+
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import Navigation from "@/components/sections/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
@@ -31,7 +34,7 @@ const ROUTES = {
   // SECRET: ["/jozo", "/luky"],
 } as const;
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   useScrollBounce();
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -106,6 +109,15 @@ const App: React.FC = () => {
         </footer>
       )}
     </>
+  );
+};
+
+// Wrap the entire app in LanguageProvider to prevent multiple useLanguage initializations
+const App: React.FC = () => {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 };
 
