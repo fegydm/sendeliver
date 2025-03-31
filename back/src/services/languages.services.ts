@@ -1,22 +1,38 @@
 // File: ./back/src/services/languages.services.ts
-// Last change: Changed mapping from code_2 to lc (was cc)
+// Last change: Fixed API response mapping to include primary_country_code as cc
 
 import { pool } from '../configs/db.js';
 import { GET_LANGUAGES_QUERY, GET_COUNTRY_LANGUAGE_QUERY } from "../queries/languages.queries.js";
 
 interface Language {
-  lc: string;  // Changed from cc to lc
+  lc: string;  // Language code (always lowercase)
+  cc: string;  // Country code for flags (always uppercase)
   name_en: string;
   native_name: string;
   is_rtl: boolean;
 }
 
 const fallbackLanguages: Language[] = [
-  { lc: "en", name_en: "English", native_name: "English", is_rtl: false },
-  { lc: "sk", name_en: "Slovak", native_name: "Slovenčina", is_rtl: false },
-  { lc: "cs", name_en: "Czech", native_name: "Čeština", is_rtl: false },
-  { lc: "de", name_en: "German", native_name: "Deutsch", is_rtl: false }
+  { lc: "en", cc: "GB", name_en: "English", native_name: "English", is_rtl: false },
+  { lc: "sk", cc: "SK", name_en: "Slovak", native_name: "Slovenčina", is_rtl: false },
+  { lc: "cs", cc: "CZ", name_en: "Czech", native_name: "Čeština", is_rtl: false },
+  { lc: "de", cc: "DE", name_en: "German", native_name: "Deutsch", is_rtl: false }
 ];
+
+// Language code to country code mapping for fallbacks
+const LC_TO_CC_MAP: Record<string, string> = {
+  'en': 'GB',
+  'sk': 'SK',
+  'cs': 'CZ',
+  'de': 'DE',
+  'fr': 'FR',
+  'es': 'ES',
+  'it': 'IT',
+  'ru': 'RU',
+  'zh': 'CN',
+  'ja': 'JP',
+  'pl': 'PL'
+};
 
 class LanguagesService {
   private cachedLanguages: Language[] | null = null;
@@ -28,18 +44,37 @@ class LanguagesService {
     
     try {
       const result = await pool.query(GET_LANGUAGES_QUERY);
-      const validatedData = result.rows.map((row: any) => ({
-        lc: row.code_2 || '',  // Changed from cc to lc
-        name_en: row.name_en || row.code_2 || 'Unknown',
-        native_name: row.native_name || row.name_en || row.code_2 || 'Unknown',
-        is_rtl: !!row.is_rtl
-      }));
+      
+      // Properly map database fields to API response
+      const validatedData = result.rows.map((row: any) => {
+        // Get language code from code_2
+        const lc = row.code_2?.toLowerCase() || '';
+        
+        // Get country code from primary_country_code or map from language code
+        let cc = '';
+        if (row.primary_country_code && row.primary_country_code.trim() !== '') {
+          cc = row.primary_country_code.toUpperCase();
+        } else if (LC_TO_CC_MAP[lc]) {
+          cc = LC_TO_CC_MAP[lc];
+        } else {
+          cc = lc.toUpperCase();
+        }
+        
+        return {
+          lc: lc,  // Language code - always lowercase
+          cc: cc,  // Country code - always uppercase
+          name_en: row.name_en || row.code_2 || 'Unknown',
+          native_name: row.native_name || row.name_en || row.code_2 || 'Unknown',
+          is_rtl: !!row.is_rtl
+        };
+      });
       
       if (validatedData.length === 0) return fallbackLanguages;
       
       this.cachedLanguages = validatedData;
       return validatedData;
     } catch (error) {
+      console.error('Error fetching languages:', error);
       return fallbackLanguages;
     }
   }
@@ -63,6 +98,7 @@ class LanguagesService {
       };
       return hardcodedMappings[validatedCountryCode] || 'en';
     } catch (error) {
+      console.error('Error getting country language:', error);
       return 'en';
     }
   }
@@ -71,16 +107,17 @@ class LanguagesService {
     try {
       const allLanguages = await this.getAllLanguages();
       const languageDetails = allLanguages.find(lang => 
-        lang.lc.toLowerCase() === languageCode.toLowerCase()  // Changed from cc to lc
+        lang.lc.toLowerCase() === languageCode.toLowerCase()
       );
       
       if (languageDetails) return languageDetails;
       
-      const englishLanguage = allLanguages.find(lang => lang.lc === 'en');  // Changed from cc to lc
+      const englishLanguage = allLanguages.find(lang => lang.lc === 'en');
       if (englishLanguage) return englishLanguage;
       
       return fallbackLanguages[0];
     } catch (error) {
+      console.error('Error getting language details:', error);
       return fallbackLanguages[0];
     }
   }

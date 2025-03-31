@@ -14,23 +14,6 @@ export const GET_LANGUAGES_QUERY = `
     name_en ASC
 `;
 
-export const GET_LANGUAGE_ID_QUERY = `
-  SELECT 
-    id 
-  FROM 
-    geo.languages 
-  WHERE 
-    code_2 = $1
-`;
-
-export const GET_LANGUAGE_CODE_QUERY = `
-  SELECT 
-    code_2 
-  FROM 
-    geo.languages 
-  WHERE 
-    id = $1
-`;
 
 export const GET_COUNTRY_LANGUAGE_QUERY = `
   SELECT 

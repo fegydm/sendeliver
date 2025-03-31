@@ -1,118 +1,129 @@
-// ✅ File: src/hooks/useLanguage.ts
+// File: ./front/src/hooks/useLanguage.ts
+// Last change: Refactored to use useTranslationsPreload hook
 
-import { useState, useEffect, useCallback } from 'react';
-import { getIPLocation } from '@/utils/geo';
+import { useCallback, useMemo } from 'react';
+import { useLocalStorage } from "./useLocalStorage";
+import { useLanguagesPreload } from './useLanguagesPreload';
+import { useTranslationsPreload } from './useTranslationsPreload';
 
-interface LanguageTranslation {
-  [key: string]: string;
+export interface LanguageHook {
+  t: (key: string, defaultValue?: string) => string;
+  currentLanguageId: number;
+  secondaryLanguageId: number | null;
+  currentLanguageCode: string;
+  secondaryLanguageCode: string | null;
+  setCurrentLanguageId: (id: number) => void;
+  setCurrentLanguageCode: (code: string) => void;
+  setSecondaryLanguageId: (id: number | null) => void;
+  setSecondaryLanguageCode: (code: string | null) => void;
+  changeLanguage: (codeOrId: string | number) => void;
+  isLoading: boolean;
+  hasError: boolean;
 }
 
-type TranslationsCache = {
-  current: LanguageTranslation;
-  secondary: LanguageTranslation;
-  english: LanguageTranslation;
-};
+const DEFAULT_LANGUAGE_ID = 1; // English
+const FALLBACK_LANGUAGE_ID = 1; // English as fallback
 
-export function useLanguage() {
-  const [currentLanguageCode, setCurrentLanguageCode] = useState<string>(
-    () => localStorage.getItem('preferredLanguage') || 'en'
-  );
-
-  const [secondaryLanguageCode, setSecondaryLanguageCode] = useState<string | null>(
-    () => localStorage.getItem('secondaryLanguage') || null
-  );
-
-  const [translations, setTranslations] = useState<TranslationsCache>({
-    current: {},
-    secondary: {},
-    english: {}
+export const useLanguage = (): LanguageHook => {
+  const [currentLanguageId, setCurrentLanguageIdState] = useLocalStorage('languagePrimary', DEFAULT_LANGUAGE_ID);
+  const [secondaryLanguageId, setSecondaryLanguageIdState] = useLocalStorage<number | null>('languageSecondary', null);
+  
+  // Get languages information
+  const { 
+    getLanguageById,
+    getLanguageByCode,
+    isPriorityLoaded
+  } = useLanguagesPreload({
+    priority: true
   });
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Use the new translations preload hook
+  const { 
+    t: translateFn, 
+    isLoading, 
+    error: translationsError 
+  } = useTranslationsPreload({
+    primaryLanguageId: currentLanguageId,
+    secondaryLanguageId: secondaryLanguageId || FALLBACK_LANGUAGE_ID,
+    enabled: isPriorityLoaded
+  });
 
-  const fetchTranslations = useCallback(async (langCode: string): Promise<LanguageTranslation> => {
-    try {
-      const response = await fetch(`/api/geo/translations/${langCode}`);
-      if (!response.ok) throw new Error(`Failed to fetch translations for language ${langCode}`);
-      return await response.json();
-    } catch (error) {
-      console.error(`[useLanguage] Error fetching translations for '${langCode}':`, error);
-      return {};
+  const currentLanguageCode = useMemo(() => {
+    const lang = getLanguageById(currentLanguageId);
+    return lang?.cc || 'GB';
+  }, [currentLanguageId, getLanguageById]);
+  
+  const secondaryLanguageCode = useMemo(() => {
+    if (!secondaryLanguageId) return null;
+    const lang = getLanguageById(secondaryLanguageId);
+    return lang?.cc || null;
+  }, [secondaryLanguageId, getLanguageById]);
+
+  // Custom translation function that handles default value
+  const t = useCallback((key: string, defaultValue?: string): string => {
+    return translateFn(key, defaultValue);
+  }, [translateFn]);
+
+  const setCurrentLanguageId = useCallback((id: number) => {
+    if (id === secondaryLanguageId) {
+      setSecondaryLanguageIdState(currentLanguageId);
     }
-  }, []);
+    setCurrentLanguageIdState(id);
+  }, [currentLanguageId, secondaryLanguageId, setCurrentLanguageIdState, setSecondaryLanguageIdState]);
 
-  useEffect(() => {
-    const loadTranslations = async () => {
-      setIsLoading(true);
-      setError(null);
+  const setCurrentLanguageCode = useCallback((code: string) => {
+    if (!code) return;
+    
+    const language = getLanguageByCode(code);
+    if (language) {
+      setCurrentLanguageId(language.id);
+    }
+  }, [getLanguageByCode, setCurrentLanguageId]);
 
-      try {
-        const primary = currentLanguageCode;
-        const secondary = secondaryLanguageCode || await getIPLocation();
-
-        const [primaryData, secondaryData] = await Promise.all([
-          fetchTranslations(primary),
-          fetchTranslations(secondary)
-        ]);
-
-        const fallback = primary === 'en' ? primaryData : await fetchTranslations('en');
-
-        setTranslations({
-          current: primaryData,
-          secondary: secondaryData,
-          english: fallback
-        });
-
-        localStorage.setItem('preferredLanguage', primary);
-        if (secondary) {
-          localStorage.setItem('secondaryLanguage', secondary);
-        } else {
-          localStorage.removeItem('secondaryLanguage');
-        }
-      } catch (err) {
-        console.error('[useLanguage] Failed to load translations:', err);
-        setError('Translation load failed');
-      } finally {
-        setIsLoading(false);
+  const setSecondaryLanguageId = useCallback((id: number | null) => {
+    if (id !== null && id === currentLanguageId) {
+      return;
+    }
+    setSecondaryLanguageIdState(id);
+  }, [currentLanguageId, setSecondaryLanguageIdState]);
+  
+  const setSecondaryLanguageCode = useCallback((code: string | null) => {
+    if (!code) {
+      setSecondaryLanguageId(null);
+      return;
+    }
+    
+    const language = getLanguageByCode(code);
+    if (language) {
+      setSecondaryLanguageId(language.id);
+    }
+  }, [getLanguageByCode, setSecondaryLanguageId]);
+  
+  const changeLanguage = useCallback((codeOrId: string | number) => {
+    if (typeof codeOrId === 'number') {
+      setCurrentLanguageId(codeOrId);
+    } else if (typeof codeOrId === 'string' && codeOrId) {
+      const language = getLanguageByCode(codeOrId);
+      if (language) {
+        setCurrentLanguageId(language.id);
       }
-    };
-
-    loadTranslations();
-  }, [currentLanguageCode, secondaryLanguageCode, fetchTranslations]);
-
-  const t = useCallback((key: string): string => {
-    return (
-      translations.current[key] ||
-      translations.secondary[key] ||
-      translations.english[key] ||
-      key
-    );
-  }, [translations]);
-
-  const changeLanguage = useCallback((langCode: string) => {
-    if (langCode === secondaryLanguageCode) {
-      setCurrentLanguageCode(langCode);
-      setSecondaryLanguageCode(currentLanguageCode);
-    } else {
-      setCurrentLanguageCode(langCode);
     }
-  }, [currentLanguageCode, secondaryLanguageCode]);
-
-  const setSecondaryLanguage = useCallback((langCode: string | null) => {
-    if (langCode === currentLanguageCode) return;
-    setSecondaryLanguageCode(langCode);
-  }, [currentLanguageCode]);
+  }, [getLanguageByCode, setCurrentLanguageId]);
 
   return {
     t,
+    currentLanguageId,
+    secondaryLanguageId,
     currentLanguageCode,
     secondaryLanguageCode,
+    setCurrentLanguageId,
+    setCurrentLanguageCode,
+    setSecondaryLanguageId,
+    setSecondaryLanguageCode,
     changeLanguage,
-    setSecondaryLanguage,
     isLoading,
-    error
+    hasError: !!translationsError
   };
-}
+};
 
 export default useLanguage;

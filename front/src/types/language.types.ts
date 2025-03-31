@@ -1,14 +1,15 @@
 // File: ./front/src/types/language.types.ts
-// Contains type definitions for language-related data structures
+// Last change: Updated Language interface and DEFAULT_LANGUAGES to match geo.languages table
 
 export interface Language {
-  cc: string;               // ISO 639-1 code (e.g., 'en', 'sk'), mapped from BE code_2
-  lc: string;               // Added property: code_2 from languages table, equivalent to cc from countries
+  id: number;               // Language ID from geo.languages
+  cc: string;               // primary_country_code from geo.languages (uppercase, e.g., 'GB', 'SK')
+  lc: string;               // code_2 from geo.languages (lowercase, e.g., 'en', 'sk')
   name_en: string;          // Name in English
   name_sk?: string;         // Name in Slovak (optional)
   native_name: string;      // Name in the language itself
   is_rtl: boolean;          // Right-to-left text direction
-  primary_country_code?: string; // Primary country for this language
+  primary_country_code?: string; // Optional, already covered by cc
   created_at?: Date;        // Creation timestamp
   updated_at?: Date;        // Last update timestamp
 }
@@ -44,13 +45,13 @@ export enum TextDirection {
 }
 
 export const DEFAULT_LANGUAGE_PREFERENCES: LanguagePreference = {
-  primaryLanguage: 'en',
-  secondaryLanguage: 'sk'
+  primaryLanguage: 'en',  // lc code
+  secondaryLanguage: 'sk' // lc code
 };
 
 export const DEFAULT_LANGUAGES: Language[] = [
-  { cc: "en", lc: "en", name_en: "English", native_name: "English", is_rtl: false },
-  { cc: "sk", lc: "sk", name_en: "Slovak", native_name: "Slovenčina", is_rtl: false },
-  { cc: "cs", lc: "cs", name_en: "Czech", native_name: "Čeština", is_rtl: false },
-  { cc: "de", lc: "de", name_en: "German", native_name: "Deutsch", is_rtl: false }
+  { id: 1, cc: "GB", lc: "en", name_en: "English", native_name: "English", is_rtl: false },
+  { id: 21, cc: "SK", lc: "sk", name_en: "Slovak", native_name: "Slovenčina", is_rtl: false },
+  { id: 20, cc: "CZ", lc: "cs", name_en: "Czech", native_name: "Čeština", is_rtl: false },
+  { id: 11, cc: "DE", lc: "de", name_en: "German", native_name: "Deutsch", is_rtl: false }
 ];

@@ -1,84 +1,123 @@
-// File: ./front/src/components/navbars/NavbarLanguage.tsx
-// Last change: Updated to use optimizedUseLanguage hook with improved caching
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { BaseDropdown } from "@/components/elements/BaseDropdown";
-import { useLanguage } from "@/hooks/optimizedUseLanguage"; // Changed import to optimized version
+import { useLanguage } from "@/hooks/useLanguage";
 import { useLanguagesPreload } from "@/hooks/useLanguagesPreload";
 import type { Language } from "@/types/language.types";
 import "./navbar.component.css";
 
 const NavbarLanguage: React.FC = () => {
-  const [filterValue, setFilterValue] = useState("");
+  const [codeSearch, setCodeSearch] = useState("");
+  const [nameSearch, setNameSearch] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   
   const componentRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const codeInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   
-  // Updated to use new hook properties
   const { 
-    currentLanguageCode: currentLanguage, 
-    secondaryLanguageCode: secondaryLanguage,
+    currentLanguageId,
+    secondaryLanguageId,
     changeLanguage,
-    setSecondaryLanguage,
-    isLoading: translationsLoading
+    setSecondaryLanguageCode,
+    currentLanguageCode,
+    secondaryLanguageCode
   } = useLanguage();
   
-  const { languages, isLoading, getFlagUrl } = useLanguagesPreload();
+  const { 
+    languages, 
+    isLoading, 
+    error,
+    getFlagUrl,
+    getLanguageById,
+    loadAllLanguages
+  } = useLanguagesPreload({
+    enabled: true,
+    priority: true
+  });
 
-  const primaryLang = currentLanguage || 'en';
-  const secondaryLang = secondaryLanguage || 'sk';
+  const getIpBasedLanguage = useCallback(() => 'sk', []);
 
-  const filteredLanguages = useMemo(() => {
-    if (!languages || !Array.isArray(languages)) return [];
-    if (!filterValue) return languages;
-    return languages.filter(lang => 
-      lang.cc.toLowerCase().includes(filterValue.toLowerCase()) || 
-      lang.name_en.toLowerCase().includes(filterValue.toLowerCase()) || 
-      lang.native_name.toLowerCase().includes(filterValue.toLowerCase())
-    );
-  }, [languages, filterValue]);
-  
   const dropdownItems = useMemo(() => {
-    if (!languages || !Array.isArray(languages)) return [];
-    const primaryLanguage = languages.find(lang => lang.cc === primaryLang);
-    const secondaryLanguage = languages.find(lang => lang.cc === secondaryLang);
-    const otherLanguages = filteredLanguages.filter(
-      lang => lang.cc !== primaryLang && lang.cc !== secondaryLang
-    );
-    
-    const result: Array<Language & { isPrimary?: boolean; isSecondary?: boolean }> = [];
-    
-    if (primaryLanguage) result.push({ ...primaryLanguage, isPrimary: true });
-    if (secondaryLanguage && secondaryLanguage.cc !== primaryLang) {
-      result.push({ ...secondaryLanguage, isSecondary: true });
+    if (!languages.length && !isLoading) return [];
+
+    const result: Array<Language & { isPrimary?: boolean; isSecondary?: boolean; isDefault?: boolean }> = [];
+    const currentLang = getLanguageById(currentLanguageId) || getLanguageById(1); // Fallback na EN (id: 1)
+    const secondaryLang = secondaryLanguageId ? getLanguageById(secondaryLanguageId) : null;
+    const enLang = getLanguageById(1); // English (id: 1)
+
+    if (currentLang) {
+      result.push({ ...currentLang, isPrimary: true });
     }
+
+    if (secondaryLang && secondaryLang.id !== currentLang?.id) {
+      result.push({ ...secondaryLang, isSecondary: true });
+    }
+
+    if (enLang && enLang.id !== currentLang?.id && enLang.id !== secondaryLang?.id) {
+      result.push({ ...enLang, isDefault: true });
+    }
+
+    const otherLanguages = languages
+      .filter(lang => 
+        lang.id !== currentLang?.id &&
+        lang.id !== secondaryLang?.id &&
+        lang.id !== enLang?.id
+      )
+      .sort((a, b) => (a.lc || '').localeCompare(b.lc || ''));
+
     result.push(...otherLanguages);
     return result;
-  }, [languages, primaryLang, secondaryLang, filteredLanguages]);
+  }, [languages, currentLanguageId, secondaryLanguageId, getLanguageById, isLoading]);
 
-  // Updated to use new language setter functions
-  const handleSelectLanguage = useCallback((language: Language, index: number) => {
-    const cc = language.cc;
-    if (cc === primaryLang) return;
+  const filteredLanguages = useMemo(() => {
+    if (!codeSearch && !nameSearch) return dropdownItems;
+
+    return dropdownItems.filter(lang => {
+      const lowerCodeSearch = codeSearch.toLowerCase();
+      const lowerNameSearch = nameSearch.toLowerCase();
+
+      const matchesCode = !lowerCodeSearch || 
+        (lang.cc?.toLowerCase() || '').startsWith(lowerCodeSearch) || 
+        (lang.lc?.toLowerCase() || '').startsWith(lowerCodeSearch);
+
+      const matchesName = !lowerNameSearch || 
+        (lang.name_en?.toLowerCase() || '').includes(lowerNameSearch) || 
+        (lang.native_name?.toLowerCase() || '').includes(lowerNameSearch);
+
+      return matchesCode && matchesName;
+    });
+  }, [dropdownItems, codeSearch, nameSearch]);
+
+  useEffect(() => {
+    if (isDropdownOpen && languages.length === 0 && !isLoading) {
+      loadAllLanguages();
+    }
+  }, [isDropdownOpen, languages.length, loadAllLanguages, isLoading]);
+
+  const handleSelectLanguage = useCallback((language: Language) => {
+    const newLanguageId = language.id;
+    if (newLanguageId === currentLanguageId) return;
+
+    console.log('[NavbarLanguage] Selecting language ID:', newLanguageId); // Debug
+    changeLanguage(newLanguageId); // Používame ID namiesto cc
     
-    if (cc === secondaryLang) {
-      // Will swap primary and secondary
-      changeLanguage(cc);
+    if (newLanguageId === secondaryLanguageId) {
+      setSecondaryLanguageCode(currentLanguageCode || null); // Swap s aktuálnym
     } else {
-      // Set new primary, keep existing secondary
-      changeLanguage(cc);
+      setSecondaryLanguageCode(currentLanguageCode || null);
     }
     
     setIsDropdownOpen(false);
-    setFilterValue("");
-  }, [primaryLang, secondaryLang, changeLanguage]);
+    setCodeSearch("");
+    setNameSearch("");
+  }, [currentLanguageId, secondaryLanguageId, currentLanguageCode, changeLanguage, setSecondaryLanguageCode]);
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
       setIsDropdownOpen(false);
-      setFilterValue("");
+      setCodeSearch("");
+      setNameSearch("");
     }
   }, []);
 
@@ -88,19 +127,59 @@ const NavbarLanguage: React.FC = () => {
   }, [handleClickOutside]);
 
   const getCurrentFlag = useCallback(() => {
-    return getFlagUrl(primaryLang);
-  }, [primaryLang, getFlagUrl]);
+    const currentLang = getLanguageById(currentLanguageId);
+    console.log('[NavbarLanguage] Current flag for ID:', currentLanguageId, 'Code:', currentLang?.cc); // Debug
+    return getFlagUrl(currentLang?.cc || 'GB');
+  }, [currentLanguageId, getFlagUrl, getLanguageById]);
+
+  const getCurrentLc = useCallback(() => {
+    const currentLang = getLanguageById(currentLanguageId);
+    console.log('[NavbarLanguage] Current lc:', currentLang?.lc || 'en'); // Debug
+    return currentLang?.lc || 'en';
+  }, [currentLanguageId, getLanguageById]);
 
   const toggleDropdown = useCallback(() => {
     setIsDropdownOpen(prev => !prev);
-    if (!isDropdownOpen) searchInputRef.current?.focus();
-    else setFilterValue("");
+    if (!isDropdownOpen) {
+      setTimeout(() => codeInputRef.current?.focus(), 50);
+    } else {
+      setCodeSearch("");
+      setNameSearch("");
+    }
   }, [isDropdownOpen]);
 
-  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleCodeSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase();
+    if (value.length <= 2) setCodeSearch(value);
+  }, []);
+
+  const handleCodeSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
       setIsDropdownOpen(false);
-      setFilterValue("");
+      setCodeSearch("");
+      setNameSearch("");
+    } else if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      nameInputRef.current?.focus();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const firstItem = document.querySelector('.navbar-language-dropdown .dropdown__item') as HTMLElement;
+      firstItem?.focus();
+    }
+  }, []);
+
+  const handleNameSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setIsDropdownOpen(false);
+      setCodeSearch("");
+      setNameSearch("");
+    } else if (e.key === 'Tab' && e.shiftKey) {
+      e.preventDefault();
+      codeInputRef.current?.focus();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const firstItem = document.querySelector('.navbar-language-dropdown .dropdown__item') as HTMLElement;
+      firstItem?.focus();
     }
   }, []);
 
@@ -108,39 +187,47 @@ const NavbarLanguage: React.FC = () => {
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
 
   const renderLanguageItem = useCallback((
-    language: Language & { isPrimary?: boolean; isSecondary?: boolean },
+    language: Language & { isPrimary?: boolean; isSecondary?: boolean; isDefault?: boolean },
     meta: { isHighlighted: boolean }
   ) => {
     const { isHighlighted } = meta;
-    const { cc, native_name, isPrimary, isSecondary } = language;
-    
+    const { cc = 'UNKNOWN', name_en = 'Unknown', native_name = 'Unknown', lc = 'unknown', isPrimary, isSecondary, isDefault } = language;
+    const isCurrent = language.id === currentLanguageId;
+
     return (
       <div 
-        className={`navbar-language-item ${isHighlighted ? 'navbar-language-item--highlighted' : ''} ${isPrimary ? 'navbar-language-item--primary' : ''} ${isSecondary ? 'navbar-language-item--secondary' : ''}`}
+        className={`navbar-language-item ${isHighlighted ? 'navbar-language-item--highlighted' : ''} ${isPrimary ? 'navbar-language-item--primary' : ''} ${isSecondary ? 'navbar-language-item--secondary' : ''} ${isDefault ? 'navbar-language-item--default' : ''}`}
       >
         <img 
           src={getFlagUrl(cc)}
-          alt={cc} 
-          className="navbar-language-item-flag"
+          alt={`${cc} flag`}
+          className={`navbar-language-item-flag ${isCurrent ? 'navbar-language-item-flag--grayscale' : ''}`}
           onError={(e) => { e.currentTarget.src = getFlagUrl('gb'); }}
         />
         <span className="navbar-language-item-code">{cc}</span>
-        <span className="navbar-language-item-name">{native_name}</span>
+        <span className="navbar-language-item-lc">{lc}</span>
+        <span className="navbar-language-item-name">{name_en}</span>
+        <span className="navbar-language-item-native">{native_name}</span>
       </div>
     );
-  }, [getFlagUrl]);
+  }, [getFlagUrl, currentLanguageId]);
 
   const handleDropdownKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
       setIsDropdownOpen(false);
-      setFilterValue("");
+      setCodeSearch("");
+      setNameSearch("");
     }
   }, []);
 
-  const getItemKey = useCallback((item: Language) => item.cc, []);
+  const getItemKey = useCallback((item: Language) => {
+    return String(item.id ?? `${item.cc || 'UNKNOWN'}-${item.name_en || 'unnamed'}`);
+  }, []);
 
-  // Combined loading state from both hooks
-  const isDataLoading = isLoading || translationsLoading;
+  const shouldRenderDivider = useCallback((index: number) => {
+    const priorityGroup1Length = (secondaryLanguageId ? 2 : 1) + (dropdownItems.some(lang => lang.isDefault) ? 1 : 0);
+    return index === priorityGroup1Length - 1;
+  }, [secondaryLanguageId, dropdownItems]);
 
   return (
     <div className="navbar-language-container" ref={componentRef}>
@@ -152,48 +239,62 @@ const NavbarLanguage: React.FC = () => {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <span className="navbar-language-code">{primaryLang}</span>
         <img 
           src={getCurrentFlag()} 
-          alt="Selected language" 
-          className={`navbar-language-icon ${isHovered ? 'navbar-language-icon--colored' : 'navbar-language-icon--gray'}`}
+          alt={`${currentLanguageCode || 'en'} flag`} 
+          className="navbar-language-flag navbar-language-flag--grayscale"
           onError={(e) => { e.currentTarget.src = getFlagUrl('gb'); }}
         />
+        <span className="navbar-language-lc">{getCurrentLc()}</span>
       </button>
       
       {isDropdownOpen && (
         <div className="navbar-language-dropdown-container">
           <div className="navbar-language-search-row">
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search language..."
-              className="navbar-language-search"
-              value={filterValue}
-              onChange={(e) => setFilterValue(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              autoFocus
-            />
+            <div className="navbar-language-code-search-container">
+              <input
+                ref={codeInputRef}
+                type="text"
+                placeholder="CC"
+                className="navbar-language-code-search"
+                value={codeSearch}
+                onChange={handleCodeSearchChange}
+                onKeyDown={handleCodeSearchKeyDown}
+                maxLength={2}
+                autoFocus
+              />
+            </div>
+            <div className="navbar-language-name-search-container">
+              <input
+                ref={nameInputRef}
+                type="text"
+                placeholder="Search language..."
+                className="navbar-language-name-search"
+                value={nameSearch}
+                onChange={(e) => setNameSearch(e.target.value)}
+                onKeyDown={handleNameSearchKeyDown}
+              />
+            </div>
           </div>
           
-          {isDataLoading ? (
+          {isLoading ? (
             <div className="navbar-language-loading">Loading languages...</div>
-          ) : languages.length === 0 ? (
-            <div className="navbar-language-empty">No languages loaded</div>
+          ) : error ? (
+            <div className="navbar-language-empty">Error: {error.message}</div>
+          ) : filteredLanguages.length === 0 ? (
+            <div className="navbar-language-empty">No languages match your search</div>
           ) : (
             <BaseDropdown
-              items={dropdownItems}
+              items={filteredLanguages}
               isOpen={true}
               onSelect={handleSelectLanguage}
               renderItem={renderLanguageItem}
               className="navbar-language-dropdown"
-              classNamePrefix="navbar-language"
+              position="right"
               onKeyDown={handleDropdownKeyDown}
               getItemKey={getItemKey}
               ariaLabel="Select language"
-              noResultsText="No languages match your search"
-              autoFocusOnOpen={true}
-              focusOnHover={true}
+              shouldRenderDivider={shouldRenderDivider}
             />
           )}
         </div>

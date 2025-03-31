@@ -1,7 +1,7 @@
 // File: ./front/src/components/elements/BaseDropdown.tsx
-// Last change: Added itemsRef forwarding and mouse event props
+// Last change: Added shouldRenderDivider prop and improved accessibility
 
-import React, { useRef, useCallback, useEffect, useState, forwardRef } from "react";
+import React, { useRef, useCallback, useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { useUINavigation } from "@/hooks/useUINavigation";
 
 interface BaseDropdownProps<T> {
@@ -29,6 +29,7 @@ interface BaseDropdownProps<T> {
   scrollSpeedBase?: number;
   onMouseEnter?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onMouseLeave?: (event: React.MouseEvent<HTMLDivElement>) => void;
+  shouldRenderDivider?: (index: number) => boolean; 
 }
 
 export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
@@ -57,12 +58,14 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
     scrollSpeedBase = 12,
     onMouseEnter,
     onMouseLeave,
+    shouldRenderDivider,
   }: BaseDropdownProps<T>, ref: React.Ref<HTMLDivElement>) => {
-    const internalDropdownRef = useRef<HTMLDivElement>(null);
-    const dropdownRef = (ref as React.RefObject<HTMLDivElement>) || internalDropdownRef;
+    const dropdownRef = useRef<HTMLDivElement>(null);
     const itemsRef = useRef<(HTMLElement | null)[]>([]);
     const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const scrollIntervalRef = useRef<number | null>(null);
+
+    useImperativeHandle(ref, () => dropdownRef.current as HTMLDivElement);
 
     const [isHovered, setIsHovered] = useState(false);
     const [lastHoveredIndex, setLastHoveredIndex] = useState<number | null>(null);
@@ -156,12 +159,11 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
           if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
           setHighlightedIndex(index);
           setLastHoveredIndex(index);
+          if (focusOnHover && itemsRef.current[index]) itemsRef.current[index].focus();
         }
       },
-      [isHovered, setHighlightedIndex]
+      [isHovered, setHighlightedIndex, focusOnHover]
     );
-
-    const handleItemMouseLeave = useCallback(() => {}, []);
 
     const handleDropdownFocus = useCallback(() => {
       if (isOpen && items.length > 0 && autoFocusOnOpen) {
@@ -200,7 +202,6 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
     useEffect(() => {
       if (!isOpen) {
         setLastHoveredIndex(null);
-        if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
       }
     }, [isOpen]);
 
@@ -242,6 +243,7 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
         ref={dropdownRef}
         className={`${dropdownClassName} ${highlightedIndex !== null ? `${prefix}--has-highlight` : ""}`}
         role="listbox"
+        aria-activedescendant={highlightedIndex !== null ? `dropdown-item-${highlightedIndex}` : undefined}
         onKeyDown={handleCombinedKeyDown}
         onFocus={handleDropdownFocus}
         onMouseEnter={handleDropdownMouseEnter}
@@ -257,26 +259,28 @@ export const BaseDropdown = forwardRef<HTMLDivElement, BaseDropdownProps<any>>(
         ) : (
           <>
             {items.map((item, index) => (
-              <div
-                key={defaultGetItemKey(item, index)}
-                id={`dropdown-item-${index}`}
-                ref={(el) => (itemsRef.current[index] = el)}
-                onClick={() => handleItemClick(index)}
-                onMouseEnter={(e) => handleItemMouseEnter(index, e)}
-                onMouseLeave={handleItemMouseLeave}
-                className={`${prefix}__item ${index === highlightedIndex ? `${prefix}--highlighted` : ""}`}
-                data-highlighted={index === highlightedIndex ? "true" : "false"}
-                role="option"
-                tabIndex={-1}
-              >
-                {renderItem(item, { isHighlighted: index === highlightedIndex })}
-              </div>
+              <React.Fragment key={defaultGetItemKey(item, index)}>
+                {shouldRenderDivider && index > 0 && shouldRenderDivider(index - 1) && (
+                  <div className={`${prefix}__divider`} role="separator" />
+                )}
+                <div
+                  id={`dropdown-item-${index}`}
+                  ref={(el) => (itemsRef.current[index] = el)}
+                  onClick={() => handleItemClick(index)}
+                  onMouseEnter={(e) => handleItemMouseEnter(index, e)}
+                  className={`${prefix}__item ${index === highlightedIndex ? `${prefix}--highlighted` : ""}`}
+                  data-highlighted={index === highlightedIndex ? "true" : "false"}
+                  role="option"
+                  tabIndex={-1}
+                >
+                  {renderItem(item, { isHighlighted: index === highlightedIndex })}
+                </div>
+              </React.Fragment>
             ))}
             {hasMore && (
               <div
                 onClick={onLoadMore}
                 onMouseEnter={(e) => handleItemMouseEnter(items.length, e)}
-                onMouseLeave={handleItemMouseLeave}
                 className={`${prefix}__load-more ${highlightedIndex === items.length ? `${prefix}--highlighted` : ""}`}
                 role="option"
                 aria-label={loadMoreText}

@@ -1,5 +1,6 @@
-// File: .front/src/types/transport-forms.types.ts
-// Last change: Updated LocationSuggestion to support both front-end and API formats
+// File: ./front/src/types/transport-forms.types.ts
+// Last change: Adjusted Country interface to match BE response with optional fields
+
 
 // Request sent to AI API
 export interface AIRequest {
@@ -25,39 +26,40 @@ export interface AIResponse {
   };
 }
 
+
 // Country data
 export interface Country {
   cc: string;                // ISO 3166-1 alpha-2 (e.g., 'SK')
-  code_3: string;            // ISO 3166-1 alpha-3 (e.g., 'SVK')
   name_en: string;
-  name_sk: string;
   name_local: string;
-  numeric_code: string;
-  phone_code: string;
-  continent_id: number;
-  is_eu: boolean;
-  capital_en: string;
-  currency_code: string;
-  driving_side: string;
-  created_at: Date;
-  updated_at: Date;
-  is_schengen: boolean;
-  area_km2: number;
+  name_sk: string;
   logistics_priority: number;
-  flag: string;
+  code_3?: string;           // Optional, provided by BE
+  numeric_code?: string;     // Optional, not provided by BE
+  phone_code?: string;
+  continent_id?: number;
+  is_eu?: boolean;
+  capital_en?: string;
+  currency_code?: string;
+  driving_side?: string;
+  created_at?: Date;
+  updated_at?: Date;
+  is_schengen?: boolean;
+  area_km2?: number;
+  flag?: string;             // Optional, generated in FE
 }
 
 // Location data used in transport form
 export interface Location {
-  country: { cc: string; flag: string }; // Simplified from full Country type
+  country: { cc: string; flag: string };
   psc: string;
   city: string;
   time: string;
-  lat?: number;             // Optional GPS coordinates from AI
+  lat?: number;
   lng?: number;
 }
 
-// Unified form data for both AI and manual forms
+// Other types remain unchanged...
 export interface TransportFormData {
   pickup: Location;
   delivery: Location;
@@ -67,20 +69,19 @@ export interface TransportFormData {
   };
 }
 
-// Suggestion for location autocomplete
 export interface LocationSuggestion {
   cc: string;
   psc: string;
   city: string;
-  country?: string;        // API response includes this
-  flag_url?: string;       // API response format
-  flag?: string;           // Front-end format
-  lat?: number;            // Frontend format
-  lng?: number;            // Frontend format
-  latitude?: number;       // API response format
-  longitude?: number;      // API response format
-  logistics_priority?: number; // API response format
-  priority?: number;       // For sorting results
+  country?: string;
+  flag_url?: string;
+  flag?: string;
+  lat?: number;
+  lng?: number;
+  latitude?: number;
+  longitude?: number;
+  logistics_priority?: number;
+  priority?: number;
 }
 
 export enum LocationType {
@@ -88,7 +89,6 @@ export enum LocationType {
   DELIVERY = 'delivery'
 }
 
-// API Response types
 export interface LocationApiResponse {
   results: LocationSuggestion[];
   hasMore: boolean;
@@ -97,11 +97,6 @@ export interface LocationApiResponse {
 
 export interface CountryApiResponse {
   results: Country[];
-}
-
-export interface PostalFormat {
-  format: string;
-  regex: string;
 }
 
 export const DEFAULT_TRANSPORT_FORM_DATA: TransportFormData = {

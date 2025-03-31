@@ -1,5 +1,5 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Fixed filtering for single-character input and restored original input behavior
+// Last change: Updated flag handling with caching and immediate gb.svg
 
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "@/components/elements/BaseDropdown";
@@ -31,7 +31,7 @@ export function CountrySelect({
   const componentRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLElement | null)[]>([]);
 
-  const { countries: allCountries, isLoading } = useCountriesPreload();
+  const { countries: allCountries, isLoading, getFlagUrl } = useCountriesPreload();
 
   // Debug logging for countries data
   useEffect(() => {
@@ -47,14 +47,13 @@ export function CountrySelect({
         inputRef.current.value = initialValue;
       }
       if (initialValue.length === 2) {
-        const flagUrl = `/flags/4x3/optimized/${initialValue.toLowerCase()}.svg`;
+        const flagUrl = getFlagUrl(initialValue); // Use cached or direct flag
         onCountrySelect(initialValue, flagUrl);
       }
     }
-  }, [initialValue, locationType, onCountrySelect, inputValue]);
+  }, [initialValue, locationType, onCountrySelect, inputValue, getFlagUrl]);
 
   const filteredItems = useMemo(() => {
-    // Important: Log what's coming in
     console.log(`[CountrySelect] Filtering with input: "${inputValue}"`, { 
       allCountries: allCountries?.length || 0, 
       isLoading 
@@ -62,28 +61,23 @@ export function CountrySelect({
 
     if (isLoading) return [];
     
-    // Handle case when allCountries might be empty or undefined
     if (!allCountries || !Array.isArray(allCountries) || allCountries.length === 0) {
       console.warn('[CountrySelect] No countries data available:', allCountries);
       return [];
     }
     
-    // Log sample of data to verify structure
     if (allCountries.length > 0) {
       console.log('[CountrySelect] Sample country:', allCountries[0]);
     }
     
-    // When no input, return all valid countries
     if (!inputValue) {
       const validCountries = allCountries.filter(c => c && typeof c === 'object' && c.cc);
       console.log(`[CountrySelect] All valid countries: ${validCountries.length}`);
       return validCountries;
     }
     
-    // Filter by input value
     const upperValue = inputValue.toUpperCase();
     const filtered = allCountries.filter((c: Country) => {
-      // Only include countries with a valid cc property that starts with our input
       return c && typeof c === 'object' && c.cc && 
              typeof c.cc === 'string' && 
              c.cc.toUpperCase().startsWith(upperValue);
@@ -93,7 +87,6 @@ export function CountrySelect({
     return filtered;
   }, [inputValue, allCountries, isLoading]);
 
-  // Debug for filtered results
   useEffect(() => {
     console.log(`[CountrySelect] filteredItems:`, filteredItems);
   }, [filteredItems]);
@@ -123,67 +116,53 @@ export function CountrySelect({
   const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const upperValue = event.target.value.toUpperCase();
     
-    // Aktualizácia hodnoty inputu
     setInputValue(upperValue);
-    
-    // Zaistíme, že dropdown je otvorený pri zmene textu
-    if (!isOpen) {
-      setIsOpen(true);
-    }
+    if (!isOpen) setIsOpen(true);
 
-    // Prázdny input - vyresetujeme all hodnoty
     if (!upperValue) {
       onCountrySelect("", "");
       setVisibleCount(20);
       return;
     } 
     
-    // Jednoznakový input - filtrujeme podľa tohto znaku
     if (upperValue.length === 1) {
-      // Obnovená funkčnosť pre jednoznakový vstup
       if (allCountries && allCountries.some((c: Country) => c && c.cc && c.cc.startsWith(upperValue))) {
         onCountrySelect(upperValue, "");
       }
       return;
     } 
     
-    // Dvojznakový input - kontrolujeme, či takýto kód existuje
     if (upperValue.length === 2) {
       const exactMatch = allCountries && allCountries.find((c: Country) => c && c.cc === upperValue);
       if (!exactMatch) {
-        // Obnovená funkcionalita - ak druhý znak neexistuje v žiadnej krajine, zachovaj len prvý znak
         setInputValue(upperValue.charAt(0));
         return;
       }
-      const flagUrl = `/flags/4x3/optimized/${exactMatch.cc.toLowerCase()}.svg`;
+      const flagUrl = getFlagUrl(exactMatch.cc); // Use cached or direct flag
       onCountrySelect(exactMatch.cc, flagUrl);
       setIsOpen(false);
       onNextFieldFocus();
     }
-  }, [allCountries, onCountrySelect, onNextFieldFocus, isOpen]);
+  }, [allCountries, onCountrySelect, onNextFieldFocus, isOpen, getFlagUrl]);
 
   const handleSelect = useCallback((selected: Country) => {
     if (!selected || !selected.cc) return;
     setInputValue(selected.cc);
-    const flagUrl = `/flags/4x3/optimized/${selected.cc.toLowerCase()}.svg`;
+    const flagUrl = selected.flag || getFlagUrl(selected.cc); // Prefer cached flag
     onCountrySelect(selected.cc, flagUrl);
     setIsOpen(false);
     onNextFieldFocus();
-  }, [onCountrySelect, onNextFieldFocus]);
+  }, [onCountrySelect, onNextFieldFocus, getFlagUrl]);
 
   const handleFocus = useCallback(() => {
     console.log('[CountrySelect] Focus', { isLoading, countriesCount: allCountries?.length || 0 });
-    if (!isLoading) {
-      setIsOpen(true);
-    }
+    if (!isLoading) setIsOpen(true);
   }, [isLoading, allCountries]);
 
   const handleInputClick = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
     console.log('[CountrySelect] Click', { isLoading, countriesCount: allCountries?.length || 0 });
-    if (!isLoading) {
-      setIsOpen(true);
-    }
+    if (!isLoading) setIsOpen(true);
   }, [isLoading, allCountries]);
 
   const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -195,14 +174,11 @@ export function CountrySelect({
         dropdownRef.current?.focus();
       }
     } else if (event.key === "ArrowUp") {
-      if (isInputHovered && isOpen) {
-        event.preventDefault();
-      }
+      if (isInputHovered && isOpen) event.preventDefault();
     } else if (event.key === "Escape") {
       setIsOpen(false);
       inputRef.current?.focus();
     }
-    // Odstránime preventDefault pre Delete a Backspace - nechceme brániť štandardnému správaniu
   }, [inputValue, isOpen, isInputHovered, highlightedIndex, setHighlightedIndex, isLoading]);
 
   const handleDropdownNavigation = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -243,27 +219,16 @@ export function CountrySelect({
   const handleDropdownMouseLeave = useCallback(() => setIsDropdownHovered(false), []);
 
   const flagSrc = useMemo(() => {
-    if (inputValue.length === 2) {
-      return `/flags/4x3/optimized/${inputValue.toLowerCase()}.svg`;
-    }
-    return "/flags/4x3/optimized/gb.svg";
-  }, [inputValue]);
+    return inputValue.length === 2 ? getFlagUrl(inputValue) : "/flags/4x3/optimized/gb.svg"; // Immediate gb.svg
+  }, [inputValue, getFlagUrl]);
 
-  // Render a message while loading
-  if (isLoading) {
-    return <div>Loading countries...</div>;
-  }
+  if (isLoading) return <div>Loading countries...</div>;
 
-  // Create a function that generates unique keys
   const getItemKeyFn = (item: Country) => {
-    if (!item || !item.cc) {
-      // Generate a unique ID for items without a cc code
-      return `unknown-${Math.random().toString(36).substr(2, 9)}`;
-    }
+    if (!item || !item.cc) return `unknown-${Math.random().toString(36).substr(2, 9)}`;
     return item.cc;
   };
 
-  // Add debug info for when we're showing the dropdown but have no items
   console.log('[CountrySelect] Render with', {
     isOpen,
     visibleItemsCount: visibleItems.length,
@@ -306,7 +271,6 @@ export function CountrySelect({
         pageSize={20}
         onLoadMore={() => setVisibleCount(prev => prev + 20)}
         renderItem={(country: Country, { isHighlighted }: { isHighlighted: boolean }) => {
-          // Guard against undefined country.cc
           if (!country || !country.cc) {
             return (
               <div className={`dropdown__item ${isHighlighted ? 'dropdown--highlighted' : ''}`}>
@@ -322,7 +286,7 @@ export function CountrySelect({
               ref={(el) => (itemsRef.current[visibleItems.indexOf(country)] = el)}
             >
               <img 
-                src={`/flags/4x3/optimized/${country.cc.toLowerCase()}.svg`} 
+                src={country.flag || getFlagUrl(country.cc)} // Use cached flag or fetch
                 alt={`${country.cc} flag`} 
                 className="dropdown__item-flag"
                 onError={(e) => (e.currentTarget.src = "/flags/4x3/optimized/gb.svg")}
@@ -341,7 +305,6 @@ export function CountrySelect({
         onKeyDown={isDropdownHovered ? handleDropdownNavigation : undefined}
         onMouseEnter={handleDropdownMouseEnter}
         onMouseLeave={handleDropdownMouseLeave}
-        // Custom prop for no results message
         noResultsText="Loading countries data..."
         onNoResults={() => (
           <div className="dropdown__no-results">

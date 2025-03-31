@@ -1,0 +1,201 @@
+/* File: ./front/src/components/navbars/navbar.component.css */
+/* Last change: Updated navbar to show flag + lc, added grayscale for selected item */
+
+.navbar-language-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Button styles */
+.navbar-language-button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.navbar-language-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-language-flag {
+  width: 1.5rem;
+  height: auto;
+  border-radius: 2px;
+  margin-right: 0.5rem;
+}
+
+.navbar-language-flag--grayscale {
+  filter: grayscale(100%);
+}
+
+.navbar-language-lc {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Dropdown container */
+.navbar-language-dropdown-container {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 300px;
+  z-index: 1000;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+/* Search row */
+.navbar-language-search-row {
+  display: flex;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f7f7f7;
+}
+
+.navbar-language-code-search-container {
+  flex: 0 0 60px;
+  margin-right: 0.5rem;
+}
+
+.navbar-language-name-search-container {
+  flex: 1;
+}
+
+.navbar-language-code-search,
+.navbar-language-name-search {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.navbar-language-code-search:focus,
+.navbar-language-name-search:focus {
+  outline: none;
+  border-color: #2684FF;
+  box-shadow: 0 0 0 1px #2684FF;
+}
+
+.navbar-language-code-search {
+  text-transform: uppercase;
+}
+
+/* Loading and empty states */
+.navbar-language-loading,
+.navbar-language-empty {
+  padding: 1rem;
+  text-align: center;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+/* Dropdown styles */
+.navbar-language-dropdown {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Language item styles */
+.navbar-language-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.navbar-language-item:hover,
+.navbar-language-item--highlighted {
+  background-color: #f0f9ff;
+}
+
+.navbar-language-item--primary {
+  background-color: #ebf5ff;
+  font-weight: 500;
+}
+
+.navbar-language-item--secondary {
+  background-color: #f5f5f5;
+}
+
+.navbar-language-item--default {
+  background-color: #fafafa;
+}
+
+.navbar-language-item-flag {
+  width: 1.5rem;
+  height: auto;
+  margin-right: 0.2rem;
+  border-radius: 2px;
+  border: 1px solid #e0e0e0;
+}
+
+.navbar-language-item-flag--grayscale {
+  filter: grayscale(100%);
+}
+
+.navbar-language-item-code {
+  font-size: 0.75rem;
+  color: #777;
+  text-transform: uppercase;
+  margin-right: 0.75rem;
+  font-weight: 400;
+}
+
+.navbar-language-item-lc {
+  font-size: 0.875rem;
+  margin-right: 0.75rem;
+}
+
+.navbar-language-item-name {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.navbar-language-item-native {
+  color: #777;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+/* Divider */
+.dropdown__divider {
+  height: 2px;
+  background-color: #d0d0d0;
+  margin: 0.5rem 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navbar-language-dropdown-container {
+    width: 280px;
+    right: -10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-language-dropdown-container {
+    width: 260px;
+    right: -50px;
+  }
+  
+  .navbar-language-search-row {
+    flex-direction: column;
+  }
+  
+  .navbar-language-code-search-container {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+    flex: 0 0 auto;
+  }
+}
