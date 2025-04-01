@@ -1,128 +1,94 @@
 // File: ./front/src/hooks/useLanguage.ts
 // Last change: Refactored to use useTranslationsPreload hook
 
-import { useCallback, useMemo } from 'react';
-import { useLocalStorage } from "./useLocalStorage";
-import { useLanguagesPreload } from './useLanguagesPreload';
+import { useCallback, useEffect, useState } from 'react';
+import { useLocalStorage } from './useLocalStorage';
 import { useTranslationsPreload } from './useTranslationsPreload';
+import { getIPLocation } from '../utils/geo';
 
 export interface LanguageHook {
   t: (key: string, defaultValue?: string) => string;
-  currentLanguageId: number;
-  secondaryLanguageId: number | null;
-  currentLanguageCode: string;
-  secondaryLanguageCode: string | null;
-  setCurrentLanguageId: (id: number) => void;
-  setCurrentLanguageCode: (code: string) => void;
-  setSecondaryLanguageId: (id: number | null) => void;
-  setSecondaryLanguageCode: (code: string | null) => void;
-  changeLanguage: (codeOrId: string | number) => void;
+  currentLc: string;
+  secondaryLc: string | null;
+  changeLanguage: (lc: string) => void;
+  setSecondaryLc: (lc: string | null) => void;
   isLoading: boolean;
   hasError: boolean;
 }
 
-const DEFAULT_LANGUAGE_ID = 1; // English
-const FALLBACK_LANGUAGE_ID = 1; // English as fallback
+const DEFAULT_LC = 'en';
+const DEFAULT_SECONDARY_LC = null;
 
 export const useLanguage = (): LanguageHook => {
-  const [currentLanguageId, setCurrentLanguageIdState] = useLocalStorage('languagePrimary', DEFAULT_LANGUAGE_ID);
-  const [secondaryLanguageId, setSecondaryLanguageIdState] = useLocalStorage<number | null>('languageSecondary', null);
-  
-  // Get languages information
-  const { 
-    getLanguageById,
-    getLanguageByCode,
-    isPriorityLoaded
-  } = useLanguagesPreload({
-    priority: true
+  const [currentLc, setCurrentLc] = useLocalStorage('languagePrimary', DEFAULT_LC);
+  const [secondaryLc, setSecondaryLcState] = useLocalStorage<string | null>('languageSecondary', DEFAULT_SECONDARY_LC);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  const { t, isLoading, hasError } = useTranslationsPreload({
+    primaryLc: currentLc,
+    secondaryLc,
+    enabled: true,
   });
 
-  // Use the new translations preload hook
-  const { 
-    t: translateFn, 
-    isLoading, 
-    error: translationsError 
-  } = useTranslationsPreload({
-    primaryLanguageId: currentLanguageId,
-    secondaryLanguageId: secondaryLanguageId || FALLBACK_LANGUAGE_ID,
-    enabled: isPriorityLoaded
-  });
+  useEffect(() => {
+    if (!isInitialLoad) return;
 
-  const currentLanguageCode = useMemo(() => {
-    const lang = getLanguageById(currentLanguageId);
-    return lang?.cc || 'GB';
-  }, [currentLanguageId, getLanguageById]);
-  
-  const secondaryLanguageCode = useMemo(() => {
-    if (!secondaryLanguageId) return null;
-    const lang = getLanguageById(secondaryLanguageId);
-    return lang?.cc || null;
-  }, [secondaryLanguageId, getLanguageById]);
+    const determineInitialLanguage = async () => {
+      let primaryLc = DEFAULT_LC;
+      let secLc: string | null = null;
 
-  // Custom translation function that handles default value
-  const t = useCallback((key: string, defaultValue?: string): string => {
-    return translateFn(key, defaultValue);
-  }, [translateFn]);
+      const cookieLc = document.cookie.split('; ').find(row => row.startsWith('lang='))?.split('=')[1];
+      const hasCookies = navigator.cookieEnabled;
 
-  const setCurrentLanguageId = useCallback((id: number) => {
-    if (id === secondaryLanguageId) {
-      setSecondaryLanguageIdState(currentLanguageId);
-    }
-    setCurrentLanguageIdState(id);
-  }, [currentLanguageId, secondaryLanguageId, setCurrentLanguageIdState, setSecondaryLanguageIdState]);
-
-  const setCurrentLanguageCode = useCallback((code: string) => {
-    if (!code) return;
-    
-    const language = getLanguageByCode(code);
-    if (language) {
-      setCurrentLanguageId(language.id);
-    }
-  }, [getLanguageByCode, setCurrentLanguageId]);
-
-  const setSecondaryLanguageId = useCallback((id: number | null) => {
-    if (id !== null && id === currentLanguageId) {
-      return;
-    }
-    setSecondaryLanguageIdState(id);
-  }, [currentLanguageId, setSecondaryLanguageIdState]);
-  
-  const setSecondaryLanguageCode = useCallback((code: string | null) => {
-    if (!code) {
-      setSecondaryLanguageId(null);
-      return;
-    }
-    
-    const language = getLanguageByCode(code);
-    if (language) {
-      setSecondaryLanguageId(language.id);
-    }
-  }, [getLanguageByCode, setSecondaryLanguageId]);
-  
-  const changeLanguage = useCallback((codeOrId: string | number) => {
-    if (typeof codeOrId === 'number') {
-      setCurrentLanguageId(codeOrId);
-    } else if (typeof codeOrId === 'string' && codeOrId) {
-      const language = getLanguageByCode(codeOrId);
-      if (language) {
-        setCurrentLanguageId(language.id);
+      const userResponse = await fetch('/api/user', { credentials: 'include' });
+      if (userResponse.ok) {
+        const user = await userResponse.json();
+        primaryLc = user.language || DEFAULT_LC;
+      } else if (hasCookies && cookieLc) {
+        primaryLc = cookieLc;
+      } else {
+        primaryLc = DEFAULT_LC;
       }
-    }
-  }, [getLanguageByCode, setCurrentLanguageId]);
+
+      secLc = await getIPLocation();
+      if (secLc === primaryLc) secLc = null;
+
+      setCurrentLc(primaryLc);
+      setSecondaryLcState(secLc);
+      if (hasCookies) document.cookie = `lang=${primaryLc}; path=/; max-age=31536000`;
+    };
+
+    determineInitialLanguage();
+    setIsInitialLoad(false);
+  }, [setCurrentLc, setSecondaryLcState, isInitialLoad]);
+
+  const changeLanguage = useCallback(
+    (lc: string) => {
+      if (lc && lc !== currentLc) {
+        setCurrentLc(lc);
+        if (navigator.cookieEnabled) document.cookie = `lang=${lc}; path=/; max-age=31536000`;
+      }
+    },
+    [currentLc, setCurrentLc]
+  );
+
+  const setSecondaryLc = useCallback(
+    (lc: string | null) => {
+      if (lc !== secondaryLc && lc !== currentLc) {
+        setSecondaryLcState(lc);
+      }
+    },
+    [secondaryLc, currentLc, setSecondaryLcState]
+  );
 
   return {
     t,
-    currentLanguageId,
-    secondaryLanguageId,
-    currentLanguageCode,
-    secondaryLanguageCode,
-    setCurrentLanguageId,
-    setCurrentLanguageCode,
-    setSecondaryLanguageId,
-    setSecondaryLanguageCode,
+    currentLc,
+    secondaryLc,
     changeLanguage,
+    setSecondaryLc,
     isLoading,
-    hasError: !!translationsError
+    hasError,
   };
 };
 

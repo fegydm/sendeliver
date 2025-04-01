@@ -10,14 +10,5 @@
     "start": "cd back && npm start & cd front && npm run preview",
     "dev": "node back/src/scripts/dev.js",
     "reset": "npm run clean && npm run install && npm run build"
-  },
-  "engines": {
-    "node": "22.x"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.1"
-  },
-  "dependencies": {
-    "express": "^5.0.0-beta.1"
   }
 }
