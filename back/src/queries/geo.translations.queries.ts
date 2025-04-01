@@ -1,4 +1,4 @@
-// File: ./back/src/queries/translations.queries.ts
+// File: ./back/src/queries/geo.translations.queries.ts
 // Last change: Added language ID mapping for lc
 
 export const GET_TRANSLATIONS_QUERY = `

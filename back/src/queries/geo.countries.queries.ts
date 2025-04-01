@@ -1,4 +1,4 @@
-// File: ./back/src/queries/countries.queries.ts
+// File: ./back/src/queries/geo.countries.queries.ts
 // Last change: Added latitude and longitude to location search queries
 
 export const GET_COUNTRIES_QUERY = `

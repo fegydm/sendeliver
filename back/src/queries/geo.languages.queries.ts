@@ -1,4 +1,4 @@
-// File: ./back/src/queries/languages.queries.ts
+// File: ./back/src/queries/geo.languages.queries.ts
 // Last change: Clean language queries
 
 export const GET_LANGUAGES_QUERY = `
