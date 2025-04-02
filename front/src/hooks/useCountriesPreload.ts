@@ -1,8 +1,9 @@
-// File: ./front/src/hooks/useCountriesPreload.ts
-// Last change: Reverted to functional update for setFlagCache with updated useLocalStorage
+// File: src/hooks/useCountriesPreload.ts
+// Last change: Simplified and optimized with separate flag management
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import { useFlagManager } from './useFlagManager';
 import type { Country } from '@/types/transport-forms.types';
 
 interface CountryCacheData {
@@ -11,93 +12,113 @@ interface CountryCacheData {
   version: number;
 }
 
-interface FlagCacheData {
-  dataUrl: string; // base64 encoded SVG
-  timestamp: number;
+interface UseCountriesOptions {
+  enabled?: boolean;
+  cacheTTL?: number;
 }
 
-export function useCountriesPreload(enabled: boolean = true) {
+// Priority countries for European focus
+const PRIORITY_COUNTRIES = ['DE', 'FR', 'IT', 'GB', 'ES', 'PL', 'NL', 'BE', 'AT', 'CZ', 'SK', 'HU'];
+const CACHE_VERSION = 1;
+const DEFAULT_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+export function useCountriesPreload(options?: UseCountriesOptions) {
+  const { 
+    enabled = true,
+    cacheTTL = DEFAULT_CACHE_TTL 
+  } = options || {};
+
   const [countries, setCountries] = useState<Country[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [lastQuery, setLastQuery] = useState<string>('');
   const [filteredResults, setFilteredResults] = useState<Country[]>([]);
 
-  const CACHE_VERSION = 1;
-  const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
-  const FLAG_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days for flags
+  // Use separate flag management
+  const { getFlagUrl, preloadFlags, preloadAllFlags } = useFlagManager({
+    priorityCodes: PRIORITY_COUNTRIES
+  });
+
+  // Country cache in localStorage
   const [countriesCache, setCountriesCache] = useLocalStorage<CountryCacheData>('countries-cache', {
     countries: [],
     timestamp: 0,
     version: 0,
   });
-  const [flagCache, setFlagCache] = useLocalStorage<Record<string, FlagCacheData>>('flag-cache', {});
 
+  // Check if cache is valid
   const isCacheValid = useMemo(() => {
     return (
       countriesCache.version === CACHE_VERSION &&
       countriesCache.countries?.length > 0 &&
-      Date.now() - countriesCache.timestamp < CACHE_TTL
+      Date.now() - countriesCache.timestamp < cacheTTL
     );
-  }, [countriesCache]);
+  }, [countriesCache, cacheTTL]);
 
-  // Fetch and cache flag as base64
-  const fetchFlag = useCallback(async (cc: string): Promise<string> => {
-    const cacheKey = `flag_${cc.toLowerCase()}`;
-    const cachedFlag = flagCache[cacheKey];
-
-    if (cachedFlag && Date.now() - cachedFlag.timestamp < FLAG_TTL) {
-      return cachedFlag.dataUrl;
-    }
-
-    try {
-      const response = await fetch(`/flags/4x3/optimized/${cc.toLowerCase()}.svg`);
-      if (!response.ok) throw new Error(`Failed to fetch flag for ${cc}`);
-      const svgText = await response.text();
-      const dataUrl = `data:image/svg+xml;base64,${btoa(svgText)}`;
-      
-      setFlagCache((prev: Record<string, FlagCacheData>) => ({
-        ...prev,
-        [cacheKey]: { dataUrl, timestamp: Date.now() },
-      }));
-      return dataUrl;
-    } catch (err) {
-      console.error(`[FlagFetch] Error fetching flag for ${cc}:`, err);
-      return '/flags/4x3/optimized/gb.svg'; // Fallback to gb.svg
-    }
-  }, [flagCache, setFlagCache]);
-
+  // Fetch countries with timeout and error handling
   const fetchCountries = useCallback(async () => {
+    if (!enabled) return;
+    
     try {
       setIsLoading(true);
+      setError(null);
 
+      // Use cache if available and valid
       if (isCacheValid) {
         setCountries(countriesCache.countries);
         setIsLoading(false);
+        
+        // Preload flags for all countries in the background
+        const countryCodes = countriesCache.countries.map(c => c.cc);
+        preloadAllFlags(countryCodes);
         return;
       }
 
-      const response = await fetch('/api/geo/countries');
-      if (!response.ok) throw new Error(`Failed to fetch countries: ${response.status}`);
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
+      const response = await fetch('/api/geo/countries', {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch countries: ${response.status}`);
+      }
 
       const data = await response.json();
-      if (!Array.isArray(data)) throw new Error('Invalid country data format from API');
+      
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid country data format from API');
+      }
 
-      const mappedCountries: Country[] = await Promise.all(
-        data.map(async (item: any) => {
-          const cc = item.cc || '';
-          return {
-            cc,
-            name_en: item.name_en || 'Unknown',
-            name_local: item.name_local || item.name_en || 'Unknown',
-            name_sk: item.name_sk || '',
-            logistics_priority: item.logistics_priority || 0,
-            code_3: item.code_3,
-            flag: await fetchFlag(cc), // Cache flag as base64
-          };
-        })
-      );
+      // Simplified mapping without waiting for flag loading
+      const mappedCountries: Country[] = data.map((item: any) => ({
+        cc: item.cc || '',
+        name_en: item.name_en || 'Unknown',
+        name_local: item.name_local || item.name_en || 'Unknown',
+        name_sk: item.name_sk || '',
+        logistics_priority: item.logistics_priority || 0,
+        code_3: item.code_3 || '',
+        flag: getFlagUrl(item.cc) // Just use the URL, don't fetch
+      }));
+
+      // Preload flags for priority countries immediately
+      const priorityCodes = mappedCountries
+        .filter(c => PRIORITY_COUNTRIES.includes(c.cc))
+        .map(c => c.cc);
+      
+      preloadFlags(priorityCodes);
+      
+      // Preload all other flags in the background with delay
+      const allCodes = mappedCountries.map(c => c.cc);
+      preloadAllFlags(allCodes);
 
       setCountries(mappedCountries);
+      
+      // Save to cache
       setCountriesCache({
         countries: mappedCountries,
         timestamp: Date.now(),
@@ -105,23 +126,26 @@ export function useCountriesPreload(enabled: boolean = true) {
       });
     } catch (err) {
       console.error('[CountriesPreload] Error fetching countries:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch countries'));
+      
+      // Try to use cache even if it's expired
       if (countriesCache.countries.length > 0) {
+        console.log('[CountriesPreload] Using expired cache after fetch error');
         setCountries(countriesCache.countries);
       }
     } finally {
       setIsLoading(false);
     }
-  }, [isCacheValid, countriesCache, setCountriesCache, fetchFlag]);
+  }, [enabled, isCacheValid, countriesCache, setCountriesCache, getFlagUrl, preloadFlags, preloadAllFlags]);
 
+  // Fetch countries on mount
   useEffect(() => {
-    if (!enabled) {
-      setIsLoading(false);
-      return;
+    if (enabled) {
+      fetchCountries();
     }
-    const timerId = setTimeout(() => fetchCountries(), 0);
-    return () => clearTimeout(timerId);
   }, [enabled, fetchCountries]);
 
+  // Filter countries (with memoization for repeated queries)
   const filterCountries = useCallback(
     (query: string): Country[] => {
       if (!query) {
@@ -130,13 +154,16 @@ export function useCountriesPreload(enabled: boolean = true) {
         return countries;
       }
 
+      // Return cached results for repeated queries
       if (query === lastQuery && filteredResults.length > 0) {
         return filteredResults;
       }
 
       const upperQuery = query.toUpperCase();
       const filtered = countries.filter(c =>
-        c.cc.startsWith(upperQuery) || c.name_en.toUpperCase().includes(upperQuery)
+        c.cc.startsWith(upperQuery) || 
+        c.name_en.toUpperCase().includes(upperQuery) ||
+        (c.name_local && c.name_local.toUpperCase().includes(upperQuery))
       );
 
       setLastQuery(query);
@@ -146,24 +173,22 @@ export function useCountriesPreload(enabled: boolean = true) {
     [countries, lastQuery, filteredResults]
   );
 
-  const getFlagUrl = useCallback((code: string): string => {
-    if (!code) return '/flags/4x3/optimized/gb.svg'; // Immediate gb.svg as mock
-    const cacheKey = `flag_${code.toLowerCase()}`;
-    const cachedFlag = flagCache[cacheKey];
-    return cachedFlag && Date.now() - cachedFlag.timestamp < FLAG_TTL 
-      ? cachedFlag.dataUrl 
-      : `/flags/4x3/optimized/${code.toLowerCase()}.svg`; // Fallback to direct path
-  }, [flagCache]);
-
-  const priorityCountries = ['DE', 'FR', 'IT', 'GB', 'ES', 'PL', 'NL', 'BE', 'AT', 'CZ', 'SK', 'HU'];
-
+  // Sort countries with priority countries first, then alphabetically
   const sortedCountries = useMemo(() => {
     return [...countries].sort((a, b) => {
-      const aIndex = priorityCountries.indexOf(a.cc);
-      const bIndex = priorityCountries.indexOf(b.cc);
+      const aIndex = PRIORITY_COUNTRIES.indexOf(a.cc);
+      const bIndex = PRIORITY_COUNTRIES.indexOf(b.cc);
+      
+      // Both are priority countries - sort by priority index
       if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      
+      // Only a is priority
       if (aIndex !== -1) return -1;
+      
+      // Only b is priority
       if (bIndex !== -1) return 1;
+      
+      // Neither is priority - sort alphabetically
       return a.name_en.localeCompare(b.name_en);
     });
   }, [countries]);
@@ -171,8 +196,10 @@ export function useCountriesPreload(enabled: boolean = true) {
   return {
     countries: sortedCountries,
     isLoading,
+    error,
     filterCountries,
     getFlagUrl,
+    reload: fetchCountries
   };
 }
 

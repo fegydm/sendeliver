@@ -1,5 +1,5 @@
-// File: src/contexts/LanguageContext.tsx
-// Last change: Removed excessive logging, kept only timing-related logs
+// File: ./front/src/contexts/LanguageContext.tsx
+// Last change: Fixed infinite render loop by removing translations from dependencies
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { getIPLocation } from '@/utils/geo';
@@ -138,13 +138,32 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     // Create new fetch promise
     pendingFetches[langCode] = (async () => {
       try {
-        const response = await fetch(`/api/geo/translations/${langCode}`);
+        // Fixed API endpoint URL to use query parameter
+        const response = await fetch(`/api/geo/translations?lc=${langCode}`);
         console.log(`[LANGUAGE_CONTEXT] Fetch response for ${langCode} - timestamp:`, new Date().toISOString());
         
         if (!response.ok) throw new Error(`Failed to fetch translations for language ${langCode}`);
         
         const data = await response.json();
         console.log(`[LANGUAGE_CONTEXT] Translation data parsed for ${langCode} - timestamp:`, new Date().toISOString());
+        
+        // Log a sample of translations to verify they're loaded correctly
+        if (Object.keys(data).length > 0) {
+          const sampleKeys = [
+            'ai_form_title_sender', 
+            'ai_form_title_hauler', 
+            'ai_button_ask_sender'
+          ];
+          
+          const samples: Record<string, string> = {};
+          sampleKeys.forEach(key => {
+            samples[key] = data[key] || '(missing)';
+          });
+          
+          console.log(`[LANGUAGE_CONTEXT] Sample translations for ${langCode}:`, samples);
+        } else {
+          console.warn(`[LANGUAGE_CONTEXT] No translations found for ${langCode}`);
+        }
         
         // Cache the result in global memory
         globalTranslationsCache[langCode] = data;
@@ -223,6 +242,13 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         // Get English data
         const finalEnglishData = primary === 'en' ? primaryData : englishData;
         
+        // Log loaded translation keys count
+        console.log('[LANGUAGE_CONTEXT] Loaded translations count:', {
+          primary: Object.keys(primaryData).length,
+          secondary: Object.keys(secondaryData).length,
+          english: Object.keys(finalEnglishData).length
+        });
+        
         setTranslations({
           current: primaryData,
           secondary: secondaryData,
@@ -253,17 +279,8 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
 
     loadTranslations();
-  }, [currentLanguageCode, secondaryLanguageCode, fetchTranslations, translations]);
-
-  // Update translations when language changes
-  useEffect(() => {
-    // Skip the initial load which is handled by the mount effect
-    if (initialLoadStarted && !isLoading) {
-      console.log('[LANGUAGE_CONTEXT] Updating translations from cache after language change - timestamp:', new Date().toISOString());
-      updateTranslationsFromCache();
-      console.log('[LANGUAGE_CONTEXT] Translations updated from cache - timestamp:', new Date().toISOString());
-    }
-  }, [currentLanguageCode, secondaryLanguageCode, isLoading]);
+  // IMPORTANT: Removed translations from dependencies to prevent infinite loop
+  }, [currentLanguageCode, secondaryLanguageCode, fetchTranslations]);
 
   // Update translations from cache without fetching
   const updateTranslationsFromCache = useCallback(() => {
@@ -274,22 +291,38 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
   }, [currentLanguageCode, secondaryLanguageCode]);
 
-  // Translation function
+  // Update translations when language changes - REMOVED to prevent infinite loops
+  // Second useEffect that was causing infinite loop has been removed
+
+  // Translation function with added debug logging
   const t = useCallback((key: string): string => {
     // Start translation performance measurement for slow keys
     const startTime = performance.now();
     
-    const result = 
-      translations.current[key] ||
-      translations.secondary[key] ||
-      translations.english[key] ||
-      key;
+    let result = key;
+    let source = 'fallback';
+    
+    if (translations.current[key]) {
+      result = translations.current[key];
+      source = 'primary';
+    } else if (translations.secondary[key]) {
+      result = translations.secondary[key];
+      source = 'secondary';
+    } else if (translations.english[key]) {
+      result = translations.english[key];
+      source = 'english';
+    }
+    
+    // Log if key is missing in all languages
+    if (source === 'fallback') {
+      console.warn(`[LANGUAGE_CONTEXT] Missing translation for key: "${key}"`);
+    }
     
     // Log slow translations that might cause rendering delay
     const endTime = performance.now();
     const duration = endTime - startTime;
     if (duration > 5) { // Log translations taking more than 5ms
-      console.log(`[LANGUAGE_CONTEXT] Slow translation for key "${key}" - ${duration.toFixed(2)}ms`);
+      console.log(`[LANGUAGE_CONTEXT] Slow translation for key "${key}" (${source}) - ${duration.toFixed(2)}ms`);
     }
     
     return result;
@@ -304,12 +337,38 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     } else {
       setCurrentLanguageCode(langCode);
     }
+    
+    // Manually update translations after language change
+    // Use setTimeout to ensure this happens after state updates
+    setTimeout(() => {
+      if (globalTranslationsCache[langCode]) {
+        setTranslations(prev => ({
+          ...prev,
+          current: globalTranslationsCache[langCode] || {},
+        }));
+      }
+    }, 0);
   }, [currentLanguageCode, secondaryLanguageCode]);
 
   // Set secondary language
   const updateSecondaryLanguage = useCallback((langCode: string | null) => {
     if (langCode === currentLanguageCode) return;
     setSecondaryLanguageCode(langCode);
+    
+    // Manually update translations after secondary language change
+    setTimeout(() => {
+      if (langCode && globalTranslationsCache[langCode]) {
+        setTranslations(prev => ({
+          ...prev,
+          secondary: globalTranslationsCache[langCode] || {},
+        }));
+      } else {
+        setTranslations(prev => ({
+          ...prev,
+          secondary: {},
+        }));
+      }
+    }, 0);
   }, [currentLanguageCode]);
 
   const contextValue = React.useMemo(() => ({
@@ -321,14 +380,6 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     isLoading,
     error
   }), [t, currentLanguageCode, secondaryLanguageCode, changeLanguage, updateSecondaryLanguage, isLoading, error]);
-
-  // Add missing logs for completion of the render
-  useEffect(() => {
-    console.log('[LANGUAGE_CONTEXT] Provider ready (translations loaded) - timestamp:', new Date().toISOString(), {
-      isLoading,
-      hasTranslations: Object.keys(translations.current).length > 0
-    });
-  }, [isLoading, translations]);
 
   // Memoize the provider component to prevent unnecessary re-renders
   if (!memoizedProvider) {

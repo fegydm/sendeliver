@@ -1,5 +1,5 @@
-// File: ./back/src/queries/geo.translations.queries.ts
-// Last change: Added language ID mapping for lc
+// File: ./back/src/queries/geo.translations.queries.js
+// Last change: Added COUNT_TRANSLATIONS_BY_LC_QUERY for quick availability checks
 
 export const GET_TRANSLATIONS_QUERY = `
   SELECT key, text
@@ -12,11 +12,17 @@ export const CHECK_TRANSLATIONS_TABLE_QUERY = `
     SELECT FROM information_schema.tables 
     WHERE table_schema = 'geo' 
     AND table_name = 'translations'
-  ) as exists
+  )
 `;
 
 export const GET_LANGUAGE_ID_BY_LC_QUERY = `
   SELECT id
   FROM geo.languages
-  WHERE language_code = $1
+  WHERE code_2 = $1
+`;
+
+export const COUNT_TRANSLATIONS_BY_LC_QUERY = `
+  SELECT COUNT(*) as count
+  FROM geo.translations
+  WHERE language_id = $1
 `;

@@ -1,5 +1,4 @@
 // ./front/src/utils/geo.ts
-
 // Fetches user's country code to use as language code
 export async function getIPLocation(): Promise<string> {
     try {

@@ -5,6 +5,9 @@ import { useState, useRef } from "react";
 import { AIResponse } from "@/types/transport-forms.types";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+
+
+
 interface Coordinates {
   lat: number;
   lng: number;
