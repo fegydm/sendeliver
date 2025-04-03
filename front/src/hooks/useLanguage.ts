@@ -1,180 +1,110 @@
-// File: src/hooks/useLanguage.ts
-// Last change: Removed dependency on /api/user endpoint and fixed language detection
+// File: ./front/src/hooks/useLanguage.ts
+// Last change: Refactored to use retry count and 14-day fallback storage for failed geo lookups
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { useTranslationsPreload } from './useTranslationsPreload';
-import { getIPLocation } from '../utils/geo';
-
-export interface LanguageHook {
-  t: (key: string, defaultValue?: string) => string;
-  currentLc: string;
-  secondaryLc: string | null;
-  changeLanguage: (lc: string) => void;
-  setSecondaryLc: (lc: string | null) => void;
-  isLoading: boolean;
-  hasError: boolean;
-}
+import { getCountryFromIP } from '../utils/getCountryFromIP';
 
 const DEFAULT_LC = 'en';
-const DEFAULT_SECONDARY_LC = null;
-const SUPPORTED_LANGUAGES = ['en', 'sk', 'cs', 'de', 'pl', 'hu']; // Add all supported languages
+const SUPPORTED_LANGUAGES = ['en', 'sk', 'cs', 'de', 'pl', 'hu'];
 const COOKIE_NAME = 'sendeliver_lang';
 
-export const useLanguage = (): LanguageHook => {
-  // Use stored language or default
-  const [currentLc, setCurrentLc] = useLocalStorage('sendeliver_language_primary', DEFAULT_LC);
-  const [secondaryLc, setSecondaryLcState] = useLocalStorage<string | null>('sendeliver_language_secondary', DEFAULT_SECONDARY_LC);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+const GEO_CACHE_KEY = 'ip-country-cache';
+const FAIL_COUNT_KEY = 'ip-country-fail-count';
+const GEO_CACHE_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days
+
+export const useLanguage = () => {
+  const [primaryLc, setPrimaryLc] = useLocalStorage('sendeliver_language_primary', DEFAULT_LC);
+  const [secondaryLc, setSecondaryLc] = useLocalStorage<string | null>('sendeliver_language_secondary', null);
+  const [geoCache, setGeoCache] = useLocalStorage<{ code: string; timestamp: number } | null>(GEO_CACHE_KEY, null);
+  const [failCount, setFailCount] = useLocalStorage<number>(FAIL_COUNT_KEY, 0);
+
   const [translationsEnabled, setTranslationsEnabled] = useState(false);
 
-  // Validate the language code is supported
-  const validateLanguage = useCallback((lc: string): string => {
-    return SUPPORTED_LANGUAGES.includes(lc) ? lc : DEFAULT_LC;
-  }, []);
+  const validate = (lc: string): string => SUPPORTED_LANGUAGES.includes(lc) ? lc : DEFAULT_LC;
 
-  // Initialize translations only after we have determined the language
+  const getLanguageFromCookie = (): string | null => {
+    if (!navigator.cookieEnabled) return null;
+    return document.cookie
+      .split('; ')
+      .find(row => row.startsWith(`${COOKIE_NAME}=`))
+      ?.split('=')[1] || null;
+  };
+
+  const setLanguageCookie = (lc: string): void => {
+    if (!navigator.cookieEnabled) return;
+    document.cookie = `${COOKIE_NAME}=${lc}; path=/; max-age=31536000`; // 1 year
+  };
+
+  const fetchSecondaryFromGeo = useCallback(async () => {
+    const now = Date.now();
+
+    if (geoCache && now - geoCache.timestamp < GEO_CACHE_TTL) {
+      console.log('[useLanguage] ✅ Cached secondary language:', geoCache.code);
+      return validate(geoCache.code);
+    }
+
+    try {
+      const countryCode = await getCountryFromIP();
+      const validated = validate(countryCode);
+
+      console.log('[useLanguage] 🌍 Fetched geo country:', validated);
+
+      setGeoCache({ code: validated, timestamp: now });
+      setFailCount(0); // reset fail count on success
+
+      return validated !== primaryLc ? validated : null;
+    } catch (err) {
+      const newFailCount = failCount + 1;
+      console.warn(`[useLanguage] ❌ Geo fetch failed (attempt ${newFailCount})`);
+      setFailCount(newFailCount);
+
+      if (newFailCount >= 3) {
+        console.warn('[useLanguage] ⛔ Writing fallback "en" to geo cache');
+        setGeoCache({ code: 'en', timestamp: now });
+        return DEFAULT_LC;
+      }
+
+      return null;
+    }
+  }, [geoCache, primaryLc, failCount, setGeoCache, setFailCount]);
+
+  useEffect(() => {
+    const init = async () => {
+      let lc = getLanguageFromCookie() || navigator.language?.substring(0, 2) || DEFAULT_LC;
+      lc = validate(lc);
+      setPrimaryLc(lc);
+      setLanguageCookie(lc);
+
+      const secLc = await fetchSecondaryFromGeo();
+      setSecondaryLc(secLc || null);
+
+      setTranslationsEnabled(true);
+      document.documentElement.lang = lc;
+      document.documentElement.dir = 'ltr';
+    };
+
+    init();
+  }, [setPrimaryLc, setSecondaryLc, fetchSecondaryFromGeo]);
+
   const { t, isLoading, hasError } = useTranslationsPreload({
-    primaryLc: validateLanguage(currentLc),
-    secondaryLc: secondaryLc ? validateLanguage(secondaryLc) : null,
+    primaryLc,
+    secondaryLc,
     enabled: translationsEnabled,
   });
 
-  // Get language from cookie
-  const getLanguageFromCookie = useCallback((): string | null => {
-    if (!navigator.cookieEnabled) return null;
-    
-    const cookieValue = document.cookie
-      .split('; ')
-      .find(row => row.startsWith(`${COOKIE_NAME}=`))
-      ?.split('=')[1];
-      
-    return cookieValue || null;
-  }, []);
-
-  // Set language cookie
-  const setLanguageCookie = useCallback((lc: string): void => {
-    if (!navigator.cookieEnabled) return;
-    document.cookie = `${COOKIE_NAME}=${lc}; path=/; max-age=31536000`; // 1 year
-  }, []);
-
-  // Determine initial language on component mount
-  useEffect(() => {
-    if (!isInitialLoad) return;
-
-    const determineInitialLanguage = async () => {
-      try {
-        let primaryLc = DEFAULT_LC;
-        let secLc: string | null = null;
-        const hasCookies = navigator.cookieEnabled;
-
-        // User group detection
-        const isNonC = hasCookies && getLanguageFromCookie() !== null;
-        
-        // For now, we only have nonC and nonN users
-        // In the future, there will be 'reg' users with API-based preferences
-        
-        if (isNonC) {
-          // NonC - unregistered user with cookies
-          const cookieLc = getLanguageFromCookie();
-          if (cookieLc) {
-            primaryLc = validateLanguage(cookieLc);
-          }
-        } else {
-          // NonN - unregistered user without cookies or new visitor
-          // Try to use browser language
-          const browserLc = navigator.language.substring(0, 2).toLowerCase();
-          if (SUPPORTED_LANGUAGES.includes(browserLc)) {
-            primaryLc = browserLc;
-          }
-        }
-
-        // Try to determine secondary language from IP location
-        try {
-          secLc = await getIPLocation();
-          secLc = secLc ? validateLanguage(secLc) : null;
-          
-          // If same as primary, don't use secondary
-          if (secLc === primaryLc) {
-            secLc = null;
-          }
-        } catch (error) {
-          console.error('[useLanguage] Error getting IP location:', error);
-          secLc = null;
-        }
-
-        // Update state and set cookie if allowed
-        setCurrentLc(primaryLc);
-        setSecondaryLcState(secLc);
-        
-        if (hasCookies) {
-          setLanguageCookie(primaryLc);
-        }
-        
-        console.log(`[useLanguage] Language initialized: primary=${primaryLc}, secondary=${secLc || 'none'}`);
-      } catch (error) {
-        console.error('[useLanguage] Error in language initialization:', error);
-        // Use defaults on error
-        setCurrentLc(DEFAULT_LC);
-        setSecondaryLcState(DEFAULT_SECONDARY_LC);
-      } finally {
-        setIsInitialLoad(false);
-        // Always enable translations, even on error
-        setTranslationsEnabled(true);
-      }
-    };
-
-    determineInitialLanguage();
-  }, [validateLanguage, setCurrentLc, setSecondaryLcState, isInitialLoad, getLanguageFromCookie, setLanguageCookie]);
-
-  // Update document attributes when language changes
-  useEffect(() => {
-    if (!isInitialLoad) {
-      document.documentElement.lang = currentLc;
-      document.documentElement.dir = 'ltr'; // We don't support RTL languages yet
+  const changeLanguage = (lc: string) => {
+    const valid = validate(lc);
+    if (valid !== primaryLc) {
+      setPrimaryLc(valid);
+      setLanguageCookie(valid);
     }
-  }, [currentLc, isInitialLoad]);
-
-  // Debug log when translations are loaded
-  useEffect(() => {
-    if (!isLoading && translationsEnabled) {
-      console.log(`[useLanguage] Translations loaded for: primary=${currentLc}, secondary=${secondaryLc || 'none'}`);
-    }
-  }, [isLoading, translationsEnabled, currentLc, secondaryLc]);
-
-  // Function to change the current language
-  const changeLanguage = useCallback(
-    (lc: string) => {
-      const validLc = validateLanguage(lc);
-      
-      if (validLc && validLc !== currentLc) {
-        console.log(`[useLanguage] Changing language to: ${validLc}`);
-        setCurrentLc(validLc);
-        
-        if (navigator.cookieEnabled) {
-          setLanguageCookie(validLc);
-        }
-      }
-    },
-    [currentLc, setCurrentLc, validateLanguage, setLanguageCookie]
-  );
-
-  // Function to update secondary language
-  const setSecondaryLc = useCallback(
-    (lc: string | null) => {
-      const validLc = lc ? validateLanguage(lc) : null;
-      
-      if (validLc !== secondaryLc && validLc !== currentLc) {
-        console.log(`[useLanguage] Setting secondary language to: ${validLc || 'none'}`);
-        setSecondaryLcState(validLc);
-      }
-    },
-    [secondaryLc, currentLc, setSecondaryLcState, validateLanguage]
-  );
+  };
 
   return {
     t,
-    currentLc,
+    currentLc: primaryLc,
     secondaryLc,
     changeLanguage,
     setSecondaryLc,

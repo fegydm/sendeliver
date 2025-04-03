@@ -2,7 +2,7 @@
 // Last change: Fixed infinite render loop by removing translations from dependencies
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { getIPLocation } from '@/utils/geo';
+import { getCountryFromIP } from '@/utils/getCountryFromIP';
 
 interface LanguageTranslation {
   [key: string]: string;
@@ -222,7 +222,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (!secondary) {
           console.log('[LANGUAGE_CONTEXT] Resolving secondary language from IP - timestamp:', new Date().toISOString());
           try {
-            secondary = await getIPLocation();
+            secondary = await getCountryFromIP();
             console.log('[LANGUAGE_CONTEXT] IP location resolved - timestamp:', new Date().toISOString());
           } catch (error) {
             console.error('[LANGUAGE_CONTEXT] Failed to resolve IP location:', error);

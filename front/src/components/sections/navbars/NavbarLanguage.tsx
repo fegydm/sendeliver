@@ -1,129 +1,258 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+// File: src/components/sections/navbars/NavbarLanguage.tsx
+// Last change: Fixed flag display for all selected languages
+
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useLanguagesPreload } from "@/hooks/useLanguagesPreload";
+import type { Language } from "@/types/language.types";
 import "./navbar.component.css";
 
-// Define translation record types for TypeScript
-type TranslationKey = 'language.en' | 'language.sk' | 'language.cs' | 'language.de';
-type LanguageCode = 'en' | 'sk' | 'cs' | 'de';
-type TranslationSet = Record<TranslationKey, string>;
-type TranslationsMap = Record<LanguageCode, TranslationSet>;
-
-// Default translations that are always immediately available
-const DEFAULT_TRANSLATIONS: TranslationsMap = {
-  'en': {
-    'language.en': 'English',
-    'language.sk': 'Slovak',
-    'language.cs': 'Czech',
-    'language.de': 'German'
-  },
-  'sk': {
-    'language.en': 'Angličtina',
-    'language.sk': 'Slovenčina',
-    'language.cs': 'Čeština',
-    'language.de': 'Nemčina'
-  },
-  'cs': {
-    'language.en': 'Angličtina',
-    'language.sk': 'Slovenština',
-    'language.cs': 'Čeština',
-    'language.de': 'Němčina'
-  },
-  'de': {
-    'language.en': 'Englisch',
-    'language.sk': 'Slowakisch',
-    'language.cs': 'Tschechisch',
-    'language.de': 'Deutsch'
-  }
-};
-
-// Supported languages with localized names
-const SUPPORTED_LANGUAGES = [
-  { lc: 'en' as LanguageCode, cc: 'GB', nameKey: 'language.en' as TranslationKey },
-  { lc: 'sk' as LanguageCode, cc: 'SK', nameKey: 'language.sk' as TranslationKey },
-  { lc: 'cs' as LanguageCode, cc: 'CZ', nameKey: 'language.cs' as TranslationKey },
-  { lc: 'de' as LanguageCode, cc: 'DE', nameKey: 'language.de' as TranslationKey }
-];
-
 const NavbarLanguage: React.FC = () => {
+  // States for the component
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const componentRef = useRef<HTMLDivElement>(null);
+  const [codeSearch, setCodeSearch] = useState("");
+  const [nameSearch, setNameSearch] = useState("");
   
-  // Get language data from context
+  const componentRef = useRef<HTMLDivElement>(null);
+  const codeInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // Get language data from hooks
   const { 
     currentLc,
     secondaryLc,
-    changeLanguage,
-    t
+    changeLanguage
   } = useLanguage();
+  
+  // Calculate tertiary language (English if neither primary nor secondary is English)
+  const tertiaryLc = useMemo(() => {
+    if (currentLc === 'en' || secondaryLc === 'en') return null;
+    return 'en';
+  }, [currentLc, secondaryLc]);
+  
+  const {
+    languages,
+    isLoading,
+    getFlagUrl
+  } = useLanguagesPreload();
 
-  // Get flag URL - simple function with no dependencies
-  const getFlagUrl = (cc: string): string => {
-    return `/flags/4x3/optimized/${cc.toLowerCase()}.svg`;
-  };
-
-  // Helper function to get translation that's always available
-  const getLocalizedName = useCallback((nameKey: TranslationKey): string => {
-    // First try to get from official t() function
-    const translation = t(nameKey);
+  // Current language object from the list
+  const currentLanguage = useMemo(() => {
+    // Try to find the exact language object for current language code
+    const exactMatch = languages.find(lang => lang.lc === currentLc);
+    if (exactMatch) return exactMatch;
     
-    // If t() returned the original key (translation not found),
-    // use default translations
-    if (translation === nameKey) {
-      // Try current language first
-      if (currentLc && isValidLanguageCode(currentLc) && DEFAULT_TRANSLATIONS[currentLc][nameKey]) {
-        return DEFAULT_TRANSLATIONS[currentLc][nameKey];
-      }
-      
-      // Try secondary language
-      if (secondaryLc && isValidLanguageCode(secondaryLc) && DEFAULT_TRANSLATIONS[secondaryLc][nameKey]) {
-        return DEFAULT_TRANSLATIONS[secondaryLc][nameKey];
-      }
-      
-      // Fallback to English
-      return DEFAULT_TRANSLATIONS['en'][nameKey] || nameKey;
-    }
+    // If not found, find English as fallback
+    return languages.find(lang => lang.lc === 'en') || 
+           { lc: 'en', cc: 'GB', name_en: 'English', native_name: 'English', is_rtl: false, id: 1 };
+  }, [languages, currentLc]);
+
+  // Group languages by priority
+  const groupedLanguages = useMemo(() => {
+    // Create two groups - priority and other
+    const priorityLangs: Language[] = [];
+    const otherLangs: Language[] = [];
     
-    return translation;
-  }, [t, currentLc, secondaryLc]);
+    // Filter languages
+    languages.forEach(lang => {
+      if (lang.lc === currentLc || lang.lc === secondaryLc || (tertiaryLc && lang.lc === tertiaryLc)) {
+        priorityLangs.push(lang);
+      } else {
+        otherLangs.push(lang);
+      }
+    });
+    
+    // Sort priority languages
+    priorityLangs.sort((a, b) => {
+      if (a.lc === currentLc) return -1;
+      if (b.lc === currentLc) return 1;
+      if (a.lc === secondaryLc) return -1;
+      if (b.lc === secondaryLc) return 1;
+      if (tertiaryLc && a.lc === tertiaryLc) return -1;
+      if (tertiaryLc && b.lc === tertiaryLc) return 1;
+      return 0;
+    });
+    
+    // Sort other languages alphabetically
+    otherLangs.sort((a, b) => a.name_en.localeCompare(b.name_en));
+    
+    return { priorityLangs, otherLangs };
+  }, [languages, currentLc, secondaryLc, tertiaryLc]);
 
-  // Type guard to check if a language code is valid
-  function isValidLanguageCode(lc: string): lc is LanguageCode {
-    return lc === 'en' || lc === 'sk' || lc === 'cs' || lc === 'de';
-  }
-
-  // Find current language object
-  const currentLanguage = SUPPORTED_LANGUAGES.find(lang => 
-    lang.lc === currentLc
-  ) || SUPPORTED_LANGUAGES[0];
-
-  // Toggle dropdown visibility with no side-effects
-  const toggleDropdown = useCallback(() => {
-    setIsDropdownOpen(prev => !prev);
-  }, []);
+  // Filter languages based on both search terms
+  const filteredLanguages = useMemo(() => {
+    const filtered = languages.filter(lang => {
+      // Code search (cc and lc)
+      const codeMatch = !codeSearch || 
+        lang.cc.toLowerCase().includes(codeSearch.toLowerCase()) || 
+        lang.lc.toLowerCase().includes(codeSearch.toLowerCase());
+      
+      // Name search (name_en and native_name)
+      const nameMatch = !nameSearch || 
+        lang.name_en.toLowerCase().includes(nameSearch.toLowerCase()) || 
+        lang.native_name.toLowerCase().includes(nameSearch.toLowerCase());
+      
+      return codeMatch && nameMatch;
+    });
+    
+    // Sort into priority and other
+    const priorityFiltered = filtered.filter(lang => 
+      lang.lc === currentLc || 
+      lang.lc === secondaryLc || 
+      (tertiaryLc && lang.lc === tertiaryLc)
+    ).sort((a, b) => {
+      if (a.lc === currentLc) return -1;
+      if (b.lc === currentLc) return 1;
+      if (a.lc === secondaryLc) return -1;
+      if (b.lc === secondaryLc) return 1;
+      if (tertiaryLc && a.lc === tertiaryLc) return -1;
+      if (tertiaryLc && b.lc === tertiaryLc) return 1;
+      return 0;
+    });
+    
+    const otherFiltered = filtered.filter(lang => 
+      lang.lc !== currentLc && 
+      lang.lc !== secondaryLc && 
+      !(tertiaryLc && lang.lc === tertiaryLc)
+    ).sort((a, b) => a.name_en.localeCompare(b.name_en));
+    
+    return { priorityFiltered, otherFiltered };
+  }, [languages, codeSearch, nameSearch, currentLc, secondaryLc, tertiaryLc]);
 
   // Handle language selection
-  const handleLanguageClick = useCallback((lc: string) => {
-    if (lc !== currentLc) {
-      changeLanguage(lc);
-    }
+  const handleLanguageSelect = useCallback((lang: Language) => {
+    // Use the language code from the selected language
+    changeLanguage(lang.lc);
     setIsDropdownOpen(false);
-  }, [currentLc, changeLanguage]);
+    setCodeSearch("");
+    setNameSearch("");
+  }, [changeLanguage]);
 
-  // Use useCallback to create a stable reference for the event handler
+  // Toggle dropdown
+  const toggleDropdown = useCallback(() => {
+    setIsDropdownOpen(prev => !prev);
+    
+    // Focus code input when opening
+    if (!isDropdownOpen) {
+      setTimeout(() => codeInputRef.current?.focus(), 10);
+    } else {
+      setCodeSearch("");
+      setNameSearch("");
+    }
+  }, [isDropdownOpen]);
+
+  // Handle click outside
   const handleClickOutside = useCallback((event: MouseEvent) => {
-    // Check if click is outside the component
     if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
       setIsDropdownOpen(false);
+      setCodeSearch("");
+      setNameSearch("");
     }
   }, []);
 
-  // Add event listener on mount and clean up on unmount
+  // Setup event listeners
   useEffect(() => {
-    window.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      window.removeEventListener('mousedown', handleClickOutside);
-    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [handleClickOutside]);
+
+  // Handle key press in code search
+  const handleCodeSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setIsDropdownOpen(false);
+      setCodeSearch("");
+      setNameSearch("");
+    } else if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      nameInputRef.current?.focus();
+    }
+  }, []);
+
+  // Handle key press in name search
+  const handleNameSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setIsDropdownOpen(false);
+      setCodeSearch("");
+      setNameSearch("");
+    } else if (e.key === 'Tab' && e.shiftKey) {
+      e.preventDefault();
+      codeInputRef.current?.focus();
+    }
+  }, []);
+
+  // Handle code search change (uppercase conversion)
+  const handleCodeSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setCodeSearch(e.target.value.toUpperCase());
+  }, []);
+
+  // Render the language items
+  const renderLanguageItems = () => {
+    const { priorityFiltered, otherFiltered } = filteredLanguages;
+    const allEmpty = priorityFiltered.length === 0 && otherFiltered.length === 0;
+    
+    if (isLoading) {
+      return <div className="navbar-language-loading">Loading...</div>;
+    }
+    
+    if (allEmpty) {
+      return <div className="navbar-language-empty">No languages found</div>;
+    }
+    
+    return (
+      <>
+        {/* Priority languages section */}
+        {priorityFiltered.map(lang => (
+          <div 
+            key={lang.id || lang.lc}
+            className={`navbar-language-item ${lang.lc === currentLc ? 'navbar-language-item--primary' : ''} ${lang.lc === secondaryLc ? 'navbar-language-item--secondary' : ''} ${tertiaryLc && lang.lc === tertiaryLc ? 'navbar-language-item--tertiary' : ''}`}
+            onClick={() => handleLanguageSelect(lang)}
+            tabIndex={0}
+            role="option"
+            aria-selected={lang.lc === currentLc}
+          >
+            <img 
+              src={getFlagUrl(lang.cc)} 
+              alt={`${lang.cc} flag`}
+              className={`navbar-language-item-flag ${lang.lc === currentLc ? 'navbar-language-item-flag--grayscale' : ''}`}
+              onError={(e) => { e.currentTarget.src = getFlagUrl('GB'); }}
+            />
+            <span className="navbar-language-item-code">{lang.cc}</span>
+            <span className="navbar-language-item-lc">{lang.lc}</span>
+            <span className="navbar-language-item-name">{lang.name_en}</span>
+            <span className="navbar-language-item-native">{lang.native_name}</span>
+          </div>
+        ))}
+        
+        {/* Divider if there are both priority and other languages */}
+        {priorityFiltered.length > 0 && otherFiltered.length > 0 && (
+          <div className="navbar-language-divider"></div>
+        )}
+        
+        {/* Other languages section */}
+        {otherFiltered.map(lang => (
+          <div 
+            key={lang.id || lang.lc}
+            className="navbar-language-item"
+            onClick={() => handleLanguageSelect(lang)}
+            tabIndex={0}
+            role="option"
+            aria-selected={false}
+          >
+            <img 
+              src={getFlagUrl(lang.cc)} 
+              alt={`${lang.cc} flag`}
+              className="navbar-language-item-flag"
+              onError={(e) => { e.currentTarget.src = getFlagUrl('GB'); }}
+            />
+            <span className="navbar-language-item-code">{lang.cc}</span>
+            <span className="navbar-language-item-lc">{lang.lc}</span>
+            <span className="navbar-language-item-name">{lang.name_en}</span>
+            <span className="navbar-language-item-native">{lang.native_name}</span>
+          </div>
+        ))}
+      </>
+    );
+  };
 
   return (
     <div className="navbar-language-container" ref={componentRef}>
@@ -136,7 +265,7 @@ const NavbarLanguage: React.FC = () => {
         <img 
           src={getFlagUrl(currentLanguage.cc)} 
           alt={`${currentLanguage.lc} flag`} 
-          className="navbar-language-flag"
+          className="navbar-language-flag navbar-language-flag--grayscale"
           onError={(e) => { e.currentTarget.src = getFlagUrl('GB'); }}
         />
         <span className="navbar-language-lc">{currentLanguage.lc}</span>
@@ -144,23 +273,35 @@ const NavbarLanguage: React.FC = () => {
       
       {isDropdownOpen && (
         <div className="navbar-language-dropdown-container">
+          <div className="navbar-language-search-row">
+            <div className="navbar-language-code-search-container">
+              <input
+                ref={codeInputRef}
+                type="text"
+                placeholder="CC/LC"
+                className="navbar-language-code-search"
+                value={codeSearch}
+                onChange={handleCodeSearchChange}
+                onKeyDown={handleCodeSearchKeyDown}
+                maxLength={2}
+                autoFocus
+              />
+            </div>
+            <div className="navbar-language-name-search-container">
+              <input
+                ref={nameInputRef}
+                type="text"
+                placeholder="Search name..."
+                className="navbar-language-name-search"
+                value={nameSearch}
+                onChange={(e) => setNameSearch(e.target.value)}
+                onKeyDown={handleNameSearchKeyDown}
+              />
+            </div>
+          </div>
+          
           <div className="navbar-language-dropdown">
-            {SUPPORTED_LANGUAGES.map(lang => (
-              <button
-                key={lang.lc}
-                className={`navbar-language-item ${lang.lc === currentLc ? 'navbar-language-item--active' : ''}`}
-                onClick={() => handleLanguageClick(lang.lc)}
-              >
-                <img 
-                  src={getFlagUrl(lang.cc)} 
-                  alt={`${lang.cc} flag`}
-                  className="navbar-language-item-flag"
-                  onError={(e) => { e.currentTarget.src = getFlagUrl('GB'); }}
-                />
-                <span className="navbar-language-item-lc">{lang.lc}</span>
-                <span className="navbar-language-item-name">{getLocalizedName(lang.nameKey)}</span>
-              </button>
-            ))}
+            {renderLanguageItems()}
           </div>
         </div>
       )}

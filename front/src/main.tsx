@@ -9,7 +9,8 @@ import "@/styles/main.css"; // Global styles
 
 // Filter out specific React Router warnings in development
 if (import.meta.env.DEV) {
-  const originalWarn = console.warn;
+  const originalWarn = console.warn.bind(console); // 
+
   console.warn = function (...args) {
     const isReactRouterWarning = args.some(
       (arg) =>
@@ -17,7 +18,7 @@ if (import.meta.env.DEV) {
         arg.includes("React Router Future Flag Warning")
     );
     if (!isReactRouterWarning) {
-      originalWarn.apply(console, args);
+      originalWarn(...args); // 
     }
   };
 }
