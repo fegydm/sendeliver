@@ -1,5 +1,5 @@
 // File: ./front/src/hooks/useLanguage.ts
-// Last change: Refactored to use retry count and 14-day fallback storage for failed geo lookups
+// Last change: Optimized for immediate language loading
 
 import { useEffect, useState, useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
@@ -7,7 +7,6 @@ import { useTranslationsPreload } from './useTranslationsPreload';
 import { getCountryFromIP } from '../utils/getCountryFromIP';
 
 const DEFAULT_LC = 'en';
-const SUPPORTED_LANGUAGES = ['en', 'sk', 'cs', 'de', 'pl', 'hu'];
 const COOKIE_NAME = 'sendeliver_lang';
 
 const GEO_CACHE_KEY = 'ip-country-cache';
@@ -19,10 +18,13 @@ export const useLanguage = () => {
   const [secondaryLc, setSecondaryLc] = useLocalStorage<string | null>('sendeliver_language_secondary', null);
   const [geoCache, setGeoCache] = useLocalStorage<{ code: string; timestamp: number } | null>(GEO_CACHE_KEY, null);
   const [failCount, setFailCount] = useLocalStorage<number>(FAIL_COUNT_KEY, 0);
-
   const [translationsEnabled, setTranslationsEnabled] = useState(false);
 
-  const validate = (lc: string): string => SUPPORTED_LANGUAGES.includes(lc) ? lc : DEFAULT_LC;
+  // Basic validation to ensure we have a valid language code
+  const validate = (lc: string): string => {
+    if (!lc) return DEFAULT_LC;
+    return lc.toLowerCase().trim();
+  };
 
   const getLanguageFromCookie = (): string | null => {
     if (!navigator.cookieEnabled) return null;
@@ -70,6 +72,20 @@ export const useLanguage = () => {
     }
   }, [geoCache, primaryLc, failCount, setGeoCache, setFailCount]);
 
+  // Get translations with our preload hook
+  const { 
+    t, 
+    isLoading, 
+    hasError, 
+    loadTranslations, 
+    loadedLanguages 
+  } = useTranslationsPreload({
+    primaryLc,
+    secondaryLc,
+    enabled: translationsEnabled,
+  });
+
+  // Initialize languages
   useEffect(() => {
     const init = async () => {
       let lc = getLanguageFromCookie() || navigator.language?.substring(0, 2) || DEFAULT_LC;
@@ -88,19 +104,23 @@ export const useLanguage = () => {
     init();
   }, [setPrimaryLc, setSecondaryLc, fetchSecondaryFromGeo]);
 
-  const { t, isLoading, hasError } = useTranslationsPreload({
-    primaryLc,
-    secondaryLc,
-    enabled: translationsEnabled,
-  });
-
-  const changeLanguage = (lc: string) => {
+  // Change language with optimized loading
+  const changeLanguage = useCallback(async (lc: string) => {
     const valid = validate(lc);
     if (valid !== primaryLc) {
+      console.log(`[useLanguage] 🔄 Changing language to ${valid}`);
+      
+      // First set the language so UI updates immediately
       setPrimaryLc(valid);
       setLanguageCookie(valid);
+      document.documentElement.lang = valid;
+      
+      // Then ensure translations are loaded (if not already)
+      if (!loadedLanguages.includes(valid)) {
+        await loadTranslations(valid);
+      }
     }
-  };
+  }, [primaryLc, loadedLanguages, loadTranslations, setPrimaryLc, setLanguageCookie]);
 
   return {
     t,
