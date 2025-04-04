@@ -1,40 +1,34 @@
 // File: ./front/src/hooks/useLocalStorage.ts
-// Last change: Updated setValue to support functional updates
+// This version is simplified – it simply reads from and writes to localStorage without using useEffect.
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export function useLocalStorage<T>(
   key: string,
   initialValue: T
 ): [T, (value: T | ((prev: T) => T)) => void] {
+  // Read the initial value from localStorage.
   const readValue = (): T => {
     if (typeof window === 'undefined') {
       return initialValue;
     }
-
     try {
       const item = window.localStorage.getItem(key);
-      if (item === null) return initialValue;
-      if (item === 'undefined') return initialValue;
-      try {
-        return JSON.parse(item);
-      } catch (error) {
-        console.error(`Error reading localStorage key "${key}":`, error);
-        return initialValue;
-      }
+      return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
+      console.error(`Error reading localStorage key "${key}":`, error);
       return initialValue;
     }
   };
 
   const [storedValue, setStoredValue] = useState<T>(readValue);
 
+  // Set the new value both in state and in localStorage.
   const setValue = (value: T | ((prev: T) => T)) => {
     try {
-      const newValue = typeof value === 'function' ? (value as (prev: T) => T)(storedValue) : value;
+      const newValue =
+        typeof value === 'function' ? (value as (prev: T) => T)(storedValue) : value;
       setStoredValue(newValue);
-
       if (typeof window !== 'undefined') {
         if (newValue === undefined) {
           window.localStorage.removeItem(key);
@@ -46,23 +40,6 @@ export function useLocalStorage<T>(
       console.error(`Error setting localStorage key "${key}":`, error);
     }
   };
-
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === key && e.newValue !== null) {
-        try {
-          setStoredValue(e.newValue === 'undefined' ? initialValue : JSON.parse(e.newValue));
-        } catch {
-          setStoredValue(initialValue);
-        }
-      } else if (e.key === key && e.newValue === null) {
-        setStoredValue(initialValue);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [key, initialValue]);
 
   return [storedValue, setValue];
 }

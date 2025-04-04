@@ -3,7 +3,7 @@
 
 import { useState, useRef } from "react";
 import { AIResponse } from "@/types/transport-forms.types";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguageContext } from "@/contexts/LanguageContext";
 
 
 
@@ -37,7 +37,7 @@ interface AIFormProps {
 
 const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = '' }) => {
   // Language hook for translations
-  const { t } = useLanguage();
+  const { t } = useLanguageContext();
   
   // For tabs
   const [activeTab, setActiveTab] = useState(0);

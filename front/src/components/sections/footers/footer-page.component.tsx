@@ -10,15 +10,15 @@ import PinModal from "@/components/modals/pin-modal.component";
 
 interface FooterPageProps {
   onAdminToggle: (isVisible: boolean) => void;
-  isTestFooterVisible: boolean; // New prop to track visibility state
+  isTestFooterVisible: boolean; // Tracks visibility state of test footer
 }
 
 const FooterPage: React.FC<FooterPageProps> = ({ onAdminToggle, isTestFooterVisible }) => {
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
 
   const handleAdminAccess = (granted: boolean) => {
-    onAdminToggle(granted); // Update visibility of FooterTest
-    setIsPinModalOpen(false); // Close modal
+    onAdminToggle(granted); // Update FooterTest visibility
+    setIsPinModalOpen(false); // Close the modal
     if (granted) {
       localStorage.setItem("isTestFooterVisible", "true");
     } else {
@@ -59,7 +59,7 @@ const FooterPage: React.FC<FooterPageProps> = ({ onAdminToggle, isTestFooterVisi
         <PinModal
           isOpen={isPinModalOpen}
           onClose={() => setIsPinModalOpen(false)}
-          requiredPin="4545"
+          requiredPin="1221"  // Updated required PIN to "1221"
           onPinSuccess={() => handleAdminAccess(true)}
         />
       )}

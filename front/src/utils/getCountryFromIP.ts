@@ -1,140 +1,145 @@
 // File: ./front/src/utils/getCountryFromIP.ts
-// Only one request per service is sent every 10 seconds.
-// If a service is rate-limited, it will not send a new request and fallback "en" is used.
+// This function determines the country code using two services (ipapi.co and ipinfo.io) concurrently.
+// It first checks localStorage for a valid cache. If not found or expired, it sends requests.
+// The result is cached with the following properties:
+// - code: determined country code (e.g., "sk")
+// - id: identifier (0 = fallback, 1 = one service result, 2 = both services result)
+// - details: elapsed times (in ms, rounded) for each service (e.g., { ipapi: 407, ipinfo: 161 })
+// - timestamp: when the cache was updated
+// - ttl: cache validity period (7 days in ms)
 
-const RATE_LIMIT = 10 * 1000; // 10 seconds
+const CACHE_KEY = "ip-country-cache";
+const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-// Global variables to track last request timestamp per service
-let lastRequestIpapi = 0;
-let lastRequestIpinfo = 0;
-
-let pendingRequest: Promise<{ code: string; source: 'ipapi' | 'ipinfo' }> | null = null;
-
-// Generic fetch helper with timeout (max 900ms) and timing logs
-async function fetchWithTimeout(
+// Helper: Fetch JSON with timeout (1000ms) and round elapsed time
+async function fetchJSONWithTimeout(
   resource: string,
   options: RequestInit = {},
-  timeout = 2000
-): Promise<Response> {
+  timeout = 1000
+): Promise<{ data: any; elapsed: number }> {
   const controller = new AbortController();
   const startTime = performance.now();
-  const id = setTimeout(() => controller.abort(), timeout);
+  const timer = setTimeout(() => controller.abort(), timeout);
   try {
     const response = await fetch(resource, { ...options, signal: controller.signal });
-    const elapsed = performance.now() - startTime;
-    console.log(`[Geo API] ⏱ Request to ${resource} took ${elapsed.toFixed(2)}ms`);
-    clearTimeout(id);
-    return response;
+    const elapsed = Math.round(performance.now() - startTime);
+    clearTimeout(timer);
+    if (!response.ok) {
+      throw new Error(`Non-200 response from ${resource}: ${response.status}`);
+    }
+    const data = await response.json();
+    return { data, elapsed };
   } catch (error) {
-    const elapsed = performance.now() - startTime;
-    console.error(`[Geo API] ⏱ Request to ${resource} failed after ${elapsed.toFixed(2)}ms with error: ${error}`);
-    clearTimeout(id);
+    clearTimeout(timer);
     throw error;
   }
 }
 
-// Helper: Custom race function that waits for the first successful promise
-function racePromises<T>(promises: Promise<T>[]): Promise<T> {
-  return new Promise((resolve, reject) => {
-    let rejectedCount = 0;
-    const errors: any[] = [];
-    promises.forEach((p) => {
-      p.then(resolve).catch((err) => {
-        errors.push(err);
-        rejectedCount++;
-        if (rejectedCount === promises.length) {
-          reject(new Error(`All promises failed: ${errors.join('; ')}`));
-        }
-      });
-    });
-  });
-}
-
-// Get country code from ipapi.co if rate limit allows
-async function getCountryFromIpapi(): Promise<{ code: string; source: 'ipapi' }> {
-  const now = Date.now();
-  if (now - lastRequestIpapi < RATE_LIMIT) {
-    throw new Error('Rate limit active for ipapi.co');
-  }
-  lastRequestIpapi = now;
-
-  const response = await fetchWithTimeout('https://ipapi.co/json/', {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-  });
-  if (!response.ok) {
-    throw new Error(`Non-200 response from ipapi.co: ${response.status}`);
-  }
-  const data = await response.json();
+// Get country code from ipapi.co with elapsed time
+async function getCountryFromIpapi(): Promise<{ code: string; source: "ipapi"; elapsed: number }> {
+  const { data, elapsed } = await fetchJSONWithTimeout("https://ipapi.co/json/", {
+    method: "GET",
+    headers: { Accept: "application/json" },
+  }, 1000);
   const code = data.country?.toLowerCase();
-  if (!code || typeof code !== 'string') {
-    throw new Error('Invalid or missing country code from ipapi.co');
+  if (!code || typeof code !== "string") {
+    throw new Error("Invalid or missing country code from ipapi.co");
   }
-  console.log('[Geo API] ✅ ipapi.co resolved country:', code);
-  return { code, source: 'ipapi' };
+  console.log(`[Geo API] ✅ ipapi.co: ${code} in ${elapsed}ms`);
+  return { code, source: "ipapi", elapsed };
 }
 
-// Get country code from ipinfo.io if rate limit allows
-async function getCountryFromIpinfo(): Promise<{ code: string; source: 'ipinfo' }> {
-  const now = Date.now();
-  if (now - lastRequestIpinfo < RATE_LIMIT) {
-    throw new Error('Rate limit active for ipinfo.io');
-  }
-  lastRequestIpinfo = now;
-
-  const response = await fetchWithTimeout('https://ipinfo.io/json', {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-  });
-  if (!response.ok) {
-    throw new Error(`Non-200 response from ipinfo.io: ${response.status}`);
-  }
-  const data = await response.json();
+// Get country code from ipinfo.io with elapsed time
+async function getCountryFromIpinfo(): Promise<{ code: string; source: "ipinfo"; elapsed: number }> {
+  const { data, elapsed } = await fetchJSONWithTimeout("https://ipinfo.io/json", {
+    method: "GET",
+    headers: { Accept: "application/json" },
+  }, 1000);
   const code = data.country?.toLowerCase();
-  if (!code || typeof code !== 'string') {
-    throw new Error('Invalid or missing country code from ipinfo.io');
+  if (!code || typeof code !== "string") {
+    throw new Error("Invalid or missing country code from ipinfo.io");
   }
-  console.log('[Geo API] ✅ ipinfo.io resolved country:', code);
-  return { code, source: 'ipinfo' };
+  console.log(`[Geo API] ✅ ipinfo.io: ${code} in ${elapsed}ms`);
+  return { code, source: "ipinfo", elapsed };
 }
 
-// Returns the user's country code based on IP.
-// Only one request per service is sent every 10 seconds.
-// If both services are rate-limited or fail, returns fallback "en".
-export async function getCountryFromIP(): Promise<string> {
-  // Ak je už prebiehajúca požiadavka, počkáme na jej výsledok
-  if (pendingRequest) {
-    try {
-      const result = await pendingRequest;
-      return result.code;
-    } catch (e) {
-      // Ignore, budeme skúšať nové požiadavky
-    }
-  }
-
-  const now = Date.now();
-  const allowedPromises: Promise<{ code: string; source: 'ipapi' | 'ipinfo' }>[] = [];
-  // Check if each service is allowed to be called
-  if (now - lastRequestIpapi >= RATE_LIMIT) {
-    allowedPromises.push(getCountryFromIpapi());
-  }
-  if (now - lastRequestIpinfo >= RATE_LIMIT) {
-    allowedPromises.push(getCountryFromIpinfo());
-  }
-
-  if (allowedPromises.length === 0) {
-    console.warn('[Geo API] ⚠️ Both services are rate-limited. Falling back to "en".');
-    return 'en';
-  }
-
-  pendingRequest = racePromises(allowedPromises);
+// Retrieve cache from localStorage if valid
+function getCache(): { code: string; id: number; details: any; timestamp: number; ttl: number } | null {
   try {
-    const result = await pendingRequest;
-    pendingRequest = null;
-    return result.code;
-  } catch (error) {
-    console.error('[Geo API] ❌ All allowed services failed:', error);
-    pendingRequest = null;
-    return 'en';
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const cacheData = JSON.parse(cached);
+      if (Date.now() - cacheData.timestamp < cacheData.ttl && cacheData.code) {
+        console.log("[Geo API] ♻️ Using cached country:", cacheData);
+        return cacheData;
+      }
+    }
+  } catch (e) {
+    console.error("[Geo API] ❌ Error reading cache:", e);
   }
+  return null;
+}
+
+// Update cache in localStorage with the determined country, identifier, and details
+function updateCache(code: string, id: number, details: { ipapi?: number; ipinfo?: number }) {
+  const cacheData = {
+    code,
+    id, // 0 = fallback, 1 = one result, 2 = both services result
+    details,
+    timestamp: Date.now(),
+    ttl: CACHE_TTL,
+  };
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+    console.log("[Geo API] ✅ Updated cache:", cacheData);
+  } catch (e) {
+    console.error("[Geo API] ❌ Failed to update cache:", e);
+  }
+}
+
+// Main function: Determines the country code based on IP.
+// It checks the cache first, then sends concurrent requests if needed.
+export async function getCountryFromIP(): Promise<string> {
+  // 1. Check LS cache.
+  const cached = getCache();
+  if (cached) {
+    return cached.code;
+  }
+
+  // 2. Send concurrent requests to both services.
+  const promises = [getCountryFromIpapi(), getCountryFromIpinfo()];
+  const results = await Promise.allSettled(promises);
+
+  // 3. Process successful results.
+  const successes = results
+    .filter((res): res is PromiseFulfilledResult<{ code: string; source: "ipapi" | "ipinfo"; elapsed: number }> => res.status === "fulfilled")
+    .map(res => res.value);
+
+  let chosenCode = "en";
+  let identifier = 0; // 0: fallback, 1: one result, 2: both services result
+  const details: { ipapi?: number; ipinfo?: number } = {};
+
+  if (successes.length === 1) {
+    chosenCode = successes[0].code;
+    identifier = 1;
+    details[successes[0].source] = successes[0].elapsed;
+  } else if (successes.length >= 2) {
+    if (successes[0].code === successes[1].code) {
+      chosenCode = successes[0].code;
+      identifier = 2;
+    } else {
+      chosenCode = successes[0].code;
+      identifier = 1;
+    }
+    successes.forEach(res => {
+      details[res.source] = res.elapsed;
+    });
+  } else {
+    chosenCode = "en";
+    identifier = 0;
+  }
+
+  // 4. Update cache in LS.
+  updateCache(chosenCode, identifier, details);
+  return chosenCode;
 }

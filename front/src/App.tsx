@@ -1,16 +1,13 @@
 // File: src/App.tsx
-// Last change: Added LanguageProvider to prevent multiple useLanguage initializations
+// Last change: Added LanguageProvider to wrap the entire app
 
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import { LanguageProvider } from "@/contexts/LanguageContext";
+import { LanguageProvider } from "@/contexts/LanguageContext"; // New import for LanguageProvider
 import Navigation from "@/components/sections/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
-// Removed static pages for secret videos
-// import JozoPage from "@/pages/jozo.page";
-// import LukyPage from "@/pages/luky.page";
-import VideoPage from "@/pages/video.page"; // English comment: Dynamic video page for secret videos
+import VideoPage from "@/pages/video.page";
 import NotFoundPage from "@/pages/notfound.page";
 import HomePage from "@/pages/home.page";
 import TestPage from "@/pages/test.page";
@@ -21,8 +18,7 @@ import FooterPage from "@/components/sections/footers/footer-page.component";
 import FooterTest from "@/components/sections/footers/footer-test.component";
 import FloatingButton from "@/components/elements/floating-button.element";
 import useScrollBounce from "@/hooks/useScrollBounce";
-
-
+import DocumentationPage from "@/pages/DocumentationPage";
 
 const ROUTES = {
   HOME: "/",
@@ -32,8 +28,6 @@ const ROUTES = {
   TEST2: "/test2",
   TEST1: "/test1",
   TEST3: "/test3",
-  // Removed static secret routes
-  // SECRET: ["/jozo", "/luky"],
 } as const;
 
 const AppContent: React.FC = () => {
@@ -55,7 +49,7 @@ const AppContent: React.FC = () => {
 
   const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
 
-  // English comment: Determine if the current page should hide header and footer.
+  // Determine if header and footer should be hidden on certain pages.
   const isTestPageWithoutHeaderFooter = [ROUTES.TEST2, ROUTES.TEST1, ROUTES.TEST3].includes(
     window.location.pathname as typeof ROUTES.TEST2
   );
@@ -69,30 +63,22 @@ const AppContent: React.FC = () => {
       )}
 
       <main>
-        <Routes>
-          <Route path={ROUTES.HOME} element={<HomePage />} />
-
-          {ROUTES.SENDER.map((path) => (
-            <Route key={path} path={path} element={<SenderPage />} />
-          ))}
-
-          {ROUTES.HAULER.map((path) => (
-            <Route key={path} path={path} element={<HaulerPage />} />
-          ))}
-
-          <Route path={ROUTES.TEST} element={<TestPage />} />
-          <Route path={ROUTES.TEST2} element={<Test2Page />} />
-          <Route path={ROUTES.TEST1} element={<Test1Page />} />
-          <Route path={ROUTES.TEST3} element={<Test3Page />} />
-
-          {/* English comment: Dynamic route for secret videos.
-              If the alias exists in videoMap inside VideoPage, it will load the video,
-              otherwise it will show an error message. */}
-          <Route path="/:alias" element={<VideoPage />} />
-
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-        <div id="result-table-dropdown-container" style={{ position: "relative" }}></div>
+      <Routes>
+  <Route path={ROUTES.HOME} element={<HomePage />} />
+  {ROUTES.SENDER.map((path) => (
+    <Route key={path} path={path} element={<SenderPage />} />
+  ))}
+  {ROUTES.HAULER.map((path) => (
+    <Route key={path} path={path} element={<HaulerPage />} />
+  ))}
+  <Route path={ROUTES.TEST} element={<TestPage />} />
+  <Route path={ROUTES.TEST2} element={<Test2Page />} />
+  <Route path={ROUTES.TEST1} element={<Test1Page />} />
+  <Route path={ROUTES.TEST3} element={<Test3Page />} />
+  <Route path="/dokumentacia" element={<DocumentationPage />} />
+  <Route path="/:alias" element={<VideoPage />} />
+  <Route path="*" element={<NotFoundPage />} />
+</Routes>
       </main>
 
       {!isTestPageWithoutHeaderFooter && (
@@ -114,7 +100,6 @@ const AppContent: React.FC = () => {
   );
 };
 
-// Wrap the entire app in LanguageProvider to prevent multiple useLanguage initializations
 const App: React.FC = () => {
   return (
     <LanguageProvider>
