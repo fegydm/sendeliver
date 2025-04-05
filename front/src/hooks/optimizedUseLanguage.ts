@@ -1,7 +1,7 @@
 // File: src/hooks/optimizedUseLanguage.ts
 
 import { useContext, useRef, useMemo } from 'react';
-import LanguageContext from '@/contexts/LanguageContext';
+import LanguageContext from '@/contexts/TranslationContext';
 
 // Define the return type based on what the context actually provides
 interface LanguageHookReturn {

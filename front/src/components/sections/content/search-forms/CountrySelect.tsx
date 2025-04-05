@@ -1,10 +1,8 @@
 // File: src/components/sections/content/search-forms/CountrySelect.tsx
-// Last change: Updated flag handling with caching and immediate gb.svg
-
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "@/components/elements/BaseDropdown";
 import type { Country } from "@/types/transport-forms.types";
-import { useCountriesPreload } from "@/hooks/useCountriesPreload";
+import { useCountriesContext } from "@/contexts/CountriesContext";
 import { useUINavigation } from "@/hooks/useUINavigation";
 
 interface CountrySelectProps {
@@ -31,7 +29,8 @@ export function CountrySelect({
   const componentRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLElement | null)[]>([]);
 
-  const { countries: allCountries, isLoading, getFlagUrl } = useCountriesPreload();
+  // Use CountriesContext instead of calling useCountriesPreload directly
+  const { countries: allCountries, isLoading, getFlagUrl } = useCountriesContext();
 
   // Debug logging for countries data
   useEffect(() => {
@@ -47,11 +46,11 @@ export function CountrySelect({
         inputRef.current.value = initialValue;
       }
       if (initialValue.length === 2) {
-        const flagUrl = getFlagUrl(initialValue); // Use cached or direct flag
+        const flagUrl = getFlagUrl(initialValue); // Use cached flag URL
         onCountrySelect(initialValue, flagUrl);
       }
     }
-  }, [initialValue, locationType, onCountrySelect, inputValue, getFlagUrl]);
+  }, [initialValue, onCountrySelect, inputValue, getFlagUrl]);
 
   const filteredItems = useMemo(() => {
     console.log(`[CountrySelect] Filtering with input: "${inputValue}"`, { 
@@ -66,30 +65,14 @@ export function CountrySelect({
       return [];
     }
     
-    if (allCountries.length > 0) {
-      console.log('[CountrySelect] Sample country:', allCountries[0]);
-    }
-    
     if (!inputValue) {
       const validCountries = allCountries.filter(c => c && typeof c === 'object' && c.cc);
-      console.log(`[CountrySelect] All valid countries: ${validCountries.length}`);
       return validCountries;
     }
     
     const upperValue = inputValue.toUpperCase();
-    const filtered = allCountries.filter((c: Country) => {
-      return c && typeof c === 'object' && c.cc && 
-             typeof c.cc === 'string' && 
-             c.cc.toUpperCase().startsWith(upperValue);
-    });
-    
-    console.log(`[CountrySelect] Filtered ${filtered.length} countries with "${upperValue}"`);
-    return filtered;
+    return allCountries.filter((c: Country) => c && c.cc && c.cc.toUpperCase().startsWith(upperValue));
   }, [inputValue, allCountries, isLoading]);
-
-  useEffect(() => {
-    console.log(`[CountrySelect] filteredItems:`, filteredItems);
-  }, [filteredItems]);
 
   const visibleItems = useMemo(() => filteredItems.slice(0, visibleCount), [filteredItems, visibleCount]);
 
@@ -115,7 +98,6 @@ export function CountrySelect({
 
   const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const upperValue = event.target.value.toUpperCase();
-    
     setInputValue(upperValue);
     if (!isOpen) setIsOpen(true);
 
@@ -138,7 +120,7 @@ export function CountrySelect({
         setInputValue(upperValue.charAt(0));
         return;
       }
-      const flagUrl = getFlagUrl(exactMatch.cc); // Use cached or direct flag
+      const flagUrl = getFlagUrl(exactMatch.cc);
       onCountrySelect(exactMatch.cc, flagUrl);
       setIsOpen(false);
       onNextFieldFocus();
@@ -148,93 +130,50 @@ export function CountrySelect({
   const handleSelect = useCallback((selected: Country) => {
     if (!selected || !selected.cc) return;
     setInputValue(selected.cc);
-    const flagUrl = selected.flag || getFlagUrl(selected.cc); // Prefer cached flag
+    const flagUrl = selected.flag || getFlagUrl(selected.cc);
     onCountrySelect(selected.cc, flagUrl);
     setIsOpen(false);
     onNextFieldFocus();
   }, [onCountrySelect, onNextFieldFocus, getFlagUrl]);
 
   const handleFocus = useCallback(() => {
-    console.log('[CountrySelect] Focus', { isLoading, countriesCount: allCountries?.length || 0 });
     if (!isLoading) setIsOpen(true);
-  }, [isLoading, allCountries]);
+  }, [isLoading]);
 
   const handleInputClick = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
-    console.log('[CountrySelect] Click', { isLoading, countriesCount: allCountries?.length || 0 });
     if (!isLoading) setIsOpen(true);
-  }, [isLoading, allCountries]);
+  }, [isLoading]);
 
   const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") {
-      if (document.activeElement === inputRef.current || isInputHovered) {
+      if (document.activeElement === inputRef.current) {
         event.preventDefault();
         if (!isOpen && !isLoading) setIsOpen(true);
         if (highlightedIndex === null) setHighlightedIndex(0);
         dropdownRef.current?.focus();
       }
-    } else if (event.key === "ArrowUp") {
-      if (isInputHovered && isOpen) event.preventDefault();
     } else if (event.key === "Escape") {
       setIsOpen(false);
       inputRef.current?.focus();
     }
-  }, [inputValue, isOpen, isInputHovered, highlightedIndex, setHighlightedIndex, isLoading]);
+  }, [highlightedIndex, isOpen, setHighlightedIndex, isLoading]);
 
   const handleDropdownNavigation = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       handleUINavKeyDown(event);
-      if (dropdownRef.current && highlightedIndex !== null && itemsRef.current[highlightedIndex]) {
-        requestAnimationFrame(() => {
-          const dropdown = dropdownRef.current;
-          const item = itemsRef.current[highlightedIndex];
-          if (item && dropdown) {
-            const dropdownRect = dropdown.getBoundingClientRect();
-            const itemRect = item.getBoundingClientRect();
-            const buffer = 20;
-            const visibleTop = dropdownRect.top + buffer;
-            const visibleBottom = dropdownRect.bottom - buffer;
-
-            const isAboveView = itemRect.top < visibleTop;
-            const isBelowView = itemRect.bottom > visibleBottom;
-
-            if (isAboveView) {
-              dropdown.scrollTop -= (visibleTop - itemRect.top);
-            } else if (isBelowView) {
-              dropdown.scrollTop += (itemRect.bottom - visibleBottom);
-            }
-          }
-        });
-      }
     } else if (event.key === "Escape") {
       setIsOpen(false);
       inputRef.current?.focus();
     }
-  }, [handleUINavKeyDown, highlightedIndex]);
-
-  const handleInputMouseEnter = useCallback(() => setIsInputHovered(true), []);
-  const handleInputMouseLeave = useCallback(() => setIsInputHovered(false), []);
-  const handleDropdownMouseEnter = useCallback(() => setIsDropdownHovered(true), []);
-  const handleDropdownMouseLeave = useCallback(() => setIsDropdownHovered(false), []);
+  }, [handleUINavKeyDown]);
 
   const flagSrc = useMemo(() => {
-    return inputValue.length === 2 ? getFlagUrl(inputValue) : "/flags/4x3/optimized/gb.svg"; // Immediate gb.svg
+    return inputValue.length === 2 ? getFlagUrl(inputValue) : "/flags/4x3/optimized/gb.svg";
   }, [inputValue, getFlagUrl]);
 
   if (isLoading) return <div>Loading countries...</div>;
-
-  const getItemKeyFn = (item: Country) => {
-    if (!item || !item.cc) return `unknown-${Math.random().toString(36).substr(2, 9)}`;
-    return item.cc;
-  };
-
-  console.log('[CountrySelect] Render with', {
-    isOpen,
-    visibleItemsCount: visibleItems.length,
-    filteredItemsCount: filteredItems.length,
-    allCountriesCount: allCountries?.length || 0
-  });
 
   return (
     <div ref={componentRef} className={`country-select country-select--${locationType}`}>
@@ -254,8 +193,6 @@ export function CountrySelect({
         onKeyDown={handleInputKeyDown}
         onFocus={handleFocus}
         onClick={handleInputClick}
-        onMouseEnter={handleInputMouseEnter}
-        onMouseLeave={handleInputMouseLeave}
         className="country-select__input"
         aria-autocomplete="list"
         aria-controls="country-select-dropdown"
@@ -270,7 +207,7 @@ export function CountrySelect({
         totalItems={filteredItems.length}
         pageSize={20}
         onLoadMore={() => setVisibleCount(prev => prev + 20)}
-        renderItem={(country: Country, { isHighlighted }: { isHighlighted: boolean }) => {
+        renderItem={(country, { isHighlighted }) => {
           if (!country || !country.cc) {
             return (
               <div className={`dropdown__item ${isHighlighted ? 'dropdown--highlighted' : ''}`}>
@@ -279,14 +216,13 @@ export function CountrySelect({
               </div>
             );
           }
-          
           return (
             <div
               className={`dropdown__item ${isHighlighted ? 'dropdown--highlighted' : ''}`}
               ref={(el) => (itemsRef.current[visibleItems.indexOf(country)] = el)}
             >
               <img 
-                src={country.flag || getFlagUrl(country.cc)} // Use cached flag or fetch
+                src={country.flag || getFlagUrl(country.cc)}
                 alt={`${country.cc} flag`} 
                 className="dropdown__item-flag"
                 onError={(e) => (e.currentTarget.src = "/flags/4x3/optimized/gb.svg")}
@@ -297,14 +233,14 @@ export function CountrySelect({
             </div>
           );
         }}
-        getItemKey={getItemKeyFn}
+        getItemKey={(item: Country) => item?.cc || ''}
         ariaLabel="Country options"
         loadMoreText="Load more countries..."
         className="country-select__dropdown"
         ref={dropdownRef}
         onKeyDown={isDropdownHovered ? handleDropdownNavigation : undefined}
-        onMouseEnter={handleDropdownMouseEnter}
-        onMouseLeave={handleDropdownMouseLeave}
+        onMouseEnter={() => setIsDropdownHovered(true)}
+        onMouseLeave={() => setIsDropdownHovered(false)}
         noResultsText="Loading countries data..."
         onNoResults={() => (
           <div className="dropdown__no-results">

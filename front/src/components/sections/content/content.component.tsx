@@ -1,4 +1,5 @@
-// File: .front/src/components/sections/content/content.component.tsx
+// File: src/components/sections/content/content.component.tsx
+// Last change: April 04, 2025
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import AIForm from "@/components/sections/content/search-forms/ai-form.component";
@@ -34,7 +35,6 @@ const Content: React.FC<ContentProps> = ({
   const [senderLoadingDt, setSenderLoadingDt] = useState<string | undefined>(undefined);
   const [haulerLoadingDt, setHaulerLoadingDt] = useState<string | undefined>(undefined);
 
-  // Handle vehicles found from ManualForm
   const handleVehiclesFound = (type: "sender" | "hauler", vehicles: SenderResultData[], totalCount: number, loadingDt: string) => {
     console.log(`[Content] Received ${vehicles.length} vehicles for ${type}`, vehicles);
     setIsRequestConfirmed(true);
@@ -49,20 +49,18 @@ const Content: React.FC<ContentProps> = ({
     }
   };
 
-  // Handle manual form submission
   const handleManualSubmit = (type: "sender" | "hauler", data: TransportFormData) => {
     console.log(`[Content] Form submitted for ${type}`, data);
     onManualSubmit(type, data);
   };
 
-  // Centralized switching logic with BEM naming
   const sections = [
     {
       type: "sender" as const,
       navigationClass: "content__navigation--sender",
       wrapperClass: "content--sender",
       title: "Client Area",
-      position: "left" as const, // Button aligned to the left in sender section
+      position: "left" as const,
       vehicles: senderVehicles,
       totalCount: senderTotalCount,
       loadingDt: senderLoadingDt,
@@ -73,7 +71,7 @@ const Content: React.FC<ContentProps> = ({
       navigationClass: "content__navigation--hauler",
       wrapperClass: "content--hauler",
       title: "Carrier Area",
-      position: "right" as const, // Button aligned to the right in hauler section
+      position: "right" as const,
       vehicles: haulerVehicles,
       totalCount: haulerTotalCount,
       loadingDt: haulerLoadingDt,
@@ -88,13 +86,15 @@ const Content: React.FC<ContentProps> = ({
           <div
             key={section.type}
             className={`${section.navigationClass} ${activeSection === section.type ? "active" : ""}`}
-          > <Link to={`/${section.type}`}>
+          >
+            <Link to={`/${section.type}`}>
               <Button
                 variant="primary"
-                position={section.position} // Use position for alignment
+                position={section.position}
                 active={activeSection === section.type}
                 onClick={() => onSwitchSection(section.type)}
-              > {section.type === "sender" ? "Client Dashboard" : "Carrier Dashboard"}
+              >
+                {section.type === "sender" ? "Client Dashboard" : "Carrier Dashboard"}
               </Button>
             </Link>
           </div>
@@ -110,7 +110,10 @@ const Content: React.FC<ContentProps> = ({
             <h2 className="content__title">{section.title}</h2>
             <AIForm
               type={section.type}
-              onAIRequest={(response: any) => onAIResponse(section.type, response)}
+              onAIRequest={(response: any) => {
+                console.log(`[Content] AI response for ${section.type}:`, response);
+                onAIResponse(section.type, response);
+              }}
             />
             <ManualForm
               type={section.type}

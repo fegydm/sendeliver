@@ -1,12 +1,9 @@
 // File: src/components/sections/content/search-forms/ai-form.component.tsx
-// Last change: Refactored translation keys with helper function
+// Last change: Fixed translation handling and improved error states
 
 import { useState, useRef } from "react";
 import { AIResponse } from "@/types/transport-forms.types";
-import { useLanguageContext } from "@/contexts/LanguageContext";
-
-
-
+import { useTranslationContext } from "@/contexts/TranslationContext";
 
 interface Coordinates {
   lat: number;
@@ -36,18 +33,20 @@ interface AIFormProps {
 }
 
 const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = '' }) => {
-  // Language hook for translations
-  const { t } = useLanguageContext();
-  
-  // For tabs
+  const { t, isLoading, error } = useTranslationContext();
+
+  console.log('[AIForm] isLoading:', isLoading, 'error:', error, 'type:', type);
+
+  // Show loading state but don't block rendering
   const [activeTab, setActiveTab] = useState(0);
   const [prompts, setPrompts] = useState(["", "", ""]);
   const [showModal, setShowModal] = useState(false);
   const [currentResult, setCurrentResult] = useState<ExtractedAIResponse | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   
   const containerRef = useRef<HTMLFormElement>(null);
 
-  // Helper function to get the appropriate key based on type
   const getTypeKey = (senderKey: string, haulerKey: string): string => {
     return type === "sender" ? senderKey : haulerKey;
   };
@@ -56,6 +55,9 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = '' }) =>
     const newPrompts = [...prompts];
     newPrompts[index] = value;
     setPrompts(newPrompts);
+    
+    // Clear any previous API errors when the user types
+    if (apiError) setApiError(null);
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -65,6 +67,9 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = '' }) =>
     if (!currentPrompt.trim()) return;
     
     try {
+      setIsSubmitting(true);
+      setApiError(null);
+      
       const response = await fetch("/api/ai/extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,7 +86,6 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = '' }) =>
 
       const rawData = await response.json();
       
-      // Transform the response
       const data: ExtractedAIResponse = {
         content: rawData.content || "",
         data: {
@@ -95,25 +99,22 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = '' }) =>
         },
       };
 
-      console.log("AI Response:", data);
-      
-      // Set current result and show modal
+      console.log('[AIForm] AI Response:', data);
       setCurrentResult(data);
       setShowModal(true);
-      
-      // Notify parent component
       onAIRequest(data);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error('[AIForm] Error fetching data:', error);
+      setApiError(error instanceof Error ? error.message : "Unknown error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Close modal when clicking outside
   const handleModalClose = () => {
     setShowModal(false);
   };
 
-  // Get placeholder for current tab
   const getPlaceholder = () => {
     const placeholders = [
       getTypeKey("ai_placeholder_example_1_sender", "ai_placeholder_example_1_hauler"),
@@ -164,13 +165,24 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = '' }) =>
           value={prompts[activeTab]}
           onChange={(e) => handlePromptChange(activeTab, e.target.value)}
           rows={4}
+          disabled={isSubmitting}
         />
-        <button type="submit" className="button ai-form__button">
-          {t(getTypeKey("ai_button_ask_sender", "ai_button_ask_hauler"))}
+        
+        {apiError && (
+          <div className="ai-form__error">{apiError}</div>
+        )}
+        
+        <button 
+          type="submit" 
+          className="button ai-form__button"
+          disabled={isSubmitting || !prompts[activeTab].trim()}
+        >
+          {isSubmitting 
+            ? t("ai_button_processing") || "Processing..." 
+            : t(getTypeKey("ai_button_ask_sender", "ai_button_ask_hauler"))}
         </button>
       </form>
       
-      {/* Modal for results */}
       {showModal && currentResult && (
         <div className="ai-form__modal-overlay" onClick={handleModalClose}>
           <div className="ai-form__modal" onClick={(e) => e.stopPropagation()}>
@@ -182,7 +194,7 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = '' }) =>
             </div>
             
             <div className="ai-form__result">
-              <h3 className="ai-form__result-title">{t("ai_extracted_data")}:</h3>
+              <h3 className="ai-form__result-title">{t("ai_extracted_data")}</h3>
               
               <div className="ai-form__result-item">
                 <strong className="ai-form__result-label">{t("ai_pickup_location")}:</strong>

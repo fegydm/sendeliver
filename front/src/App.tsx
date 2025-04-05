@@ -1,9 +1,11 @@
 // File: src/App.tsx
-// Last change: Added LanguageProvider to wrap the entire app
-
-import { useEffect, useState } from "react";
+import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { LanguageProvider } from "@/contexts/LanguageContext"; // New import for LanguageProvider
+// Import all providers
+import { TranslationProvider } from "@/contexts/TranslationContext";
+import { LanguagesProvider } from "@/contexts/LanguagesContext";
+import { CountriesProvider } from "@/contexts/CountriesContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Navigation from "@/components/sections/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
@@ -14,11 +16,12 @@ import TestPage from "@/pages/test.page";
 import Test2Page from "@/pages/test2";
 import Test1Page from "@/pages/test1";
 import Test3Page from "@/pages/test3";
+import DocumentationPage from "@/pages/DocumentationPage";
 import FooterPage from "@/components/sections/footers/footer-page.component";
 import FooterTest from "@/components/sections/footers/footer-test.component";
 import FloatingButton from "@/components/elements/floating-button.element";
 import useScrollBounce from "@/hooks/useScrollBounce";
-import DocumentationPage from "@/pages/DocumentationPage";
+import AIForm from "@/components/sections/content/search-forms/ai-form.component";
 
 const ROUTES = {
   HOME: "/",
@@ -30,81 +33,79 @@ const ROUTES = {
   TEST3: "/test3",
 } as const;
 
-const AppContent: React.FC = () => {
+const App: React.FC = () => {
   useScrollBounce();
 
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
+  // State for dark mode
+  const [isDarkMode, setIsDarkMode] = React.useState<boolean>(() => {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const savedMode = localStorage.getItem("darkMode");
     return savedMode ? JSON.parse(savedMode) : prefersDark;
   });
 
-  const [isTestFooterVisible, setIsTestFooterVisible] = useState(false);
+  // State for test footer visibility
+  const [isTestFooterVisible, setIsTestFooterVisible] = React.useState<boolean>(false);
 
-  useEffect(() => {
+  // Update dark mode and HTML class
+  React.useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
     document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
 
   const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
 
-  // Determine if header and footer should be hidden on certain pages.
-  const isTestPageWithoutHeaderFooter = [ROUTES.TEST2, ROUTES.TEST1, ROUTES.TEST3].includes(
-    window.location.pathname as typeof ROUTES.TEST2
-  );
-
   return (
-    <>
-      {!isTestPageWithoutHeaderFooter && (
-        <header>
-          <Navigation isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
-        </header>
-      )}
-
-      <main>
-      <Routes>
-  <Route path={ROUTES.HOME} element={<HomePage />} />
-  {ROUTES.SENDER.map((path) => (
-    <Route key={path} path={path} element={<SenderPage />} />
-  ))}
-  {ROUTES.HAULER.map((path) => (
-    <Route key={path} path={path} element={<HaulerPage />} />
-  ))}
-  <Route path={ROUTES.TEST} element={<TestPage />} />
-  <Route path={ROUTES.TEST2} element={<Test2Page />} />
-  <Route path={ROUTES.TEST1} element={<Test1Page />} />
-  <Route path={ROUTES.TEST3} element={<Test3Page />} />
-  <Route path="/dokumentacia" element={<DocumentationPage />} />
-  <Route path="/:alias" element={<VideoPage />} />
-  <Route path="*" element={<NotFoundPage />} />
-</Routes>
-      </main>
-
-      {!isTestPageWithoutHeaderFooter && (
-        <footer>
-          <FooterPage
-            onAdminToggle={setIsTestFooterVisible}
-            isTestFooterVisible={isTestFooterVisible}
-          />
-          <div className="footer-floating">
-            <FloatingButton />
-          </div>
-          <FooterTest
-            isVisible={isTestFooterVisible}
-            onClose={() => setIsTestFooterVisible(false)}
-          />
-        </footer>
-      )}
-    </>
-  );
-};
-
-const App: React.FC = () => {
-  return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <TranslationProvider>
+      <LanguagesProvider>
+        <CountriesProvider>
+          <header>
+            {/* Navigation receives required props */}
+            <Navigation isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
+          </header>
+          <main>
+            <Routes>
+              <Route path={ROUTES.HOME} element={<HomePage />} />
+              {ROUTES.SENDER.map((path) => (
+                <Route key={path} path={path} element={<SenderPage />} />
+              ))}
+              {ROUTES.HAULER.map((path) => (
+                <Route key={path} path={path} element={<HaulerPage />} />
+              ))}
+              <Route path={ROUTES.TEST} element={<TestPage />} />
+              <Route path={ROUTES.TEST2} element={<Test2Page />} />
+              <Route path={ROUTES.TEST1} element={<Test1Page />} />
+              <Route path={ROUTES.TEST3} element={<Test3Page />} />
+              <Route path="/dokumentacia" element={<DocumentationPage />} />
+              <Route path="/:alias" element={<VideoPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+            {/* Wrap AIForm with ErrorBoundary and pass required props */}
+            <ErrorBoundary>
+              <AIForm
+                type="sender"
+                onAIRequest={(request) => {
+                  console.log("AI request triggered with:", request);
+                  // Add further request handling here if needed
+                }}
+              />
+            </ErrorBoundary>
+          </main>
+          <footer>
+            <FooterPage
+              onAdminToggle={setIsTestFooterVisible}
+              isTestFooterVisible={isTestFooterVisible}
+            />
+            <div className="footer-floating">
+              <FloatingButton />
+            </div>
+            <FooterTest
+              isVisible={isTestFooterVisible}
+              onClose={() => setIsTestFooterVisible(false)}
+            />
+          </footer>
+        </CountriesProvider>
+      </LanguagesProvider>
+    </TranslationProvider>
   );
 };
 

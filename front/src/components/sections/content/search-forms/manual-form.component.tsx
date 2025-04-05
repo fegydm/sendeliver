@@ -1,12 +1,12 @@
-// File: .front/src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Removed ResultTable rendering and added callback for found vehicles
+// File: src/components/sections/content/search-forms/manual-form.component.tsx
+// Last change: Replaced useCountriesPreload with useCountriesContext
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import CountrySelect from "./CountrySelect";
 import PostalCitySelect from "./PostalCitySelect";
 import { DateTimeSelect } from "./DateTimeSelect";
 import { TransportFormData, LocationType, LocationSuggestion } from "@/types/transport-forms.types";
-import { useCountriesPreload } from "@/hooks/useCountriesPreload";
+import { useCountriesContext } from "@/contexts/CountriesContext"; // Fixed import
 import loadIconWebp from "@/assets/icon-load.webp"; 
 import deliverIconWebp from "@/assets/icon-del.webp"; 
 import { SenderResultData } from "@/components/sections/content/results/result-table.component";
@@ -75,7 +75,9 @@ export function ManualForm({
   const [postalFormats, setPostalFormats] = useState<Record<string, PostalFormat>>({});
   const [availableVehicles, setAvailableVehicles] = useState<SenderResultData[]>([]);
   const [totalVehiclesCount, setTotalVehiclesCount] = useState<number>(0);
-  const { countries: allCountries } = useCountriesPreload();
+  
+  // Use CountriesContext instead of useCountriesPreload
+  const { countries: allCountries } = useCountriesContext();
 
   const fetchPostalFormat = useCallback(async (cc: string) => {
     try {

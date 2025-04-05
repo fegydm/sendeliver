@@ -1,8 +1,5 @@
-// File: ./front/src/hooks/useTranslationsPreload.ts
-// This hook preloads translations for the application.
-// It prioritizes loading the primary language translations immediately (from LS if available or from API)
-// and then loads other priority languages (secondary and tertiary) in the background.
-// The translations are cached in localStorage and in memory for fast access.
+// File: src/hooks/useTranslationsPreload.ts
+// Last change: Jednoduché a čisté riešenie
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocalStorage } from './useLocalStorage';
@@ -13,10 +10,8 @@ interface TranslationsPreloadOptions {
   enabled: boolean;
 }
 
-// Type for translations
 type TranslationsData = Record<string, string>;
 
-// Type for cache object for translations
 interface TranslationCache {
   [lc: string]: TranslationsData;
 }
@@ -25,10 +20,6 @@ const DEFAULT_LC = 'en';
 const TRANSLATION_CACHE_KEY = 'translation-cache';
 const CACHE_VERSION = 1;
 
-// Minimal essential translations (could be preloaded)
-const ESSENTIAL_TRANSLATIONS: TranslationsData = {};
-
-// Calculate tertiary language: default (en) if neither primary nor secondary is en
 const useTertiaryLanguage = (primaryLc: string, secondaryLc: string | null): string | null =>
   useMemo(() => {
     if (primaryLc === DEFAULT_LC || secondaryLc === DEFAULT_LC) return null;
@@ -36,144 +27,163 @@ const useTertiaryLanguage = (primaryLc: string, secondaryLc: string | null): str
   }, [primaryLc, secondaryLc]);
 
 export const useTranslationsPreload = ({ primaryLc, secondaryLc, enabled }: TranslationsPreloadOptions) => {
-  // Determine tertiary language
   const tertiaryLc = useTertiaryLanguage(primaryLc, secondaryLc);
 
-  // Build priority languages list: filter out falsy values
   const priorityLanguages = useMemo(() => {
     return [primaryLc, secondaryLc, tertiaryLc].filter(Boolean) as string[];
   }, [primaryLc, secondaryLc, tertiaryLc]);
 
-  // Local state for loading and error status, and for tracking which languages are loaded
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [loadedLanguages, setLoadedLanguages] = useState<string[]>([]);
 
-  // LocalStorage cache for translations
+  // Inicializácia localStorage cache
   const [storageCache, setStorageCache] = useLocalStorage<{
     version: number;
     translations: TranslationCache;
   }>(TRANSLATION_CACHE_KEY, {
     version: CACHE_VERSION,
-    translations: { [DEFAULT_LC]: ESSENTIAL_TRANSLATIONS }
+    translations: {}
   });
 
-  // In-memory cache combining LS cache and runtime loaded translations
+  // Inicializácia memory cache
   const [memoryCache, setMemoryCache] = useState<TranslationCache>(
-    storageCache.version === CACHE_VERSION ? storageCache.translations : { [DEFAULT_LC]: ESSENTIAL_TRANSLATIONS }
+    storageCache.version === CACHE_VERSION ? storageCache.translations : {}
   );
 
-  // Function to fetch translations from API for a given language code
+  // Načítanie prekladov z API
   const fetchTranslations = useCallback(async (lc: string): Promise<TranslationsData> => {
     try {
-      console.log(`[useTranslationsPreload] 🌐 Fetching translations for ${lc} from API`);
-      // API fetch logic (uncomment when API is available)
-      /*
-      const response = await fetch(`/api/translations?lc=${lc}`);
+      console.log(`[TranslationsPreload] Fetching translations for ${lc} from API`);
+      const response = await fetch(`/api/geo/translations?lc=${lc}`);
+      
       if (!response.ok) {
         throw new Error(`Failed to load translations for ${lc}: ${response.status}`);
       }
+      
       const data = await response.json();
+      console.log(`[TranslationsPreload] Received ${Object.keys(data).length} translations for ${lc}`);
+      
+      if (!data || typeof data !== 'object') {
+        throw new Error(`Invalid translation data for ${lc}`);
+      }
+      
       return data;
-      */
-      // For now, return an empty object (will fallback to keys)
-      return {};
     } catch (error) {
-      console.error(`[useTranslationsPreload] ❌ Error fetching translations for ${lc}:`, error);
-      return {}; // Fallback to empty translations
+      console.error(`[TranslationsPreload] Error fetching translations for ${lc}:`, error);
+      return {};
     }
   }, []);
 
-  // Function to load translations for a specific language, using LS cache or fetching from API
+  // Načítanie prekladov s použitím cache
   const loadTranslations = useCallback(async (lc: string): Promise<TranslationsData> => {
     if (!lc) return {};
-    // If translations already loaded in memory, return them
-    if (memoryCache[lc]) {
-      console.log(`[useTranslationsPreload] ✅ Using in-memory translations for ${lc}`);
+    
+    // Ak už máme načítané v pamäti, vrátime ich
+    if (memoryCache[lc] && Object.keys(memoryCache[lc]).length > 0) {
+      console.log(`[TranslationsPreload] Using in-memory translations for ${lc}`);
       return memoryCache[lc];
     }
+    
+    // Ak máme v localStorage, vrátime ich
+    if (storageCache.version === CACHE_VERSION && 
+        storageCache.translations[lc] && 
+        Object.keys(storageCache.translations[lc]).length > 0) {
+      
+      console.log(`[TranslationsPreload] Using localStorage translations for ${lc}`);
+      
+      const translations = storageCache.translations[lc];
+      setMemoryCache(prev => ({ ...prev, [lc]: translations }));
+      
+      setLoadedLanguages(prev => prev.includes(lc) ? prev : [...prev, lc]);
+      return translations;
+    }
+    
+    // Potrebujeme načítať z API
     try {
       setIsLoading(true);
-      let translations: TranslationsData;
-      // Check localStorage cache if version is valid
-      if (storageCache.version === CACHE_VERSION && storageCache.translations[lc]) {
-        console.log(`[useTranslationsPreload] 📦 Using localStorage translations for ${lc}`);
-        translations = storageCache.translations[lc];
-      } else {
-        // Otherwise, fetch from API
-        translations = await fetchTranslations(lc);
-      }
-      // Update in-memory cache
-      setMemoryCache(prev => ({ ...prev, [lc]: translations }));
-      // For priority languages, update localStorage cache
-      if (priorityLanguages.includes(lc)) {
+      
+      const translations = await fetchTranslations(lc);
+      
+      if (Object.keys(translations).length > 0) {
+        console.log(`[TranslationsPreload] Updating caches with translations`);
+        
+        // Aktualizovať memoryCache
+        setMemoryCache(prev => ({ ...prev, [lc]: translations }));
+        
+        // Aktualizovať localStorage
         setStorageCache(prev => ({
           version: CACHE_VERSION,
           translations: { ...prev.translations, [lc]: translations }
         }));
+        
+        setLoadedLanguages(prev => prev.includes(lc) ? prev : [...prev, lc]);
+        return translations;
+      } else {
+        console.warn(`[TranslationsPreload] No translations received for ${lc}`);
+        setLoadedLanguages(prev => prev.includes(lc) ? prev : [...prev, lc]);
+        return {};
       }
-      // Mark language as loaded (avoid duplicate entries)
-      setLoadedLanguages(prev => prev.includes(lc) ? prev : [...prev, lc]);
-      return translations;
     } catch (error) {
-      console.error(`[useTranslationsPreload] Failed to load translations for ${lc}:`, error);
+      console.error(`[TranslationsPreload] Failed to load translations for ${lc}:`, error);
       setHasError(true);
       setLoadedLanguages(prev => prev.includes(lc) ? prev : [...prev, lc]);
-      return {}; // Fallback to empty object if error
+      return {};
     } finally {
       setIsLoading(false);
     }
-  }, [memoryCache, storageCache, fetchTranslations, priorityLanguages, setStorageCache]);
+  }, [memoryCache, storageCache, fetchTranslations, setStorageCache]);
 
-  // useEffect to load primary language translations immediately, then background load other priorities
+  // Načítať preklady, keď sa zmení jazyk
   useEffect(() => {
     if (!enabled) return;
+    
     let mounted = true;
-    const loadPrimaryLanguage = async () => {
+    
+    const loadAllLanguages = async () => {
       try {
-        console.log(`[useTranslationsPreload] Loading primary language: ${primaryLc}`);
-        await loadTranslations(primaryLc);
-        if (!mounted) return;
-        // Load remaining priority languages in the background
-        const otherLanguages = priorityLanguages.filter(lc => lc !== primaryLc);
-        if (otherLanguages.length > 0) {
-          console.log(`[useTranslationsPreload] Loading other priority languages: ${otherLanguages.join(', ')}`);
-          for (const lc of otherLanguages) {
-            if (!mounted) break;
-            loadTranslations(lc).catch(err => {
-              console.warn(`[useTranslationsPreload] Failed to load language ${lc}:`, err);
-            });
-          }
+        // Načítať primárny jazyk
+        if (primaryLc && mounted) {
+          console.log(`[TranslationsPreload] Loading primary language: ${primaryLc}`);
+          await loadTranslations(primaryLc);
+        }
+        
+        // Načítať ostatné jazyky
+        for (const lc of priorityLanguages.filter(l => l !== primaryLc)) {
+          if (!mounted) break;
+          
+          console.log(`[TranslationsPreload] Loading additional language: ${lc}`);
+          await loadTranslations(lc).catch(err => {
+            console.warn(`[TranslationsPreload] Failed to load language ${lc}:`, err);
+          });
         }
       } catch (err) {
-        console.error(`[useTranslationsPreload] Error loading languages:`, err);
+        console.error(`[TranslationsPreload] Error loading languages:`, err);
+        setHasError(true);
       }
     };
-    loadPrimaryLanguage();
+    
+    loadAllLanguages();
+    
     return () => {
       mounted = false;
     };
   }, [enabled, primaryLc, priorityLanguages, loadTranslations]);
 
-  // Translation function: returns the translation for a given key based on the fallback chain
-  const t = useCallback((key: string, defaultValue?: string): string => {
-    // Try primary language translations
+  // Funkcia na preklad - vracia kľúč, ak preklad neexistuje
+  const t = useCallback((key: string): string => {
+    if (!key) return '';
+    
+    // Skúsiť nájsť preklad v primárnom jazyku
     if (memoryCache[primaryLc]?.[key]) {
       return memoryCache[primaryLc][key];
     }
-    // Try secondary language if available
-    if (secondaryLc && memoryCache[secondaryLc]?.[key]) {
-      return memoryCache[secondaryLc][key];
-    }
-    // Try tertiary language (default English) if available
-    if (tertiaryLc && memoryCache[tertiaryLc]?.[key]) {
-      return memoryCache[tertiaryLc][key];
-    }
-    // Fallback: return provided defaultValue or the key itself
-    return defaultValue || key;
-  }, [memoryCache, primaryLc, secondaryLc, tertiaryLc]);
+    
+    // Ak preklad neexistuje, vrátiť kľúč
+    console.log(`[TranslationsPreload] Missing translation for key: ${key}`);
+    return key;
+  }, [memoryCache, primaryLc]);
 
-  // Public API of the hook
   return { 
     t,
     isLoading,
