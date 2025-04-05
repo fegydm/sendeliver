@@ -1,5 +1,6 @@
 // File: src/components/sections/content/content.component.tsx
-// Last change: April 04, 2025
+// Last change: April 05, 2025 - Fixed navigation by removing unnecessary event blocking
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import AIForm from "@/components/sections/content/search-forms/ai-form.component";
@@ -87,12 +88,12 @@ const Content: React.FC<ContentProps> = ({
             key={section.type}
             className={`${section.navigationClass} ${activeSection === section.type ? "active" : ""}`}
           >
-            <Link to={`/${section.type}`}>
+            <Link to={`/${section.type}`} style={{ textDecoration: 'none' }}>
               <Button
                 variant="primary"
                 position={section.position}
                 active={activeSection === section.type}
-                onClick={() => onSwitchSection(section.type)}
+                onClick={() => onSwitchSection(section.type)} // Only handle section switch
               >
                 {section.type === "sender" ? "Client Dashboard" : "Carrier Dashboard"}
               </Button>

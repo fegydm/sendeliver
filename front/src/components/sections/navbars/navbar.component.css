@@ -1,5 +1,5 @@
 /* File: ./front/src/components/navbars/navbar.component.css */
-/* Last change: Updated styles for language dropdown and added divider */
+/* Last change: Fixed native name alignment to the right with grid */
 
 .navbar-language-container {
   position: relative;
@@ -27,10 +27,22 @@
   height: auto;
   border-radius: 2px;
   margin-right: 0.5rem;
+  transition: filter 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+  opacity: 1;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2),
+              -1px -1px 2px rgba(255, 255, 255, 0.3);
 }
 
 .navbar-language-flag--grayscale {
-  filter: grayscale(100%);
+  filter: grayscale(80%) contrast(120%) brightness(100%);
+  opacity: 0.7;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.15),
+              -1px -1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.navbar-language-flag--grayscale:hover {
+  filter: none;
+  opacity: 1;
 }
 
 .navbar-language-lc {
@@ -47,36 +59,42 @@
   background-color: #fff;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 300px;
+  width: 350px;
   z-index: 1000;
   overflow: hidden;
   border: 1px solid #e0e0e0;
+  pointer-events: auto;
 }
 
 /* Search row */
 .navbar-language-search-row {
   display: flex;
-  padding: 0.75rem;
+  align-items: center;
+  padding: 0.5rem;
   border-bottom: 1px solid #e0e0e0;
   background-color: #f7f7f7;
+  gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .navbar-language-code-search-container {
   flex: 0 0 60px;
-  margin-right: 0.5rem;
 }
 
 .navbar-language-name-search-container {
   flex: 1;
+  min-width: 0;
 }
 
 .navbar-language-code-search,
 .navbar-language-name-search {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.3rem 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 0.875rem;
+  box-sizing: border-box;
 }
 
 .navbar-language-code-search:focus,
@@ -101,17 +119,19 @@
 
 /* Dropdown styles */
 .navbar-language-dropdown {
-  max-height: 300px;
+  max-height: 390px;
   overflow-y: auto;
 }
 
 /* Language item styles */
 .navbar-language-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.5rem 20px 20px 120px 1fr; /* Flag, CC, LC, Name, Native */
   align-items: center;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  gap: 0.5rem;
 }
 
 .navbar-language-item:hover,
@@ -135,37 +155,55 @@
 .navbar-language-item-flag {
   width: 1.5rem;
   height: auto;
-  margin-right: 0.2rem;
   border-radius: 2px;
   border: 1px solid #e0e0e0;
+  transition: filter 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+  opacity: 1;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2),
+              -1px -1px 2px rgba(255, 255, 255, 0.3);
 }
 
 .navbar-language-item-flag--grayscale {
-  filter: grayscale(100%);
+  filter: grayscale(80%) contrast(120%) brightness(100%);
+  opacity: 0.7;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.15),
+              -1px -1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.navbar-language-item-flag--grayscale:hover {
+  filter: none;
+  opacity: 1;
 }
 
 .navbar-language-item-code {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #777;
   text-transform: uppercase;
-  margin-right: 0.75rem;
   font-weight: 400;
+  text-align: left;
 }
 
 .navbar-language-item-lc {
   font-size: 0.875rem;
-  margin-right: 0.75rem;
+  text-align: left;
 }
 
 .navbar-language-item-name {
-  flex: 1;
   font-size: 0.875rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.navbar-language-item-unsupported {
+  font-size: 0.75rem;
+  color: #999;
+  margin-left: 0.25rem;
 }
 
 .navbar-language-item-native {
   color: #777;
   font-size: 0.75rem;
-  margin-left: 0.5rem;
+  text-align: right; /* Align right in the last column */
 }
 
 /* Divider between priority and other languages */
@@ -179,24 +217,28 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .navbar-language-dropdown-container {
-    width: 280px;
+    width: 330px;
     right: -10px;
   }
 }
 
 @media (max-width: 480px) {
   .navbar-language-dropdown-container {
-    width: 260px;
+    width: 310px;
     right: -50px;
   }
   
   .navbar-language-search-row {
     flex-direction: column;
+    gap: 0.5rem;
   }
   
   .navbar-language-code-search-container {
-    margin-right: 0;
-    margin-bottom: 0.5rem;
     flex: 0 0 auto;
+    width: 60px;
+  }
+  
+  .navbar-language-item {
+    grid-template-columns: 1.5rem 20px 30px 100px 1fr; /* Adjust for smaller screens */
   }
 }

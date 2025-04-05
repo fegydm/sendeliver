@@ -1,67 +1,36 @@
 // File: src/components/sections/navbars/NavbarLanguage.tsx
+// Last change: April 05, 2025 - Fixed DD flag, grid alignment, and searchbox layout
+
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
-// Use translation context for current language and changeLanguage function
 import { useTranslationContext } from "@/contexts/TranslationContext";
-// Use languages context for list of languages and flag URL function
 import { useLanguagesContext } from "@/contexts/LanguagesContext";
 import type { Language } from "@/types/language.types";
 import "./navbar.component.css";
 
 const NavbarLanguage: React.FC = () => {
-  // State for dropdown open/close and search fields
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [codeSearch, setCodeSearch] = useState("");
   const [nameSearch, setNameSearch] = useState("");
 
-  // Refs for DOM elements
   const componentRef = useRef<HTMLDivElement>(null);
   const codeInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  // Get current language settings from TranslationContext
-  const { currentLanguage, secondaryLanguage, changeLanguage } = useTranslationContext();
+  const { currentLanguage, secondaryLanguage, changeLanguage, unsupportedLanguages } = useTranslationContext();
   const currentLc = currentLanguage.lc;
-  const secLc = secondaryLanguage; // alias
+  const secLc = secondaryLanguage;
 
-  // Determine tertiary language (set to 'en' only if neither current nor secondary is 'en')
+  useEffect(() => {
+    console.log(`[NavbarLanguage] Current: ${currentLc}, Unsupported: ${unsupportedLanguages.includes(currentLc) ? 'yes' : 'no'}`);
+  }, [currentLc, unsupportedLanguages]);
+
   const tertiaryLc = useMemo(() => {
     if (currentLc === "en" || secLc === "en") return null;
     return "en";
   }, [currentLc, secLc]);
 
-  // Get languages list and getFlagUrl from LanguagesContext
   const { languages, isLoading, getFlagUrl } = useLanguagesContext();
 
-  // Group languages by priority (for potential future use)
-  const groupedLanguages = useMemo(() => {
-    const priorityLangs: Language[] = [];
-    const otherLangs: Language[] = [];
-    languages.forEach((lang) => {
-      if (
-        lang.lc === currentLc ||
-        lang.lc === secLc ||
-        (tertiaryLc && lang.lc === tertiaryLc)
-      ) {
-        priorityLangs.push(lang);
-      } else {
-        otherLangs.push(lang);
-      }
-    });
-    // Sort priority languages
-    priorityLangs.sort((a, b) => {
-      if (a.lc === currentLc) return -1;
-      if (b.lc === currentLc) return 1;
-      if (a.lc === secLc) return -1;
-      if (b.lc === secLc) return 1;
-      if (tertiaryLc && a.lc === tertiaryLc) return -1;
-      if (tertiaryLc && b.lc === tertiaryLc) return 1;
-      return 0;
-    });
-    otherLangs.sort((a, b) => a.name_en.localeCompare(b.name_en));
-    return { priorityLangs, otherLangs };
-  }, [languages, currentLc, secLc, tertiaryLc]);
-
-  // Filter languages based on search input
   const filteredLanguages = useMemo(() => {
     const filtered = languages.filter((lang) => {
       const codeMatch =
@@ -103,11 +72,10 @@ const NavbarLanguage: React.FC = () => {
     return { priorityFiltered, otherFiltered };
   }, [languages, codeSearch, nameSearch, currentLc, secLc, tertiaryLc]);
 
-  // Handle language selection
   const handleLanguageSelect = useCallback(
     (lang: Language) => {
-      console.log(`[NavbarLanguage] Changing language to: ${lang.lc} (${lang.name_en})`);
-      changeLanguage(lang); // Pass full language object
+      console.log(`[NavbarLanguage] Selecting: ${lang.lc} (${lang.name_en})`);
+      changeLanguage(lang);
       setIsDropdownOpen(false);
       setCodeSearch("");
       setNameSearch("");
@@ -115,19 +83,18 @@ const NavbarLanguage: React.FC = () => {
     [changeLanguage]
   );
 
-  // Toggle dropdown open/close
-  const toggleDropdown = useCallback(() => {
+  const toggleDropdown = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    console.log("[NavbarLanguage] Toggle clicked, current state:", isDropdownOpen);
     setIsDropdownOpen((prev) => !prev);
     if (!isDropdownOpen) {
-      // Focus on code input after opening dropdown
-      setTimeout(() => codeInputRef.current?.focus(), 10);
+        setTimeout(() => codeInputRef.current?.focus(), 10);
     } else {
-      setCodeSearch("");
-      setNameSearch("");
+        setCodeSearch("");
+        setNameSearch("");
     }
-  }, [isDropdownOpen]);
+}, [isDropdownOpen]);
 
-  // Close dropdown when clicking outside
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
       setIsDropdownOpen(false);
@@ -141,7 +108,6 @@ const NavbarLanguage: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [handleClickOutside]);
 
-  // Keydown handlers for search inputs
   const handleCodeSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
       setIsDropdownOpen(false);
@@ -168,7 +134,6 @@ const NavbarLanguage: React.FC = () => {
     setCodeSearch(e.target.value.toUpperCase());
   }, []);
 
-  // Render language items in dropdown
   const renderLanguageItems = () => {
     const { priorityFiltered, otherFiltered } = filteredLanguages;
     if (isLoading) {
@@ -204,7 +169,12 @@ const NavbarLanguage: React.FC = () => {
             />
             <span className="navbar-language-item-code">{lang.cc || ""}</span>
             <span className="navbar-language-item-lc">{lang.lc || ""}</span>
-            <span className="navbar-language-item-name">{lang.name_en || ""}</span>
+            <span className="navbar-language-item-name">
+              {lang.name_en || ""}
+              {unsupportedLanguages.includes(lang.lc) && (
+                <span className="navbar-language-item-unsupported"> - unsupported</span>
+              )}
+            </span>
             <span className="navbar-language-item-native">{lang.native_name || ""}</span>
           </div>
         ))}
@@ -230,7 +200,12 @@ const NavbarLanguage: React.FC = () => {
             />
             <span className="navbar-language-item-code">{lang.cc || ""}</span>
             <span className="navbar-language-item-lc">{lang.lc || ""}</span>
-            <span className="navbar-language-item-name">{lang.name_en || ""}</span>
+            <span className="navbar-language-item-name">
+              {lang.name_en || ""}
+              {unsupportedLanguages.includes(lang.lc) && (
+                <span className="navbar-language-item-unsupported"> - unsupported</span>
+              )}
+            </span>
             <span className="navbar-language-item-native">{lang.native_name || ""}</span>
           </div>
         ))}
@@ -249,15 +224,23 @@ const NavbarLanguage: React.FC = () => {
         <img
           src={getFlagUrl(currentLanguage.cc || "")}
           alt={`${currentLc} flag`}
-          className="navbar-language-flag navbar-language-flag--grayscale"
+          className={`navbar-language-flag ${!isDropdownOpen ? "navbar-language-flag--grayscale" : ""}`}
           onError={(e) => {
             e.currentTarget.src = getFlagUrl("GB");
           }}
         />
-        <span className="navbar-language-lc">{currentLc}</span>
+        <span className="navbar-language-lc">
+          {currentLc}
+          {unsupportedLanguages.includes(currentLc) && (
+            <span className="navbar-language-item-unsupported"> - unsupported</span>
+          )}
+        </span>
       </button>
       {isDropdownOpen && (
-        <div className="navbar-language-dropdown-container">
+        <div
+          className="navbar-language-dropdown-container"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="navbar-language-search-row">
             <div className="navbar-language-code-search-container">
               <input
@@ -284,9 +267,7 @@ const NavbarLanguage: React.FC = () => {
               />
             </div>
           </div>
-          <div className="navbar-language-dropdown">
-            {renderLanguageItems()}
-          </div>
+          <div className="navbar-language-dropdown">{renderLanguageItems()}</div>
         </div>
       )}
     </div>
