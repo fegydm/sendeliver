@@ -1,10 +1,11 @@
 // File: ./back/src/queries/geo.translations.queries.js
-// Last change: Added COUNT_TRANSLATIONS_BY_LC_QUERY for quick availability checks
+// Last change: Updated GET_TRANSLATIONS_QUERY to join with translations_keys
 
 export const GET_TRANSLATIONS_QUERY = `
-  SELECT key, text
-  FROM geo.translations
-  WHERE language_id = $1
+  SELECT k.key_name AS key, t.text
+  FROM geo.translations t
+  JOIN geo.translations_keys k ON t.key_id = k.id
+  WHERE t.language_id = $1
 `;
 
 export const CHECK_TRANSLATIONS_TABLE_QUERY = `

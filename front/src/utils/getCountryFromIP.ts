@@ -1,15 +1,9 @@
-// File: ./front/src/utils/getCountryFromIP.ts
-// This function determines the country code using two services (ipapi.co and ipinfo.io) concurrently.
-// It first checks localStorage for a valid cache. If not found or expired, it sends requests.
-// The result is cached with the following properties:
-// - code: determined country code (e.g., "sk")
-// - id: identifier (0 = fallback, 1 = one service result, 2 = both services result)
-// - details: elapsed times (in ms, rounded) for each service (e.g., { ipapi: 407, ipinfo: 161 })
-// - timestamp: when the cache was updated
-// - ttl: cache validity period (7 days in ms)
+// File: ./src/utils/getCountryFromIP.ts
+// Last change: Pridaný vývojový režim s fixnou hodnotou "sk"
 
 const CACHE_KEY = "ip-country-cache";
-const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 dní
+const DEV_MODE = true; // ⚠️ ZMENIŤ NA FALSE PRE PRODUKCIU ⚠️
 
 // Helper: Fetch JSON with timeout (1000ms) and round elapsed time
 async function fetchJSONWithTimeout(
@@ -100,6 +94,23 @@ function updateCache(code: string, id: number, details: { ipapi?: number; ipinfo
 // Main function: Determines the country code based on IP.
 // It checks the cache first, then sends concurrent requests if needed.
 export async function getCountryFromIP(): Promise<string> {
+  // Vývojový režim - vráti fixnú hodnotu "sk" bez volania API
+  if (DEV_MODE) {
+    console.log("[Geo API] 🔧 DEV MODE: Using fixed country code 'sk'");
+    
+    // Uložiť do cache pre ďalšie volania
+    const devCache = {
+      code: "sk",
+      id: 999, // Špeciálny identifikátor pre dev režim
+      details: { dev: true },
+      timestamp: Date.now(),
+      ttl: CACHE_TTL,
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(devCache));
+    
+    return "sk";
+  }
+
   // 1. Check LS cache.
   const cached = getCache();
   if (cached) {

@@ -4,7 +4,7 @@
 // The required PIN is set to "1221".
 
 import React, { useState } from "react";
-import PinForm from "@/components/elements/pin-form.element"; // Using PinForm element
+import PinForm from "@/components/elements/pin-form.element";
 import "@/styles/sections/video.page.css";
 import "./documentation.page.css";
 
@@ -25,70 +25,102 @@ const DocumentationPage: React.FC = () => {
         // Once access is granted, show the documentation content
         <div className="documentation-content">
           <h1>Dokumentácia jazykového systému</h1>
+          
           <h2>Úvod</h2>
           <p>
             Jazykový systém umožňuje lokalizáciu aplikácie prostredníctvom dynamického načítania prekladov
-            na základe dvojmiestneho jazykového kódu (lc). Systém je optimalizovaný pre rýchlosť, pričom databáza
+            na základe dvojmiestneho jazykového kódu (lc). Systém je optimalizovaný pre rýchlosť – databáza
             používa <code>language_id</code> (integer) pre efektívne dotazy, zatiaľ čo frontend a backend
-            komunikujú pomocou <code>lc</code> (napr. "en", "sk"). Dizajn zohľadňuje jednoduchú rozšíriteľnosť a
-            údržbu prekladov.
+            komunikujú pomocou <code>lc</code> (napr. "en", "sk").
           </p>
+
           <h2>Architektúra</h2>
+          
           <h3>Databáza</h3>
-          <p>
-            <strong>Tabuľky:</strong>
-          </p>
+          <p><strong>Tabuľky:</strong></p>
           <ul>
             <li>
-              <strong>geo.languages:</strong> Obsahuje informácie o jazykoch.
-              <ul>
-                <li><code>id</code>: integer PRIMARY KEY – unikátny identifikátor jazyka.</li>
-                <li><code>code_2</code>: text – dvojmiestny kód jazyka (napr. "en", "sk").</li>
-                <li><code>code_3</code>: text – trojmiestny kód jazyka (napr. "eng", "slo").</li>
-                <li><code>name_en</code>: text – názov jazyka v angličtine.</li>
-                <li><code>name_sk</code>: text – názov jazyka v slovenčine.</li>
-                <li><code>name_local</code>: text – lokálny názov jazyka.</li>
-                <li><code>native_name</code>: text – názov v natívnom jazyku.</li>
-                <li><code>is_rtl</code>: boolean – označuje smer písma.</li>
-                <li><code>primary_country_code</code>: text – kód krajiny (napr. "GB", "SK").</li>
-              </ul>
+              <strong>geo.languages</strong>
+              <pre>{`
+id: integer PRIMARY KEY
+code_2: text – dvojmiestny kód jazyka (napr. "en", "sk")
+code_3: text – trojmiestny kód jazyka (napr. "eng", "slo")
+name_en: text – názov jazyka v angličtine
+name_sk: text – názov jazyka v slovenčine
+name_local: text – lokálny názov jazyka
+native_name: text – názov v natívnom jazyku
+is_rtl: boolean – označuje smer písma
+primary_country_code: text – dvojmiestny kód krajiny veľkými písmenami
+              `}</pre>
             </li>
             <li>
-              <strong>geo.translations:</strong> Obsahuje preklady jednotlivých kľúčov.
-              <ul>
-                <li><code>id</code>: integer PRIMARY KEY.</li>
-                <li><code>key</code>: text – kľúč prekladu (napr. "welcome").</li>
-                <li><code>text</code>: text – preklad (napr. "Vitaj").</li>
-                <li><code>language_id</code>: integer – cudzí kľúč odkazujúci na geo.languages.id.</li>
-              </ul>
+              <strong>geo.translations_keys</strong>
+              <pre>{`
+id: integer PRIMARY KEY
+key_name: text UNIQUE – názov kľúča (napr. "welcome")
+key_description: text – popis významu kľúča
+notes: text – poznámky, kde sa kľúč používa
+              `}</pre>
             </li>
             <li>
-              <strong>geo.translations_metadata:</strong> Slúži na dokumentáciu prekladových kľúčov.
+              <strong>geo.translations</strong>
+              <pre>{`
+id: integer PRIMARY KEY
+key_id: integer – odkaz na geo.translations_keys.id
+language_id: integer – odkaz na geo.languages.id
+text: text – preložený výraz
+is_verified: boolean – či je preklad overený
+created_by: text – autor prekladu
+created_at: timestamp – dátum vytvorenia záznamu
+              `}</pre>
             </li>
           </ul>
+
           <h3>Backend</h3>
-          <p>
-            Backend načítava preklady pomocou dotazov, kde sa lc mapuje na <code>language_id</code> a následne
-            vykonáva SELECT z <code>geo.translations</code>. Cachovanie mapovania lc na language_id minimalizuje počet dotazov.
-          </p>
+          <p>Dotazy na načítanie prekladov:</p>
+          <pre>{`
+GET_TRANSLATIONS_QUERY:
+SELECT k.key_name AS key, t.text
+FROM geo.translations t
+JOIN geo.translations_keys k ON t.key_id = k.id
+WHERE t.language_id = $1;
+
+GET_LANGUAGE_ID_BY_LC_QUERY:
+SELECT id FROM geo.languages WHERE code_2 = $1;
+          `}</pre>
+          <p>Výsledok je mapovaný na objekt typu:</p>
+          <pre>{`
+{
+  "welcome": "Vitaj",
+  "logout": "Odhlásiť sa",
+  ...
+}
+          `}</pre>
+
           <h3>Frontend</h3>
-          <p>
-            Frontend používa Context API pre správu jazykových nastavení. Hlavné súbory:
-          </p>
+          <p>Hlavné súbory:</p>
           <ul>
-            <li><strong>LanguageContext.tsx</strong>: Poskytuje centralizovaný prístup k jazykovým nastaveniam a prekladom.</li>
-            <li><strong>useTranslationsPreload.ts</strong>: Načítava preklady z API s cachovaním v LS a pamäti.</li>
-            <li><strong>NavbarLanguage.tsx</strong>: Umožňuje výber jazyka cez dropdown a prepína aktuálny jazyk.</li>
+            <li><strong>LanguageContext.tsx</strong> – spravuje currentLanguage, changeLanguage a funkciu t(key)</li>
+            <li><strong>useTranslationsPreload.ts</strong> – načítava preklady z API a ukladá do pamäťovej/LS cache</li>
+            <li><strong>NavbarLanguage.tsx</strong> – dropdown na výber jazyka s prepnutím currentLanguage</li>
           </ul>
-          <h3>Pracovný tok</h3>
-          <p>
-            Používateľ vyberie jazyk v dropdown menu (napr. "sk"). Funkcia <code>changeLanguage</code> aktualizuje currentLanguage,
-            a preklady sa načítavajú cez useTranslationsPreload z API. Výsledné preklady sa zobrazujú v UI prostredníctvom funkcie <code>t(key)</code>.
-          </p>
+
+          <h3>API Endpoint</h3>
+          <pre>{`
+GET /api/geo/translations?lc=sk
+Výstup:
+{
+  "ai_button_ask": "Opýtať sa AI",
+  "ai_modal_close": "Zavrieť",
+  ...
+}
+          `}</pre>
+
           <h3>Optimalizácia a rozšíriteľnosť</h3>
           <p>
-            Databáza používa indexy pre rýchle SELECT dotazy. Frontend používa in-memory a LS cache pre preklady,
-            čo znižuje počet HTTP požiadaviek. Systém je navrhnutý na jednoduchú rozšíriteľnosť (napr. pridanie nových jazykov či regionálnych variantov).
+            Indexy na <code>language_id</code> a <code>key_id</code> zabezpečujú rýchlosť. Oddelenie kľúčov 
+            (<code>translations_keys</code>) a textov (<code>translations</code>) uľahčuje správu. Na pridanie 
+            nového jazyka stačí vložiť nové záznamy do <code>geo.translations</code>.
           </p>
         </div>
       )}

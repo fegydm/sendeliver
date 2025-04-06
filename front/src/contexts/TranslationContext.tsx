@@ -1,8 +1,9 @@
 // File: src/contexts/TranslationContext.tsx
-// Last change: Integrated translation loading logic, removed props dependency, stabilized rendering
+// Last change: Integrated geolocation functionality using getCountryFromIP utility
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { getCountryFromIP } from '@/utils/getCountryFromIP';
 
 // Interface for language information
 export interface LanguageInfo {
@@ -47,6 +48,7 @@ const LS_KEYS = {
 // Constants
 const DEFAULT_LC = 'en';
 const CACHE_VERSION = 1;
+const SUPPORTED_LANGUAGES = ['en', 'sk', 'de']; // Zoznam podporovaných jazykov
 
 // Type for translation data
 type TranslationsData = Record<string, string>;
@@ -77,6 +79,8 @@ export const TranslationProvider: React.FC<{ children: ReactNode }> = ({ childre
     LS_KEYS.SECONDARY,
     null
   );
+  
+  // Nepoužívame vlastné geo cache, o to sa stará utilita getCountryFromIP
 
   // Current language state
   const [currentLanguage, setCurrentLanguage] = useState<LanguageInfo>(() => {
@@ -102,6 +106,29 @@ export const TranslationProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unsupportedLanguages, setUnsupportedLanguages] = useState<string[]>([]);
+
+  // Validate language code
+  const validateLanguage = (lc: string): string => {
+    return SUPPORTED_LANGUAGES.includes(lc) ? lc : DEFAULT_LC;
+  };
+
+  // Fetch secondary language from geolocation
+  const fetchSecondaryFromGeo = useCallback(async () => {
+    try {
+      // Get country code from IP - utilita sa stará o vlastnú logiku cacheovania a zlyhaní
+      const countryCode = await getCountryFromIP();
+      // Validácia jazykového kódu
+      const validated = validateLanguage(countryCode);
+
+      console.log('[TranslationContext] 🌍 Detected country from IP:', validated);
+
+      // Return as secondary only if different from primary
+      return validated !== primaryLanguage ? validated : null;
+    } catch (err) {
+      console.warn('[TranslationContext] ❌ Geo fetch failed:', err);
+      return null;
+    }
+  }, [primaryLanguage]);
 
   // Fetch translations from API
   const fetchTranslations = useCallback(async (lc: string): Promise<TranslationsData> => {
@@ -172,18 +199,46 @@ export const TranslationProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Initial setup and language loading
   useEffect(() => {
     if (isInitialized) return;
-    document.documentElement.lang = currentLanguage.lc;
-    if (navigator.cookieEnabled) {
-      document.cookie = `sendeliver_lang=${currentLanguage.lc}; path=/; max-age=31536000`;
-    }
-    loadTranslations(currentLanguage.lc);
-    setIsInitialized(true);
-  }, [currentLanguage.lc, isInitialized, loadTranslations]);
+
+    const init = async () => {
+      // Set document language
+      document.documentElement.lang = currentLanguage.lc;
+      
+      // Set language cookie
+      if (navigator.cookieEnabled) {
+        document.cookie = `sendeliver_lang=${currentLanguage.lc}; path=/; max-age=31536000`;
+      }
+      
+      // Load translations for current language
+      loadTranslations(currentLanguage.lc);
+      
+      // Try to determine secondary language based on location
+      if (!secondaryLanguage) {
+        try {
+          const geoLanguage = await fetchSecondaryFromGeo();
+          if (geoLanguage && geoLanguage !== currentLanguage.lc) {
+            console.log(`[TranslationContext] Setting secondary language from geo: ${geoLanguage}`);
+            setSecondaryLanguage(geoLanguage);
+            loadTranslations(geoLanguage);
+          }
+        } catch (err) {
+          console.error('[TranslationContext] Error setting secondary language:', err);
+        }
+      } else {
+        // Load translations for existing secondary language
+        loadTranslations(secondaryLanguage);
+      }
+      
+      setIsInitialized(true);
+    };
+
+    init();
+  }, [currentLanguage.lc, secondaryLanguage, isInitialized, loadTranslations, fetchSecondaryFromGeo, setSecondaryLanguage]);
 
   // Debug logging
   useEffect(() => {
-    console.log(`[TranslationContext] Current: ${currentLanguage.lc}, Unsupported: ${unsupportedLanguages.includes(currentLanguage.lc) ? 'yes' : 'no'}`);
-  }, [currentLanguage.lc, unsupportedLanguages]);
+    console.log(`[TranslationContext] Current: ${currentLanguage.lc}, Secondary: ${secondaryLanguage || 'none'}, Unsupported: ${unsupportedLanguages.join(',') || 'none'}`);
+  }, [currentLanguage.lc, secondaryLanguage, unsupportedLanguages]);
 
   return (
     <TranslationContext.Provider

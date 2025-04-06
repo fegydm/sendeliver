@@ -5,7 +5,6 @@ import { Routes, Route } from "react-router-dom";
 import { TranslationProvider } from "@/contexts/TranslationContext";
 import { LanguagesProvider } from "@/contexts/LanguagesContext";
 import { CountriesProvider } from "@/contexts/CountriesContext";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import Navigation from "@/components/sections/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
@@ -21,7 +20,6 @@ import FooterPage from "@/components/sections/footers/footer-page.component";
 import FooterTest from "@/components/sections/footers/footer-test.component";
 import FloatingButton from "@/components/elements/floating-button.element";
 import useScrollBounce from "@/hooks/useScrollBounce";
-import AIForm from "@/components/sections/content/search-forms/ai-form.component";
 
 const ROUTES = {
   HOME: "/",
@@ -80,15 +78,7 @@ const App: React.FC = () => {
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
             {/* Wrap AIForm with ErrorBoundary and pass required props */}
-            <ErrorBoundary>
-              <AIForm
-                type="sender"
-                onAIRequest={(request) => {
-                  console.log("AI request triggered with:", request);
-                  // Add further request handling here if needed
-                }}
-              />
-            </ErrorBoundary>
+           
           </main>
           <footer>
             <FooterPage

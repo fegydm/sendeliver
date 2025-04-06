@@ -1,5 +1,6 @@
 // File: src/components/sections/navbars/NavbarLanguage.tsx
 // Last change: April 05, 2025 - Fixed DD flag, grid alignment, and searchbox layout
+// Updated: Added logs for debugging inconsistent dropdown behavior
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useTranslationContext } from "@/contexts/TranslationContext";
@@ -32,6 +33,7 @@ const NavbarLanguage: React.FC = () => {
   const { languages, isLoading, getFlagUrl } = useLanguagesContext();
 
   const filteredLanguages = useMemo(() => {
+    console.log("[NavbarLanguage] Filtering languages, codeSearch:", codeSearch, "nameSearch:", nameSearch);
     const filtered = languages.filter((lang) => {
       const codeMatch =
         !codeSearch ||
@@ -86,26 +88,40 @@ const NavbarLanguage: React.FC = () => {
   const toggleDropdown = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     console.log("[NavbarLanguage] Toggle clicked, current state:", isDropdownOpen);
-    setIsDropdownOpen((prev) => !prev);
+    setIsDropdownOpen((prev) => {
+      const newState = !prev;
+      console.log("[NavbarLanguage] Setting new dropdown state:", newState);
+      return newState;
+    });
     if (!isDropdownOpen) {
-        setTimeout(() => codeInputRef.current?.focus(), 10);
+      setTimeout(() => {
+        console.log("[NavbarLanguage] Focusing code input");
+        codeInputRef.current?.focus();
+      }, 10);
     } else {
-        setCodeSearch("");
-        setNameSearch("");
+      setCodeSearch("");
+      setNameSearch("");
     }
-}, [isDropdownOpen]);
+  }, [isDropdownOpen]);
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
+      console.log("[NavbarLanguage] Clicked outside, closing dropdown, target:", event.target);
       setIsDropdownOpen(false);
       setCodeSearch("");
       setNameSearch("");
+    } else {
+      console.log("[NavbarLanguage] Clicked inside, target:", event.target);
     }
   }, []);
 
   useEffect(() => {
+    console.log("[NavbarLanguage] Adding click outside listener");
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      console.log("[NavbarLanguage] Removing click outside listener");
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [handleClickOutside]);
 
   const handleCodeSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -136,6 +152,7 @@ const NavbarLanguage: React.FC = () => {
 
   const renderLanguageItems = () => {
     const { priorityFiltered, otherFiltered } = filteredLanguages;
+    console.log("[NavbarLanguage] Rendering language items, priority:", priorityFiltered.length, "other:", otherFiltered.length);
     if (isLoading) {
       return <div className="navbar-language-loading">Loading...</div>;
     }
@@ -213,6 +230,7 @@ const NavbarLanguage: React.FC = () => {
     );
   };
 
+  console.log("[NavbarLanguage] Render, isDropdownOpen:", isDropdownOpen);
   return (
     <div className="navbar-language-container" ref={componentRef}>
       <button
@@ -237,6 +255,7 @@ const NavbarLanguage: React.FC = () => {
         </span>
       </button>
       {isDropdownOpen && (
+        console.log("[NavbarLanguage] Rendering dropdown, isDropdownOpen:", isDropdownOpen),
         <div
           className="navbar-language-dropdown-container"
           onClick={(e) => e.stopPropagation()}
