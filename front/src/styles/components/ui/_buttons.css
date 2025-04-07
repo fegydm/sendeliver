@@ -1,6 +1,3 @@
-/* File: ./front/src/styles/components/ui/_buttons.css */
-/* Last change: Added z-index to left/right buttons for stacking clarity */
-
 .button {
   padding: 0.6rem 1.2rem;
   font-size: 1rem;
@@ -63,26 +60,26 @@
   background-color: var(--ghost-hover, #f5f5f5);
 }
 
-/* Left variant for sender-specific buttons */
-.button--left {
+/* Sender variant for sender-specific buttons */
+.button--sender {
   background-color: var(--sender-primary);
   color: white;
   z-index: 10; /* Lower than dropdown's 1000 */
 }
 
-.button--left:hover {
-  background-color: var(--sender-dark);
+.button--sender:hover {
+  background-color: var(--sender-primary-hover);
 }
 
-/* Right variant for hauler-specific buttons */
-.button--right {
+/* Hauler variant for hauler-specific buttons */
+.button--hauler {
   background-color: var(--hauler-primary);
   color: white;
   z-index: 10; /* Lower than dropdown's 1000 */
 }
 
-.button--right:hover {
-  background-color: var(--hauler-dark);
+.button--hauler:hover {
+  background-color: var(--hauler-primary-hover);
 }
 
 /* Full width button */

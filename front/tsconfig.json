@@ -37,6 +37,7 @@
     "typeRoots": ["node_modules/@types", "front/src/types"]
   },
   "include": [
+    "src/assets/**/*.json",
     "src/**/*",
     "../back/src/**/*"
   ],

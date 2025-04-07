@@ -6,7 +6,7 @@ export interface ButtonProps
   variant?: "primary" | "secondary" | "cancel" | "close" | "ghost";
   size?: "default" | "small" | "large" | "icon";
   fullWidth?: boolean;
-  position?: "left" | "right"; // New property for button position
+  position?: "left" | "right" | "sender" | "hauler";
   active?: boolean; // Indicates if the button is in an active state
   className?: string;
 }

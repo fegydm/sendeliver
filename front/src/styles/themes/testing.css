@@ -10,11 +10,11 @@
 /*Import components */
 @import '../sections/_content2.css';
 
-
+@import '../sections/_banner.css';
 
 
 /* Default theme styles */
-body { background-color: var(--body-background-color-default, #f4f4f4); }
+body { background-color: var(--body-background-color-default, #f6f7f9); }
 header { background-color: var(--header-background-color-default, #ffffff); }
 footer { background-color: var(--footer-background-color-default, #ffffff); }
 
