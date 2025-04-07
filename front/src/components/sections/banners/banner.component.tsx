@@ -30,9 +30,9 @@ const Banner: React.FC = () => {
   return (
     <div className="banner">
       <div className="banner__left">
-        <h2 className="banner__slogan">
+        <h1 className="banner__slogan">
           Empowering Connections Between Clients and Carriers.
-        </h2>
+        </h1>
       </div>
       <div className="banner__right">
         {!import.meta.env.PROD && (
@@ -60,8 +60,8 @@ const Banner: React.FC = () => {
           <LottieLightPlayer
             ref={playerRef}
             animationData={selectedAnimation.data}
-            width={70}
-            height={60}
+            width={80}
+            height={80}
             loop={true}
             autoplay={true}
             isPaused={isPaused}

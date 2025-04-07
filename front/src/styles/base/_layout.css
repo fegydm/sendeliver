@@ -3,7 +3,6 @@
 .navbar { background-color: var(--navbar-bg-color, rgb(255,233,233)); }
 
 .banner { height: var(--banner-height); background-color: var(--banner-bg-color, rgb(255,200,200)); color: #D1D5DB; }
-.banner__left, .banner__right { flex: 1; }
 
 .content__navigation { display: flex; gap: 1rem; padding: 10px;}
 .content__navigation--hauler {  flex: 1;   display: flex; justify-content: flex-start;}

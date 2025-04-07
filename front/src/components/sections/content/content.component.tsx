@@ -1,5 +1,5 @@
-// File: ./front/src/components/sections/content/content.component.tsx
-// Last change: April 05, 2025 - Fixed navigation by removing unnecessary event blocking
+// File: src/components/sections/content/content.component.tsx
+// Last change: April 05, 2025 - Updated navigation keys and button position to use sender/hauler, with hover description shown only on button hover
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -9,6 +9,7 @@ import ManualForm from "@/components/sections/content/search-forms/manual-form.c
 import ResultTable, { SenderResultData } from "@/components/sections/content/results/result-table.component";
 import Button from "@/components/ui/button.ui";
 import { TransportFormData } from "@/types/transport-forms.types";
+import { useTranslationContext } from "@/contexts/TranslationContext";
 
 interface ContentProps {
   activeSection: "sender" | "hauler";
@@ -29,7 +30,8 @@ const Content: React.FC<ContentProps> = ({
   clientData,
   carrierData,
 }) => {
-  const { t } = useTranslationContext(); // Funkcia na preklad, fallback je kľúč
+  const { t } = useTranslationContext(); // Get translation function
+
   const [isRequestConfirmed, setIsRequestConfirmed] = useState(false);
   const [senderVehicles, setSenderVehicles] = useState<SenderResultData[]>([]);
   const [haulerVehicles, setHaulerVehicles] = useState<SenderResultData[]>([]);
@@ -38,7 +40,13 @@ const Content: React.FC<ContentProps> = ({
   const [senderLoadingDt, setSenderLoadingDt] = useState<string | undefined>(undefined);
   const [haulerLoadingDt, setHaulerLoadingDt] = useState<string | undefined>(undefined);
 
-  const handleVehiclesFound = (type: "sender" | "hauler", vehicles: SenderResultData[], totalCount: number, loadingDt: string) => {
+  // Handler to update vehicles found after manual form submission
+  const handleVehiclesFound = (
+    type: "sender" | "hauler",
+    vehicles: SenderResultData[],
+    totalCount: number,
+    loadingDt: string
+  ) => {
     console.log(`[Content] Received ${vehicles.length} vehicles for ${type}`, vehicles);
     setIsRequestConfirmed(true);
     if (type === "sender") {
@@ -52,11 +60,13 @@ const Content: React.FC<ContentProps> = ({
     }
   };
 
+  // Handler for manual form submission
   const handleManualSubmit = (type: "sender" | "hauler", data: TransportFormData) => {
     console.log(`[Content] Form submitted for ${type}`, data);
     onManualSubmit(type, data);
   };
 
+  // Define sections with sender and hauler data and translation keys for headers
   const sections = [
     {
       type: "sender" as const,
@@ -64,13 +74,13 @@ const Content: React.FC<ContentProps> = ({
       wrapperClass: "content--sender",
       titleKey: "client_area_title",
       descriptionKey: "client_area_description",
-      dashboardKey: "client_area_link",
-      dashboardDescriptionKey: "client_area_link_description",
-      position: "left" as const,
+      position: "sender" as const, // Updated to "sender"
       vehicles: senderVehicles,
       totalCount: senderTotalCount,
       loadingDt: senderLoadingDt,
       defaultData: clientData,
+      navButtonKey: "client_area_link",
+      navDescKey: "client_area_link_description",
     },
     {
       type: "hauler" as const,
@@ -78,13 +88,13 @@ const Content: React.FC<ContentProps> = ({
       wrapperClass: "content--hauler",
       titleKey: "carrier_area_title",
       descriptionKey: "carrier_area_description",
-      dashboardKey: "carrier_area_link",
-      dashboardDescriptionKey: "carrier_area_link_description",
-      position: "right" as const,
+      position: "hauler" as const, // Updated to "hauler"
       vehicles: haulerVehicles,
       totalCount: haulerTotalCount,
       loadingDt: haulerLoadingDt,
       defaultData: carrierData,
+      navButtonKey: "carrier_area_link",
+      navDescKey: "carrier_area_link_description",
     },
   ];
 
@@ -96,17 +106,23 @@ const Content: React.FC<ContentProps> = ({
             key={section.type}
             className={`${section.navigationClass} ${activeSection === section.type ? "active" : ""}`}
           >
-            <Link to={`/${section.type}`} style={{ textDecoration: "none" }}>
-              <Button
-                variant="primary"
-                position={section.position}
-                active={activeSection === section.type}
-                onClick={() => onSwitchSection(section.type)}
-              >
-                {t(section.dashboardKey)}
-              </Button>
-              <span className="button__description">{t(section.dashboardDescriptionKey)}</span>
-            </Link>
+            {/* Wrap the button and description in a relative container */}
+            <div className="navigation-button-wrapper">
+              <Link to={`/${section.type}`} style={{ textDecoration: "none" }}>
+                <Button
+                  variant="primary"
+                  position={section.position} // "sender" or "hauler"
+                  active={activeSection === section.type}
+                  onClick={() => onSwitchSection(section.type)} // Handle section switch
+                >
+                  {t(section.navButtonKey)}
+                </Button>
+              </Link>
+              {/* Tooltip/subtext displayed only on button hover */}
+              <p className="content__navigation-description">
+                {t(section.navDescKey)}
+              </p>
+            </div>
           </div>
         ))}
       </div>
@@ -117,6 +133,7 @@ const Content: React.FC<ContentProps> = ({
             key={section.type}
             className={`${section.wrapperClass} ${activeSection === section.type ? "active" : ""}`}
           >
+            {/* Use translated title and description inside the wrapper */}
             <h2 className="content__title">{t(section.titleKey)}</h2>
             <p className="content__description">{t(section.descriptionKey)}</p>
             <AIForm

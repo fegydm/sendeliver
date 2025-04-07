@@ -1,28 +1,21 @@
-/* File: src/styles/components/_banner.css */
-.banner-wrapper {
-    position: relative;
-    max-width: 100%;
-    overflow: hidden;
-}
-
-.banner-player {
-    position: relative;
-    top: 0;
-    left: 0;
-    width: 60%;
-    max-height: 70px;
-    transition: opacity 0.3s ease-in-out;
-    opacity: 1;
-}
-
-.banner-player:not(:nth-child(2)) {
-    opacity: 0;
-}
-
-.banner-controls {
-    position: relative;
-    bottom: 10px;
-    left: 10px;
+/* CSS for banner positioning */
+/* The container is set as a flex container to distribute its children */
+.banner {
     display: flex;
-    gap: 10px;
+    justify-content: space-between; /* Distributes space between left and right sections */
+    align-items: center; /* Centers items vertically */
+}
+
+/* Title section on the left with some indentation */
+.banner__left {
+    flex: 1;
+    padding-left: 50px; /* Adjust as needed */
+}
+
+/* The entire banner__right section takes up 30% of the container's width */
+.banner__right {
+    width: 20%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
