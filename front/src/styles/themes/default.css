@@ -9,7 +9,8 @@
 /*Import components 
 @import '../sections/manual-form.content.css';*/
 @import '../sections/_content.css';
-
+@import '../sections/_footer.css';
+@import '../sections/_banner.css';
 /* @import '../components/ui/ui-components.css'; */
 /* @import '../components/_modals.css'; */
 

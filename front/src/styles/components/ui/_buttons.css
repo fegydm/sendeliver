@@ -111,3 +111,29 @@
 .button.active {
   opacity: 1.0;
 }
+
+/* Floating button variant */
+.button--floating {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 0.75rem; /* Slightly larger padding for better touch target */
+  background-color: var(--floating-bg, #7f9ab6); /* Default blue color */
+  color: var(--floating-color, #ffffff);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 200ms ease, transform 200ms ease, opacity 200ms ease;
+  opacity: 0.8; /* Base opacity */
+  z-index: 1000;
+}
+
+.button--floating:hover {
+  background-color: var(--floating-hover, #6d7e91); /* Darker blue on hover */
+  transform: scale(1.1);
+  opacity: 1; /* Full opacity on hover */
+}

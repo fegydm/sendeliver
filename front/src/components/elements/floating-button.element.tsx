@@ -1,7 +1,7 @@
-// ./front/src/components/elements/floating-button.element.tsx
+// File: src/components/elements/floating-button.element.tsx
 import React, { useState, useEffect } from "react";
 import { FaArrowUp } from "react-icons/fa";
-
+import Button from "@/components/ui/button.ui"; 
 const FloatingButton: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -17,12 +17,12 @@ const FloatingButton: React.FC = () => {
   if (!isVisible) return null;
 
   return (
-    <button
-      className="footer__floating"
+    <Button
+      variant="floating"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
     >
       <FaArrowUp size={24} />
-    </button>
+    </Button>
   );
 };
 

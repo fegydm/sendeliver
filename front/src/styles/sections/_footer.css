@@ -153,32 +153,3 @@
 }
 /* ./front/src/styles/floating-button.css */
 
-/* Base styles for the floating button */
-.floating-button {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  padding: 12px;
-  background-color:rgb(127, 154, 182); /* Blue color */
-  color: white;
-  border: none;
-  border-radius: 50%;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  z-index: 1000;
-}
-
-/* Hover effect for the button */
-.floating-button:hover {
-  background-color: #0056b3; /* Darker blue */
-  transform: scale(1.1);
-}
-
-/* Make sure it remains visible on all screen sizes */
-.floating-button {
-  display: flex; /* Ensure it's always displayed */
-}

@@ -6,7 +6,7 @@ import LottieLightPlayer, {
 } from "@/components/elements/animation/lottie-light-player";
 
 // Import JSON animations
-import animation1 from "@/assets/sd2.json";
+import animation1 from "../../../sd2.json";
 import animation2 from "@/assets/sd11.json";
 
 const ANIMATIONS = [
@@ -60,8 +60,8 @@ const Banner: React.FC = () => {
           <LottieLightPlayer
             ref={playerRef}
             animationData={selectedAnimation.data}
-            width={100}
-            height={100}
+            width={70}
+            height={60}
             loop={true}
             autoplay={true}
             isPaused={isPaused}

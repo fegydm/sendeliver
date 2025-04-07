@@ -1,9 +1,9 @@
-// File: .front/src/components/ui/button.ui.tsx
+// File: src/components/ui/button.ui.tsx
 import React from "react";
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "cancel" | "close" | "ghost";
+  variant?: "primary" | "secondary" | "cancel" | "close" | "ghost" | "floating";
   size?: "default" | "small" | "large" | "icon";
   fullWidth?: boolean;
   position?: "left" | "right"; // New property for button position
@@ -21,13 +21,15 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   ...props
 }) => {
+  // Determine button classes based on variant.
+  // If variant is "floating", use a specific class.
   const buttonClasses = [
-    "button", // Base class changed from "btn" to "button"
-    `button-${variant}`,
+    "button", // Base class
+    variant === "floating" ? "button--floating" : `button-${variant}`,
     `button-${size}`,
     fullWidth ? "button-full-width" : "",
-    position ? `button--${position}` : "", // Adds position-specific class
-    active ? "active" : "", // Adds active class if true
+    position ? `button--${position}` : "",
+    active ? "active" : "",
     className,
   ]
     .filter(Boolean)

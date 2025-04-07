@@ -1,8 +1,9 @@
-// File: src/components/sections/content/content.component.tsx
+// File: ./front/src/components/sections/content/content.component.tsx
 // Last change: April 05, 2025 - Fixed navigation by removing unnecessary event blocking
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslationContext } from "@/contexts/TranslationContext"; // Predpokladám tvoj TranslationProvider
 import AIForm from "@/components/sections/content/search-forms/ai-form.component";
 import ManualForm from "@/components/sections/content/search-forms/manual-form.component";
 import ResultTable, { SenderResultData } from "@/components/sections/content/results/result-table.component";
@@ -28,6 +29,7 @@ const Content: React.FC<ContentProps> = ({
   clientData,
   carrierData,
 }) => {
+  const { t } = useTranslationContext(); // Funkcia na preklad, fallback je kľúč
   const [isRequestConfirmed, setIsRequestConfirmed] = useState(false);
   const [senderVehicles, setSenderVehicles] = useState<SenderResultData[]>([]);
   const [haulerVehicles, setHaulerVehicles] = useState<SenderResultData[]>([]);
@@ -60,7 +62,10 @@ const Content: React.FC<ContentProps> = ({
       type: "sender" as const,
       navigationClass: "content__navigation--sender",
       wrapperClass: "content--sender",
-      title: "Client Area",
+      titleKey: "client_area_title",
+      descriptionKey: "client_area_description",
+      dashboardKey: "client_area_link",
+      dashboardDescriptionKey: "client_area_link_description",
       position: "left" as const,
       vehicles: senderVehicles,
       totalCount: senderTotalCount,
@@ -71,7 +76,10 @@ const Content: React.FC<ContentProps> = ({
       type: "hauler" as const,
       navigationClass: "content__navigation--hauler",
       wrapperClass: "content--hauler",
-      title: "Carrier Area",
+      titleKey: "carrier_area_title",
+      descriptionKey: "carrier_area_description",
+      dashboardKey: "carrier_area_link",
+      dashboardDescriptionKey: "carrier_area_link_description",
       position: "right" as const,
       vehicles: haulerVehicles,
       totalCount: haulerTotalCount,
@@ -88,15 +96,16 @@ const Content: React.FC<ContentProps> = ({
             key={section.type}
             className={`${section.navigationClass} ${activeSection === section.type ? "active" : ""}`}
           >
-            <Link to={`/${section.type}`} style={{ textDecoration: 'none' }}>
+            <Link to={`/${section.type}`} style={{ textDecoration: "none" }}>
               <Button
                 variant="primary"
                 position={section.position}
                 active={activeSection === section.type}
-                onClick={() => onSwitchSection(section.type)} // Only handle section switch
+                onClick={() => onSwitchSection(section.type)}
               >
-                {section.type === "sender" ? "Client Dashboard" : "Carrier Dashboard"}
+                {t(section.dashboardKey)}
               </Button>
+              <span className="button__description">{t(section.dashboardDescriptionKey)}</span>
             </Link>
           </div>
         ))}
@@ -108,7 +117,8 @@ const Content: React.FC<ContentProps> = ({
             key={section.type}
             className={`${section.wrapperClass} ${activeSection === section.type ? "active" : ""}`}
           >
-            <h2 className="content__title">{section.title}</h2>
+            <h2 className="content__title">{t(section.titleKey)}</h2>
+            <p className="content__description">{t(section.descriptionKey)}</p>
             <AIForm
               type={section.type}
               onAIRequest={(response: any) => {

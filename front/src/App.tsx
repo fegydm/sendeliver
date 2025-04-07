@@ -85,7 +85,7 @@ const App: React.FC = () => {
               onAdminToggle={setIsTestFooterVisible}
               isTestFooterVisible={isTestFooterVisible}
             />
-            <div className="footer-floating">
+            <div className="footer__floating">
               <FloatingButton />
             </div>
             <FooterTest

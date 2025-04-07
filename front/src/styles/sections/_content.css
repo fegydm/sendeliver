@@ -222,3 +222,36 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+
+
+
+
+
+/* =================== Quick Stats =================== */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 16px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-default);
+}
+
+.stat-value {
+  font-weight: bold;
+  font-size: 1.25rem;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #555;
+}
