@@ -1,4 +1,6 @@
-// File: src/components/ui/button.ui.tsx
+// File: .front/src/components/ui/button.ui.tsx
+// This component creates a button with configurable variant, size, fullWidth, and role.
+// The "role" property (sender/hauler) is used to apply role-specific styling.
 import React from "react";
 
 export interface ButtonProps
@@ -6,8 +8,8 @@ export interface ButtonProps
   variant?: "primary" | "secondary" | "cancel" | "close" | "ghost" | "floating";
   size?: "default" | "small" | "large" | "icon";
   fullWidth?: boolean;
-  position?: "left" | "right" | "sender" | "hauler";
-  active?: boolean; // Indicates if the button is in an active state
+  role?: "sender" | "hauler"; // New property: defines role for additional styling
+  active?: boolean; // true means button is active (fully opaque), false means inactive (will get lower opacity)
   className?: string;
 }
 
@@ -15,25 +17,45 @@ export const Button: React.FC<ButtonProps> = ({
   variant = "primary",
   size = "default",
   fullWidth = false,
-  position,
-  active = false,
+  role,
+  active = true,
   className = "",
   children,
   ...props
 }) => {
-  // Determine button classes based on variant.
-  // If variant is "floating", use a specific class.
-  const buttonClasses = [
-    "button", // Base class
-    variant === "floating" ? "button--floating" : `button-${variant}`,
-    `button-${size}`,
-    fullWidth ? "button-full-width" : "",
-    position ? `button--${position}` : "",
-    active ? "active" : "",
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  // Build an array of CSS classes based on the provided props.
+  // We avoid adding "primary" and "default" classes if they are set as defaults.
+  const classes = ["button"];
+
+  if (variant === "floating") {
+    classes.push("button--floating");
+  } else if (variant !== "primary") {
+    classes.push(`button-${variant}`);
+  }
+
+  if (size !== "default") {
+    classes.push(`button-${size}`);
+  }
+
+  if (fullWidth) {
+    classes.push("button-full-width");
+  }
+
+  // Instead of using the name "position", we use "role" to avoid conflicts.
+  if (role) {
+    classes.push(`button--${role}`);
+  }
+
+  // If the button is not active, add the "inactive" class.
+  if (!active) {
+    classes.push("inactive");
+  }
+
+  if (className) {
+    classes.push(className);
+  }
+
+  const buttonClasses = classes.filter(Boolean).join(" ");
 
   return (
     <button className={buttonClasses} {...props}>

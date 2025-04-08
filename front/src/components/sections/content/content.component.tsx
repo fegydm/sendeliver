@@ -110,7 +110,7 @@ const Content: React.FC<ContentProps> = ({
               <Link to={`/${section.type}`} style={{ textDecoration: "none" }}>
                 <Button
                   variant="primary"
-                  position={section.position} // "sender" or "hauler"
+                  role={section.position} // "sender" or "hauler"
                   active={activeSection === section.type}
                   onClick={() => onSwitchSection(section.type)} // Handle section switch
                 >

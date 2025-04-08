@@ -1,4 +1,5 @@
-// .front/src/components/ui/tabs.ui.ts
+// File: src/components/ui/tabs.ui.ts
+// Last change: Fixed tab highlighting when changing active tab
 
 import * as React from "react";
 
@@ -23,6 +24,7 @@ interface TabsTriggerProps extends BaseProps {
   value: string;
   isSelected?: boolean;
   onSelect?: (value: string) => void;
+  role?: "sender" | "hauler"; // Custom prop for role-based styling
 }
 
 // Props for the TabsContent component
@@ -42,10 +44,18 @@ const Tabs: React.FC<TabsProps> & {
   Trigger: React.FC<TabsTriggerProps>;
   Content: React.FC<TabsContentProps & InternalTabsProps>;
 } = ({ children, value, defaultValue, onValueChange, className }) => {
-  // State management for selected tab
+  // Manage the selected tab state if no external value is provided.
   const [internalValue, setInternalValue] = React.useState(defaultValue);
-  const selectedValue = value ?? internalValue;
-  const handleValueChange = onValueChange ?? setInternalValue;
+  const selectedValue = value !== undefined ? value : internalValue;
+  
+  const handleValueChange = React.useCallback((newValue: string) => {
+    // Update internal state if no external handler
+    if (onValueChange) {
+      onValueChange(newValue);
+    } else {
+      setInternalValue(newValue);
+    }
+  }, [onValueChange]);
 
   return (
     <div className={`tabs-container ${className || ""}`}>
@@ -62,43 +72,70 @@ const Tabs: React.FC<TabsProps> & {
   );
 };
 
-// TabsList component
+// TabsList component casts each child to a React element with TabsTriggerProps,
+// so that we can add custom properties like isSelected and onSelect.
 const TabsList: React.FC<TabsListProps & InternalTabsProps> = ({
   children,
   className,
   selectedValue,
   onValueChange,
-}) => (
-  <div className={`tabs-list ${className || ""}`}>
-    {React.Children.map(children, (child) =>
-      React.isValidElement(child)
-        ? React.cloneElement(child, {
-            ...child.props,
-            isSelected: child.props.value === selectedValue,
+}) => {
+  return (
+    <div className={`tabs-list ${className || ""}`}>
+      {React.Children.map(children, (child) => {
+        if (React.isValidElement(child)) {
+          const trigger = child as React.ReactElement<TabsTriggerProps>;
+          return React.cloneElement(trigger, {
+            ...trigger.props,
+            isSelected: trigger.props.value === selectedValue,
             onSelect: onValueChange,
-          })
-        : null
-    )}
-  </div>
-);
+          });
+        }
+        return null;
+      })}
+    </div>
+  );
+};
 
-// TabsTrigger component
+// TabsTrigger component with role support.
 const TabsTrigger: React.FC<TabsTriggerProps> = ({
   children,
   value,
   className,
   isSelected,
   onSelect,
-}) => (
-  <button
-    className={`tabs-trigger ${isSelected ? "tabs-trigger--active" : ""} ${className || ""}`.trim()}
-    onClick={() => onSelect?.(value)}
-  >
-    {children}
-  </button>
-);
+  role,
+}) => {
+  const classes = ["tabs-trigger"];
+  if (isSelected) {
+    classes.push("tabs-trigger--active");
+  }
+  if (role) {
+    classes.push(`tabs-trigger--${role}`);
+  }
+  if (className) {
+    classes.push(className);
+  }
+  
+  const handleClick = React.useCallback(() => {
+    if (onSelect) {
+      onSelect(value);
+    }
+  }, [onSelect, value]);
 
-// TabsContent component
+  return (
+    <button
+      className={classes.join(" ")}
+      onClick={handleClick}
+      type="button"
+      aria-selected={isSelected}
+    >
+      {children}
+    </button>
+  );
+};
+
+// TabsContent component renders content only if its value matches the selected value.
 const TabsContent: React.FC<TabsContentProps & InternalTabsProps> = ({
   children,
   value,
@@ -109,16 +146,18 @@ const TabsContent: React.FC<TabsContentProps & InternalTabsProps> = ({
     <div className={`tabs-content ${className || ""}`}>{children}</div>
   ) : null;
 
-// Attach subcomponents to the main Tabs component
+// Attach subcomponents to the main Tabs component.
 Tabs.List = TabsList;
 Tabs.Trigger = TabsTrigger;
 Tabs.Content = TabsContent;
 
 export { Tabs };
 
-/* =============================================
-   Notes:
-   - Unified CSS is imported from _ui-components.css.
-   - Removed inline styles and directly applied CSS classes.
-   - All components share common utilities and styling rules.
-   ============================================= */
+/*
+English Comments:
+- Fixed tab selection by ensuring internal state updates correctly
+- Added useCallback to prevent unnecessary re-renders
+- Added aria-selected attribute for accessibility
+- Made sure value comparison uses strict equality
+- Made handler logic more robust when state is controlled or uncontrolled
+*/

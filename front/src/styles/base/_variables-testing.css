@@ -9,18 +9,18 @@
     --color-modal-bg: #333333;
     --color-text-primary: #ffffff;
     --color-text-secondary: #bbbbbb;
-    --logo-1-color: rgb(220, 31, 240);
-    --logo-2-color: #57cc32;
-    --sender-primary: rgb(136, 38, 143);
-    --sender-primary-hover: rgb(166, 65, 173);
-    --sender-light: rgb(240, 229, 242);
-    --sender-medium: rgb(231, 212, 233);
-    --sender-dark: #bf70c4;
-    --hauler-primary: #3f842a;
-    --hauler-primary-hover: #4a9b31;
-    --hauler-light: #e0ffda;
-    --hauler-medium: #8adf6f;
-    --hauler-dark: #418f26;
+    --logo-1-color: hsl(290, 87%, 53%);
+    --logo-2-color: hsl(106, 61%, 50%);
+    --sender-primary: hsl(290, 40%, 40%);
+    --sender-primary-hover: hsl(290, 40%, 46%);
+    --sender-light: hsl(290, 50%, 95%);
+    --sender-medium: hsl(290, 50%, 90%);
+    --sender-dark: hsl(290, 50%, 80%);
+    --hauler-primary: hsl(110, 60%, 30%);
+    --hauler-primary-hover: hsl(110, 60%, 36%);
+    --hauler-light: hsl(110, 50%, 95%);
+    --hauler-medium: hsl(110, 50%, 90%);
+    --hauler-dark: hsl(110, 50%, 60%);
 
     /* Heights - Testing variations for layout */
     --height-header: 120px;
@@ -42,7 +42,7 @@
     --spacing-lg: 28px;
 
 /* priradit */
---border-radius: 8px;
+--border-radius: 6px;
 --common-spacing: 1rem;
 --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
 --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.15);

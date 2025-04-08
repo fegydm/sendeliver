@@ -1,3 +1,4 @@
+/* Base button styles */
 .button {
   padding: 0.6rem 1.2rem;
   font-size: 1rem;
@@ -5,79 +6,90 @@
   border: none;
   border-radius: var(--border-radius, 0.5rem);
   cursor: pointer;
-  transition: all var(--transition-speed, 200ms) ease;
+  /* Include transition for all properties and opacity specifically */
+  transition: all var(--transition-speed, 200ms) ease, opacity 200ms ease;
+  opacity: 1; /* Default fully opaque */
 }
 
-/* Primary variant styles */
-.button-primary {
-  background-color: var(--primary-bg, #ffffff);
-  color: var(--primary-color, #000000);
+/* Inactive state: lower opacity */
+.button.inactive {
+  opacity: 0.7;
 }
 
-.button-primary:hover {
-  background-color: var(--primary-hover, #e5e7eb);
-}
-
-/* Secondary variant styles */
+/* Secondary variant */
 .button-secondary {
   background-color: transparent;
   border: 1px solid var(--secondary-border, #4b5563);
   color: var(--secondary-color, #ffffff);
 }
-
 .button-secondary:hover {
   background-color: var(--secondary-hover, #374151);
 }
 
-/* Cancel variant styles */
+/* Cancel variant */
 .button-cancel {
   background-color: var(--cancel-bg, #f44336);
   color: var(--cancel-color, #ffffff);
 }
-
 .button-cancel:hover {
   background-color: var(--cancel-hover, #d32f2f);
 }
 
-/* Close variant styles */
+/* Close variant */
 .button-close {
   background-color: transparent;
   color: var(--close-color, #000000);
 }
-
 .button-close:hover {
   background-color: var(--close-hover, #e0e0e0);
 }
 
-/* Ghost variant styles */
+/* Ghost variant */
 .button-ghost {
   background-color: transparent;
   border: 1px solid var(--ghost-border, #cccccc);
   color: var(--ghost-color, #000000);
 }
-
 .button-ghost:hover {
   background-color: var(--ghost-hover, #f5f5f5);
 }
 
-/* Sender variant for sender-specific buttons */
+/* Floating variant */
+.button--floating {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 0.75rem;
+  background-color: var(--floating-bg, #7f9ab6);
+  color: var(--floating-color, #ffffff);
+  border-radius: 50%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 200ms ease, transform 200ms ease, opacity 200ms ease;
+  opacity: 0.8;
+  z-index: 1000;
+}
+.button--floating:hover {
+  background-color: var(--floating-hover, #6d7e91);
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* Role-based classes */
 .button--sender {
   background-color: var(--sender-primary);
   color: white;
-  z-index: 10; /* Lower than dropdown's 1000 */
 }
-
 .button--sender:hover {
   background-color: var(--sender-primary-hover);
 }
 
-/* Hauler variant for hauler-specific buttons */
 .button--hauler {
   background-color: var(--hauler-primary);
   color: white;
-  z-index: 10; /* Lower than dropdown's 1000 */
 }
-
 .button--hauler:hover {
   background-color: var(--hauler-primary-hover);
 }
@@ -92,45 +104,18 @@
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
 }
-
 .button-large {
   padding: 1rem 2rem;
   font-size: 1.125rem;
 }
 
-/* Icon button styles */
+/* Icon button */
 .button-icon {
   padding: 0.5rem;
   font-size: 1rem;
 }
-
-/* Active state for buttons */
-.button.active {
-  opacity: 1.0;
-}
-
-/* Floating button variant */
-.button--floating {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  padding: 0.75rem; /* Slightly larger padding for better touch target */
-  background-color: var(--floating-bg, #7f9ab6); /* Default blue color */
-  color: var(--floating-color, #ffffff);
-  border: none;
-  border-radius: 50%;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 200ms ease, transform 200ms ease, opacity 200ms ease;
-  opacity: 0.8; /* Base opacity */
-  z-index: 1000;
-}
-
-.button--floating:hover {
-  background-color: var(--floating-hover, #6d7e91); /* Darker blue on hover */
-  transform: scale(1.1);
-  opacity: 1; /* Full opacity on hover */
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  /* You can add other styles to indicate the button is disabled */
 }
