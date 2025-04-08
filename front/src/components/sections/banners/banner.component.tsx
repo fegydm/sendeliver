@@ -6,7 +6,7 @@ import LottieLightPlayer, {
 } from "@/components/elements/animation/lottie-light-player";
 
 // Import JSON animations
-import animation1 from "../../../sd2.json";
+import animation1 from "@/assets/sd2.json";
 import animation2 from "@/assets/sd11.json";
 
 const ANIMATIONS = [

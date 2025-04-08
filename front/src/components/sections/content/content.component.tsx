@@ -3,7 +3,6 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useTranslationContext } from "@/contexts/TranslationContext"; // Predpokladám tvoj TranslationProvider
 import AIForm from "@/components/sections/content/search-forms/ai-form.component";
 import ManualForm from "@/components/sections/content/search-forms/manual-form.component";
 import ResultTable, { SenderResultData } from "@/components/sections/content/results/result-table.component";
