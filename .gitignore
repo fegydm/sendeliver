@@ -4,6 +4,9 @@ node_modules
 .pnp
 .pnp.js
 
+_old/
+
+
 # Data raw
 txt/raw
 txt/processed
