@@ -177,14 +177,15 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = "" }) =>
         />
         {apiError && <div className="ai-form__error">{apiError}</div>}
         <Button
-          variant="primary"
-          role={type}
-          disabled={isSubmitting || !prompts[activeIndex]?.trim()}
-        >
-          {isSubmitting
-            ? t("ai_button_processing") || "Processing..."
-            : t(getTypeKey("ai_button_ask_sender", "ai_button_ask_hauler"))}
-        </Button>
+  type="submit"  
+  variant="primary"
+  role={type}
+  disabled={isSubmitting || !prompts[activeIndex]?.trim()}
+>
+  {isSubmitting
+    ? t("ai_button_processing") || "Processing..."
+    : t(getTypeKey("ai_button_ask_sender", "ai_button_ask_hauler"))}
+</Button>
       </form>
 
       {/* Modal for AI response */}

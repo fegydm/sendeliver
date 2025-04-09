@@ -1,4 +1,3 @@
-/* Base button styles */
 .button {
   padding: 0.6rem 1.2rem;
   font-size: 1rem;
@@ -10,12 +9,10 @@
   transition: all var(--transition-speed, 200ms) ease, opacity 200ms ease;
   opacity: 1; /* Default fully opaque */
 }
-
 /* Inactive state: lower opacity */
 .button.inactive {
   opacity: 0.7;
 }
-
 /* Secondary variant */
 .button-secondary {
   background-color: transparent;
@@ -25,7 +22,6 @@
 .button-secondary:hover {
   background-color: var(--secondary-hover, #374151);
 }
-
 /* Cancel variant */
 .button-cancel {
   background-color: var(--cancel-bg, #f44336);
@@ -34,7 +30,6 @@
 .button-cancel:hover {
   background-color: var(--cancel-hover, #d32f2f);
 }
-
 /* Close variant */
 .button-close {
   background-color: transparent;
@@ -43,7 +38,6 @@
 .button-close:hover {
   background-color: var(--close-hover, #e0e0e0);
 }
-
 /* Ghost variant */
 .button-ghost {
   background-color: transparent;
@@ -53,7 +47,6 @@
 .button-ghost:hover {
   background-color: var(--ghost-hover, #f5f5f5);
 }
-
 /* Floating variant */
 .button--floating {
   position: fixed;
@@ -76,16 +69,14 @@
   transform: scale(1.1);
   opacity: 1;
 }
-
 /* Role-based classes */
-.button--sender {
+.button--sender {  
   background-color: var(--sender-primary);
   color: white;
 }
 .button--sender:hover {
   background-color: var(--sender-primary-hover);
 }
-
 .button--hauler {
   background-color: var(--hauler-primary);
   color: white;
@@ -93,12 +84,10 @@
 .button--hauler:hover {
   background-color: var(--hauler-primary-hover);
 }
-
 /* Full width button */
 .button-full-width {
   width: 100%;
 }
-
 /* Size variants */
 .button-small {
   padding: 0.5rem 1rem;
@@ -108,7 +97,6 @@
   padding: 1rem 2rem;
   font-size: 1.125rem;
 }
-
 /* Icon button */
 .button-icon {
   padding: 0.5rem;

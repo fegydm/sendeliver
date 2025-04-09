@@ -5,6 +5,7 @@ import { Routes, Route } from "react-router-dom";
 import { TranslationProvider } from "@/contexts/TranslationContext";
 import { LanguagesProvider } from "@/contexts/LanguagesContext";
 import { CountriesProvider } from "@/contexts/CountriesContext";
+import { ThemeProvider } from "@/contexts/ThemeContext"; // Import ThemeProvider
 import Navigation from "@/components/sections/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
@@ -34,65 +35,50 @@ const ROUTES = {
 const App: React.FC = () => {
   useScrollBounce();
 
-  // State for dark mode
-  const [isDarkMode, setIsDarkMode] = React.useState<boolean>(() => {
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const savedMode = localStorage.getItem("darkMode");
-    return savedMode ? JSON.parse(savedMode) : prefersDark;
-  });
-
   // State for test footer visibility
   const [isTestFooterVisible, setIsTestFooterVisible] = React.useState<boolean>(false);
-
-  // Update dark mode and HTML class
-  React.useEffect(() => {
-    localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
-    document.documentElement.classList.toggle("dark", isDarkMode);
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
 
   return (
     <TranslationProvider>
       <LanguagesProvider>
         <CountriesProvider>
-          <header>
-            {/* Navigation receives required props */}
-            <Navigation isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
-          </header>
-          <main>
-            <Routes>
-              <Route path={ROUTES.HOME} element={<HomePage />} />
-              {ROUTES.SENDER.map((path) => (
-                <Route key={path} path={path} element={<SenderPage />} />
-              ))}
-              {ROUTES.HAULER.map((path) => (
-                <Route key={path} path={path} element={<HaulerPage />} />
-              ))}
-              <Route path={ROUTES.TEST} element={<TestPage />} />
-              <Route path={ROUTES.TEST2} element={<Test2Page />} />
-              <Route path={ROUTES.TEST1} element={<Test1Page />} />
-              <Route path={ROUTES.TEST3} element={<Test3Page />} />
-              <Route path="/dokumentacia" element={<DocumentationPage />} />
-              <Route path="/:alias" element={<VideoPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-            {/* Wrap AIForm with ErrorBoundary and pass required props */}
-           
-          </main>
-          <footer>
-            <FooterPage
-              onAdminToggle={setIsTestFooterVisible}
-              isTestFooterVisible={isTestFooterVisible}
-            />
-            <div className="footer__floating">
-              <FloatingButton />
-            </div>
-            <FooterTest
-              isVisible={isTestFooterVisible}
-              onClose={() => setIsTestFooterVisible(false)}
-            />
-          </footer>
+          <ThemeProvider>
+            <header>
+              {/* Navigation no longer needs dark mode props */}
+              <Navigation />
+            </header>
+            <main>
+              <Routes>
+                <Route path={ROUTES.HOME} element={<HomePage />} />
+                {ROUTES.SENDER.map((path) => (
+                  <Route key={path} path={path} element={<SenderPage />} />
+                ))}
+                {ROUTES.HAULER.map((path) => (
+                  <Route key={path} path={path} element={<HaulerPage />} />
+                ))}
+                <Route path={ROUTES.TEST} element={<TestPage />} />
+                <Route path={ROUTES.TEST2} element={<Test2Page />} />
+                <Route path={ROUTES.TEST1} element={<Test1Page />} />
+                <Route path={ROUTES.TEST3} element={<Test3Page />} />
+                <Route path="/dokumentacia" element={<DocumentationPage />} />
+                <Route path="/:alias" element={<VideoPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </main>
+            <footer>
+              <FooterPage
+                onAdminToggle={setIsTestFooterVisible}
+                isTestFooterVisible={isTestFooterVisible}
+              />
+              <div className="footer__floating">
+                <FloatingButton />
+              </div>
+              <FooterTest
+                isVisible={isTestFooterVisible}
+                onClose={() => setIsTestFooterVisible(false)}
+              />
+            </footer>
+          </ThemeProvider>
         </CountriesProvider>
       </LanguagesProvider>
     </TranslationProvider>

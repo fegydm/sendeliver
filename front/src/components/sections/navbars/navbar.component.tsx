@@ -1,7 +1,8 @@
 // File: front/src/components/navbars/navbar.component.tsx
-// Last change: Fixed typo in handleDotsSelectionChange
+// Last change: Updated to use ThemeContext instead of props
 
 import { useState, FC } from "react";
+import { useTheme } from "@/contexts/ThemeContext"; // Import ThemeContext hook
 import NavbarHamburger from "./NavbarHamburger";
 import NavbarLogo from "./NavbarLogo";
 import NavbarBreadcrumb from "./NavbarBreadcrumb";
@@ -25,11 +26,22 @@ import "./navbar.component.css";
 type ModalType = "about" | "login" | "register" | "dots" | "avatar" | null;
 
 interface NavigationProps {
-  isDarkMode: boolean;
-  onToggleDarkMode: () => void;
+  isDarkMode?: boolean; // Optional now
+  onToggleDarkMode?: () => void; // Optional now
 }
 
-const Navbar: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
+const Navbar: FC<NavigationProps> = ({ 
+  // Accept props but prefer context values
+  isDarkMode: propIsDarkMode, 
+  onToggleDarkMode: propToggleDarkMode 
+}) => {
+  // Get theme values from context
+  const { isDarkMode: contextIsDarkMode, toggleDarkMode: contextToggleDarkMode } = useTheme();
+  
+  // Use props if provided, otherwise use context
+  const isDarkMode = propIsDarkMode !== undefined ? propIsDarkMode : contextIsDarkMode;
+  const onToggleDarkMode = propToggleDarkMode || contextToggleDarkMode;
+
   const [showBreadcrumbs, setShowBreadcrumbs] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [topDots, setTopDots] = useState<DotsArray>(
@@ -60,7 +72,7 @@ const Navbar: FC<NavigationProps> = ({ isDarkMode, onToggleDarkMode }) => {
       if (index !== -1) newTopDots[index] = components.dots[top];
     }
     if (bottom) {
-      const index = ["anonymous", "cookies", "registered"].indexOf(bottom); // Fixed typo: 'custom' → 'bottom'
+      const index = ["anonymous", "cookies", "registered"].indexOf(bottom);
       if (index !== -1) newBottomDots[index] = components.dots[bottom];
     }
 

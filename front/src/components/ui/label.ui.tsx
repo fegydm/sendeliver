@@ -1,23 +1,50 @@
-// ./src/components/ui/label/label.ui.tsx
+// File: ./front/src/components/ui/label.ui.tsx
+// Last change: Added description variant for form field hints and descriptions
 
 import React from "react";
 
-export interface LabelProps {
-  variant?: "default" | "error" | "success";
-  children: React.ReactNode;
-  htmlFor?: string;
+export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
+  variant?: "default" | "required" | "optional" | "helper" | "description" | "neutral";
+  role?: "sender" | "hauler";
+  className?: string;
 }
 
-export const Label: React.FC<LabelProps> = ({
-  variant = "default",
-  children,
-  htmlFor,
-}) => {
-  return (
-    <label htmlFor={htmlFor} className={`label label-${variant}`}>
-      {children}
-    </label>
-  );
-};
+export const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
+  (
+    {
+      variant = "default",
+      role,
+      className = "",
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    // Build classes array
+    const classes = ["label"];
+    
+    if (variant !== "default") {
+      classes.push(`label--${variant}`);
+    }
+    
+    if (role) {
+      classes.push(`label--${role}`);
+    }
+    
+    if (className) {
+      classes.push(className);
+    }
+
+    const labelClasses = classes.join(" ");
+
+    return (
+      <label ref={ref} className={labelClasses} {...props}>
+        {children}
+      </label>
+    );
+  }
+);
+
+Label.displayName = "Label";
 
 export default Label;

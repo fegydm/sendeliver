@@ -8,6 +8,8 @@ import { useCountriesContext } from "@/contexts/CountriesContext";
 import { useTranslationContext } from "@/contexts/TranslationContext"; // <-- Translation system
 import loadIconWebp from "@/assets/icon-load.webp"; 
 import deliverIconWebp from "@/assets/icon-del.webp"; 
+import Button from "@/components/ui/button.ui";
+import Input from "@/components/ui/input.ui";
 import { SenderResultData } from "@/components/sections/content/results/result-table.component";
 
 interface ManualFormProps {
@@ -136,7 +138,7 @@ export function ManualForm({
   className = "",
 }: ManualFormProps) {
   const { t } = useTranslationContext();
-  const { countries: allCountries } = useCountriesContext();
+  useCountriesContext();
 
   const pickupPscRef = useRef<HTMLInputElement>(null);
   const deliveryPscRef = useRef<HTMLInputElement>(null);
@@ -259,13 +261,16 @@ export function ManualForm({
     <form className={`manual-form manual-form--${type} ${className}`} onSubmit={handleSubmit}>
       {/* Header using translation keys */}
       <div className="manual-form__header">
-        <h2 className="manual-form__title">
-          {t(type === "sender" ? "m_f_title_sender" : "m_f_title_hauler")}
-        </h2>
-        <p className="manual-form__descr">
-          {t(type === "sender" ? "m_f_descr_sender" : "m_f_descr_hauler")}
-        </p>
-      </div>
+  <h3 className="manual-form__title">
+    {t(type === "sender" ? "m_f_title_sender" : "m_f_title_hauler")}
+  </h3>
+  <p className="manual-form__descr">
+    {t(type === "sender" ? "m_f_descr_sender" : "m_f_descr_hauler")}
+  </p>
+  <p className="manual-form__descr">
+    {t("fields_required")}
+  </p>
+</div>
       
       {/* Pickup Section */}
       <section className={`manual-form__pickup ${isPickupValid ? "manual-form__pickup--valid" : ""}`}>
@@ -365,37 +370,30 @@ export function ManualForm({
           {t(type === "sender" ? "m_f_sub_cargo_sender" : "m_f_sub_cargo_hauler")}
         </h3>
         <div className="manual-form__cargo-inputs">
-          <div className="manual-form__field">
-            <label className="manual-form__label">{t("m_f_lbl_pallets")}</label>
-            <input
-              type="number"
-              value={localFormData.cargo.pallets}
-              onChange={(e) => handleCargoChange("pallets", Number(e.target.value))}
-              min="0"
-              className="manual-form__input-number"
-            />
-          </div>
-          <div className="manual-form__field">
-            <label className="manual-form__label">{t("m_f_lbl_weight")}</label>
-            <input
-              type="number"
-              value={localFormData.cargo.weight}
-              onChange={(e) => handleCargoChange("weight", Number(e.target.value))}
-              min="0"
-              step="0.1"
-              className="manual-form__input-number"
-            />
-          </div>
+        <div className="manual-form__field">
+  <label className="manual-form__label">{t("m_f_lbl_pallets")}</label>
+  <Input
+    type="number"
+    role={type} // Use the role property (sender/hauler)
+    value={localFormData.cargo.pallets}
+    onChange={(e) => handleCargoChange("pallets", Number(e.target.value))}
+    min="0"
+    className="manual-form__input-number"
+  />
+</div>
         </div>
       </section>
       
-      <button
-        type="submit"
-        className={`manual-form__submit ${!isPickupValid ? "manual-form__submit--disabled" : ""}`}
-        disabled={!isPickupValid || isSearching}
-      >
-        {isSearching ? t("m_f_btn_submit") : t("m_f_btn_submit")}
-      </button>
+      <Button
+  type="submit"
+  variant="primary"
+  role={type}
+  active={isPickupValid && !isSearching}
+  disabled={!isPickupValid || isSearching}
+  className={`manual-form__submit ${!isPickupValid ? "manual-form__submit--disabled" : ""}`}
+>
+  {isSearching ? t("m_f_btn_searching") : t("m_f_btn_submit")}
+</Button>
     </form>
   );
 }

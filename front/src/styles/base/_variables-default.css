@@ -1,55 +1,107 @@
-/* File: front/src/styles/base/variables-default.css */
-/* Last updated: Default theme variables for ThemeSwitcher and ThemeEditorModal */
+/* File: front/src/styles/base/variables.css */
+/* Last updated: Added both light and dark mode theme variables */
 
+/* Light Mode (Default) */
 :root {
-    /* Colors */
-    --color-page-bg: #ffffff; /* Page background color */
-    --color-navbar-bg:rgb(204, 69, 69); /* Navbar background color */
-    --color-footer-bg: #eeeeee; /* Footer background color */
-    --color-modal-bg: #ffffff; /* Modal background color */
-    --color-text-primary: #000000; /* Primary text color */
-    --color-text-secondary: #333333; /* Secondary text color */
-    --color-pickup-section: #5775a7;
-    --color-delivery-section: #62a58f;
-    --logo-1-color: #dc1ff0;
-    --logo-2-color: #57cc32;
-    --sender-primary: #a93ab5;
-    --sender-light: #f9f0fa;
-    --sender-medium: #fbd3ff;
-    --sender-dark: #a913b3;
-    --hauler-primary: #4c9f32;
-    --hauler-light: #e0ffda;
-    --hauler-medium: #8adf6f;
-    --hauler-dark: #418f26;
-
+    /* Colors - Light Theme */
+    --color-page-bg: #ffffff;
+    --color-navbar-bg: #f8f8f8;
+    --color-footer-bg: #f5f5f5;
+    --color-modal-bg: #ffffff;
+    --color-text-primary: #333333;
+    --color-text-secondary: #666666;
     
-
-
-
+    /* Brand Colors - These remain consistent across themes */
+    --logo-1-color: hsl(290, 87%, 53%);
+    --logo-2-color: hsl(106, 61%, 50%);
+    
+    /* Sender Theme - Light Mode */
+    --sender-primary: hsl(290, 40%, 40%);
+    --sender-primary-hover: hsl(290, 40%, 46%);
+    --sender-light: hsl(290, 50%, 95%);
+    --sender-medium: hsl(290, 50%, 90%);
+    --sender-dark: hsl(290, 50%, 80%);
+    
+    /* Hauler Theme - Light Mode */
+    --hauler-primary: hsl(110, 60%, 30%);
+    --hauler-primary-hover: hsl(110, 60%, 36%);
+    --hauler-light: hsl(110, 50%, 95%);
+    --hauler-medium: hsl(110, 50%, 90%);
+    --hauler-dark: hsl(110, 50%, 60%);
+ 
+    /* Form and UI Elements */
+    --input-bg: #ffffff;
+    --input-border: #dddddd;
+    --input-text: #333333;
+    --input-placeholder: hsl(0, 0%, 60%);
+    --button-text: #ffffff;
+    --dropdown-bg: #ffffff;
+    --dropdown-border: #eeeeee;
+    --dropdown-hover: #f5f5f5;
+    --label-text: hsl(0, 0%, 0%);
+    
     /* Heights */
-    --height-header: 100px; /* Header height */
-    --height-footer: 200px; /* Footer height */
-    --height-banner: 300px; /* Banner height */
-
+    --height-header: 100px;
+    --height-footer: 200px;
+    --height-banner: 300px;
+ 
     /* Modal offset */
-    --modal-offset-top: 10vh; /* Modal vertical offset from the top */
-
+    --modal-offset-top: 10vh;
+ 
     /* Font Sizes */
-    --font-size-base: 16px; /* Base font size */
-    --font-size-lg: 20px; /* Large font size */
-    --font-size-sm: 14px; /* Small font size */
-
+    --font-size-base: 16px;
+    --font-size-lg: 20px;
+    --font-size-sm: 14px;
+ 
     /* Spacing */
-    --spacing-xs: 4px; /* Extra small spacing */
-    --spacing-sm: 8px; /* Small spacing */
-    --spacing-md: 16px; /* Medium spacing */
-    --spacing-lg: 24px; /* Large spacing */
-
-/* priradit */
-    --border-radius: 8px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+ 
+    /* Common UI Elements */
+    --border-radius: 6px;
     --common-spacing: 1rem;
     --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
     --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.15);
     --transition-speed: 0.2s;
-
-}
+ }
+ 
+ /* Dark Mode */
+ [data-theme="dark"] {
+    /* Colors - Dark Theme */
+    --color-page-bg: #121212;
+    --color-navbar-bg: #222222;
+    --color-footer-bg: #333333;
+    --color-modal-bg: #1e1e1e;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #bbbbbb;
+    
+    /* Sender Theme - Dark Mode */
+    --sender-primary: hsl(290, 40%, 40%); /* Same color for brand recognition */
+    --sender-primary-hover: hsl(290, 40%, 46%);
+    --sender-light: hsl(290, 30%, 25%);
+    --sender-medium: hsl(290, 30%, 20%);
+    --sender-dark: hsl(290, 30%, 15%);
+    
+    /* Hauler Theme - Dark Mode */
+    --hauler-primary: hsl(110, 60%, 30%); /* Same color for brand recognition */
+    --hauler-primary-hover: hsl(110, 60%, 36%); 
+    --hauler-light: hsl(110, 30%, 25%);
+    --hauler-medium: hsl(110, 30%, 20%);
+    --hauler-dark: hsl(110, 30%, 15%);
+ 
+    /* Form and UI Elements */
+    --input-bg: #333333;
+    --input-border: #555555;
+    --input-text: #ffffff;
+    --input-placeholder: hsl(0, 0%, 50%);
+    --button-text: #ffffff;
+    --dropdown-bg: #2a2a2a;
+    --dropdown-border: #444444;
+    --dropdown-hover: #3a3a3a;
+    
+    /* Shadows are more subtle in dark mode */
+    --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.3);
+ }
