@@ -236,11 +236,6 @@
   background-color: var(--hauler-dark);
 }
 
-
-
-
-
-
 .manual-form__submit--disabled {
   opacity: 0.6;
   cursor: not-allowed;

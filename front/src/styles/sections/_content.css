@@ -58,23 +58,20 @@
     pointer-events: none;
     width: auto;           /* Allow the description to expand */
     white-space: nowrap;   /* Prevent line breaks if desired */  }
-.content--sender .content__description {
-      color: var(--sender-primary);
-      margin: 1rem 2rem; /* Adjust the margin values as needed */  }
+
 .content--sender .content__title {
         color:var(--sender-primary);
         border-bottom:2px solid transparent;
         border-image:linear-gradient(to right, transparent, var(--sender-primary), transparent) 1;}
+.content--sender .content__description {
+       color: var(--sender-primary);
+       margin: 1rem 2rem; /* Adjust the margin values as needed */  }
 .ai-form--sender,
 .manual-form--sender,
 .result-table {
   border:2px solid var(--sender-medium);
   background: var(--sender-light);}
-.content--sender .manual-form__descr,
-.content--sender .ai-form__description {
-  color: var(--sender-primary, #333333);
-  margin-left: 8px;
-  font-size: 0.9rem; }  
+ 
 .content--sender .ai-form__title,
 .content--sender .manual-form__title {
     color: var(--sender-primary, #005f99);
@@ -116,23 +113,19 @@
   pointer-events: none;
   width: auto;           /* Allow the description to expand */
   white-space: nowrap;   /* Prevent line breaks if desired */  }
-.content--hauler .content__description {
-    color: var(--hauler-primary);
-    margin: 1rem 2rem; /* Adjust the margin values as needed */  }
+
 .content--hauler .content__title {
   color: var(--hauler-primary);
   border-bottom:2px solid transparent;
   border-image:linear-gradient(to right, transparent, var(--hauler-primary), transparent) 1;}
+.content--hauler .content__description {
+  color: var(--hauler-primary);
+  margin: 1rem 2rem; /* Adjust the margin values as needed */  }
 .ai-form--hauler,
 .manual-form--hauler,
 .result-table {
   border:2px solid var(--hauler-medium);
   background: var(--hauler-light);}
-.content--hauler .manual-form__descr,
-.content--hauler .ai-form__description {
-    color: var(--hauler-primary, #333333);
-    margin-left: 8px;
-    font-size: 0.9rem; }  
 .content--hauler .ai-form__title,
 .content--hauler .manual-form__title {
       color: var(--hauler-primary, #005f99);
@@ -152,52 +145,14 @@
       border-radius: var(--border-radius);
       box-shadow: var(--shadow-light);
     }
-        
-
-
-
 
 /* Manual Form styling */
-
-.manual-form__label {
-  display: block;
-  margin-bottom: 0.3rem;
-  font-weight: 500;
-  color: #494949;
-  font-size: 0.95rem; 
-  margin-left: 0.2rem; 
-}
-
-
-
-
-.manual-form__cargo {
-  padding: 1.2rem;
-  border-radius: var(--border-radius);
-  background-color: #f9f9f9;
-  box-shadow: var(--shadow-light);
-}
-
-
-
-
-
-.manual-form__cargo-inputs {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+.manual-form__cargo-fields {
+  display: flex;
   gap: 1rem;
+  align-items: flex-start;
 }
 
-.manual-form__field {
-  margin-bottom: 0.5rem;
-}
-
-.manual-form__input-number {
-  width: 100%;
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
 
 .manual-form--sender .manual-form__input-number:focus {
   border-color: var(--sender-primary);
@@ -209,43 +164,24 @@
   box-shadow: 0 0 0 2px var(--hauler-light);
 }
 
-.manual-form__submit {
-  padding: 0.8rem 1.5rem;
-  margin-top: 1rem;
-  font-weight: 600; 
-  font-size: 1rem;
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  transition: all var(--transition-speed) ease;
-  align-self: flex-end;
+
+
+
+
+
+
+
+.manual-form__cargo {
+  margin-bottom: 1.5rem;
 }
 
-.manual-form--sender .manual-form__submit {
-  background-color: var(--sender-primary);
-  color: white;
+.manual-form__cargo-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
-.manual-form--sender .manual-form__submit:hover:not(:disabled) {
-  background-color: var(--sender-dark);
+.manual-form__cargo .input-container {
+  flex: 1;
+  min-width: 150px;
 }
-
-.manual-form--hauler .manual-form__submit {
-  background-color: var(--hauler-primary);
-  color: white;
-}
-
-.manual-form--hauler .manual-form__submit:hover:not(:disabled) {
-  background-color: var(--hauler-dark);
-}
-
-
-
-
-
-
-
-
-
-
-

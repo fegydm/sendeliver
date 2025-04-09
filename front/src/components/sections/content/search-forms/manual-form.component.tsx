@@ -1,15 +1,18 @@
 // File: src/components/sections/content/search-forms/manual-form.component.tsx
+// Last change: Updated to use custom Label UI component for standardized field labels.
+
 import React, { useState, useRef, useCallback } from "react";
 import CountrySelect from "./CountrySelect";
 import PostalCitySelect from "./PostalCitySelect";
 import { DateTimeSelect } from "./DateTimeSelect";
 import { TransportFormData, LocationType, LocationSuggestion } from "@/types/transport-forms.types";
 import { useCountriesContext } from "@/contexts/CountriesContext";
-import { useTranslationContext } from "@/contexts/TranslationContext"; // <-- Translation system
+import { useTranslationContext } from "@/contexts/TranslationContext"; // Translation system
 import loadIconWebp from "@/assets/icon-load.webp"; 
 import deliverIconWebp from "@/assets/icon-del.webp"; 
 import Button from "@/components/ui/button.ui";
 import Input from "@/components/ui/input.ui";
+import Label from "@/components/ui/label.ui"; // Import custom Label component
 import { SenderResultData } from "@/components/sections/content/results/result-table.component";
 
 interface ManualFormProps {
@@ -60,7 +63,7 @@ const DEFAULT_FORM_DATA: TransportFormData = {
 
 const isDevMode = process.env.NODE_ENV === "development";
 
-// Combined function to search vehicles and return the loading date/time as ISO string
+// Combined function to search vehicles and return the loading date/time as ISO string.
 async function searchAvailableVehiclesInternal(
   localFormData: TransportFormData,
   setAvailableVehicles: React.Dispatch<React.SetStateAction<SenderResultData[]>>,
@@ -232,7 +235,7 @@ export function ManualForm({
     }));
   }, []);
 
-  // Combined submit handler: validate, search vehicles and then submit the form data.
+  // Combined submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validatePickup()) {
@@ -241,10 +244,14 @@ export function ManualForm({
     }
     setIsSearching(true);
     try {
-      const loadingDt = await searchAvailableVehiclesInternal(localFormData, setAvailableVehicles, setTotalVehiclesCount);
+      const loadingDt = await searchAvailableVehiclesInternal(
+        localFormData,
+        setAvailableVehicles,
+        setTotalVehiclesCount
+      );
       const updatedFormData = {
         ...localFormData,
-        pickup: { ...localFormData.pickup, time: loadingDt }
+        pickup: { ...localFormData.pickup, time: loadingDt },
       };
       onSubmit(updatedFormData);
       if (onVehiclesFound && availableVehicles.length > 0) {
@@ -259,18 +266,18 @@ export function ManualForm({
 
   return (
     <form className={`manual-form manual-form--${type} ${className}`} onSubmit={handleSubmit}>
-      {/* Header using translation keys */}
+      {/* Header with Labels using our custom Label component */}
       <div className="manual-form__header">
-  <h3 className="manual-form__title">
-    {t(type === "sender" ? "m_f_title_sender" : "m_f_title_hauler")}
-  </h3>
-  <p className="manual-form__descr">
-    {t(type === "sender" ? "m_f_descr_sender" : "m_f_descr_hauler")}
-  </p>
-  <p className="manual-form__descr">
-    {t("fields_required")}
-  </p>
-</div>
+        <h3 className="manual-form__title">
+          {t(type === "sender" ? "m_f_title_sender" : "m_f_title_hauler")}
+        </h3>
+        <Label variant="description" className="manual-form__descr">
+          {t(type === "sender" ? "m_f_descr_sender" : "m_f_descr_hauler")}
+        </Label>
+        <Label variant="description" className="manual-form__descr">
+          {t("fields_required")}
+        </Label>
+      </div>
       
       {/* Pickup Section */}
       <section className={`manual-form__pickup ${isPickupValid ? "manual-form__pickup--valid" : ""}`}>
@@ -279,7 +286,7 @@ export function ManualForm({
         </h3>
         <div className="manual-form__grid">
           <div className="manual-form__country">
-            <label className="manual-form__label">{t("m_f_lbl_country")}</label>
+            <Label>{t("m_f_lbl_country")}</Label>
             <CountrySelect
               onCountrySelect={(cc, flag) => handleCountrySelect(LocationType.PICKUP, cc, flag)}
               onNextFieldFocus={() => focusPostalCode(LocationType.PICKUP)}
@@ -288,7 +295,7 @@ export function ManualForm({
             />
           </div>
           <div className="manual-form__location">
-            <label className="manual-form__label">{t("m_f_lbl_location")}</label>
+            <Label>{t("m_f_lbl_location")}</Label>
             <PostalCitySelect
               pscRef={pickupPscRef}
               onValidSelection={() => {}}
@@ -307,7 +314,7 @@ export function ManualForm({
             />
           </div>
           <div className="manual-form__datetime">
-            <label className="manual-form__label">{t("m_f_lbl_loading_dt")}</label>
+            <Label>{t("m_f_lbl_loading_dt")}</Label>
             <DateTimeSelect
               value={localFormData.pickup.time ? new Date(localFormData.pickup.time) : new Date()}
               onChange={(date: Date) => handleDateTimeChange(LocationType.PICKUP, date)}
@@ -325,7 +332,7 @@ export function ManualForm({
         </h3>
         <div className="manual-form__grid">
           <div className="manual-form__country">
-            <label className="manual-form__label">{t("m_f_lbl_country")}</label>
+            <Label>{t("m_f_lbl_country")}</Label>
             <CountrySelect
               onCountrySelect={(cc, flag) => handleCountrySelect(LocationType.DELIVERY, cc, flag)}
               onNextFieldFocus={() => focusPostalCode(LocationType.DELIVERY)}
@@ -334,7 +341,7 @@ export function ManualForm({
             />
           </div>
           <div className="manual-form__location">
-            <label className="manual-form__label">{t("m_f_lbl_location")}</label>
+            <Label>{t("m_f_lbl_location")}</Label>
             <PostalCitySelect
               pscRef={deliveryPscRef}
               onValidSelection={() => {}}
@@ -353,7 +360,7 @@ export function ManualForm({
             />
           </div>
           <div className="manual-form__datetime">
-            <label className="manual-form__label">{t("m_f_lbl_delivery_dt")}</label>
+            <Label>{t("m_f_lbl_delivery_dt")}</Label>
             <DateTimeSelect
               value={localFormData.delivery.time ? new Date(localFormData.delivery.time) : null}
               onChange={(date: Date) => handleDateTimeChange(LocationType.DELIVERY, date)}
@@ -364,36 +371,46 @@ export function ManualForm({
         </div>
       </section>
       
-      {/* Cargo Section */}
-      <section className="manual-form__cargo">
-        <h3 className="manual-form__sub">
-          {t(type === "sender" ? "m_f_sub_cargo_sender" : "m_f_sub_cargo_hauler")}
-        </h3>
-        <div className="manual-form__cargo-inputs">
-        <div className="manual-form__field">
-  <label className="manual-form__label">{t("m_f_lbl_pallets")}</label>
-  <Input
-    type="number"
-    role={type} // Use the role property (sender/hauler)
-    value={localFormData.cargo.pallets}
-    onChange={(e) => handleCargoChange("pallets", Number(e.target.value))}
-    min="0"
-    className="manual-form__input-number"
-  />
-</div>
-        </div>
-      </section>
+    {/* Cargo Section */}   
+    <section className="manual-form__cargo">
+  <h3 className="manual-form__title">
+    {t(type === "sender" ? "m_f_sub_cargo_sender" : "m_f_sub_cargo_hauler")}
+  </h3>
+  <div className="manual-form__cargo-row">
+    <Input
+      type="number"
+      role={type}
+      label={t("m_f_lbl_pallets")} 
+      value={localFormData.cargo.pallets}
+      onChange={(e) => handleCargoChange("pallets", Number(e.target.value))}
+      min="0"
+      className="manual-form__input-number"
+    />
+    <Input
+      type="number"
+      role={type}
+      label={t("m_f_lbl_weight")} 
+      value={localFormData.cargo.weight}
+      onChange={(e) => handleCargoChange("weight", Number(e.target.value))}
+      min="0"
+      step="0.1"
+      className="manual-form__input-number"
+    />
+  </div>
+</section>
+
+
       
       <Button
-  type="submit"
-  variant="primary"
-  role={type}
-  active={isPickupValid && !isSearching}
-  disabled={!isPickupValid || isSearching}
-  className={`manual-form__submit ${!isPickupValid ? "manual-form__submit--disabled" : ""}`}
->
-  {isSearching ? t("m_f_btn_searching") : t("m_f_btn_submit")}
-</Button>
+        type="submit"
+        variant="primary"
+        role={type} // Apply sender or hauler role styling
+        active={isPickupValid && !isSearching}
+        disabled={!isPickupValid || isSearching}
+        className={`manual-form__submit ${!isPickupValid ? "manual-form__submit--disabled" : ""}`}
+      >
+        {isSearching ? t("m_f_btn_searching") : t("m_f_btn_submit")}
+      </Button>
     </form>
   );
 }

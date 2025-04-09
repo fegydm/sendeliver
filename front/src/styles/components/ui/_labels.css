@@ -2,16 +2,21 @@
     display: block;
     font-size: 0.85rem;
     color: var(--label-text);
-    margin-top: 0.25rem;
+   
      }
 .label--description {
     display: block;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--label-gtext);
-    margin-top: 0.25rem;
-    font-style: italic;
+    margin-left: 8px;
+    
   }
-  .label--neutral {
+.content--sender .label--description {
+    color: var(--sender-primary); }
+.content--hauler .label--description {
+    color: var(--hauler-primary); }
+  
+.label--neutral {
     color: hsl(0, 0%, 50%); /* Mid-gray */
   
   }

@@ -38,7 +38,7 @@
     --dropdown-bg: #ffffff;
     --dropdown-border: #eeeeee;
     --dropdown-hover: #f5f5f5;
-    --label-text: hsl(0, 0%, 0%);
+    --label-text: hsl(0, 0%, 40%);
     
     /* Heights */
     --height-header: 100px;

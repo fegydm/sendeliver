@@ -9,6 +9,9 @@
   transition: all var(--transition-speed, 200ms) ease, opacity 200ms ease;
   opacity: 1; /* Default fully opaque */
 }
+.manual-form__submit {
+   align-self: flex-end;
+}
 /* Inactive state: lower opacity */
 .button.inactive {
   opacity: 0.7;

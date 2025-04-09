@@ -1,16 +1,11 @@
 .input {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  font-size: var(--font-size-medium, 1rem);
-  color: #ffffff; /* Biela v tmavom režime */
-  background-color: #2d3748;
-  border: 1px solid #4b5563;
-  border-radius: var(--border-radius, 0.5rem);
-  transition: var(--transition-default, 0.2s ease);
+  padding: 0.3rem;
 }
 
 .input:focus {
   outline: none;
-  border-color: #ffffff; /* Biela pri focus */
+  border-color: #ffffff; 
   box-shadow: 0 0 0 2px #4b5563;
 }
+

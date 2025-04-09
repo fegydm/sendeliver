@@ -146,7 +146,7 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = "" }) =>
       <h3 className="ai-form__title">
         {t(getTypeKey("ai_form_title_sender", "ai_form_title_hauler"))}
       </h3>
-      <p className="ai-form__description">
+      <p className="label label--description">
         {t(getTypeKey("ai_form_description_sender", "ai_form_description_hauler"))}
       </p>
 
