@@ -31,7 +31,7 @@
  
     /* Form and UI Elements */
     --input-bg: #ffffff;
-    --input-border: #dddddd;
+    --input-border: hsl(0, 0%, 50%);
     --input-text: #333333;
     --input-placeholder: hsl(0, 0%, 60%);
     --button-text: #ffffff;

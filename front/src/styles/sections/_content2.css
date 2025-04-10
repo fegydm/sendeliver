@@ -154,7 +154,6 @@
   box-shadow: var(--shadow-light);
 }
 
-
 .manual-form__grid {
   display: grid;
   grid-template-columns: 70px auto;
@@ -169,7 +168,6 @@
   font-size: 0.95rem; 
   margin-left: 0.2rem; 
 }
-
 .manual-form__cargo {
   padding: 1.2rem;
   border-radius: var(--border-radius);
@@ -177,14 +175,11 @@
   box-shadow: var(--shadow-light);
 }
 
-
-
 .manual-form__cargo-inputs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
-
 .manual-form__field {
   margin-bottom: 0.5rem;
 }

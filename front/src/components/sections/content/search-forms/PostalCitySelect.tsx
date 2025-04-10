@@ -1,8 +1,8 @@
 // File: src/components/sections/content/search-forms/PostalCitySelect.tsx
-// Last change: Fixed coordinate handling to support both API and front-end formats
+// Last change: Updated to use Input UI component with postal-code variant
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import PostalCodeInput from "@/components/elements/PostalCodeInput";
+import Input from "@/components/ui/input.ui";
 import { BaseDropdown } from "../../../elements/BaseDropdown";
 import { LOCATION_PAGE_SIZE, DEBOUNCE_LOCATION_SEARCH } from "@/constants/pagination.constants";
 import { LocationType, LocationSuggestion } from "@/types/transport-forms.types";
@@ -16,6 +16,7 @@ interface PostalCitySelectProps {
   cc?: string;
   postalCodeRegex?: string;
   dbPostalCodeMask: string;
+  role?: "sender" | "hauler"; // Added role prop for styling consistency
 }
 
 export function PostalCitySelect({
@@ -26,7 +27,9 @@ export function PostalCitySelect({
   locationType,
   cc,
   dbPostalCodeMask,
+  role, // Accept role from parent
 }: PostalCitySelectProps) {
+  // State for input values
   const [psc, setPsc] = useState("");
   const [city, setCity] = useState("");
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
@@ -36,20 +39,23 @@ export function PostalCitySelect({
   const [error, setError] = useState<string | null>(null);
   const [manualOverride, setManualOverride] = useState(false);
 
+  // Refs for DOM elements
   const cityInputRef = useRef<HTMLInputElement>(null);
   const searchTimer = useRef<NodeJS.Timeout>();
   const activePscRef = pscRef || useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-
+  // Validate if we have any search input
   const validateSearchInput = useCallback((pscValue: string, cityValue: string): boolean => {
     return pscValue.trim().length > 0 || cityValue.trim().length > 0;
   }, []);
 
+  // Load location suggestions from API
   const loadSuggestions = useCallback(
     async (pscValue: string, cityValue: string, pagination?: { lastPsc?: string; lastCity?: string }) => {
       setError(null);
 
+      // Skip API call if no search input
       if (!validateSearchInput(pscValue, cityValue)) {
         console.log(`[PostalCitySelect] ${locationType} No search input provided`);
         setSuggestions([]);
@@ -58,6 +64,7 @@ export function PostalCitySelect({
 
       setIsLoading(true);
       try {
+        // Build API request parameters
         const params = new URLSearchParams();
         if (pscValue.trim()) params.append("psc", pscValue.trim());
         if (cityValue.trim()) params.append("city", cityValue.trim());
@@ -71,6 +78,7 @@ export function PostalCitySelect({
 
         console.log(`[PostalCitySelect] ${locationType} Loading suggestions:`, { psc: pscValue, city: cityValue, cc });
 
+        // Fetch data from API
         const response = await fetch(requestUrl);
         if (!response.ok) {
           const errorText = await response.text();
@@ -96,11 +104,13 @@ export function PostalCitySelect({
           flag: item.flag || item.flag_url
         }));
 
+        // Auto-select single result if not manually typing
         if (!pagination && normalizedResults.length === 1 && !manualOverride) {
           handleSelect(normalizedResults[0]);
           return false;
         }
 
+        // Update suggestions list
         setSuggestions(prev => (pagination ? [...prev, ...normalizedResults] : normalizedResults));
         return data.hasMore;
       } catch (error) {
@@ -116,7 +126,7 @@ export function PostalCitySelect({
     [cc, locationType, validateSearchInput, manualOverride]
   );
 
-  // Enhanced to always provide complete location data to parent
+  // Handle selection of a location from the dropdown
   const handleSelect = useCallback((item: LocationSuggestion) => {
     console.log(`[PostalCitySelect] ${locationType} Selected:`, item);
     
@@ -153,6 +163,7 @@ export function PostalCitySelect({
     setManualOverride(false);
   }, [onSelectionChange, onValidSelection, dateInputRef, locationType]);
 
+  // Debounce search to prevent excessive API calls
   const debouncedSearch = useCallback(
     (pscValue: string, cityValue: string) => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -163,14 +174,17 @@ export function PostalCitySelect({
     [loadSuggestions]
   );
 
+  // Handle input focus
   const handleInputFocus = useCallback((field: "psc" | "city") => {
     setActiveField(field);
     setIsOpen(true);
     if (validateSearchInput(psc, city)) debouncedSearch(psc, city);
   }, [psc, city, debouncedSearch, validateSearchInput]);
 
+  // Handle postal code input change
   const handlePscChange = useCallback(
-    (newValue: string) => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
       setPsc(newValue);
       setActiveField("psc");
       setIsOpen(true);
@@ -182,6 +196,7 @@ export function PostalCitySelect({
     [debouncedSearch]
   );
 
+  // Handle city input change
   const handleCityChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
@@ -196,6 +211,7 @@ export function PostalCitySelect({
     [debouncedSearch]
   );
 
+  // Close dropdown when clicking outside
   const handleClickOutside = useCallback((event: MouseEvent) => {
     const target = event.target as Node;
     const dropdown = dropdownRef.current;
@@ -208,22 +224,26 @@ export function PostalCitySelect({
     }
   }, []);
 
+  // Add and remove event listeners
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [handleClickOutside]);
 
+  // Clear suggestions when country changes or inputs change
   useEffect(() => {
     setSuggestions([]);
     if (validateSearchInput(psc, city)) debouncedSearch(psc, city);
   }, [cc, psc, city, debouncedSearch, validateSearchInput]);
 
+  // Cleanup timers
   useEffect(() => {
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
     };
   }, []);
 
+  // Render location item in dropdown
   const renderLocationItem = useCallback((
     item: LocationSuggestion, 
     { isHighlighted }: { isHighlighted: boolean }
@@ -237,6 +257,7 @@ export function PostalCitySelect({
           src={`/flags/4x3/optimized/${item.cc.toLowerCase()}.svg`}
           alt={`${item.cc} flag`}
           className="dropdown__item-flag"
+          onError={(e) => (e.currentTarget.src = "/flags/4x3/optimized/placeholder.svg")}
         />
       )}
       <div className="dropdown__item-details">
@@ -247,6 +268,7 @@ export function PostalCitySelect({
     </div>
   ), [activeField]);
 
+  // Render message when no results
   const renderNoResults = useCallback(() => {
     if (isLoading) return <div className="dropdown__no-results">Loading...</div>;
     if (error) return <div className="dropdown__no-results dropdown__no-results--error">{error}</div>;
@@ -254,6 +276,7 @@ export function PostalCitySelect({
     return <div className="dropdown__no-results">No results found</div>;
   }, [psc, city, isLoading, error, validateSearchInput]);
 
+  // Handle loading more results when scrolling
   const handleLoadMore = useCallback(() => {
     if (suggestions.length > 0) {
       const lastItem = suggestions[suggestions.length - 1];
@@ -265,21 +288,24 @@ export function PostalCitySelect({
   }, [psc, city, loadSuggestions, suggestions]);
 
   return (
-    <div className={`location-select location-select--${locationType}`} ref={dropdownRef}>
-      <PostalCodeInput
+    <div className={`location-select location-select--${locationType}`}>
+      <Input
+        ref={activePscRef}
+        type="text"
         value={psc}
         onChange={handlePscChange}
-        mask={dbPostalCodeMask}
+        mask={dbPostalCodeMask || "#####"}
         placeholder="Postal code"
         className="location-select__psc"
-        ref={activePscRef}
+        role={role}
+        variant="postal-code"
         onFocus={() => { 
           setCity(""); 
           setManualOverride(true);
           handleInputFocus("psc"); 
         }}
       />
-      <input
+      <Input
         ref={cityInputRef}
         type="text"
         value={city}
@@ -291,11 +317,14 @@ export function PostalCitySelect({
         }}
         placeholder="Place/City"
         className="location-select__city"
+        role={role}
+        variant="default"
         aria-autocomplete="list"
         aria-controls="location-select-dropdown"
         aria-expanded={isOpen}
       />
       <BaseDropdown
+        ref={dropdownRef}
         items={suggestions}
         isOpen={isOpen && !error}
         onSelect={(item) => handleSelect(item)}

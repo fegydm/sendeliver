@@ -556,7 +556,7 @@ useEffect(() => {
   });
 
   return (
-    <div className={`result-table ${className}`} ref={resultTableRef}>
+    <div className={`result-table result-table--${type} ${className}`} ref={resultTableRef}>
       <div className="result-table__filter-summary">
         <span>
           {appliedFilters.length > 0

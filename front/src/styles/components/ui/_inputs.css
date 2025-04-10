@@ -1,11 +1,11 @@
 .input {
   width: 100%;
-  padding: 0.3rem;
-}
-
+  border-radius: 4px;
+  border: 1px solid var(--input-border);
+  padding: 0.3rem; }
+  
 .input:focus {
   outline: none;
   border-color: #ffffff; 
-  box-shadow: 0 0 0 2px #4b5563;
-}
+  box-shadow: 0 0 0 2px #4b5563;}
 

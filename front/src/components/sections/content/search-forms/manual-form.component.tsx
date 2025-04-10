@@ -1,5 +1,5 @@
-// File: src/components/sections/content/search-forms/manual-form.component.tsx
-// Last change: Updated to use custom Label UI component for standardized field labels.
+// File: ./front/src/components/sections/content/search-forms/manual-form.component.tsx
+// Last change: Updated component to pass role parameter to child components
 
 import React, { useState, useRef, useCallback } from "react";
 import CountrySelect from "./CountrySelect";
@@ -292,6 +292,7 @@ export function ManualForm({
               onNextFieldFocus={() => focusPostalCode(LocationType.PICKUP)}
               initialValue={localFormData.pickup.country.cc}
               locationType={LocationType.PICKUP}
+              role={type} // Pass role (sender/hauler) to CountrySelect
             />
           </div>
           <div className="manual-form__location">
@@ -304,6 +305,7 @@ export function ManualForm({
               cc={localFormData.pickup.country.cc}
               dbPostalCodeMask={postalFormats[localFormData.pickup.country.cc]?.format || ""}
               postalCodeRegex={postalFormats[localFormData.pickup.country.cc]?.regex}
+              role={type} // Pass role (sender/hauler) to PostalCitySelect
             />
           </div>
           <div className="manual-form__load-img">
@@ -338,6 +340,7 @@ export function ManualForm({
               onNextFieldFocus={() => focusPostalCode(LocationType.DELIVERY)}
               initialValue={localFormData.delivery.country.cc}
               locationType={LocationType.DELIVERY}
+              role={type} // Pass role (sender/hauler) to CountrySelect
             />
           </div>
           <div className="manual-form__location">
@@ -350,6 +353,7 @@ export function ManualForm({
               cc={localFormData.delivery.country.cc}
               dbPostalCodeMask={postalFormats[localFormData.delivery.country.cc]?.format || ""}
               postalCodeRegex={postalFormats[localFormData.delivery.country.cc]?.regex}
+              role={type} // Pass role (sender/hauler) to PostalCitySelect
             />
           </div>
           <div className="manual-form__deliver-img">
@@ -371,43 +375,42 @@ export function ManualForm({
         </div>
       </section>
       
-    {/* Cargo Section */}   
-    <section className="manual-form__cargo">
-  <h3 className="manual-form__sub">
-    {t(type === "sender" ? "m_f_sub_cargo_sender" : "m_f_sub_cargo_hauler")}
-  </h3>
-  <div className="manual-form__cargo-row">
-    {/*1st */}
-    <div className="cargo-field">
-      <Label>{t("m_f_lbl_pallets")}</Label>
-      <Input
-        type="number"
-        role={type}
-        value={localFormData.cargo.pallets}
-        onChange={(e) => handleCargoChange("pallets", Number(e.target.value))}
-        min="0"
-        className="cargo-input"
-      />
-    </div>
-    
-    {/* 2nd */}
-    <div className="cargo-field">
-      <Label>{t("m_f_lbl_weight")}</Label>
-      <Input
-        type="number"
-        role={type}
-        value={localFormData.cargo.weight}
-        onChange={(e) => handleCargoChange("weight", Number(e.target.value))}
-        min="0"
-        step="0.1"
-        className="cargo-input"
-      />
-    </div>
-  </div>
-</section>
+      {/* Cargo Section */}   
+      <section className="manual-form__cargo">
+        <h3 className="manual-form__sub">
+          {t(type === "sender" ? "m_f_sub_cargo_sender" : "m_f_sub_cargo_hauler")}
+        </h3>
+        <div className="manual-form__cargo-row">
+          {/* Pallets Input */}
+          <div className="cargo-field">
+            <Label>{t("m_f_lbl_pallets")}</Label>
+            <Input
+              type="number"
+              role={type}
+              value={localFormData.cargo.pallets}
+              onChange={(e) => handleCargoChange("pallets", Number(e.target.value))}
+              min="0"
+              className="cargo-input"
+            />
+          </div>
+          
+          {/* Weight Input */}
+          <div className="cargo-field">
+            <Label>{t("m_f_lbl_weight")}</Label>
+            <Input
+              type="number"
+              role={type}
+              value={localFormData.cargo.weight}
+              onChange={(e) => handleCargoChange("weight", Number(e.target.value))}
+              min="0"
+              step="0.1"
+              className="cargo-input"
+            />
+          </div>
+        </div>
+      </section>
 
-
-      
+      {/* Submit Button */}
       <Button
         type="submit"
         variant="primary"

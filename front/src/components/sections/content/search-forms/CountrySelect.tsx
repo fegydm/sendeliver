@@ -1,15 +1,19 @@
-// File: src/components/sections/content/search-forms/CountrySelect.tsx
+// File: ./front/src/components/sections/content/search-forms/CountrySelect.tsx
+// Last change: Replaced native input with Input UI component for consistent styling
+
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { BaseDropdown } from "@/components/elements/BaseDropdown";
 import type { Country } from "@/types/transport-forms.types";
 import { useCountriesContext } from "@/contexts/CountriesContext";
 import { useUINavigation } from "@/hooks/useUINavigation";
+import Input from "@/components/ui/input.ui"; // Import Input component
 
 interface CountrySelectProps {
   onCountrySelect: (cc: string, flag: string) => void;
   onNextFieldFocus: () => void;
   initialValue?: string;
   locationType: "pickup" | "delivery";
+  role?: "sender" | "hauler"; // Added role prop for styling support
 }
 
 export function CountrySelect({
@@ -17,26 +21,21 @@ export function CountrySelect({
   onNextFieldFocus,
   initialValue = "",
   locationType,
+  role, // Accept role parameter from parent component
 }: CountrySelectProps) {
   const [inputValue, setInputValue] = useState(initialValue);
   const [isOpen, setIsOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
   const [isDropdownHovered, setIsDropdownHovered] = useState(false);
-  const [isInputHovered, setIsInputHovered] = useState(false);
+  const [] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const componentRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<(HTMLElement | null)[]>([]);
 
-  // Use CountriesContext instead of calling useCountriesPreload directly
+  // Use CountriesContext for countries data
   const { countries: allCountries, isLoading, getFlagUrl } = useCountriesContext();
-
-  // Debug logging for countries data
-  useEffect(() => {
-    console.log(`[CountrySelect] allCountries:`, allCountries);
-    console.log(`[CountrySelect] isLoading:`, isLoading);
-  }, [allCountries, isLoading]);
 
   // Sync inputValue with initialValue
   useEffect(() => {
@@ -53,11 +52,7 @@ export function CountrySelect({
   }, [initialValue, onCountrySelect, inputValue, getFlagUrl]);
 
   const filteredItems = useMemo(() => {
-    console.log(`[CountrySelect] Filtering with input: "${inputValue}"`, { 
-      allCountries: allCountries?.length || 0, 
-      isLoading 
-    });
-
+    // Filter countries based on input value
     if (isLoading) return [];
     
     if (!allCountries || !Array.isArray(allCountries) || allCountries.length === 0) {
@@ -74,8 +69,10 @@ export function CountrySelect({
     return allCountries.filter((c: Country) => c && c.cc && c.cc.toUpperCase().startsWith(upperValue));
   }, [inputValue, allCountries, isLoading]);
 
+  // Get visible items based on pagination
   const visibleItems = useMemo(() => filteredItems.slice(0, visibleCount), [filteredItems, visibleCount]);
 
+  // Setup keyboard navigation
   const { highlightedIndex, setHighlightedIndex, handleKeyDown: handleUINavKeyDown } = useUINavigation({
     items: visibleItems,
     isOpen,
@@ -85,6 +82,7 @@ export function CountrySelect({
     inputRef,
   });
 
+  // Handle click outside to close dropdown
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
       setIsOpen(false);
@@ -96,6 +94,7 @@ export function CountrySelect({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [handleClickOutside]);
 
+  // Handle input change and process country code
   const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const upperValue = event.target.value.toUpperCase();
     setInputValue(upperValue);
@@ -127,6 +126,7 @@ export function CountrySelect({
     }
   }, [allCountries, onCountrySelect, onNextFieldFocus, isOpen, getFlagUrl]);
 
+  // Handle country selection from dropdown
   const handleSelect = useCallback((selected: Country) => {
     if (!selected || !selected.cc) return;
     setInputValue(selected.cc);
@@ -136,15 +136,18 @@ export function CountrySelect({
     onNextFieldFocus();
   }, [onCountrySelect, onNextFieldFocus, getFlagUrl]);
 
+  // Handle input focus - open dropdown
   const handleFocus = useCallback(() => {
     if (!isLoading) setIsOpen(true);
   }, [isLoading]);
 
+  // Handle input click
   const handleInputClick = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
     if (!isLoading) setIsOpen(true);
   }, [isLoading]);
 
+  // Handle keyboard navigation
   const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "ArrowDown") {
       if (document.activeElement === inputRef.current) {
@@ -159,6 +162,7 @@ export function CountrySelect({
     }
   }, [highlightedIndex, isOpen, setHighlightedIndex, isLoading]);
 
+  // Handle dropdown keyboard navigation
   const handleDropdownNavigation = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
@@ -169,6 +173,7 @@ export function CountrySelect({
     }
   }, [handleUINavKeyDown]);
 
+  // Get flag source URL based on input value
   const flagSrc = useMemo(() => {
     return inputValue.length === 2 ? getFlagUrl(inputValue) : "/flags/4x3/optimized/gb.svg";
   }, [inputValue, getFlagUrl]);
@@ -183,7 +188,7 @@ export function CountrySelect({
         alt="Country flag" 
         onError={(e) => (e.currentTarget.src = "/flags/4x3/optimized/gb.svg")}
       />
-      <input
+      <Input
         ref={inputRef}
         type="text"
         value={inputValue}
@@ -194,6 +199,8 @@ export function CountrySelect({
         onFocus={handleFocus}
         onClick={handleInputClick}
         className="country-select__input"
+        role={role} // Pass role to Input component for styling
+        variant="default"
         aria-autocomplete="list"
         aria-controls="country-select-dropdown"
         aria-expanded={isOpen}
