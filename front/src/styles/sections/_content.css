@@ -147,41 +147,31 @@
     }
 
 /* Manual Form styling */
-.manual-form__cargo-fields {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-}
-
-
-.manual-form--sender .manual-form__input-number:focus {
-  border-color: var(--sender-primary);
-  box-shadow: 0 0 0 2px var(--sender-light);
-}
-
-.manual-form--hauler .manual-form__input-number:focus {
-  border-color: var(--hauler-primary);
-  box-shadow: 0 0 0 2px var(--hauler-light);
-}
 
 
 
 
 
 
-
-
-.manual-form__cargo {
-  margin-bottom: 1.5rem;
-}
 
 .manual-form__cargo-row {
   display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+  gap: 0.2rem;
+  width: 100%;
 }
 
-.manual-form__cargo .input-container {
-  flex: 1;
-  min-width: 150px;
+.cargo-label {
+  display: block;
+  margin-bottom: 0.5rem;
 }
+
+.cargo-field input {
+  box-sizing: border-box;
+}
+
+
+
+
+
+
+

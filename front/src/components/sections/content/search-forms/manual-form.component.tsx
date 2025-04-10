@@ -373,29 +373,36 @@ export function ManualForm({
       
     {/* Cargo Section */}   
     <section className="manual-form__cargo">
-  <h3 className="manual-form__title">
+  <h3 className="manual-form__sub">
     {t(type === "sender" ? "m_f_sub_cargo_sender" : "m_f_sub_cargo_hauler")}
   </h3>
   <div className="manual-form__cargo-row">
-    <Input
-      type="number"
-      role={type}
-      label={t("m_f_lbl_pallets")} 
-      value={localFormData.cargo.pallets}
-      onChange={(e) => handleCargoChange("pallets", Number(e.target.value))}
-      min="0"
-      className="manual-form__input-number"
-    />
-    <Input
-      type="number"
-      role={type}
-      label={t("m_f_lbl_weight")} 
-      value={localFormData.cargo.weight}
-      onChange={(e) => handleCargoChange("weight", Number(e.target.value))}
-      min="0"
-      step="0.1"
-      className="manual-form__input-number"
-    />
+    {/*1st */}
+    <div className="cargo-field">
+      <Label>{t("m_f_lbl_pallets")}</Label>
+      <Input
+        type="number"
+        role={type}
+        value={localFormData.cargo.pallets}
+        onChange={(e) => handleCargoChange("pallets", Number(e.target.value))}
+        min="0"
+        className="cargo-input"
+      />
+    </div>
+    
+    {/* 2nd */}
+    <div className="cargo-field">
+      <Label>{t("m_f_lbl_weight")}</Label>
+      <Input
+        type="number"
+        role={type}
+        value={localFormData.cargo.weight}
+        onChange={(e) => handleCargoChange("weight", Number(e.target.value))}
+        min="0"
+        step="0.1"
+        className="cargo-input"
+      />
+    </div>
   </div>
 </section>
 
