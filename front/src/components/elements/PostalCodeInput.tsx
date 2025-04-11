@@ -1,4 +1,4 @@
-// File: src/components/elements/PostalCodeInput.tsx
+// File: ./front/src/components/elements/PostalCodeInput.tsx
 import React, { useState, useCallback, forwardRef, useRef, useEffect } from "react";
 
 export interface PostalCodeInputProps {

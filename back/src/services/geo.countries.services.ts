@@ -114,12 +114,15 @@ class CountriesService {
   public async getCountryPostalFormat(cc: string) {
     try {
       if (!this.isHealthy) await this.checkHealth();
-
+  
       const normalizedCC = cc.trim().toUpperCase();
       const result = await pool.query(GET_COUNTRY_POSTAL_FORMAT_QUERY, [normalizedCC]);
-
-      if (result.rows.length === 0) return null;
-
+  
+      if (result.rows.length === 0) {
+        // Default for missing
+        return { postal_code_format: "#####", postal_code_regex: "^[0-9]{5}$" };
+      }
+  
       return {
         postal_code_format: result.rows[0].postal_code_format,
         postal_code_regex: result.rows[0].postal_code_regex

@@ -1,12 +1,23 @@
-// File: src/components/sections/navbars/NavbarLanguage.tsx
-// Last change: April 05, 2025 - Fixed DD flag, grid alignment, and searchbox layout
-// Updated: Added logs for debugging inconsistent dropdown behavior
+// File: ./front/src/components/sections/navbars/NavbarLanguage.tsx
+// Last change: Fixed dropdown interference with other components
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useTranslationContext } from "@/contexts/TranslationContext";
 import { useLanguagesContext } from "@/contexts/LanguagesContext";
 import type { Language } from "@/types/language.types";
 import "./navbar.component.css";
+
+// Classes to ignore in click outside detection
+const IGNORED_CLASSES = [
+  "dropdown__item",
+  "dropdown__item-city",
+  "dropdown__item-postal",
+  "dropdown__item-code",
+  "dropdown__item-flag",
+  "dropdown__item-details",
+  "location-select__dropdown",
+  "dropdown__no-results"
+];
 
 const NavbarLanguage: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -21,10 +32,6 @@ const NavbarLanguage: React.FC = () => {
   const currentLc = currentLanguage.lc;
   const secLc = secondaryLanguage;
 
-  useEffect(() => {
-    console.log(`[NavbarLanguage] Current: ${currentLc}, Unsupported: ${unsupportedLanguages.includes(currentLc) ? 'yes' : 'no'}`);
-  }, [currentLc, unsupportedLanguages]);
-
   const tertiaryLc = useMemo(() => {
     if (currentLc === "en" || secLc === "en") return null;
     return "en";
@@ -33,7 +40,6 @@ const NavbarLanguage: React.FC = () => {
   const { languages, isLoading, getFlagUrl } = useLanguagesContext();
 
   const filteredLanguages = useMemo(() => {
-    console.log("[NavbarLanguage] Filtering languages, codeSearch:", codeSearch, "nameSearch:", nameSearch);
     const filtered = languages.filter((lang) => {
       const codeMatch =
         !codeSearch ||
@@ -76,7 +82,6 @@ const NavbarLanguage: React.FC = () => {
 
   const handleLanguageSelect = useCallback(
     (lang: Language) => {
-      console.log(`[NavbarLanguage] Selecting: ${lang.lc} (${lang.name_en})`);
       changeLanguage(lang);
       setIsDropdownOpen(false);
       setCodeSearch("");
@@ -87,15 +92,12 @@ const NavbarLanguage: React.FC = () => {
 
   const toggleDropdown = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    console.log("[NavbarLanguage] Toggle clicked, current state:", isDropdownOpen);
     setIsDropdownOpen((prev) => {
       const newState = !prev;
-      console.log("[NavbarLanguage] Setting new dropdown state:", newState);
       return newState;
     });
     if (!isDropdownOpen) {
       setTimeout(() => {
-        console.log("[NavbarLanguage] Focusing code input");
         codeInputRef.current?.focus();
       }, 10);
     } else {
@@ -104,25 +106,65 @@ const NavbarLanguage: React.FC = () => {
     }
   }, [isDropdownOpen]);
 
-  const handleClickOutside = useCallback((event: MouseEvent) => {
-    if (componentRef.current && !componentRef.current.contains(event.target as Node)) {
-      console.log("[NavbarLanguage] Clicked outside, closing dropdown, target:", event.target);
-      setIsDropdownOpen(false);
-      setCodeSearch("");
-      setNameSearch("");
-    } else {
-      console.log("[NavbarLanguage] Clicked inside, target:", event.target);
+  // Helper function to check if an element or its parents have any of the ignored classes
+  const hasIgnoredClass = useCallback((element: Node | null): boolean => {
+    if (!element || element.nodeType !== Node.ELEMENT_NODE) return false;
+    
+    const el = element as Element;
+    
+    // Check if the element has any of the ignored classes
+    for (const className of IGNORED_CLASSES) {
+      if (el.classList && el.classList.contains(className)) {
+        return true;
+      }
     }
+    
+    // Check data attributes that might indicate a dropdown component
+    if (el.hasAttribute('aria-controls') && el.getAttribute('aria-controls')?.includes('dropdown')) {
+      return true;
+    }
+    
+    // Check if the element is inside a dropdown container
+    if (el.closest('.location-select') || el.closest('.country-select') || el.closest('.dropdown')) {
+      return true;
+    }
+    
+    // Recursively check parent
+    return hasIgnoredClass(el.parentNode);
   }, []);
 
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    // If dropdown isn't open, do nothing
+    if (!componentRef.current || !isDropdownOpen) return;
+    
+    const target = event.target as Node;
+    
+    // If click is inside our component, do nothing
+    if (componentRef.current.contains(target)) {
+      return;
+    }
+    
+    // Check if the clicked element is in our ignore list
+    if (hasIgnoredClass(target)) {
+      // Skip handling for elements related to other dropdowns
+      return;
+    }
+    
+    // Otherwise close the dropdown
+    setIsDropdownOpen(false);
+    setCodeSearch("");
+    setNameSearch("");
+  }, [isDropdownOpen, hasIgnoredClass]);
+
   useEffect(() => {
-    console.log("[NavbarLanguage] Adding click outside listener");
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      console.log("[NavbarLanguage] Removing click outside listener");
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [handleClickOutside]);
+    // Only add listener if dropdown is open
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [handleClickOutside, isDropdownOpen]);
 
   const handleCodeSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
@@ -152,7 +194,6 @@ const NavbarLanguage: React.FC = () => {
 
   const renderLanguageItems = () => {
     const { priorityFiltered, otherFiltered } = filteredLanguages;
-    console.log("[NavbarLanguage] Rendering language items, priority:", priorityFiltered.length, "other:", otherFiltered.length);
     if (isLoading) {
       return <div className="navbar-language-loading">Loading...</div>;
     }
@@ -230,7 +271,6 @@ const NavbarLanguage: React.FC = () => {
     );
   };
 
-  console.log("[NavbarLanguage] Render, isDropdownOpen:", isDropdownOpen);
   return (
     <div className="navbar-language-container" ref={componentRef}>
       <button
@@ -255,7 +295,6 @@ const NavbarLanguage: React.FC = () => {
         </span>
       </button>
       {isDropdownOpen && (
-        console.log("[NavbarLanguage] Rendering dropdown, isDropdownOpen:", isDropdownOpen),
         <div
           className="navbar-language-dropdown-container"
           onClick={(e) => e.stopPropagation()}

@@ -2,7 +2,6 @@
 @import '../components/dropdown.css'; 
 @import '../components/ui/ui-components.css';
 
-
 /* Global content container styling */
 
 .content {
@@ -166,10 +165,12 @@
 .cargo-field input {
   box-sizing: border-box;
   width: 100%; }
- 
+.manual-form__grid {
+    display: grid;
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 1rem;  } 
 
 /* Country and Location Components */
-
 
 .country-select__flag {
   width: 24px;
@@ -187,58 +188,31 @@
   align-items: center;
   gap: 0.5rem;}
 .location-select__psc {
-  width: 70px;}
-
-
-
-
-
- 
-  .manual-form__grid {
-    display: grid;
-    grid-template-columns: 70px minmax(0, 1fr);
-    gap: 1rem;
-  }
-  .location-select__psc {
-    width: 70px; /* Už máš */
-    flex: 0 0 70px; /* Zafixuje šírku, zabráni rastu/zmršteniu */
-    box-sizing: border-box;
-  }
-  
-  .location-select__city {
-    flex: 1 1 0; /* Rovnaké ako .datetime-select__date/time */
-    min-width: 10px;
-    box-sizing: border-box;
-  }
-
-
-  .location-select .input-container {
+    width: 85px;
+    flex: 0 0 85px;
+    border-radius: 4px;
+    min-width: 30px;
+    border: 1px solid var(--input-border);
+    padding: 0.3rem; 
+    box-sizing: border-box;  }
+.location-select__city {
+    width: 100%;
+    flex: 1 1 0;
+    border-radius: 4px;
+    min-width: 15px;
+    border: 1px solid var(--input-border);
+    padding: 0.3rem;           /* Let both inputs grow equally */
+    box-sizing: border-box;  }
+.location-select .input-wrapper {
     display: flex;
-    width: 100%; /* Pridané */
-  }
-  
-  .location-select .input-container:last-child {
-    flex: 1; /* Už máš */
-    min-width: 0;
-  }
-  
-  .location-select .input-wrapper {
-    display: flex;
-    width: 100%; /* Už máš */
-  }
-
-
-
-
-
+    width: 100%;  }
 
 /* DateTime Select styling */
+
 .datetime-select {
   display: flex;
   gap: 0.5rem;
-  width: 100%;        /* Ensure the container takes the full available width */
-}
-
+  width: 100%;        /* Ensure the container takes the full available width */}
 .datetime-select__date,
 .datetime-select__time {
   flex: 1 1 0;
@@ -246,7 +220,6 @@
   min-width: 50px;
   border: 1px solid var(--input-border);
   padding: 0.3rem;           /* Let both inputs grow equally */
-  box-sizing: border-box;  /* Include padding and border in width calculation */
-}
+  box-sizing: border-box;  /* Include padding and border in width calculation */}
 
 
