@@ -1,4 +1,6 @@
 // File: src/components/sections/footers/footer-test.component.tsx
+// Last change: Updated log filtering to allow map-related logs in console but hide from UI
+
 import React, { useState, useEffect } from "react";
 import ThemeSwitcher from "@/components/elements/theme-switcher.element";
 import ThemeEditorModal from "@/components/modals/theme-editor.modal";
@@ -6,6 +8,9 @@ import ColorPaletteModal from "@/components/modals/color-palette.modal";
 import { Button } from "@/components/ui";
 import KeystrokeAndQueryTiming from "@/components/KeystrokeAndQueryTiming";
 import "./footer-test.component.css";
+
+// Define excluded log prefixes to filter out from UI but still show in console
+const EXCLUDED_FROM_UI_PREFIXES = ['[MapRenderer]', '[CarMap:', '[VehicleRenderer]'];
 
 interface FooterTestProps {
   isVisible: boolean;
@@ -33,42 +38,74 @@ const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
     const originalWarn = console.warn;
     const originalError = console.error;
     const originalLog = console.log;
+  
     console.warn = (...args) => {
       const message = args.join(" ");
+      
+      // Always pass to original console for debugging
+      originalWarn(...args);
+      
+      // Check if message should be excluded from UI
+      if (EXCLUDED_FROM_UI_PREFIXES.some(prefix => message.startsWith(prefix) || message.includes(prefix))) {
+        return; // Don't update state, but still logged to console above
+      }
+      
+      // Update state for UI display
       if (message.includes("React") || message.includes("Warning:")) {
         setWarnings(prev => [...prev, message]);
       }
-      originalWarn(...args);
     };
+  
     console.error = (...args) => {
       const formattedError = args.map(arg => {
         if (typeof arg === "object") {
-          if (arg && typeof arg.message === "string" && arg.message.trim().startsWith("<!doctype")) {
+          if (arg?.message?.trim().startsWith("<!doctype")) {
             return arg.message;
           }
           try {
             return JSON.stringify(arg, null, 2);
-          } catch (err) {
+          } catch {
             return String(arg);
           }
         }
         return arg;
       }).join(" ");
+      
+      // Always pass to original console for debugging
+      originalError(...args);
+      
+      // Check if error should be excluded from UI
+      if (EXCLUDED_FROM_UI_PREFIXES.some(prefix => formattedError.startsWith(prefix) || formattedError.includes(prefix))) {
+        return; // Don't update state, but still logged to console above
+      }
+      
+      // Update state for UI display
       if (formattedError.includes("Error:") || formattedError.includes("Exception:")) {
         setErrors(prev => [...prev, formattedError]);
       }
-      originalError(...args);
     };
+  
     console.log = (...args) => {
       const message = args.join(" ");
+      
+      // Always pass to original console for debugging
+      originalLog(...args);
+      
+      // Check if message should be excluded from UI
+      if (EXCLUDED_FROM_UI_PREFIXES.some(prefix => message.startsWith(prefix) || message.includes(prefix))) {
+        return; // Don't update state, but still logged to console above
+      }
+      
+      // Update states for UI display
       if (message.includes("System:") || message.includes("[System]")) {
         setSystemLogs(prev => [...prev, message]);
       }
+      
       if (APP_LOG_PREFIXES.some(prefix => message.startsWith(prefix))) {
         setAppLogs(prev => [...prev, message]);
       }
-      originalLog(...args);
     };
+  
     return () => {
       console.warn = originalWarn;
       console.error = originalError;
@@ -83,8 +120,8 @@ const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
       <div className="footer-test__left">
         <Button variant="secondary" onClick={onClose}>Close Footer</Button>
         <div className="theme-switcher-wrapper">
-  <ThemeSwitcher is3DMode={is3DMode} />
-</div>
+          <ThemeSwitcher is3DMode={is3DMode} />
+        </div>
         <Button variant="secondary" onClick={() => setIs3DMode(prev => !prev)}>
           {is3DMode ? "Switch to 2D" : "Switch to 3D"}
         </Button>
@@ -95,9 +132,9 @@ const FooterTest: React.FC<FooterTestProps> = ({ isVisible, onClose }) => {
           Color Palette
         </Button>
         <div className="url-testing">
-  <a href="/luky" target="_blank">Test luky video</a>
-  <a href="./jozo" target="_blank">Test jozo video</a>
-</div>
+          <a href="/luky" target="_blank">Test luky video</a>
+          <a href="./jozo" target="_blank">Test jozo video</a>
+        </div>
       </div>
       <div className="footer-test__right">
         <h2 className="heading">System Monitoring</h2>

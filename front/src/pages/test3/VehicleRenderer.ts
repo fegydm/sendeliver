@@ -1,40 +1,44 @@
 // File: src/components/maps/VehicleRenderer.ts
-// Last change: Obnovenie logovania
+// Last change: Removed unnecessary logs
 
 import { lngLatToPixel } from './MapUtils';
 
-export type Vehicle = {
+export interface Vehicle {
   id: string;
   lat: number;
   lng: number;
   image: string;
   location: string;
-};
+}
 
 export const preloadVehicleImages = (
   vehicles: Vehicle[],
   vehicleImages: Map<string, HTMLImageElement>,
-  requestRender: () => void
+  onLoad: () => void
 ) => {
-  console.log('[VehicleRenderer] Preload:', vehicles.length);
+  let loadedCount = 0;
+  const total = vehicles.length;
+
   vehicles.forEach((vehicle) => {
-    console.log('[VehicleRenderer] Load:', vehicle.id, vehicle.image);
-    if (!vehicleImages.has(vehicle.id)) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = vehicle.image;
-
-      img.onload = () => {
-        vehicleImages.set(vehicle.id, img);
-        console.log('[VehicleRenderer] Loaded:', vehicle.id);
-        requestRender();
-      };
-
-      img.onerror = () => {
-        console.error('[VehicleRenderer] Load failed:', vehicle.id, vehicle.image);
-        requestRender();
-      };
+    if (vehicleImages.has(vehicle.id)) {
+      loadedCount++;
+      if (loadedCount === total) onLoad();
+      return;
     }
+
+    const img = new Image();
+    img.src = vehicle.image;
+
+    img.onload = () => {
+      vehicleImages.set(vehicle.id, img);
+      loadedCount++;
+      if (loadedCount === total) onLoad();
+    };
+
+    img.onerror = () => {
+      loadedCount++;
+      if (loadedCount === total) onLoad();
+    };
   });
 };
 
@@ -46,48 +50,34 @@ export const drawVehicles = (
   vehicles: Vehicle[],
   vehicleImages: Map<string, HTMLImageElement>
 ) => {
-  console.log('[VehicleRenderer] Draw:', vehicles.length);
   const { zoom, center, offsetX, offsetY } = mapState;
-  const centerPixel = lngLatToPixel(center[1], center[0], zoom);
-  console.log('[VehicleRenderer] Center pixel:', centerPixel);
+  const centerPx = lngLatToPixel(center[1], center[0], zoom);
 
   vehicles.forEach((vehicle) => {
-    console.log('[VehicleRenderer] Vehicle:', vehicle.id, 'lat:', vehicle.lat, 'lng:', vehicle.lng);
-    const vehiclePixel = lngLatToPixel(vehicle.lng, vehicle.lat, zoom);
-    const canvasX = vehiclePixel.x - centerPixel.x + width / 2 + offsetX;
-    const canvasY = vehiclePixel.y - centerPixel.y + height / 2 + offsetY;
-    console.log('[VehicleRenderer] Coords:', vehicle.id, canvasX, canvasY);
+    const vehiclePx = lngLatToPixel(vehicle.lng, vehicle.lat, zoom);
+    const x = vehiclePx.x - centerPx.x + width / 2 + offsetX;
+    const y = vehiclePx.y - centerPx.y + height / 2 + offsetY;
 
-    if (isNaN(canvasX) || isNaN(canvasY)) {
-      console.error('[VehicleRenderer] Invalid coords:', vehicle.id);
-      return;
+    if (x < 0 || x > width || y < 0 || y > height) return;
+
+    const img = vehicleImages.get(vehicle.id);
+    if (img) {
+      const size = 32;
+      ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
     }
 
-    if (canvasX < -50 || canvasX > width + 50 || canvasY < -50 || canvasY > height + 50) {
-      console.log('[VehicleRenderer] Out of bounds:', vehicle.id);
-      return;
-    }
-
-    if (vehicleImages.has(vehicle.id)) {
-      const img = vehicleImages.get(vehicle.id)!;
-      console.log('[VehicleRenderer] Image:', vehicle.id);
-      ctx.drawImage(img, canvasX - 25, canvasY - 25, 50, 50);
-    } else {
-      console.log('[VehicleRenderer] Circle:', vehicle.id);
-      ctx.fillStyle = '#ff9800';
-      ctx.beginPath();
-      ctx.arc(canvasX, canvasY, 15, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = '10px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('?', canvasX, canvasY + 3);
-    }
+    ctx.beginPath();
+    ctx.arc(x, y, 20, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 165, 0, 0.3)';
+    ctx.fill();
+    ctx.strokeStyle = 'orange';
+    ctx.stroke();
   });
 
-  console.log('[VehicleRenderer] Fixed test circle');
-  ctx.fillStyle = '#00ff00';
   ctx.beginPath();
-  ctx.arc(width / 2, height / 2, 20, 0, Math.PI * 2);
+  ctx.arc(width / 2 + offsetX, height / 2 + offsetY, 50, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
   ctx.fill();
+  ctx.strokeStyle = 'green';
+  ctx.stroke();
 };

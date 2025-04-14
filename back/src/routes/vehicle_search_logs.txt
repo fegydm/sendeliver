@@ -10960,3 +10960,148 @@
   }
 }
 [2025-04-11T16:16:54.330Z] 📊 Found 395 total vehicles, 61 within 300km, 19 after all filters
+[2025-04-14T06:11:48.401Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "SE",
+      "flag": "/flags/4x3/optimized/se.svg"
+    },
+    "psc": "10005",
+    "city": "Stockholm",
+    "time": "2025-04-14T09:00:32.538Z",
+    "lat": 59.3326,
+    "lng": 18.0649
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-14T06:11:48.516Z] 📊 Found 263 total vehicles, 1 within 300km, 0 after all filters
+[2025-04-14T06:14:30.053Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "2025-04-14T09:14:21.703Z",
+    "lat": 48.453,
+    "lng": 12.356
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-14T06:14:30.144Z] 📊 Found 264 total vehicles, 40 within 300km, 7 after all filters
+[2025-04-14T11:07:29.685Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "SE",
+      "flag": "/flags/4x3/optimized/se.svg"
+    },
+    "psc": "10004",
+    "city": "Stockholm",
+    "time": "2025-04-14T14:06:59.684Z",
+    "lat": 59.3326,
+    "lng": 18.0649
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-14T11:07:30.222Z] 📊 Found 328 total vehicles, 1 within 300km, 0 after all filters
+[2025-04-14T11:07:33.761Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "SE",
+      "flag": "/flags/4x3/optimized/se.svg"
+    },
+    "psc": "10004",
+    "city": "Stockholm",
+    "time": "2025-04-14T14:06:59.684Z",
+    "lat": 59.3326,
+    "lng": 18.0649
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-14T11:07:33.968Z] 📊 Found 328 total vehicles, 1 within 300km, 0 after all filters
+[2025-04-14T11:08:00.627Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "10107",
+    "city": "Aral Berlin GmbH",
+    "time": "2025-04-14T14:06:59.684Z",
+    "lat": 52.5121,
+    "lng": 13.3845
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-14T11:08:00.763Z] 📊 Found 328 total vehicles, 52 within 300km, 18 after all filters

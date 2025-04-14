@@ -231,3 +231,49 @@
 .car-map-attribution a:hover {
   text-decoration: underline;
 }
+
+/* Pridať do CarMap.css */
+.car-map__minimaps {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.car-map__minimap {
+  background-color: #e0e0e0;
+  border: 1px solid #000;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease-in-out;
+}
+
+.car-map__minimap:hover {
+  transform: scale(1.05);
+}
+
+.car-map__minimap--active {
+  border: 3px solid #00F;
+}
+
+.car-map__view-modes {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.car-map__mode-button {
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  background: #f0f0f0;
+  cursor: pointer;
+}
+
+.car-map__mode-button--active {
+  background: #007bff;
+  color: white;
+  border-color: #0056b3;
+}
