@@ -1,10 +1,10 @@
 // File: ./front/src/components/sections/content/search-forms/manual-form.component.tsx
 // Removed DateTimeSelect and set default time values directly
+// Removed setTimeout calls in handleLocationSelect for direct validation
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import CountrySelect from "./CountrySelect";
 import PostalCitySelect from "./PostalCitySelect";
-// Removed DateTimeSelect import
 import { TransportFormData, LocationType, LocationSuggestion } from "@/types/transport-forms.types";
 import { useCountriesContext } from "@/contexts/CountriesContext";
 import { useTranslationContext } from "@/contexts/TranslationContext";
@@ -14,7 +14,6 @@ import Button from "@/components/ui/button.ui";
 import Input from "@/components/ui/input.ui";
 import Label from "@/components/ui/label.ui";
 import { SenderResultData } from "@/components/sections/content/results/result-table.component";
-
 import usePrevious from "@/hooks/usePrevious";
 
 const DEFAULT_PICKUP_TIME = new Date(new Date().getTime() + 3 * 60 * 60 * 1000).toISOString();
@@ -75,17 +74,17 @@ export function ManualForm({
     }
   }, []);
 
-  // Handle country selection: update the corresponding location data and reset other fields.
+  // Handle country selection: update the corresponding location data and reset other fields
   const handleCountrySelect = useCallback(
     (locationType: LocationType, cc: string, flag: string) => {
       setLocalFormData((prev) => {
         const updated = JSON.parse(JSON.stringify(prev));
-        updated[locationType] = { 
-          ...updated[locationType], 
-          country: { cc, flag }, 
-          psc: "", 
-          city: "", 
-          lat: 0, 
+        updated[locationType] = {
+          ...updated[locationType],
+          country: { cc, flag },
+          psc: "",
+          city: "",
+          lat: 0,
           lng: 0,
           // Keep default time intact
           time: locationType === LocationType.PICKUP ? DEFAULT_PICKUP_TIME : DEFAULT_DELIVERY_TIME,
@@ -105,21 +104,21 @@ export function ManualForm({
     else deliveryPscRef.current?.focus();
   }, []);
 
-  // Handle location selection from PostalCitySelect.
+  // Handle location selection from PostalCitySelect
   const handleLocationSelect = useCallback(
     (locationType: LocationType, location: Omit<LocationSuggestion, "priority">) => {
       console.log(`[ManualForm] Location selected for ${locationType}:`, location);
-      
+
       // Create a deep copy of the current form data
       const updatedData = JSON.parse(JSON.stringify(localFormData));
 
-      // Update country info if provided.
+      // Update country info if provided
       if (location.cc) {
         const flagUrl = location.flag || `/flags/4x3/optimized/${location.cc.toLowerCase()}.svg`;
         updatedData[locationType].country = { cc: location.cc, flag: flagUrl };
       }
 
-      // Update location fields with provided values.
+      // Update location fields with provided values
       updatedData[locationType].psc = location.psc || "";
       updatedData[locationType].city = location.city || "";
       updatedData[locationType].lat =
@@ -127,49 +126,33 @@ export function ManualForm({
       updatedData[locationType].lng =
         typeof location.lng === "string" ? parseFloat(location.lng) : (location.lng || 0);
 
-      // If no time is set, assign default time.
+      // If no time is set, assign default time
       if (!updatedData[locationType].time) {
         updatedData[locationType].time =
           locationType === LocationType.PICKUP ? DEFAULT_PICKUP_TIME : DEFAULT_DELIVERY_TIME;
         console.log(`[ManualForm] Setting default time for ${locationType}:`, updatedData[locationType].time);
       }
-      
+
       console.log(`[ManualForm] Updating form data for ${locationType}:`, updatedData[locationType]);
-      
-      // Update ref and local state synchronously.
+
+      // Update ref and local state
       formDataRef.current = updatedData;
       setLocalFormData(updatedData);
-      
-      // For pickup, perform immediate validation using the updated data.
+
+      // Validate pickup directly
       if (locationType === LocationType.PICKUP) {
         const isValid =
           updatedData.pickup.country.cc !== "" &&
           updatedData.pickup.psc !== "" &&
           updatedData.pickup.city !== "";
-        console.log(`[ManualForm] Direct validation after selection: ${isValid}`, updatedData.pickup);
-        
-        // Set current valid state first,
+        console.log(`[ManualForm] Pickup validation: ${isValid}`, updatedData.pickup);
         setIsPickupValid(isValid);
-        
-        // then temporarily reset to false, a bit later reapply the original value.
-        setTimeout(() => {
-          setIsPickupValid(false);
-          console.log("[ManualForm] isPickupValid temporarily set to false");
-          setTimeout(() => {
-            setIsPickupValid(isValid);
-            console.log("[ManualForm] isPickupValid restored to:", isValid);
-          }, 100);
-        }, 100);
       }
     },
     [localFormData]
   );
 
-  // For this temporary setup, we removed the DateTimeSelect component.
-  // The default times (DEFAULT_PICKUP_TIME / DEFAULT_DELIVERY_TIME) are used and not changed.
-  // The handleDateTimeChange function is not needed.
-  
-  // Handle cargo data changes.
+  // Handle cargo data changes
   const handleCargoChange = useCallback((field: "pallets" | "weight", value: number) => {
     setLocalFormData((prev) => {
       const updated = JSON.parse(JSON.stringify(prev));
@@ -179,90 +162,93 @@ export function ManualForm({
     });
   }, []);
 
-  // Modified handleManualSubmit with detailed logging.
-  const handleManualSubmit = useCallback(async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const submitData = JSON.parse(JSON.stringify(formDataRef.current));
-    
-    const isValid = 
-      submitData.pickup.country.cc !== "" && 
-      submitData.pickup.psc !== "" && 
-      submitData.pickup.city !== "";
-    
-    console.log("[ManualForm] Submit validation:", {
-      isValid,
-      pickup: submitData.pickup,
-    });
-    
-    if (!isValid) {
-      console.warn("[ManualForm] Pickup data is invalid, cannot submit:", submitData.pickup);
-      return;
-    }
-    
-    setIsSearching(true);
-    
-    try {
-      if (!submitData.pickup.time) {
-        submitData.pickup.time = DEFAULT_PICKUP_TIME;
-        console.log("[ManualForm] Adding fallback time:", submitData.pickup.time);
-      }
-      
-      console.log("[ManualForm] Submitting with data:", submitData);
-      
-      const response = await fetch("/api/vehicles/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(submitData),
+  // Handle form submission
+  const handleManualSubmit = useCallback(
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const submitData = JSON.parse(JSON.stringify(formDataRef.current));
+
+      const isValid =
+        submitData.pickup.country.cc !== "" &&
+        submitData.pickup.psc !== "" &&
+        submitData.pickup.city !== "";
+
+      console.log("[ManualForm] Submit validation:", {
+        isValid,
+        pickup: submitData.pickup,
       });
 
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.status}`);
+      if (!isValid) {
+        console.warn("[ManualForm] Pickup data is invalid, cannot submit:", submitData.pickup);
+        return;
       }
 
-      const data = await response.json();
-      const loadingDt = submitData.pickup.time;
-      
-      const transformedResults = Array.isArray(data.vehicles) 
-        ? data.vehicles.map((vehicle: any) => {
-            const speedKmPerHour = 80;
-            const hours = vehicle.distance / speedKmPerHour;
-            const fullHours = Math.floor(hours);
-            const minutes = Math.round((hours - fullHours) * 60);
-            const transit = fullHours === 0 ? `${minutes}m` : `${fullHours}h ${minutes}m`;
+      setIsSearching(true);
 
-            return {
-              distance: vehicle.distance,
-              type: vehicle.vehicle_type || "Unknown",
-              status: "Available",
-              availability_date: vehicle.availability_date,
-              availability_time: vehicle.availability_time,
-              transit,
-              rating: Math.round((3.1 + Math.random() * (4.9 - 3.1)) * 10) / 10,
-              id_pp: vehicle.id_pp,
-              name_carrier: vehicle.carrier_name || "Unknown Carrier",
-            };
-          }) 
-        : [];
-      
-      onSubmit(submitData);
-      if (onVehiclesFound && transformedResults.length > 0) {
-        onVehiclesFound(transformedResults, data.totalCount || 0, loadingDt);
+      try {
+        if (!submitData.pickup.time) {
+          submitData.pickup.time = DEFAULT_PICKUP_TIME;
+          console.log("[ManualForm] Adding fallback time:", submitData.pickup.time);
+        }
+
+        console.log("[ManualForm] Submitting with data:", submitData);
+
+        const response = await fetch("/api/vehicles/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(submitData),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Search failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const loadingDt = submitData.pickup.time;
+
+        const transformedResults = Array.isArray(data.vehicles)
+          ? data.vehicles.map((vehicle: any) => {
+              const speedKmPerHour = 80;
+              const hours = vehicle.distance / speedKmPerHour;
+              const fullHours = Math.floor(hours);
+              const minutes = Math.round((hours - fullHours) * 60);
+              const transit = fullHours === 0 ? `${minutes}m` : `${fullHours}h ${minutes}m`;
+
+              return {
+                distance: vehicle.distance,
+                type: vehicle.vehicle_type || "Unknown",
+                status: "Available",
+                availability_date: vehicle.availability_date,
+                availability_time: vehicle.availability_time,
+                transit,
+                rating: Math.round((3.1 + Math.random() * (4.9 - 3.1)) * 10) / 10,
+                id_pp: vehicle.id_pp,
+                name_carrier: vehicle.carrier_name || "Unknown Carrier",
+              };
+            })
+          : [];
+
+        onSubmit(submitData);
+        if (onVehiclesFound && transformedResults.length > 0) {
+          onVehiclesFound(transformedResults, data.totalCount || 0, loadingDt);
+        }
+      } catch (error) {
+        console.error("[ManualForm] Error during submission:", error);
+      } finally {
+        setIsSearching(false);
       }
-    } catch (error) {
-      console.error("[ManualForm] Error during submission:", error);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [onSubmit, onVehiclesFound]);
+    },
+    [onSubmit, onVehiclesFound]
+  );
 
   console.log("[ManualForm] Render state:", {
     isPickupValid,
     isSearching,
     pickupData: formDataRef.current.pickup,
     localFormDataPickup: localFormData.pickup,
-    hasValidPickupData: 
+    hasValidPickupData:
       localFormData.pickup.country.cc !== "" &&
       localFormData.pickup.psc !== "" &&
       localFormData.pickup.city !== "",
@@ -281,9 +267,9 @@ export function ManualForm({
   }, [localFormData, prevLocalFormData]);
 
   return (
-    <form 
+    <form
       ref={formRef}
-      className={`manual-form manual-form--${type} ${className}`} 
+      className={`manual-form manual-form--${type} ${className}`}
       onSubmit={(e) => e.preventDefault()}
     >
       <div className="manual-form__header">
@@ -325,7 +311,6 @@ export function ManualForm({
           </div>
           <div className="manual-form__datetime">
             <Label>{t("m_f_lbl_loading_dt")}</Label>
-            {/* Instead of DateTimeSelect, display a simple input with default time */}
             <Input
               type="text"
               value={localFormData.pickup.time}

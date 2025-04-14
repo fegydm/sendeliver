@@ -10931,3 +10931,32 @@
   }
 }
 [2025-04-11T14:37:09.433Z] 📊 Found 392 total vehicles, 53 within 300km, 14 after all filters
+[2025-04-11T16:16:53.449Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "2025-04-11T19:16:28.922Z",
+    "lat": 48.453,
+    "lng": 12.356
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-11T16:16:54.330Z] 📊 Found 395 total vehicles, 61 within 300km, 19 after all filters
