@@ -13,6 +13,7 @@ import aiRouter from './routes/ai.routes.js';
 import geoCountriesRouter from './routes/geo.countries.routes.js';
 import geoLanguagesRouter from './routes/geo.languages.routes.js';
 import geoTranslationsRouter from './routes/geo.translations.routes.js';
+import mapsRouter from './routes/maps.routes.js';
 import vehiclesRouter from './routes/vehicles.routes.js';
 import deliveryRouter from './routes/delivery.routes.js';
 import externalDeliveriesRouter from './routes/external.deliveries.routes.js';
@@ -90,6 +91,7 @@ app.use('/api/ai', aiRouter);
 app.use('/api/geo/countries', geoCountriesRouter); // /api/geo/countries
 app.use('/api/geo/languages', geoLanguagesRouter); // /api/geo/languages
 app.use('/api/geo/translations', geoTranslationsRouter); // /api/geo/translations
+app.use('/api/maps', mapsRouter);
 app.use('/api/vehicles', vehiclesRouter);
 app.use('/api', deliveryRouter); // /api/import-delivery
 app.use('/api/external/deliveries', externalDeliveriesRouter); // /api/external/deliveries

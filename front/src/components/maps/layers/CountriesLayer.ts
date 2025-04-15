@@ -1,5 +1,5 @@
 // File: src/components/maps/layers/CountriesLayer.ts
-// Last change: Adjusted for Europe-focused GeoJSON with OSM layer compatibility
+// Last change: Fixed variable naming to avoid conflicts with global URL object
 
 import { MapState } from '../MapRenderer';
 
@@ -13,29 +13,38 @@ const countryColors: Record<string, string> = {
   'default': 'hsla(0, 0%, 80%, 0.1)',
 };
 
+// Fallback GeoJSON (prázdna FeatureCollection)
+const FALLBACK_GEOJSON = { type: 'FeatureCollection', features: [], zoom: 5 };
+
 export const loadCountriesData = async (
-  zoom: number = 5, // Added default value
+  zoom: number = 5,
   bbox?: [number, number, number, number]
 ) => {
   if (countriesGeoJson && countriesGeoJson.zoom === zoom) return countriesGeoJson;
 
+  const bboxStr = bbox ? bbox.join(',') : '-25,35,45,70';
+  const apiEndpoint = `/api/maps/boundaries?zoom=${zoom}&bbox=${bboxStr}`;
+  
   try {
-    let url: string;
-    if (zoom <= 6) {
-      url = `/data/countries-europe-zoom${zoom}.geojson`;
-    } else {
-      const bboxStr = bbox ? bbox.join(',') : '-25,35,45,70'; // Európa
-      url = `/api/countries?zoom=${zoom}&bbox=${bboxStr}`;
+    const response = await fetch(apiEndpoint);
+    if (!response.ok) {
+      console.error(`Chyba pri načítavaní GeoJSON z ${apiEndpoint}: Status ${response.status}`);
+      return FALLBACK_GEOJSON;
     }
 
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error(`Neplatný Content-Type z ${apiEndpoint}: ${contentType}`);
+      return FALLBACK_GEOJSON;
+    }
+
     countriesGeoJson = await response.json();
     countriesGeoJson.zoom = zoom;
     return countriesGeoJson;
   } catch (error) {
-    console.error('Failed to load countries GeoJSON:', error);
-    return null;
+    console.error(`Chyba pri načítavaní GeoJSON:`, error);
+    return FALLBACK_GEOJSON;
   }
 };
 
@@ -60,10 +69,8 @@ export const drawCountries = (
   const canvasCenterY = height / 2 + mapState.offsetY;
 
   for (const feature of countriesGeoJson.features) {
-    const countryCode = feature.properties.ISO_A2 || 'default';
-    const fillColor =
-      countryColors[countryCode] ||
-      `hsla(${(parseInt(countryCode, 36) % 360)}, 70%, 50%, ${zoom > 15 ? 0.3 : 0.15})`;
+    const countryCode = feature.properties.code_2 || 'default';
+    const fillColor = feature.properties.color || countryColors[countryCode] || `hsla(${(parseInt(countryCode, 36) % 360)}, 70%, 50%, ${zoom > 15 ? 0.3 : 0.15})`;
 
     const geometries =
       feature.geometry.type === 'MultiPolygon'

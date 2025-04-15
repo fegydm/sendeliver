@@ -1,5 +1,5 @@
 // File: src/components/maps/CarMap.tsx
-// Last change: Fixed circular dependency issues between render and requestRender functions
+// Last change: Fixed circular dependency between render and requestRender functions
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import './CarMap.css';
@@ -115,6 +115,9 @@ const CarMap: React.FC<CarMapProps> = ({
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
   const panAccumulatorXRef = useRef<number>(0);
   const panAccumulatorYRef = useRef<number>(0);
+  
+  // Referencia na render funkciu, ktorá zabráni cyklickej závislosti
+  const renderRef = useRef<(() => void) | null>(null);
   
   const calculateOptimalView = useCallback(() => {
     if (effectiveVehicles.length === 0) {
@@ -310,10 +313,19 @@ const CarMap: React.FC<CarMapProps> = ({
     }
   }, [effectiveVehicles, importantPoints, targetPoint, viewState.mode, layer]);
   
-  // Preddeklarujeme typ requestRender funkcie aby sme mohli použiť referenciu na ňu v render funkcii
-  const requestRender = useCallback((): void => {}, []);
+  // Najprv definujeme requestRender bez závislosti na render funkcii
+  const requestRender = useCallback((): void => {
+    if (animationFrameRef.current !== null) return;
+    animationFrameRef.current = requestAnimationFrame(() => {
+      if (renderRef.current) {
+        renderRef.current();
+        renderMiniMaps();
+      }
+      animationFrameRef.current = null;
+    });
+  }, [renderMiniMaps]);
   
-  // Definujeme render funkciu s explicitným typom
+  // Potom definujeme render funkciu s referenciou na requestRender
   const render = useCallback((): void => {
     const ctx = ctxRef.current;
     if (!ctx) return;
@@ -321,7 +333,11 @@ const CarMap: React.FC<CarMapProps> = ({
     const now = performance.now();
     
     if (CONFIG.THROTTLE_RENDERS && now - lastRenderTimeRef.current < CONFIG.RENDER_THROTTLE_MS) {
-      animationFrameRef.current = requestAnimationFrame(render);
+      animationFrameRef.current = requestAnimationFrame(() => {
+        if (renderRef.current) {
+          renderRef.current();
+        }
+      });
       return;
     }
     
@@ -357,15 +373,10 @@ const CarMap: React.FC<CarMapProps> = ({
     animationFrameRef.current = null;
   }, [width, height, effectiveVehicles, showCountries, countriesData, importantPoints, debug, calculateFPS, requestRender]);
   
-  // Prepíšeme requestRender implementáciu so správnym odkazom na render funkciu
-  Object.assign(requestRender, useCallback((): void => {
-    if (animationFrameRef.current !== null) return;
-    animationFrameRef.current = requestAnimationFrame(() => {
-      render();
-      renderMiniMaps();
-      animationFrameRef.current = null;
-    });
-  }, [render, renderMiniMaps]));
+  // Aktualizácia renderRef po definícii render funkcie
+  useEffect(() => {
+    renderRef.current = render;
+  }, [render]);
   
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     isDraggingRef.current = true;
@@ -501,6 +512,7 @@ const CarMap: React.FC<CarMapProps> = ({
     }
   }, [debug, requestRender, saveMapState]);
 
+  // useZoom hook needs to be used in the component because it accesses component state
   const zoomController = useZoom({ 
     mapStateRef, 
     requestRender, 
@@ -559,7 +571,8 @@ const CarMap: React.FC<CarMapProps> = ({
   
   useEffect(() => {
     if (showCountries) {
-      loadCountriesData(mapStateRef.current.zoom).then(data => {
+      const bbox: [number, number, number, number] = [-25, 35, 45, 70]; // Predvolený rozsah
+      loadCountriesData(mapStateRef.current.zoom, bbox).then(data => {
         setCountriesData(data);
       });
     } else {
@@ -734,6 +747,8 @@ const CarMap: React.FC<CarMapProps> = ({
             <canvas
               ref={targetedMiniMapRef}
               width={CONFIG.MINIMAP_WIDTH}
+              height={CONFIG.MINIMAP_HEIGHT}
+              className={`car-map__minimap car-map__minimap--targeted ${viewState.width={CONFIG.MINIMAP_WIDTH}
               height={CONFIG.MINIMAP_HEIGHT}
               className={`car-map__minimap car-map__minimap--targeted ${viewState.mode === 'targeted' ? 'car-map__minimap--active' : ''}`}
               onClick={handleTargetedMiniMapClick}
