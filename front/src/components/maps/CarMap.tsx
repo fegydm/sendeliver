@@ -748,8 +748,6 @@ const CarMap: React.FC<CarMapProps> = ({
               ref={targetedMiniMapRef}
               width={CONFIG.MINIMAP_WIDTH}
               height={CONFIG.MINIMAP_HEIGHT}
-              className={`car-map__minimap car-map__minimap--targeted ${viewState.width={CONFIG.MINIMAP_WIDTH}
-              height={CONFIG.MINIMAP_HEIGHT}
               className={`car-map__minimap car-map__minimap--targeted ${viewState.mode === 'targeted' ? 'car-map__minimap--active' : ''}`}
               onClick={handleTargetedMiniMapClick}
               title="Targeted View"
@@ -815,6 +813,6 @@ const CarMap: React.FC<CarMapProps> = ({
       )}
     </div>
   );
-};
-
-export default CarMap;
+  };
+  
+  export default CarMap;
