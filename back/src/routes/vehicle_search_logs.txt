@@ -11105,3 +11105,90 @@
   }
 }
 [2025-04-14T11:08:00.763Z] 📊 Found 328 total vehicles, 52 within 300km, 18 after all filters
+[2025-04-16T09:14:39.163Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "2025-04-16T12:13:36.349Z",
+    "lat": 48.453,
+    "lng": 12.356
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-16T09:14:40.518Z] 📊 Found 345 total vehicles, 58 within 300km, 16 after all filters
+[2025-04-16T10:10:20.349Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "2025-04-16T13:01:45.726Z",
+    "lat": 48.453,
+    "lng": 12.356
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-16T10:10:20.553Z] 📊 Found 358 total vehicles, 59 within 300km, 16 after all filters
+[2025-04-16T11:23:02.466Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "CZ",
+      "flag": "/flags/4x3/optimized/cz.svg"
+    },
+    "psc": "10000",
+    "city": "Praha 10-Strašnice",
+    "time": "2025-04-16T14:18:50.465Z",
+    "lat": 50.0774,
+    "lng": 14.4658
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-16T11:23:02.903Z] 📊 Found 373 total vehicles, 77 within 300km, 29 after all filters

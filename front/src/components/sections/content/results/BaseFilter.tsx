@@ -1,5 +1,5 @@
 // File: src/components/sections/content/results/BaseFilter.tsx
-// Last modified: March 26, 2025 - Updated to use "result-table-dropdown-container" and remove duplicate empty elements
+// Last modified: Updated to correctly position dropdowns in local container
 
 import { forwardRef, useImperativeHandle, useRef, useEffect, useState } from "react";
 import { getAnimatedArrow } from "@/utils/animateArrow";
@@ -102,45 +102,54 @@ const BaseFilter = forwardRef<
       document.body.removeChild(tempSpan);
 
       // Add some padding to prevent a tight fit
-      return `${maxWidth + 10}px`;
+      return `${maxWidth + 20}px`;
     };
 
-    // Check if the dropdown container exists.
-    // We expect the container to be statically defined in App.tsx as "result-table-dropdown-container"
+    // Check if the dropdown container exists
     useEffect(() => {
       const container = document.getElementById("result-table-dropdown-container");
       if (!container) {
         console.warn(
-          'Dropdown container (#result-table-dropdown-container) not found. Please add it in App.tsx under <main>.'
+          'Dropdown container (#result-table-dropdown-container) not found. Please add it in ResultTable component.'
         );
       }
     }, []);
 
-    // Update the dropdown position relative to the container
+    // Update the dropdown position when it opens
     useEffect(() => {
       if (isOpen && headerRef.current) {
-        // Get the bounding rectangle of the header element (viewport coordinates)
-        const headerRect = headerRef.current.getBoundingClientRect();
-        // Get the container's bounding rectangle to compute the relative position
+        // Get dropdown container element
         const container = document.getElementById("result-table-dropdown-container");
-        let containerRect = { top: 0, left: 0 };
-        if (container) {
-          containerRect = container.getBoundingClientRect();
+        if (!container) {
+          console.warn("[BaseFilter] Dropdown container not found. Make sure it exists in the DOM.");
+          return;
         }
 
-        const calculatedWidth = calculateMaxWidth();
-        // Calculate the left position relative to the container
+        // Get header position relative to the viewport
+        const headerRect = headerRef.current.getBoundingClientRect();
+        
+        // Get container position relative to the viewport
+        const containerRect = container.getBoundingClientRect();
+        
+        // Calculate relative position of dropdown within the container
+        const top = headerRect.bottom - containerRect.top;
+        
+        // Calculate left position aligned with the header
         let left = headerRect.left - containerRect.left;
+        
+        // Get calculated width
+        const calculatedWidth = calculateMaxWidth();
         const numericWidth = parseInt(calculatedWidth, 10);
+        
+        // Ensure the dropdown doesn't go off-screen on the right
         const viewportWidth = window.innerWidth;
-        // Adjust left if dropdown overflows the viewport
         if (headerRect.left + numericWidth > viewportWidth) {
           left = Math.max(0, viewportWidth - containerRect.left - numericWidth - 10);
         }
-
-        // Set the position relative to the container using the difference between header and container
+        
+        // Set the position of the dropdown
         setDropdownPosition({
-          top: `${headerRect.bottom - containerRect.top}px`,
+          top: `${top}px`,
           left: `${left}px`,
           width: calculatedWidth,
           display: "block",
@@ -153,12 +162,14 @@ const BaseFilter = forwardRef<
       }
     }, [isOpen, options]);
 
-    // Create, update, or remove the dropdown element in the DOM.
-    // We remove the element when the filter is closed, so no duplicate or empty element remains.
+    // Create, update, or remove the dropdown element in the DOM
     useEffect(() => {
       const dropdownId = dropdownIdRef.current;
       const container = document.getElementById("result-table-dropdown-container");
-      if (!container) return;
+      if (!container) {
+        console.warn("[BaseFilter] Dropdown container not found for filter:", label);
+        return;
+      }
 
       // If the filter is not open, remove the dropdown element if it exists
       if (!isOpen) {
@@ -176,7 +187,7 @@ const BaseFilter = forwardRef<
         dropdownElement.id = dropdownId;
         dropdownElement.className = "dropfilter__content";
 
-        // Set initial styles with absolute positioning so it moves with the container
+        // Set initial styles with absolute positioning
         Object.assign(dropdownElement.style, {
           position: "absolute",
           zIndex: "3000",
@@ -273,8 +284,8 @@ const BaseFilter = forwardRef<
           document.removeEventListener("mousedown", handleOutsideClick);
         };
       }
-
-      // Cleanup: remove only our dropdown element when component unmounts
+      
+      // Cleanup: remove our dropdown element when component unmounts
       return () => {
         if (container) {
           const existingDropdown = document.getElementById(dropdownId);
@@ -287,7 +298,7 @@ const BaseFilter = forwardRef<
           }
         }
       };
-    }, [isOpen, options, dropdownPosition, handleOptionSelect, onToggleClick]);
+    }, [isOpen, options, dropdownPosition, handleOptionSelect, onToggleClick, label]);
 
     return (
       <>

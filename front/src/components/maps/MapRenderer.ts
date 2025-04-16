@@ -1,4 +1,4 @@
-// File: src/components/maps/MapRenderer.ts
+// File: ./front/src/components/maps/MapRenderer.ts
 // Last change: Enhanced OSM layer with layer switching support and improved error handling
 
 import { LRUCache } from './LRUCache';
