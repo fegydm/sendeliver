@@ -80,9 +80,6 @@ const CarMapUsage: React.FC = () => {
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
   const panAccumulatorXRef = useRef<number>(0);
   const panAccumulatorYRef = useRef<number>(0);
-  const frameCountRef = useRef<number>(0);
-  const fpsTimerRef = useRef<number>(performance.now());
-  const animationFrameRef = useRef<number | null>(null);
 
   const instanceId = 'usage';
   const width = 1000;
@@ -132,22 +129,8 @@ const CarMapUsage: React.FC = () => {
   }, [importantPoints]);
 
   // Calculate FPS
-  const calculateFPS = useCallback(() => {
-    frameCountRef.current++;
-    const now = performance.now();
-    const elapsed = now - fpsTimerRef.current;
-    if (elapsed >= 1000) {
-      const fps = Math.round((frameCountRef.current * 1000) / elapsed);
-      setDebugInfo((prev: DebugInfo) => ({ ...prev, fps }));
-      frameCountRef.current = 0;
-      fpsTimerRef.current = now;
-    }
-  }, []);
 
   // Update tiles loaded
-  const handleTileLoaded = useCallback(() => {
-    setDebugInfo((prev: DebugInfo) => ({ ...prev, tilesLoaded: prev.tilesLoaded + 1 }));
-  }, []);
 
   // Save map state
   const saveMapState = useCallback(() => {
@@ -354,17 +337,14 @@ const CarMapUsage: React.FC = () => {
 
   // Render loop
   useEffect(() => {
-    const render = () => {
-      calculateFPS();
-      animationFrameRef.current = requestAnimationFrame(render);
-    };
-    animationFrameRef.current = requestAnimationFrame(render);
+   
+    console.log("Map rendered once on mount");
+    
+    
     return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      // Cleanup code
     };
-  }, [calculateFPS]);
+  }, []);
 
   return (
     <div className="car-map-usage">

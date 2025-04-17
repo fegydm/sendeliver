@@ -1,7 +1,7 @@
 // front/src/components/maps/CarMap.tsx
 // Last change: 2025-04-17
 // English comment: Presentation component for rendering map, vehicles, points, and minimaps
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import './CarMap.css';
 import { drawTiles, MapState, preloadTiles } from './MapRenderer';
 import { Vehicle as VehicleType, preloadVehicleImages, drawVehicles } from './VehicleRenderer';
@@ -22,7 +22,7 @@ export interface CarMapProps {
   zoom: number;
   viewMode: ViewMode;
   targetPoint?: { lat: number; lng: number };
-  countriesData?: any; // Using any since GeoJSON is not exported
+  countriesData?: any;
   showMinimaps: boolean;
   onMouseDown?: (e: React.MouseEvent<HTMLCanvasElement>) => void;
   onMouseMove?: (e: React.MouseEvent<HTMLCanvasElement>) => void;
@@ -38,6 +38,7 @@ const CONFIG = {
   MINIMAP_HEIGHT: 150,
   PERFORMANCE_CLASS: 'high',
   PRELOAD_ADJACENT_ZOOM: true,
+  DEBOUNCE_DELAY: 100, // Debounce delay for tile load triggers
 };
 
 const CarMap: React.FC<CarMapProps> = ({
@@ -66,8 +67,28 @@ const CarMap: React.FC<CarMapProps> = ({
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const vehicleImagesRef = useRef<Map<string, HTMLImageElement>>(new Map());
   const testImageRef = useRef<HTMLImageElement | null>(null);
+  const renderTimeoutRef = useRef<number | null>(null);
 
-  const mapState: MapState = { zoom, center, offsetX: 0, offsetY: 0, layer };
+  // Stabilize mapState
+  const mapState = useMemo(() => ({ zoom, center, offsetX: 0, offsetY: 0, layer }), [zoom, center, layer]);
+
+  // Stabilize dependencies
+  const stableVehicles = useMemo(() => vehicles, [vehicles]);
+  const stableCenter = useMemo(() => center, [center]);
+  const stableImportantPoints = useMemo(() => importantPoints, [importantPoints]);
+  const stableTargetPoint = useMemo(() => targetPoint, [targetPoint]);
+  const stableCountriesData = useMemo(() => countriesData, [countriesData]);
+
+  // Debounced tile load handler to prevent infinite loop
+  const onTileLoad = useCallback(() => {
+    if (renderTimeoutRef.current) {
+      clearTimeout(renderTimeoutRef.current);
+    }
+    renderTimeoutRef.current = setTimeout(() => {
+      console.log(`[CarMap:Debug:Render] Tile loaded`);
+      canvasRef.current?.dispatchEvent(new Event('render'));
+    }, CONFIG.DEBOUNCE_DELAY);
+  }, []);
 
   // Initialize canvas
   useEffect(() => {
@@ -96,100 +117,113 @@ const CarMap: React.FC<CarMapProps> = ({
 
   // Load test image
   useEffect(() => {
-    console.log(`[CarMap:Debug:Image] Starting test image load: ${lorryImage}`);
+    // Namiesto dynamického načítavania
+    console.log(`[CarMap:Debug:Image] Using imported image: ${lorryImage}`);
     const img = new Image();
-    img.src = lorryImage;
+    img.src = lorryImage; // Toto by už malo byť spracované URL od Vite
+    testImageRef.current = img;
     img.onload = () => {
-      testImageRef.current = img;
-      console.log(`[CarMap:Debug:Image] Test image loaded successfully: ${lorryImage}`);
+      console.log(`[CarMap:Debug:Image] Image ready`);
+      canvasRef.current?.dispatchEvent(new Event('render'));
     };
-    img.onerror = () => {
-      console.error(`[CarMap:Debug:Image] Test image failed to load: ${lorryImage}`);
-      testImageRef.current = null;
-    };
-    fetch(lorryImage)
-      .then((res) => console.log(`[CarMap:Debug:Image] Fetch check: ${lorryImage}, status: ${res.status}`))
-      .catch((err) => console.error(`[CarMap:Debug:Image] Fetch check failed: ${lorryImage}, error:`, err));
+    // Bez onerror handlera - použijeme už importovaný obrázok
     return () => {
-      img.src = '';
-      console.log(`[CarMap:Debug:Image] Cleaning up image load`);
+      testImageRef.current = null;
     };
   }, []);
 
   // Preload vehicle images
   useEffect(() => {
-    preloadVehicleImages(vehicles, vehicleImagesRef.current, () => {});
-  }, [vehicles]);
+    preloadVehicleImages(stableVehicles, vehicleImagesRef.current, () => {
+      console.log(`[CarMap:Debug:Render] Vehicle images loaded`);
+      canvasRef.current?.dispatchEvent(new Event('render')); // Trigger render
+    });
+  }, [stableVehicles]);
 
   // Preload adjacent zoom levels
   useEffect(() => {
     if (CONFIG.PRELOAD_ADJACENT_ZOOM) {
-      const [lat, lon] = center;
+      const [lat, lon] = stableCenter;
       if (Math.ceil(zoom) !== zoom) {
-        preloadTiles(Math.ceil(zoom), lat, lon, width, height, layer, () => {});
+        preloadTiles(Math.ceil(zoom), lat, lon, width, height, layer, onTileLoad);
       }
       if (Math.floor(zoom) !== zoom) {
-        preloadTiles(Math.floor(zoom), lat, lon, width, height, layer, () => {});
+        preloadTiles(Math.floor(zoom), lat, lon, width, height, layer, onTileLoad);
       }
     }
-  }, [zoom, center, layer, width, height]);
+  }, [zoom, stableCenter, layer, width, height, onTileLoad]);
 
   // Render main canvas and minimaps
   useEffect(() => {
-    const ctx = ctxRef.current;
-    if (!ctx) {
-      console.error(`[CarMap:Debug:Render] Canvas context missing`);
-      return;
-    }
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    ctx.clearRect(0, 0, width, height);
-
-    if (layer === 'test' && testImageRef.current) {
-      ctx.drawImage(testImageRef.current, 0, 0, width, height);
-      console.log(`[CarMap:Debug:Render] Test layer: Static image drawn`);
-    } else {
-      drawTiles(ctx, width, height, mapState, () => {
-        console.log(`[CarMap:Debug:Render] Tile loaded`);
-      });
-      drawVehicles(ctx, width, height, mapState, vehicles, vehicleImagesRef.current);
-      drawImportantPoints(ctx, width, height, mapState, importantPoints);
-      if (countriesData) {
-        drawCountries(ctx, width, height, mapState);
+    const render = () => {
+      const ctx = ctxRef.current;
+      if (!ctx) {
+        console.error(`[CarMap:Debug:Render] Canvas context missing`);
+        return;
       }
-      console.log(`[CarMap:Debug:Render] Rendered: tiles, vehicles=${vehicles.length}, points=${importantPoints.length}`);
-    }
 
-    if (showMinimaps) {
-      const globalCtx = globalMiniMapRef.current?.getContext('2d');
-      if (globalCtx) {
-        globalCtx.clearRect(0, 0, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT);
-        drawTiles(globalCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, mapState, () => {});
-        drawVehicles(globalCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, mapState, vehicles, vehicleImagesRef.current);
-        drawImportantPoints(globalCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, mapState, importantPoints);
-        if (countriesData) {
-          drawCountries(globalCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, mapState);
+      ctx.clearRect(0, 0, width, height);
+
+      if (layer === 'test' && testImageRef.current) {
+        console.log(`[CarMap:Debug:Render] Drawing test image, timestamp: ${Date.now()}`);
+        ctx.drawImage(testImageRef.current, 0, 0, width, height);
+        console.log(`[CarMap:Debug:Render] Test layer: Static image drawn`);
+      } else {
+        drawTiles(ctx, width, height, mapState, onTileLoad);
+        drawVehicles(ctx, width, height, mapState, stableVehicles, vehicleImagesRef.current);
+        drawImportantPoints(ctx, width, height, mapState, stableImportantPoints);
+        if (stableCountriesData) {
+          drawCountries(ctx, width, height, mapState);
         }
-        globalCtx.strokeStyle = viewMode === 'global' ? '#00F' : '#000';
-        globalCtx.lineWidth = viewMode === 'global' ? 3 : 1;
-        globalCtx.strokeRect(0, 0, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT);
+        console.log(`[CarMap:Debug:Render] Rendered: tiles, vehicles=${stableVehicles.length}, points=${stableImportantPoints.length}`);
       }
 
-      const targetedCtx = targetedMiniMapRef.current?.getContext('2d');
-      if (targetedCtx && targetPoint) {
-        targetedCtx.clearRect(0, 0, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT);
-        const targetMapState: MapState = { ...mapState, center: [targetPoint.lat, targetPoint.lng] };
-        drawTiles(targetedCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, targetMapState, () => {});
-        drawVehicles(targetedCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, targetMapState, vehicles, vehicleImagesRef.current);
-        drawImportantPoints(targetedCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, targetMapState, importantPoints);
-        if (countriesData) {
-          drawCountries(targetedCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, targetMapState);
+      if (showMinimaps) {
+        const globalCtx = globalMiniMapRef.current?.getContext('2d');
+        if (globalCtx) {
+          globalCtx.clearRect(0, 0, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT);
+          drawTiles(globalCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, mapState, onTileLoad);
+          drawVehicles(globalCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, mapState, stableVehicles, vehicleImagesRef.current);
+          drawImportantPoints(globalCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, mapState, stableImportantPoints);
+          if (stableCountriesData) {
+            drawCountries(globalCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, mapState);
+          }
+          globalCtx.strokeStyle = viewMode === 'global' ? '#00F' : '#000';
+          globalCtx.lineWidth = viewMode === 'global' ? 3 : 1;
+          globalCtx.strokeRect(0, 0, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT);
         }
-        targetedCtx.strokeStyle = viewMode === 'targeted' ? '#00F' : '#000';
-        targetedCtx.lineWidth = viewMode === 'targeted' ? 3 : 1;
-        targetedCtx.strokeRect(0, 0, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT);
+
+        const targetedCtx = targetedMiniMapRef.current?.getContext('2d');
+        if (targetedCtx && stableTargetPoint) {
+          targetedCtx.clearRect(0, 0, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT);
+          const targetMapState: MapState = { ...mapState, center: [stableTargetPoint.lat, stableTargetPoint.lng] };
+          drawTiles(targetedCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, targetMapState, onTileLoad);
+          drawVehicles(targetedCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, targetMapState, stableVehicles, vehicleImagesRef.current);
+          drawImportantPoints(targetedCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, targetMapState, stableImportantPoints);
+          if (stableCountriesData) {
+            drawCountries(targetedCtx, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT, targetMapState);
+          }
+          targetedCtx.strokeStyle = viewMode === 'targeted' ? '#00F' : '#000';
+          targetedCtx.lineWidth = viewMode === 'targeted' ? 3 : 1;
+          targetedCtx.strokeRect(0, 0, CONFIG.MINIMAP_WIDTH, CONFIG.MINIMAP_HEIGHT);
+        }
       }
-    }
-  }, [vehicles, importantPoints, width, height, layer, center, zoom, viewMode, targetPoint, countriesData, showMinimaps]);
+    };
+
+    // Attach render handler
+    canvas.addEventListener('render', render);
+    render(); // Initial render
+
+    return () => {
+      canvas.removeEventListener('render', render);
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current);
+      }
+    };
+  }, [stableVehicles, stableImportantPoints, width, height, layer, mapState, viewMode, stableTargetPoint, stableCountriesData, showMinimaps, onTileLoad]);
 
   return (
     <div className="car-map" style={{ width: '100%', height: `${height}px`, position: 'relative' }}>
@@ -211,7 +245,7 @@ const CarMap: React.FC<CarMapProps> = ({
             onClick={onGlobalMiniMapClick}
             title="Global View"
           />
-          {targetPoint && (
+          {stableTargetPoint && (
             <canvas
               ref={targetedMiniMapRef}
               width={CONFIG.MINIMAP_WIDTH}
