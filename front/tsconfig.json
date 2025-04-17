@@ -10,18 +10,22 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": "../",
+
+    "baseUrl": "src",                             // English comment: set baseUrl to the src directory
     "paths": {
-      "@/*": ["front/src/*"],
-      "back/*": ["back/src/*"]
+      "@/*": ["*"],                               // English comment: alias @ → front/src
+      "back/*": ["../back/src/*"]                 // English comment: alias back → ../back/src
     },
-    "rootDir": "../",
-    "outDir": "front/dist",
+
+    "rootDir": "src",                             // English comment: root for input files
+    "outDir": "dist",                             // English comment: output directory
+
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+
     "sourceMap": true,
     "declaration": true,
     "removeComments": true,
@@ -31,15 +35,17 @@
     "composite": true,
     "allowJs": true,
     "checkJs": false,
+
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
-    "typeRoots": ["node_modules/@types", "front/src/types"]
+
+    "types": ["vite/client"],                    // English comment: include Vite env types
+    "typeRoots": ["node_modules/@types", "src/types"] // English comment: include custom types dir
   },
   "include": [
-    "src/assets/**/*.json",
-    "src/**/*",
-    "../back/src/**/*"
+    "src/**/*",                                   // English comment: include all TS/TSX in src
+    "src/types/env.d.ts"                          // English comment: ensure env.d.ts is picked up
   ],
   "exclude": [
     "**/node_modules",

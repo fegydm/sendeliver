@@ -1,6 +1,6 @@
 // File: ./back/src/services/maps.services.ts
 // Last change: 2025-04-17
-// Description: Updated queries for BE services to support world_boundaries_2level and europe_boundaries_6level
+// Description: Updated queries for BE services to support world_boundaries_2level, europe_boundaries_6level, and europe_roads
 
 import { pool } from "../configs/db.js";
 import { 
@@ -162,10 +162,12 @@ class MapsService {
         const tileQuery = `
           SELECT ST_AsMVT(tile_data, 'tile', 4096, 'geom') AS mvt
           FROM (
-            SELECT b.id, b.geom, b.road_type
-            FROM maps.roads b
-            WHERE b.road_type IN ('motorway', 'primary', 'secondary')
-              AND ST_Intersects(b.geom, ST_TileEnvelope($1, $2, $3))
+            SELECT id, geom, highway
+            FROM maps.europe_roads
+            WHERE highway IN ('motorway', 'primary', 'secondary')
+              AND ST_Intersects(geom, ST_TileEnvelope($1, $2, $3))
+              AND geom IS NOT NULL
+              AND ST_IsValid(geom)
           ) AS tile_data
         `;
         const tileResult = await pool.query(tileQuery, [z, x, y]);
@@ -174,12 +176,17 @@ class MapsService {
           // ENG: Return the generated vector tile as a Buffer.
           return Buffer.from(mvt);
         }
+        // ENG: Log if no roads are found for the tile.
+        console.warn(`No roads found for tile z=${z}, x=${x}, y=${y} in maps.europe_roads`);
+      } else {
+        // ENG: Log when non-simple map type is requested.
+        console.warn(`Tile type '${type}' not supported; only 'simple' is supported`);
       }
 
-      // ENG: For non-simple types or if tile generation fails, return an empty Buffer.
+      // ENG: Return an empty Buffer if no tile is generated.
       return Buffer.from('');
     } catch (error) {
-      console.error(`Failed to generate ${type} road tile:`, error);
+      console.error(`Failed to generate ${type} road tile for z=${z}, x=${x}, y=${y}:`, error);
       return Buffer.from('');
     }
   }

@@ -5,7 +5,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
-import "@/styles/main.css"; // Global styles
+import "@/styles/main.css";
 
 // Filter out specific React Router warnings in development
 if (import.meta.env.DEV) {
