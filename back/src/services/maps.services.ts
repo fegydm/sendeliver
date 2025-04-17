@@ -1,7 +1,14 @@
 // File: ./back/src/services/maps.services.ts
-// Last change: Updated queries for BE services to differentiate between simple and OSM tile handling
+// Last change: 2025-04-17
+// Description: Updated queries for BE services to support world_boundaries_2level and europe_boundaries_6level
 
 import { pool } from "../configs/db.js";
+import { 
+  GET_BOUNDARIES_GEOJSON_QUERY,
+  UPDATE_BOUNDARY_COLOR_QUERY,
+  CHECK_BOUNDARY_EXISTS_QUERY,
+  GET_BOUNDARY_BY_CODE_QUERY 
+} from "../queries/maps.queries.js";
 
 // ENG: Define the GeoJSON interface.
 interface GeoJson {
@@ -36,9 +43,9 @@ class MapsService {
     return this.geoJsonCache.has(key) && Date.now() - lastTime < this.CACHE_DURATION;
   }
 
-  // ENG: Get countries boundaries as GeoJSON based on zoom level and bbox.
-  // For zoom 0-4: Global countries with simplified geometry.
-  // For zoom 5+: European regions with full detail (optionally filtering by admin_level).
+  // ENG: Get countries and regions boundaries as GeoJSON based on zoom level and bbox.
+  // For zoom 0-4: Global countries from world_boundaries_2level.
+  // For zoom 5+: European regions from europe_boundaries_6level, with fallback to countries.
   public async getCountriesGeoJson(zoom: number, bbox?: [number, number, number, number]): Promise<GeoJson> {
     try {
       // ENG: Ensure the database is healthy.
@@ -50,75 +57,21 @@ class MapsService {
         return this.geoJsonCache.get(cacheKey)!;
       }
 
-      let query = '';
-      const queryParams: any[] = [];
-
-      // ENG: Adjust the SQL query based on zoom level.
-      if (zoom <= 4) {
-        // ENG: For zoom levels 0-4, query global country boundaries with geometry simplified.
-        query = `
-          SELECT jsonb_build_object(
-            'type', 'FeatureCollection',
-            'features', jsonb_agg(
-              jsonb_build_object(
-                'type', 'Feature',
-                'geometry', ST_AsGeoJSON(ST_Simplify(b.geom, 0.1))::jsonb,
-                'properties', jsonb_build_object(
-                  'id', b.id,
-                  'country_id', b.country_id,
-                  'name_sk', COALESCE(c.name_sk, 'Unknown'),
-                  'code_2', COALESCE(c.code_2, ''),
-                  'color', COALESCE(b.colour, '#cccccc')
-                )
-              )
-            )
-          ) AS geojson
-          FROM maps.world_boundaries_2level b
-          LEFT JOIN geo.countries c ON b.country_id = c.id
-        `;
-      } else {
-        // ENG: For zoom levels 5 and above, query European regions.
-        // Optionally, filter by admin_level = 4 (assuming such column exists).
-        query = `
-          SELECT jsonb_build_object(
-            'type', 'FeatureCollection',
-            'features', jsonb_agg(
-              jsonb_build_object(
-                'type', 'Feature',
-                'geometry', ST_AsGeoJSON(b.geom)::jsonb,
-                'properties', jsonb_build_object(
-                  'id', b.id,
-                  'country_id', b.country_id,
-                  'name_sk', COALESCE(c.name_sk, 'Unknown'),
-                  'code_2', COALESCE(c.code_2, ''),
-                  'color', COALESCE(b.colour, '#cccccc')
-                )
-              )
-            )
-          ) AS geojson
-          FROM maps.world_boundaries_2level b
-          LEFT JOIN geo.countries c ON b.country_id = c.id
-          WHERE b.admin_level = 4
-        `;
-      }
+      // ENG: Use query from maps.queries.ts with optional bbox filtering.
+      let query = GET_BOUNDARIES_GEOJSON_QUERY;
+      const queryParams: any[] = [zoom, 200]; // Default limit 200
 
       // ENG: If bbox is provided, append a WHERE clause to restrict by spatial envelope.
       if (bbox) {
         const [minLon, minLat, maxLon, maxLat] = bbox;
-        // If there is already a WHERE clause from admin_level filtering, use AND instead.
         const spatialCondition = `
-          ST_Intersects(
-            b.geom,
+          AND ST_Intersects(
+            geom,
             ST_MakeEnvelope($${queryParams.length + 1}, $${queryParams.length + 2}, $${queryParams.length + 3}, $${queryParams.length + 4}, 4326)
           )
         `;
+        query = query.replace('LIMIT CASE', `${spatialCondition} LIMIT CASE`);
         queryParams.push(minLon, minLat, maxLon, maxLat);
-        // Append condition appropriately.
-        if (zoom > 4) {
-          query += ` AND ${spatialCondition}`;
-        } else {
-          query += ` WHERE ${spatialCondition}`;
-        }
       }
 
       // ENG: Execute the SQL query with the parameters.
@@ -138,10 +91,11 @@ class MapsService {
               },
               properties: {
                 id: 1,
-                country_id: 1,
-                name_sk: 'Testovacia krajina',
                 code_2: 'TC',
-                color: '#ff0000',
+                name: 'Testovacia krajina',
+                name_en: 'Test Country',
+                colour: '#ff0000',
+                level: 'country',
               },
             },
             {
@@ -152,10 +106,11 @@ class MapsService {
               },
               properties: {
                 id: 2,
-                country_id: 2,
-                name_sk: 'Druhá krajina',
                 code_2: 'DC',
-                color: '#00ff00',
+                name: 'Druhá krajina',
+                name_en: 'Second Country',
+                colour: '#00ff00',
+                level: 'country',
               },
             },
           ],
@@ -181,10 +136,11 @@ class MapsService {
             },
             properties: {
               id: 1,
-              country_id: 1,
-              name_sk: 'Testovacia krajina',
               code_2: 'TC',
-              color: '#ff0000',
+              name: 'Testovacia krajina',
+              name_en: 'Test Country',
+              colour: '#ff0000',
+              level: 'country',
             },
           },
         ],
@@ -228,15 +184,47 @@ class MapsService {
     }
   }
 
-  // ENG: Update the color of a boundary.
-  // This is a fallback implementation that logs the change instead of performing a real DB update.
-  public async updateBoundaryColor(boundary_id: number, color: string): Promise<void> {
+  // ENG: Update the color of a boundary using UPDATE_BOUNDARY_COLOR_QUERY.
+  public async updateBoundaryColor(boundary_id: number, color: string): Promise<{ id: number; code_2: string; name_en: string; colour: string } | null> {
     try {
+      // ENG: Ensure the database is healthy.
       if (!this.isHealthy) await this.checkHealth();
-      // ENG: Log the update operation (replace with actual DB update logic if needed).
-      console.log(`Fallback: Updating boundary ${boundary_id} to color ${color}`);
+
+      // ENG: Execute the update query.
+      const result = await pool.query(UPDATE_BOUNDARY_COLOR_QUERY, [boundary_id, color]);
+      return result.rows[0] || null;
     } catch (error) {
       console.error('Failed to update boundary color:', error);
+      throw error;
+    }
+  }
+
+  // ENG: Check if a boundary exists by code_2.
+  public async checkBoundaryExists(code_2: string): Promise<boolean> {
+    try {
+      // ENG: Ensure the database is healthy.
+      if (!this.isHealthy) await this.checkHealth();
+
+      // ENG: Execute the check query.
+      const result = await pool.query(CHECK_BOUNDARY_EXISTS_QUERY, [code_2]);
+      return result.rows[0].found;
+    } catch (error) {
+      console.error('Failed to check boundary existence:', error);
+      throw error;
+    }
+  }
+
+  // ENG: Get boundary details by code_2.
+  public async getBoundaryByCode(code_2: string): Promise<{ id: number; code_2: string; name: string; name_en: string; colour: string; level: string } | null> {
+    try {
+      // ENG: Ensure the database is healthy.
+      if (!this.isHealthy) await this.checkHealth();
+
+      // ENG: Execute the query.
+      const result = await pool.query(GET_BOUNDARY_BY_CODE_QUERY, [code_2]);
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Failed to fetch boundary by code:', error);
       throw error;
     }
   }
