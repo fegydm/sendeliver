@@ -5,7 +5,7 @@ node_modules
 .pnp.js
 
 _old/
-
+_maps/
 
 # Data raw
 txt/raw

@@ -1,14 +1,8 @@
 // File: ./back/src/services/maps.services.ts
-// Last change: 2025-04-17
-// Description: Updated queries for BE services to support world_boundaries_2level, europe_boundaries_6level, and europe_roads
+// Last change: 2025-04-22
+// Description: Map service for generating GeoJSON and MVT tiles, using SRID 3857 exclusively
 
 import { pool } from "../configs/db.js";
-import { 
-  GET_BOUNDARIES_GEOJSON_QUERY,
-  UPDATE_BOUNDARY_COLOR_QUERY,
-  CHECK_BOUNDARY_EXISTS_QUERY,
-  GET_BOUNDARY_BY_CODE_QUERY 
-} from "../queries/maps.queries.js";
 
 // ENG: Define the GeoJSON interface.
 interface GeoJson {
@@ -24,6 +18,9 @@ class MapsService {
   private geoJsonCache: Map<string, GeoJson> = new Map();
   // ENG: Map to store last cache time per key.
   private lastCacheTime: Map<string, number> = new Map();
+  // ENG: Cache for MVT tiles (24 hours validity)
+  private mvtCache: Map<string, { data: Buffer, timestamp: number }> = new Map();
+  private readonly MVT_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
   private isHealthy = true;
 
   // ENG: Check the database connectivity by executing a simple query.
@@ -43,42 +40,54 @@ class MapsService {
     return this.geoJsonCache.has(key) && Date.now() - lastTime < this.CACHE_DURATION;
   }
 
+  // ENG: Check if MVT cache is valid
+  private isMvtCacheValid(key: string): boolean {
+    const entry = this.mvtCache.get(key);
+    return !!entry && (Date.now() - entry.timestamp < this.MVT_CACHE_DURATION);
+  }
+
   // ENG: Get countries and regions boundaries as GeoJSON based on zoom level and bbox.
-  // For zoom 0-4: Global countries from world_boundaries_2level.
-  // For zoom 5+: European regions from europe_boundaries_6level, with fallback to countries.
   public async getCountriesGeoJson(zoom: number, bbox?: [number, number, number, number]): Promise<GeoJson> {
     try {
-      // ENG: Ensure the database is healthy.
       if (!this.isHealthy) await this.checkHealth();
-
-      // ENG: Create a unique cache key based on zoom and bbox.
       const cacheKey = `${zoom}_${bbox ? bbox.join(',') : 'no_bbox'}`;
       if (this.isCacheValid(cacheKey)) {
         return this.geoJsonCache.get(cacheKey)!;
       }
 
-      // ENG: Use query from maps.queries.ts with optional bbox filtering.
-      let query = GET_BOUNDARIES_GEOJSON_QUERY;
-      const queryParams: any[] = [zoom, 200]; // Default limit 200
+      // ENG: Use ST_Transform to convert geometry to 4326 for GeoJSON output
+      let query = `
+        SELECT jsonb_build_object(
+          'type', 'FeatureCollection',
+          'features', jsonb_agg(
+            jsonb_build_object(
+              'type', 'Feature',
+              'geometry', ST_AsGeoJSON(${zoom <= 3 ? 'ST_Simplify(ST_Transform(geom, 4326), 0.1)' : 'ST_Transform(geom, 4326)'})::jsonb,
+              'properties', jsonb_build_object(
+                'id', id,
+                'code_2', code_2,
+                'code_3', code_3,
+                'name', name,
+                'name_en', name_en,
+                'colour', colour
+              )
+            )
+          )
+        ) AS geojson
+        FROM maps.world_countries
+      `;
 
-      // ENG: If bbox is provided, append a WHERE clause to restrict by spatial envelope.
       if (bbox) {
         const [minLon, minLat, maxLon, maxLat] = bbox;
-        const spatialCondition = `
-          AND ST_Intersects(
-            geom,
-            ST_MakeEnvelope($${queryParams.length + 1}, $${queryParams.length + 2}, $${queryParams.length + 3}, $${queryParams.length + 4}, 4326)
-          )
-        `;
-        query = query.replace('LIMIT CASE', `${spatialCondition} LIMIT CASE`);
-        queryParams.push(minLon, minLat, maxLon, maxLat);
+        query += ` WHERE ST_Intersects(
+            ST_Transform(geom, 4326),
+            ST_MakeEnvelope(${minLon}, ${minLat}, ${maxLon}, ${maxLat}, 4326)
+          )`;
       }
 
-      // ENG: Execute the SQL query with the parameters.
-      const result = await pool.query(query, queryParams);
+      const result = await pool.query(query);
       let geojson = result.rows[0]?.geojson || { type: 'FeatureCollection', features: [], zoom };
 
-      // ENG: Fallback for empty result: Return a predefined GeoJSON.
       if (!geojson.features || geojson.features.length === 0) {
         geojson = {
           type: 'FeatureCollection',
@@ -94,8 +103,7 @@ class MapsService {
                 code_2: 'TC',
                 name: 'Testovacia krajina',
                 name_en: 'Test Country',
-                colour: '#ff0000',
-                level: 'country',
+                colour: '#ff0000'
               },
             },
             {
@@ -109,8 +117,7 @@ class MapsService {
                 code_2: 'DC',
                 name: 'Druhá krajina',
                 name_en: 'Second Country',
-                colour: '#00ff00',
-                level: 'country',
+                colour: '#00ff00'
               },
             },
           ],
@@ -118,13 +125,11 @@ class MapsService {
         };
       }
 
-      // ENG: Cache the resulting GeoJSON.
       this.geoJsonCache.set(cacheKey, geojson);
       this.lastCacheTime.set(cacheKey, Date.now());
       return geojson;
     } catch (error) {
       console.error('Failed to generate GeoJSON:', error);
-      // ENG: Return a fallback GeoJSON in case of failure.
       return {
         type: 'FeatureCollection',
         features: [
@@ -139,8 +144,7 @@ class MapsService {
               code_2: 'TC',
               name: 'Testovacia krajina',
               name_en: 'Test Country',
-              colour: '#ff0000',
-              level: 'country',
+              colour: '#ff0000'
             },
           },
         ],
@@ -149,56 +153,165 @@ class MapsService {
     }
   }
 
-  // ENG: Get roads tile as a vector tile (MVT) for the 'simple' map type.
-  // For other map types (osm, satellite), it is expected to be fetched externally.
-  // Tiles are cached for 24 hours (caching to be implemented if needed).
-  public async getRoadsTile(type: string, z: number, x: number, y: number): Promise<Buffer> {
+  /**
+   * Získa MVT dlaždicu pre hranice krajín (SRID 3857)
+   */
+  public async getBoundariesMVT(z: number, x: number, y: number): Promise<Buffer> {
     try {
-      // ENG: Ensure the database is healthy.
-      if (!this.isHealthy) await this.checkHealth();
-
-      // ENG: Only generate vector tiles for the 'simple' type.
-      if (type === 'simple') {
-        const tileQuery = `
-          SELECT ST_AsMVT(tile_data, 'tile', 4096, 'geom') AS mvt
-          FROM (
-            SELECT id, geom, highway
-            FROM maps.europe_roads
-            WHERE highway IN ('motorway', 'primary', 'secondary')
-              AND ST_Intersects(geom, ST_TileEnvelope($1, $2, $3))
-              AND geom IS NOT NULL
-              AND ST_IsValid(geom)
-          ) AS tile_data
-        `;
-        const tileResult = await pool.query(tileQuery, [z, x, y]);
-        const mvt = tileResult.rows[0]?.mvt;
-        if (mvt) {
-          // ENG: Return the generated vector tile as a Buffer.
-          return Buffer.from(mvt);
-        }
-        // ENG: Log if no roads are found for the tile.
-        console.warn(`No roads found for tile z=${z}, x=${x}, y=${y} in maps.europe_roads`);
-      } else {
-        // ENG: Log when non-simple map type is requested.
-        console.warn(`Tile type '${type}' not supported; only 'simple' is supported`);
+      if (z > 8) {
+        console.log(`Returning empty tile for high zoom level z=${z}, x=${x}, y=${y}`);
+        return Buffer.from([]);
       }
 
-      // ENG: Return an empty Buffer if no tile is generated.
-      return Buffer.from('');
+      if (!this.isHealthy) await this.checkHealth();
+      const cacheKey = `boundaries_mvt_${z}_${x}_${y}`;
+      if (this.isMvtCacheValid(cacheKey)) {
+        return this.mvtCache.get(cacheKey)!.data;
+      }
+
+      const simplification = z < 4 ? 0.1 : z < 6 ? 0.05 : 0.01;
+      const query = `
+        WITH 
+        bounds AS (
+          SELECT ST_TileEnvelope($1, $2, $3) AS geom
+        ),
+        mvt_data AS (
+          SELECT
+            id,
+            code_2,
+            name,
+            colour,
+            ST_AsMVTGeom(
+              ST_Simplify(wc.geom, $4),
+              bounds.geom,
+              4096,
+              256,
+              true
+            ) AS mvtgeom
+          FROM maps.world_countries wc, bounds
+          WHERE ST_Intersects(wc.geom, bounds.geom)
+        )
+        SELECT ST_AsMVT(mvt_data, 'boundaries', 4096, 'mvtgeom') AS mvt
+        FROM mvt_data
+      `;
+
+      const result = await pool.query(query, [z, x, y, simplification]);
+      const mvtBuffer = result.rows[0]?.mvt || Buffer.from([]);
+
+      this.mvtCache.set(cacheKey, { 
+        data: mvtBuffer, 
+        timestamp: Date.now() 
+      });
+
+      return mvtBuffer;
     } catch (error) {
-      console.error(`Failed to generate ${type} road tile for z=${z}, x=${x}, y=${y}:`, error);
-      return Buffer.from('');
+      console.error(`Error generating boundaries MVT for z=${z}, x=${x}, y=${y}:`, error);
+      return Buffer.from([]);
     }
   }
 
-  // ENG: Update the color of a boundary using UPDATE_BOUNDARY_COLOR_QUERY.
+  /**
+   * Získa MVT dlaždicu pre cesty
+   */
+  public async getRoadsTile(z: number, x: number, y: number): Promise<Buffer> {
+    try {
+      if (z > 6) {
+        console.log(`Returning empty roads tile for zoom level z=${z}, x=${x}, y=${y}`);
+        return Buffer.from([]);
+      }
+
+      if (!this.isHealthy) await this.checkHealth();
+      const cacheKey = `roads_mvt_${z}_${x}_${y}`;
+      if (this.isMvtCacheValid(cacheKey)) {
+        return this.mvtCache.get(cacheKey)!.data;
+      }
+
+      return Buffer.from([]);
+    } catch (error) {
+      console.error(`Error generating roads MVT for z=${z}, x=${x}, y=${y}:`, error);
+      return Buffer.from([]);
+    }
+  }
+
+  /**
+   * Získa MVT dlaždicu pre konkrétnu krajinu podľa kódu (SRID 3857)
+   */
+  public async getCountryBoundariesMVT(z: number, x: number, y: number, countryCode: string): Promise<Buffer> {
+    try {
+      if (z > 8) {
+        console.log(`Returning empty country tile for high zoom level z=${z}, x=${x}, y=${y}, country=${countryCode}`);
+        return Buffer.from([]);
+      }
+
+      if (!this.isHealthy) await this.checkHealth();
+      const cacheKey = `country_mvt_${countryCode}_${z}_${x}_${y}`;
+      if (this.isMvtCacheValid(cacheKey)) {
+        return this.mvtCache.get(cacheKey)!.data;
+      }
+
+      const simplification = z < 4 ? 0.1 : z < 6 ? 0.05 : 0.01;
+      const query = `
+        WITH 
+        bounds AS (
+          SELECT ST_TileEnvelope($1, $2, $3) AS geom
+        ),
+        mvt_data AS (
+          SELECT
+            wc.id,
+            wc.code_2,
+            wc.name,
+            wc.colour,
+            ST_AsMVTGeom(
+              ST_Simplify(wc.geom, $4),
+              bounds.geom,
+              4096,
+              256,
+              true
+            ) AS mvtgeom
+          FROM maps.world_countries wc, bounds
+          WHERE ST_Intersects(wc.geom, bounds.geom)
+          AND wc.code_2 = $5
+        )
+        SELECT ST_AsMVT(mvt_data, 'boundaries', 4096, 'mvtgeom') AS mvt
+        FROM mvt_data
+      `;
+
+      const result = await pool.query(query, [z, x, y, simplification, countryCode]);
+      const mvtBuffer = result.rows[0]?.mvt || Buffer.from([]);
+
+      this.mvtCache.set(cacheKey, { 
+        data: mvtBuffer, 
+        timestamp: Date.now() 
+      });
+
+      return mvtBuffer;
+    } catch (error) {
+      console.error(`Error generating country MVT for z=${z}, x=${x}, y=${y}, country=${countryCode}:`, error);
+      return Buffer.from([]);
+    }
+  }
+
+  /**
+   * Aktualizuje farbu hranice krajiny
+   */
   public async updateBoundaryColor(boundary_id: number, color: string): Promise<{ id: number; code_2: string; name_en: string; colour: string } | null> {
     try {
-      // ENG: Ensure the database is healthy.
       if (!this.isHealthy) await this.checkHealth();
+      const query = `
+        UPDATE maps.world_countries
+        SET colour = $2
+        WHERE id = $1
+        RETURNING id, code_2, name_en, colour
+      `;
 
-      // ENG: Execute the update query.
-      const result = await pool.query(UPDATE_BOUNDARY_COLOR_QUERY, [boundary_id, color]);
+      const result = await pool.query(query, [boundary_id, color]);
+      
+      this.mvtCache.forEach((_, key) => {
+        if (key.startsWith('boundaries_mvt_') || key.startsWith('country_mvt_')) {
+          this.mvtCache.delete(key);
+        }
+      });
+      
       return result.rows[0] || null;
     } catch (error) {
       console.error('Failed to update boundary color:', error);
@@ -206,14 +319,18 @@ class MapsService {
     }
   }
 
-  // ENG: Check if a boundary exists by code_2.
+  /**
+   * Kontroluje, či existuje krajina s daným kódom
+   */
   public async checkBoundaryExists(code_2: string): Promise<boolean> {
     try {
-      // ENG: Ensure the database is healthy.
       if (!this.isHealthy) await this.checkHealth();
-
-      // ENG: Execute the check query.
-      const result = await pool.query(CHECK_BOUNDARY_EXISTS_QUERY, [code_2]);
+      const query = `
+        SELECT EXISTS(
+          SELECT 1 FROM maps.world_countries WHERE code_2 = $1
+        ) AS found
+      `;
+      const result = await pool.query(query, [code_2]);
       return result.rows[0].found;
     } catch (error) {
       console.error('Failed to check boundary existence:', error);
@@ -221,14 +338,18 @@ class MapsService {
     }
   }
 
-  // ENG: Get boundary details by code_2.
-  public async getBoundaryByCode(code_2: string): Promise<{ id: number; code_2: string; name: string; name_en: string; colour: string; level: string } | null> {
+  /**
+   * Získa detaily o krajine podľa kódu
+   */
+  public async getBoundaryByCode(code_2: string): Promise<{ id: number; code_2: string; name: string; name_en: string; colour: string } | null> {
     try {
-      // ENG: Ensure the database is healthy.
       if (!this.isHealthy) await this.checkHealth();
-
-      // ENG: Execute the query.
-      const result = await pool.query(GET_BOUNDARY_BY_CODE_QUERY, [code_2]);
+      const query = `
+        SELECT id, code_2, name, name_en, colour
+        FROM maps.world_countries
+        WHERE code_2 = $1
+      `;
+      const result = await pool.query(query, [code_2]);
       return result.rows[0] || null;
     } catch (error) {
       console.error('Failed to fetch boundary by code:', error);

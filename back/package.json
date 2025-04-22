@@ -17,6 +17,7 @@
     "dotenv": "16.4.5",
     "express": "5.0.1",
     "ioredis": "^5.3.2",
+    "maplibre-gl": "^5.4.0",
     "openai": "^4.28.0",
     "pg": "8.13.1",
     "qs": "^6.11.0",
@@ -27,7 +28,9 @@
   "devDependencies": {
     "@types/body-parser": "^1.19.2",
     "@types/cors": "2.8.17",
+    "@types/express": "5.0.1",
     "@types/jest": "^29.5.12",
+    "@types/maplibre-gl": "^1.13.2",
     "@types/node": "18.19.81",
     "@types/pg": "^8.11.0",
     "@types/qs": "^6.9.15",
@@ -38,7 +41,6 @@
     "prettier": "^3.3.0",
     "ts-node": "10.9.2",
     "tsx": "4.19.2",
-     "@types/express": "5.0.1",
     "typescript": "5.7.3"
   }
 }

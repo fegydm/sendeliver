@@ -1,0 +1,116 @@
+import { useEffect, useRef, useState } from "react";
+// import MapLibreMap from './MapLibreMap';
+
+
+const W = 500;
+const H = 400;
+
+export default function WorldMap() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rendererRef = useRef<WebGLMapRenderer | null>(null);
+  const [zoom, setZoom] = useState(2);
+  const [center, setCenter] = useState<[number, number]>([0, 0]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [selectedLayer, setSelectedLayer] = useState('boundaries');
+
+  // Initialize WebGL renderer
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    rendererRef.current = new WebGLMapRenderer(canvas);
+    rendererRef.current.setSize(W, H);
+
+    return () => {
+      rendererRef.current?.dispose();
+    };
+  }, []);
+
+  // Native wheel listener with passive:false
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // English comment: add wheel listener as non-passive so preventDefault works
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const newZoom = zoom + (e.deltaY < 0 ? 1 : -1);
+      if (newZoom >= 0 && newZoom <= 8) {
+        setZoom(newZoom);
+      }
+    };
+
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      canvas.removeEventListener('wheel', handleWheel);
+    };
+  }, [zoom]);
+
+  // Render map on zoom, center, or layer change
+  useEffect(() => {
+    const renderer = rendererRef.current;
+    if (!renderer) return;
+    renderer.render(center, zoom, W, H, selectedLayer);
+  }, [zoom, center, selectedLayer]);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDragging || !canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    // počítame pohyb v CSS pixeloch
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    // preveď CSS pixely na mapové stupne podľa aktuálneho zoomu
+    const scale = Math.pow(2, zoom);
+    const degPerPixelX = 360 / (rect.width * scale);
+    const degPerPixelY = 180 / (rect.height * scale);
+  
+    setCenter(prev => [
+      prev[0] - dx * degPerPixelX,
+      prev[1] + dy * degPerPixelY,
+    ]);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleLayerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedLayer(e.target.value);
+  };
+
+  return (
+    <div className="map-wrapper">
+      <h2>World Map with Layers (WebGL)</h2>
+      <div>
+        <label htmlFor="layer-select">Vyberte vrstvu:</label>
+        <select id="layer-select" value={selectedLayer} onChange={handleLayerChange}>
+          <option value="boundaries">Hranice štátov</option>
+          <option value="roads">Cesty</option>
+        </select>
+      </div>
+      <canvas
+        ref={canvasRef}
+        width={W}
+        height={H}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        style={{ cursor: isDragging ? "grabbing" : "grab", touchAction: 'none' }}
+      />
+      <div>Zoom: {zoom} | Použite koliesko myši na zoom, ťahaním pan</div>
+      {DEBUG.lastError && (
+        <div style={{ color: 'red' }}>
+          Posledná chyba pri parsovaní MVT: {DEBUG.lastError.message}
+        </div>
+      )}
+      <div>Počet naparsovaných feature: {DEBUG.lastParsedFeatures}</div>
+    </div>
+  );
+}
