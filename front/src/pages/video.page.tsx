@@ -1,7 +1,7 @@
 // File: src/pages/video.page.tsx
 import { useEffect, useState, useRef } from "react";
 import useRouter from "@/hooks/useRouter";
-import PinForm from "@/components/elements/pin-form.element";
+import PinForm from "@/components/shared/elements/pin-form.element";
 import "@/styles/sections/video.page.css";
 
 // Statically imported video files

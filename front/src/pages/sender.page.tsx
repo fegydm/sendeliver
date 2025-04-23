@@ -2,8 +2,8 @@
 // Last change: Removed redundant Navigation and dark mode handling, handled globally in App.tsx
 
 import React from "react";
-import BannerS from "@/components/sections/banners/banner-s.component";
-import UnderConstruction from "@/components/elements/under-construction.element";
+import BannerS from "@/components/sender/content/sender.content.component";
+import UnderConstruction from "@/components/shared/elements/under-construction.element";
 
 const SenderPage: React.FC = () => {
   return (

@@ -36,10 +36,11 @@
   padding: 0.5rem;
   border-radius: var(--border-radius);
   resize: vertical;    /* Allow vertical resizing only */}
-.tabs-container {
+.ai-form__tabs {
   position: relative;
   z-index: 2; 
   margin-top: 16px;
+  margin-left: 8px;
   margin-bottom: -1px; }
 .manual-form {
     gap: 1.2rem; }

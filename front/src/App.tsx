@@ -6,7 +6,7 @@ import { TranslationProvider } from "@/contexts/TranslationContext";
 import { LanguagesProvider } from "@/contexts/LanguagesContext";
 import { CountriesProvider } from "@/contexts/CountriesContext";
 import { ThemeProvider } from "@/contexts/ThemeContext"; // Import ThemeProvider
-import Navigation from "@/components/sections/navbars/navbar.component";
+import Navigation from "@/components/shared/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
 import VideoPage from "@/pages/video.page";
@@ -17,9 +17,9 @@ import Test2Page from "@/pages/test2";
 import Test1Page from "@/pages/test1";
 import Test3Page from "@/pages/test3";
 import DocumentationPage from "@/pages/DocumentationPage";
-import FooterPage from "@/components/sections/footers/footer-page.component";
-import FooterTest from "@/components/sections/footers/footer-test.component";
-import FloatingButton from "@/components/elements/floating-button.element";
+import FooterPage from "@/components/shared/footers/footer-page.component";
+import FooterTest from "@/components/shared/footers/footer-test.component";
+import FloatingButton from "@/components/shared/elements/floating-button.element";
 import useScrollBounce from "@/hooks/useScrollBounce";
 
 const ROUTES = {

@@ -2,10 +2,10 @@
 // Last change: Removed mock data imports and using component placeholders instead
 
 import { useState } from "react";
-import PageBanner from "@/components/sections/banners/banner.component";
-import Content from "@/components/sections/content/content.component";
-import AIChatModal from "@/components/modals/ai-chat-modal.component";
-import QuickStats from "@/components/sections/stats/quick-stats.component";
+import PageBanner from "@/components/home/banners/home.banner.component";
+import Content from "@/components/home/content/home.content.component";
+import AIChatModal from "@/components/home/modals/ai-chat-modal.component";
+import QuickStats from "@/components/home/stats/quick-stats.component";
 import {
   AIRequest,
   AIResponse,

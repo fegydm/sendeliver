@@ -2,9 +2,9 @@
 
 import { Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
-import Navigation from "@/components/sections/navbars/navbar.component";
-import FooterPage from "@/components/sections/footers/footer-page.component";
-import FooterTest from "@/components/sections/footers/footer-test.component";
+import Navigation from "@/components/shared/navbars/navbar.component";
+import FooterPage from "@/components/shared/footers/footer-page.component";
+import FooterTest from "@/components/shared/footers/footer-test.component";
 import FloatingButton from "@/components/elements/floating-button.element";
 import HomePage from "@/pages/home.page";
 import SenderPage from "@/pages/sender.page";

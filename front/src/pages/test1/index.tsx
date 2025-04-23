@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import TimeColumn from "@/components/sections/content/search-forms/TimeColumn";
+import TimeColumn from "@/components/home/content/search-forms/TimeColumn";
 
 const Test1Page: React.FC = () => {
   const [useParent, setUseParent] = useState(true); // Toggle state

@@ -4,7 +4,7 @@
 // The required PIN is set to "1221".
 
 import React, { useState } from "react";
-import PinForm from "@/components/elements/pin-form.element";
+import PinForm from "@/components/shared/elements/pin-form.element";
 import "@/styles/sections/video.page.css";
 import "./documentation.page.css";
 

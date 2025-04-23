@@ -2,8 +2,8 @@
 // Last change: Fixed styles path and integrated DriverCard correctly
 
 import React, { useState } from "react";
-import BannerH from "@/components/sections/banners/banner-h.component";
-import DriverCard from "@/components/elements/DriverCard";
+import BannerH from "@/components/hauler/content/hauler.content.component";
+import DriverCard from "@/components/shared/elements/DriverCard";
 // import "@/styles/sections/hauler.page.css";
 
 const HaulerPage: React.FC = () => {

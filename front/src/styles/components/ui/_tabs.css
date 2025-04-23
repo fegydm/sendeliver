@@ -1,7 +1,4 @@
 /* Tabs container styling */
-.tabs-container {
-    margin-left: 8px; 
-  }
   
   /* Base style for each tab trigger button */
   .tabs-trigger {
@@ -39,12 +36,7 @@
   }
   
    /* Tabs content styling */
-  .tabs-content {
-    padding: 1rem;
-    border: 1px solid var(--sender-primary-hover, #e5e7eb);
-    border-top: none;
-    animation: fadeIn 300ms ease;
-  }
+
   
   @keyframes fadeIn {
     from { opacity: 0; }
