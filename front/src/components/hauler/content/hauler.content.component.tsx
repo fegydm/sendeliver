@@ -1,5 +1,5 @@
-// File: ./front/src/components/hauler/content/hauler.content.component.tsx
-// Last change: Added imports for all card components
+/* File: ./front/src/components/hauler/content/hauler.content.component.tsx */
+/* Last change: Added hauler-card class to all content sections for consistent styling */
 
 import React from "react";
 import { Tabs } from "@/components/shared/ui/tabs.ui";
@@ -11,7 +11,7 @@ import HaulerExchange from "./HaulerExchange";
 import HaulerAnalytics from "./HaulerAnalytics";
 import HaulerWebCards from "./HaulerWebCards";
 import HaulerBilling from "./HaulerBilling";
-import "./hauler.cards.css";
+import "./hauler.cards.css"; // Common styles for all cards
 import "./hc.component.css";
 
 interface HaulerContentProps {
@@ -33,7 +33,7 @@ const HaulerContent: React.FC<HaulerContentProps> = ({ activeTab, setActiveTab }
   ];
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
+    <Tabs value={activeTab} onChange={setActiveTab}>
       <div className="hc-container">
         <div className="hc-title">carriers.sendeliver.com</div>
 
@@ -51,38 +51,54 @@ const HaulerContent: React.FC<HaulerContentProps> = ({ activeTab, setActiveTab }
           ))}
         </div>
       </div>
-      
-      {/* Content sections */}
+
+      {/* Content sections with common hauler-card class */}
       <Tabs.Content value="dashboard">
-        <HaulerDashboard />
+        <div className="hauler-card">
+          <HaulerDashboard />
+        </div>
       </Tabs.Content>
-      
+
       <Tabs.Content value="fleet">
-        <HaulerFleet />
+        <div className="hauler-card">
+          <HaulerFleet />
+        </div>
       </Tabs.Content>
-      
+
       <Tabs.Content value="people">
-        <HaulerPeople />
+        <div className="hauler-card">
+          <HaulerPeople />
+        </div>
       </Tabs.Content>
-      
+
       <Tabs.Content value="logbook">
-        <HaulerLogbook />
+        <div className="hauler-card">
+          <HaulerLogbook />
+        </div>
       </Tabs.Content>
-      
+
       <Tabs.Content value="exchange">
-        <HaulerExchange />
+        <div className="hauler-card">
+          <HaulerExchange />
+        </div>
       </Tabs.Content>
-      
+
       <Tabs.Content value="analytics">
-        <HaulerAnalytics />
+        <div className="hauler-card">
+          <HaulerAnalytics />
+        </div>
       </Tabs.Content>
-      
+
       <Tabs.Content value="webcards">
-        <HaulerWebCards />
+        <div className="hauler-card">
+          <HaulerWebCards />
+        </div>
       </Tabs.Content>
-      
+
       <Tabs.Content value="billing">
-        <HaulerBilling />
+        <div className="hauler-card">
+          <HaulerBilling />
+        </div>
       </Tabs.Content>
     </Tabs>
   );

@@ -1,8 +1,8 @@
-/* File: ./front/src/components/hauler/content/fleet.cards.css */
-/* Last change: Updated styles to fix image position and adjust vehicle list background */
+/* File: ./front/src/components/hauler/content/people.cards.css */
+/* Last change: Created specific styles for people management that extend common hauler styles */
 
-/* Fleet container layout */
-.fleet-container {
+/* People container layout */
+.people-container {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -10,7 +10,7 @@
 }
 
 /* Header/toolbar section */
-.fleet-toolbar {
+.people-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -20,29 +20,29 @@
   height: 28px;
 }
 
-[data-theme="dark"] .fleet-toolbar {
+[data-theme="dark"] .people-toolbar {
   background-color: var(--hauler-dark);
 }
 
-.fleet-toolbar-left {
+.people-toolbar-left {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.fleet-toolbar-right {
+.people-toolbar-right {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.fleet-count {
+.people-count {
   font-size: 14px;
   color: var(--color-text-secondary);
   margin-right: 12px;
 }
 
-.fleet-toolbar-button {
+.people-toolbar-button {
   background: none;
   border: none;
   color: var(--color-text);
@@ -56,20 +56,20 @@
   transition: background-color 0.2s;
 }
 
-.fleet-toolbar-button:hover {
+.people-toolbar-button:hover {
   background-color: var(--hauler-dark);
 }
 
-[data-theme="dark"] .fleet-toolbar-button:hover {
+[data-theme="dark"] .people-toolbar-button:hover {
   background-color: var(--hauler-light);
 }
 
-.fleet-toolbar-button svg {
+.people-toolbar-button svg {
   width: 18px;
   height: 18px;
 }
 
-.fleet-toolbar-separator {
+.people-toolbar-separator {
   width: 1px;
   height: 24px;
   background-color: var(--color-text-secondary);
@@ -78,7 +78,7 @@
 }
 
 /* Main content area */
-.fleet-content {
+.people-content {
   display: flex;
   flex: 1;
   overflow: hidden;
@@ -86,8 +86,8 @@
   border-radius: 0 0 var(--border-radius) var(--border-radius);
 }
 
-/* Sidebar with vehicle list */
-.fleet-sidebar {
+/* Sidebar with people list */
+.people-sidebar {
   width: 300px;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
@@ -95,21 +95,21 @@
   background-color: var(--color-canvas-darker);
 }
 
-[data-theme="dark"] .fleet-sidebar {
+[data-theme="dark"] .people-sidebar {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Search and filters area */
-.fleet-search-container {
+.people-search-container {
   padding: 12px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-[data-theme="dark"] .fleet-search-container {
+[data-theme="dark"] .people-search-container {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.fleet-search {
+.people-search {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid var(--input-border);
@@ -119,7 +119,7 @@
   font-size: 14px;
 }
 
-.fleet-search::placeholder {
+.people-search::placeholder {
   color: var(--input-placeholder);
 }
 
@@ -139,15 +139,15 @@
   font-size: 14px;
 }
 
-/* Vehicle list */
-.vehicle-list {
+/* People list */
+.person-list {
   flex: 1;
   overflow-y: auto;
   padding: 0;
   background-color: var(--color-canvas-darker);
 }
 
-.vehicle-item {
+.person-item {
   display: flex;
   padding: 8px 12px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -156,34 +156,34 @@
   transition: background-color 0.2s;
 }
 
-.vehicle-item:hover {
+.person-item:hover {
   background-color: var(--color-canvas);
 }
 
-.vehicle-item.selected {
+.person-item.selected {
   background-color: var(--color-canvas);
   border-left: 4px solid var(--hauler-primary);
   padding-left: 8px;
 }
 
-[data-theme="dark"] .vehicle-item {
+[data-theme="dark"] .person-item {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .vehicle-item:hover {
+[data-theme="dark"] .person-item:hover {
   background-color: var(--color-canvas);
 }
 
-[data-theme="dark"] .vehicle-item.selected {
+[data-theme="dark"] .person-item.selected {
   background-color: var(--color-canvas);
 }
 
-.vehicle-thumbnail-container {
-  width: 60px;
-  height: 45px;
+.person-photo-container {
+  width: 50px;
+  height: 50px;
   margin-right: 12px;
   position: relative;
-  border-radius: 4px;
+  border-radius: 50%;
   overflow: hidden;
   background-color: rgba(0, 0, 0, 0.05);
   display: flex;
@@ -191,11 +191,11 @@
   justify-content: center;
 }
 
-[data-theme="dark"] .vehicle-thumbnail-container {
+[data-theme="dark"] .person-photo-container {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-.vehicle-thumbnail {
+.person-photo {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -206,19 +206,19 @@
   opacity: 0.7;
 }
 
-.vehicle-info {
+.person-info {
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
-.vehicle-name {
+.person-name {
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 4px;
 }
 
-.vehicle-meta {
+.person-meta {
   display: flex;
   font-size: 12px;
   color: var(--color-text-secondary);
@@ -226,8 +226,8 @@
   align-items: center;
 }
 
-/* Override status-chip styles for fleet specific use */
-.fleet-container .status-chip {
+/* Override status-chip styles for people specific use */
+.people-container .status-chip {
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 11px;
@@ -235,48 +235,48 @@
   display: inline-block;
 }
 
-.fleet-container .status-chip.ready {
+.people-container .status-chip.active {
   background-color: rgba(50, 180, 50, 0.2);
   color: rgb(30, 160, 30);
 }
 
-.fleet-container .status-chip.route {
+.people-container .status-chip.vacation {
   background-color: rgba(50, 120, 220, 0.2);
   color: rgb(40, 100, 200);
 }
 
-.fleet-container .status-chip.service {
+.people-container .status-chip.sick {
   background-color: rgba(220, 120, 50, 0.2);
   color: rgb(200, 100, 40);
 }
 
-.fleet-container .status-chip.parking {
+.people-container .status-chip.leave {
   background-color: rgba(150, 150, 150, 0.2);
   color: rgb(120, 120, 120);
 }
 
-[data-theme="dark"] .fleet-container .status-chip.ready {
+[data-theme="dark"] .people-container .status-chip.active {
   background-color: rgba(50, 180, 50, 0.3);
   color: rgb(100, 220, 100);
 }
 
-[data-theme="dark"] .fleet-container .status-chip.route {
+[data-theme="dark"] .people-container .status-chip.vacation {
   background-color: rgba(50, 120, 220, 0.3);
   color: rgb(100, 160, 240);
 }
 
-[data-theme="dark"] .fleet-container .status-chip.service {
+[data-theme="dark"] .people-container .status-chip.sick {
   background-color: rgba(220, 120, 50, 0.3);
   color: rgb(240, 160, 100);
 }
 
-[data-theme="dark"] .fleet-container .status-chip.parking {
+[data-theme="dark"] .people-container .status-chip.leave {
   background-color: rgba(150, 150, 150, 0.3);
   color: rgb(200, 200, 200);
 }
 
 /* Details panel */
-.fleet-details {
+.person-details {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -293,7 +293,7 @@
   font-style: italic;
 }
 
-.vehicle-image-container {
+.person-photo-large-container {
   text-align: center;
   padding: 20px;
   position: relative;
@@ -304,35 +304,37 @@
   flex-shrink: 0; /* Zabráni zmenšeniu pri nedostatku miesta */
 }
 
-.vehicle-image-wrapper {
-  max-width: 100%;
-  max-height: 100%;
+.person-photo-wrapper {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.vehicle-image {
-  max-width: 300px;
-  max-height: 180px;
-  object-fit: contain;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+[data-theme="dark"] .person-photo-wrapper {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="dark"] .vehicle-image {
-  border-color: rgba(255, 255, 255, 0.1);
+.person-photo-large {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 /* Scrollable content container */
-.vehicle-details-scroll-container {
+.person-details-scroll-container {
   flex: 1;
   overflow-y: auto;
   padding: 0 20px 20px 20px;
 }
 
 /* Details layout */
-.vehicle-details-grid {
+.person-details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-gap: 20px;
@@ -352,24 +354,24 @@
   background-color: var(--hauler-dark);
 }
 
-.details-row {
+.person-details-row {
   display: flex;
   align-items: center;
 }
 
-.details-label {
-  width: 100px;
+.person-details-label {
+  width: 120px;
   font-size: 14px;
   color: var(--label-text);
 }
 
-.details-value {
+.person-details-value {
   flex: 1;
 }
 
-.details-input,
-.details-select,
-.details-textarea {
+.person-details-input,
+.person-details-select,
+.person-details-textarea {
   width: 100%;
   padding: 8px;
   border: 1px solid var(--input-border);
@@ -379,7 +381,7 @@
   font-size: 14px;
 }
 
-.details-textarea {
+.person-details-textarea {
   min-height: 80px;
   resize: vertical;
 }
@@ -443,7 +445,7 @@
 
 /* Lists in sections */
 .trips-list,
-.service-list {
+.documents-list {
   overflow-y: auto;
   max-height: 200px;
 }
@@ -476,9 +478,9 @@
   grid-template-columns: 80px 1fr 1fr 80px;
 }
 
-.service-list .table-header,
-.service-list .table-row {
-  grid-template-columns: 80px 1fr 80px;
+.documents-list .table-header,
+.documents-list .table-row {
+  grid-template-columns: 80px 1fr 1fr 80px;
 }
 
 /* Empty states and loading */
@@ -494,49 +496,102 @@
   color: #d32f2f;
 }
 
+/* Two column form layout for personal details */
+.person-form-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.person-form-2col .person-details-row:nth-child(odd) {
+  grid-column: 1;
+}
+
+.person-form-2col .person-details-row:nth-child(even) {
+  grid-column: 2;
+}
+
+.person-form-2col .person-details-row.full-width {
+  grid-column: 1 / 3;
+}
+
+/* Date warning for expired documents */
+.date-warning {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.date-expiring {
+  color: #ff9800;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.date-valid {
+  color: #4caf50;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
 /* Responsive styles */
 @media (max-width: 1024px) {
-  .vehicle-details-grid {
+  .person-details-grid {
     grid-template-columns: 1fr;
   }
   
   .details-panel {
     grid-column: 1;
   }
+  
+  .person-form-2col {
+    grid-template-columns: 1fr;
+  }
+  
+  .person-form-2col .person-details-row:nth-child(odd),
+  .person-form-2col .person-details-row:nth-child(even),
+  .person-form-2col .person-details-row.full-width {
+    grid-column: 1;
+  }
 }
 
 @media (max-width: 768px) {
-  .fleet-content {
+  .people-content {
     flex-direction: column;
   }
   
-  .fleet-sidebar {
+  .people-sidebar {
     width: 100%;
     height: 300px;
     border-right: none;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
 
-  [data-theme="dark"] .fleet-sidebar {
+  [data-theme="dark"] .people-sidebar {
     border-color: rgba(255, 255, 255, 0.1);
   }
   
-  .vehicle-details-grid {
+  .person-details-grid {
     gap: 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .fleet-toolbar {
+  .people-toolbar {
     flex-direction: column;
     height: auto;
     gap: 8px;
     padding: 8px;
   }
   
-  .fleet-toolbar-left,
-  .fleet-toolbar-right {
+  .people-toolbar-left,
+  .people-toolbar-right {
     width: 100%;
     justify-content: space-between;
+  }
+  
+  .person-details-label {
+    width: 90px;
+    font-size: 13px;
   }
 }

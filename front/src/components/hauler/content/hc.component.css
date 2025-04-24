@@ -1,63 +1,60 @@
 /* File: front/src/components/hauler/content/hc.component.css */
-/* Last change: Added dark mode and active tab scaling matching hover effect */
+/* Last change: Adjusted border-radius, full content border, active tab shifted down */
 
 .hauler-page {
-  /* Gradient simulujúci --hauler-light odvodený z --hauler-primary */
-  background: linear-gradient(
-    to bottom,
-    hsl(var(--hauler-h), calc(var(--hauler-s) - 10%), calc(var(--hauler-l) + 65%)) 0%, /* --hauler-light: hsl(110, 50%, 95%) */
-    hsl(var(--hauler-h), calc(var(--hauler-s) - 30%), calc(var(--hauler-l) + 30%)) 100% /* Tmavší odtieň */
-  );
+  background: linear-gradient(to bottom, var(--hauler-light) 0%, var(--hauler-dark) 100%);
   padding: 0px;
-  /* Tab colors derived from --hauler-primary */
-  --tab-bg: hsl(var(--hauler-h), calc(var(--hauler-s) - 30%), calc(var(--hauler-l) + 30%)); /* --hauler-dark: hsl(110, 30%, 60%) */
-  --tab-text: white;
-  --tab-hover: hsl(var(--hauler-h), calc(var(--hauler-s) - 30%), calc(var(--hauler-l) + 42%)); /* --hauler-medium: hsl(110, 30%, 72%) */
-  --tab-active-bg: var(--color-canvas);
+  --tab-bg: var(--hauler-mid);
+  --tab-text: var(--color-text);
+  --tab-hover: var(--hauler-lighter);
+  --tab-active-bg: var(--color-canvas-darker);
   --tab-active-text: var(--color-text);
+  --chart-red: hsl(0, 70%, 50%);
+  --chart-green: hsl(120, 60%, 50%);
+  --chart-orange: hsl(30, 70%, 50%);
+  --chart-blue: hsl(210, 70%, 50%);
 }
 
 [data-theme="dark"] .hauler-page {
-  /* Gradient pre tmavú tému */
-  background: linear-gradient(
-    to bottom,
-    hsl(var(--hauler-h), calc(var(--hauler-s) - 10%), calc(var(--hauler-l) + 20%)) 0%, /* Jemnejší odtieň (~ #2e7d32) */
-    hsl(var(--hauler-h), calc(var(--hauler-s) - 20%), calc(var(--hauler-l) + 10%)) 100% /* Tmavší odtieň (~ #1b5e20) */
-  );
-  /* Predefinované farby pre tmavú tému */
-  --tab-bg: hsl(var(--hauler-h), calc(var(--hauler-s) - 20%), calc(var(--hauler-l) + 15%)); /* ~ #388e3c */
-  --tab-text: #e0e0e0;
-  --tab-hover: hsl(var(--hauler-h), calc(var(--hauler-s) - 20%), calc(var(--hauler-l) + 27%)); /* ~ #66bb6a */
-  --tab-active-bg: hsl(40, 20%, 10%); /* ~ #1a1a1a */
-  --tab-active-text: #e0e0e0;
+  background: linear-gradient(to bottom, var(--hauler-light) 0%, var(--hauler-dark) 100%);
+  --tab-bg: var(--hauler-mid);
+  --tab-text: var(--color-text);
+  --tab-hover: var(--hauler-darker);
+  --tab-active-bg: var(--color-canvas-darker);
+  --tab-active-text: var(--color-text);
+  --chart-red: hsl(0, 80%, 40%);
+  --chart-green: hsl(120, 70%, 40%);
+  --chart-orange: hsl(30, 80%, 40%);
+  --chart-blue: hsl(210, 80%, 40%);
 }
 
 .tabs-content {
   padding: 0;
   margin: 0 40px;
   background-color: var(--color-canvas);
-  border-radius: 8px 8px 0 0;
+  border: 1px solid var(--hauler-primary);
+  border-radius: 6px; /* Smaller radius, applied all sides */
   box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="dark"] .tabs-content {
-  background-color: hsl(40, 20%, 10%); /* Tmavé pozadie */
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3); /* Výraznejší tieň */
+  background-color: var(--color-canvas-darker);
+  border: 1px solid var(--hauler-primary-hover);
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .hc-title {
-  color: var(--hauler-primary);
+  color: var(--color-text-lighter);
   font-size: 2rem;
   font-weight: bold;
   text-align: center;
-  padding: 15px 40px 20px;
-  margin: 0;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  padding: 10px ;
+  text-shadow: 0 1px 3px rgba(95, 95, 95, 0.3);
 }
 
 [data-theme="dark"] .hc-title {
-  color: hsl(var(--hauler-h), var(--hauler-s), calc(var(--hauler-l) + 15%)); /* Svetlejší odtieň pre kontrast (~ #4caf50) */
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); /* Tmavší tieň */
+  color: var(--color-text-darker);
+  text-shadow: 0 2px 2px rgba(122, 122, 122, 0.5);
 }
 
 .hc-menu-container {
@@ -71,48 +68,64 @@
   flex: 1;
   min-width: 80px;
   padding: 10px 0 8px;
-  border-radius: 8px 8px 0 0;
+  border-left: 1px solid var(--hauler-primary);
+  border-top: 1px solid var(--hauler-primary);
+  border-right: 1px solid var(--hauler-primary);
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0; /* Smaller radius */
   background-color: var(--tab-bg);
   color: var(--tab-text);
   text-align: center;
-  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease; /* Pridaný prechod pre tieň */
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
   cursor: pointer;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Jemný vonkajší tieň */
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="dark"] .hc-menu-item {
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3); /* Výraznejší tieň pre tmavú tému */
+  border-left: 1px solid var(--hauler-primary-hover);
+  border-top: 1px solid var(--hauler-primary-hover);
+  border-right: 1px solid var(--hauler-primary-hover);
+  border-bottom: 0;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .hc-menu-item.hc-active {
   background-color: var(--tab-active-bg);
   color: var(--tab-active-text);
-  transform: translateY(0px) scale(1.01); /* Rovnaké zväčšenie ako hover */
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.12); /* Jemne výraznejší tieň */
+  transform: translateY(1px) scale(1.01); /* Shifted down 1px */
+  border-left: 1px solid var(--hauler-primary);
+  border-top: 1px solid var(--hauler-primary);
+  border-right: 1px solid var(--hauler-primary);
+  border-bottom: 0;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.12);
   z-index: 1;
-  cursor: default; /* Normálny kurzor pre aktívny tab */
+  cursor: default;
 }
 
 [data-theme="dark"] .hc-menu-item.hc-active {
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.4); /* Ešte výraznejší tieň */
+  border-left: 1px solid var(--hauler-primary-hover);
+  border-top: 1px solid var(--hauler-primary-hover);
+  border-right: 1px solid var(--hauler-primary-hover);
+  border-bottom: 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .hc-menu-item:not(.hc-active):hover {
-  transform: translateY(-2px) scale(1.02); /* Posun hore o 2px a zväčšenie */
+  transform: translateY(-2px) scale(1.02);
   background-color: var(--tab-hover);
 }
 
 .hc-menu-icon {
   font-size: 1.2rem;
-  transition: transform 0.3s ease; /* Hladký prechod pre zväčšenie */
+  transition: transform 0.3s ease;
 }
 
 .hc-menu-item:not(.hc-active):hover .hc-menu-icon {
-  transform: scale(1.1); /* Jemnejšie zväčšenie ikony */
+  transform: scale(1.1);
 }
 
 .hc-menu-title {
@@ -125,15 +138,14 @@
   bottom: 6px;
   width: 70%;
   height: 2px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l)),
-    transparent
-  );
+  background: linear-gradient(to right, transparent, var(--hauler-primary), transparent);
   transform: scaleX(0);
   transform-origin: center;
   transition: transform 0.3s ease;
+}
+
+[data-theme="dark"] .hc-menu-underline {
+  background: linear-gradient(to right, transparent, var(--hauler-primary-hover), transparent);
 }
 
 .hc-menu-item:not(.hc-active):hover .hc-menu-underline,
@@ -148,8 +160,8 @@
 }
 
 [data-theme="dark"] .hc-content {
-  background: hsl(40, 20%, 10%); /* Tmavé pozadie */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Výraznejší tieň */
+  background: var(--color-canvas-darker);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .hc-placeholder {
@@ -160,7 +172,14 @@
 }
 
 @media (max-width: 768px) {
-  .hc-menu-container { padding: 0 8px; gap: 4px; }
-  .hc-menu-item { min-width: 70px; }
-  .hc-menu-title { font-size: 0.8rem; }
+  .hc-menu-container {
+    padding: 0 8px;
+    gap: 4px;
+  }
+  .hc-menu-item {
+    min-width: 70px;
+  }
+  .hc-menu-title {
+    font-size: 0.8rem;
+  }
 }

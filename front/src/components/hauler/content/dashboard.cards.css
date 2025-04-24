@@ -1,243 +1,178 @@
-/* File: dashboard.css */
-/* Last change: Adapted for dark and light themes with consistent variables */
+/* File: ./front/src/components/hauler/content/dashboard.cards.css */
+/* Specific styles for Dashboard card, using common styles from hauler.cards.css and chart colors from hc.component.css */
 
-/* Dashboard container */
+
+
 .dashboard-container {
-    background-color: var(--color-canvas); /* hsl(40, 20%, 10%) v tmavej téme */
-    color: var(--color-text); /* #e0e0e0 v tmavej téme */
-    padding: 20px;
-    height: calc(100vh - 50px);
-    overflow-y: auto;
-  }
-  
-  [data-theme="light"] .dashboard-container {
-    background-color: hsl(40, 30%, 98%); /* --color-canvas-warm */
-    color: #333333;
-  }
-  
-  /* Header */
-  .dashboard-header {
-    margin-bottom: 20px;
-    text-align: center;
-  }
-  
-  .dashboard-header h1 {
-    font-size: 20px;
-    font-weight: 500;
-    margin-bottom: 5px;
-    color: var(--color-text); /* #e0e0e0 v tmavej téme */
-  }
-  
-  [data-theme="light"] .dashboard-header h1 {
-    color: #333333;
-  }
-  
-  .dashboard-subheader {
-    font-size: 14px;
-    color: hsl(40, 20%, 70%); /* Svetlejší šedý */
-  }
-  
-  [data-theme="light"] .dashboard-subheader {
-    color: hsl(40, 30%, 50%);
-  }
-  
-  /* Content layout */
+  composes: hauler-card; /* Use common hauler-card styles */
+  background: linear-gradient(
+    to bottom,
+    var(--hauler-light) 0%,
+    var(--hauler-medium) 100%
+  );
+}
+
+[data-theme="dark"] .dashboard-container {
+  background: linear-gradient(
+    to bottom,
+    var(--hauler-medium) 0%,
+    var(--hauler-dark) 100%
+  );
+}
+
+.dashboard-header {
+  composes: card-header; /* Use common header styles */
+}
+
+.dashboard-header h1 {
+  composes: card-header h1; /* Use common h1 styles */
+}
+
+.dashboard-subheader {
+  composes: card-subheader; /* Use common subheader styles */
+}
+
+.dashboard-content {
+  composes: card-content; /* Use common flex layout */
+}
+
+.dashboard-stats {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.dashboard-stat-row {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.dashboard-stat-card {
+  composes: card-item; /* Use common card-item styles */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+}
+
+.dashboard-stat-card h2 {
+  font-size: var(--font-size-md);
+  margin-bottom: var(--spacing-lg);
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+.stat-value {
+  font-size: 60px;
+  font-weight: 500;
+}
+
+.export-value {
+  color: var(--chart-red);
+}
+
+.import-value {
+  color: var(--chart-green);
+}
+
+.ready-value {
+  color: var(--chart-orange);
+}
+
+.parking-value {
+  color: var(--chart-blue);
+}
+
+.dashboard-chart {
+  flex: 1;
+  background-color: var(--hauler-medium);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius);
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="dark"] .dashboard-chart {
+  background-color: var(--hauler-dark);
+}
+
+.pie-chart {
+  width: 100%;
+  max-height: 300px;
+}
+
+.pie-segment {
+  fill: none;
+  stroke-width: 40;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+.export-segment {
+  stroke: var(--chart-red);
+}
+
+.import-segment {
+  stroke: var(--chart-green);
+}
+
+.ready-segment {
+  stroke: var(--chart-orange);
+}
+
+.parking-segment {
+  stroke: var(--chart-blue);
+}
+
+.chart-legend {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--border-radius);
+}
+
+.export-color {
+  background-color: var(--chart-red);
+}
+
+.import-color {
+  background-color: var(--chart-green);
+}
+
+.ready-color {
+  background-color: var(--chart-orange);
+}
+
+.parking-color {
+  background-color: var(--chart-blue);
+}
+
+.legend-text {
+  color: var(--color-text);
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
   .dashboard-content {
-    display: flex;
-    gap: 20px;
-  }
-  
-  /* Stats section */
-  .dashboard-stats {
-    flex: 1;
-    display: flex;
     flex-direction: column;
-    gap: 20px;
   }
-  
+
   .dashboard-stat-row {
-    display: flex;
-    gap: 20px;
-  }
-  
-  .dashboard-stat-card {
-    flex: 1;
-    background-color: var(--color-canvas-darker); /* hsl(40, 20%, 7%) v tmavej téme */
-    padding: 20px;
-    border-radius: 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 150px;
-  }
-  
-  [data-theme="light"] .dashboard-stat-card {
-    background-color: hsl(40, 30%, 95%);
-  }
-  
-  .dashboard-stat-card h2 {
-    font-size: 16px;
-    margin-bottom: 20px;
-    text-transform: uppercase;
-    color: var(--color-text); /* #e0e0e0 v tmavej téme */
-  }
-  
-  [data-theme="light"] .dashboard-stat-card h2 {
-    color: #333333;
-  }
-  
-  .stat-value {
-    font-size: 60px;
-    font-weight: 500;
-  }
-  
-  .export-value {
-    color: hsl(0, 70%, 50%); /* Jasná červená */
-  }
-  
-  .import-value {
-    color: hsl(var(--hauler-h), var(--hauler-s), calc(var(--hauler-l) + 10%)); /* ~ #4caf50 */
-  }
-  
-  .ready-value {
-    color: hsl(30, 70%, 50%); /* Jasná oranžová */
-  }
-  
-  .parking-value {
-    color: hsl(340, 70%, 50%); /* Jasná ružovo-červená */
-  }
-  
-  [data-theme="light"] .export-value {
-    color: hsl(0, 80%, 40%); /* Tmavšia červená */
-  }
-  
-  [data-theme="light"] .import-value {
-    color: hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l)); /* ~ #2e7d32 */
-  }
-  
-  [data-theme="light"] .ready-value {
-    color: hsl(30, 80%, 40%); /* Tmavšia oranžová */
-  }
-  
-  [data-theme="light"] .parking-value {
-    color: hsl(340, 80%, 40%); /* Tmavšia ružovo-červená */
-  }
-  
-  /* Chart section */
-  .dashboard-chart {
-    flex: 1;
-    background-color: hsl(40, 20%, 12%); /* Jemne svetlejšie ako canvas */
-    padding: 20px;
-    border-radius: 4px;
-    display: flex;
     flex-direction: column;
   }
-  
-  [data-theme="light"] .dashboard-chart {
-    background-color: hsl(40, 30%, 98%);
-  }
-  
-  .pie-chart {
-    width: 100%;
-    max-height: 300px;
-  }
-  
-  .pie-segment {
-    fill: none;
-    stroke-width: 40;
-    transform: rotate(-90deg);
-    transform-origin: 50% 50%;
-  }
-  
-  .export-segment {
-    stroke: hsl(0, 70%, 50%); /* Jasná červená */
-  }
-  
-  .import-segment {
-    stroke: hsl(var(--hauler-h), var(--hauler-s), calc(var(--hauler-l) + 10%)); /* ~ #4caf50 */
-  }
-  
-  .ready-segment {
-    stroke: hsl(30, 70%, 50%); /* Jasná oranžová */
-  }
-  
-  .parking-segment {
-    stroke: hsl(340, 70%, 50%); /* Jasná ružovo-červená */
-  }
-  
-  [data-theme="light"] .export-segment {
-    stroke: hsl(0, 80%, 40%); /* Tmavšia červená */
-  }
-  
-  [data-theme="light"] .import-segment {
-    stroke: hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l)); /* ~ #2e7d32 */
-  }
-  
-  [data-theme="light"] .ready-segment {
-    stroke: hsl(30, 80%, 40%); /* Tmavšia oranžová */
-  }
-  
-  [data-theme="light"] .parking-segment {
-    stroke: hsl(340, 80%, 40%); /* Tmavšia ružovo-červená */
-  }
-  
-  /* Chart legend */
-  .chart-legend {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .legend-color {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-  }
-  
-  .export-color {
-    background-color: hsl(0, 70%, 50%); /* Jasná červená */
-  }
-  
-  .import-color {
-    background-color: hsl(var(--hauler-h), var(--hauler-s), calc(var(--hauler-l) + 10%)); /* ~ #4caf50 */
-  }
-  
-  .ready-color {
-    background-color: hsl(30, 70%, 50%); /* Jasná oranžová */
-  }
-  
-  .parking-color {
-    background-color: hsl(340, 70%, 50%); /* Jasná ružovo-červená */
-  }
-  
-  [data-theme="light"] .export-color {
-    background-color: hsl(0, 80%, 40%); /* Tmavšia červená */
-  }
-  
-  [data-theme="light"] .import-color {
-    background-color: hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l)); /* ~ #2e7d32 */
-  }
-  
-  [data-theme="light"] .ready-color {
-    background-color: hsl(30, 80%, 40%); /* Tmavšia oranžová */
-  }
-  
-  [data-theme="light"] .parking-color {
-    background-color: hsl(340, 80%, 40%); /* Tmavšia ružovo-červená */
-  }
-  
-  .legend-text {
-    color: var(--color-text); /* #e0e0e0 v tmavej téme */
-  }
-  
-  [data-theme="light"] .legend-text {
-    color: #333333;
-  }
+}
