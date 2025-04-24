@@ -1,7 +1,23 @@
 // File: src/components/ui/tabs.ui.ts
-// Last change: Fixed tab highlighting when changing active tab
+// Last change: Complete rewrite to follow React and HTML standards with proper WAI-ARIA support
 
 import * as React from "react";
+
+// Context for sharing state between tab components
+interface TabsContextValue {
+  activeTab: string;
+  setActiveTab: (id: string) => void;
+}
+
+const TabsContext = React.createContext<TabsContextValue | undefined>(undefined);
+
+function useTabsContext() {
+  const context = React.useContext(TabsContext);
+  if (!context) {
+    throw new Error("Tabs components must be used within a <Tabs> component");
+  }
+  return context;
+}
 
 // Base interface for shared props
 interface BaseProps {
@@ -13,7 +29,8 @@ interface BaseProps {
 interface TabsProps extends BaseProps {
   value?: string;
   defaultValue?: string;
-  onValueChange?: (value: string) => void;
+  onChange?: (value: string) => void;
+  id?: string;
 }
 
 // Props for the TabsList component
@@ -22,8 +39,7 @@ interface TabsListProps extends BaseProps {}
 // Props for the TabsTrigger component
 interface TabsTriggerProps extends BaseProps {
   value: string;
-  isSelected?: boolean;
-  onSelect?: (value: string) => void;
+  disabled?: boolean;
   role?: "sender" | "hauler"; // Custom prop for role-based styling
 }
 
@@ -32,132 +48,168 @@ interface TabsContentProps extends BaseProps {
   value: string;
 }
 
-// Internal props for handling state
-interface InternalTabsProps {
-  selectedValue?: string;
-  onValueChange?: (value: string) => void;
-}
-
 // Main Tabs component
-const Tabs: React.FC<TabsProps> & {
-  List: React.FC<TabsListProps & InternalTabsProps>;
-  Trigger: React.FC<TabsTriggerProps>;
-  Content: React.FC<TabsContentProps & InternalTabsProps>;
-} = ({ children, value, defaultValue, onValueChange, className }) => {
-  // Manage the selected tab state if no external value is provided.
-  const [internalValue, setInternalValue] = React.useState(defaultValue);
-  const selectedValue = value !== undefined ? value : internalValue;
+const TabsRoot: React.FC<TabsProps> = ({
+  children,
+  value,
+  defaultValue,
+  onChange,
+  className,
+  id: providedId,
+}) => {
+  // Generate a stable ID if none is provided
+  const generatedId = React.useId();
+  const id = providedId || generatedId;
+
+  // Manage the active tab state
+  const [activeTab, setActiveTabInternal] = React.useState(
+    value || defaultValue || ""
+  );
   
-  const handleValueChange = React.useCallback((newValue: string) => {
-    // Update internal state if no external handler
-    if (onValueChange) {
-      onValueChange(newValue);
-    } else {
-      setInternalValue(newValue);
+  // External controlled state takes precedence
+  const currentActiveTab = value !== undefined ? value : activeTab;
+  
+  // Handler for tab changes
+  const setActiveTab = React.useCallback(
+    (newValue: string) => {
+      if (value === undefined) {
+        setActiveTabInternal(newValue);
+      }
+      onChange?.(newValue);
+    },
+    [onChange, value]
+  );
+  
+  // Update internal state when controlled value changes
+  React.useEffect(() => {
+    if (value !== undefined) {
+      setActiveTabInternal(value);
     }
-  }, [onValueChange]);
+  }, [value]);
 
   return (
-    <div className={`tabs-container ${className || ""}`}>
-      {React.Children.map(children, (child) =>
-        React.isValidElement(child)
-          ? React.cloneElement(child, {
-              ...child.props,
-              selectedValue,
-              onValueChange: handleValueChange,
-            })
-          : null
-      )}
-    </div>
+    <TabsContext.Provider value={{ activeTab: currentActiveTab, setActiveTab }}>
+      <div 
+        className={`tabs-container ${className || ""}`}
+        id={id}
+        data-state={currentActiveTab ? "active" : "inactive"}
+      >
+        {children}
+      </div>
+    </TabsContext.Provider>
   );
 };
 
-// TabsList component casts each child to a React element with TabsTriggerProps,
-// so that we can add custom properties like isSelected and onSelect.
-const TabsList: React.FC<TabsListProps & InternalTabsProps> = ({
+// TabsList component
+const TabsList: React.FC<TabsListProps> = ({
   children,
   className,
-  selectedValue,
-  onValueChange,
 }) => {
   return (
-    <div className={`tabs-list ${className || ""}`}>
-      {React.Children.map(children, (child) => {
-        if (React.isValidElement(child)) {
-          const trigger = child as React.ReactElement<TabsTriggerProps>;
-          return React.cloneElement(trigger, {
-            ...trigger.props,
-            isSelected: trigger.props.value === selectedValue,
-            onSelect: onValueChange,
-          });
-        }
-        return null;
-      })}
+    <div 
+      className={`tabs-list ${className || ""}`} 
+      role="tablist"
+      aria-orientation="horizontal"
+    >
+      {children}
     </div>
   );
 };
 
-// TabsTrigger component with role support.
+// TabsTrigger component
 const TabsTrigger: React.FC<TabsTriggerProps> = ({
   children,
   value,
   className,
-  isSelected,
-  onSelect,
-  role,
+  disabled = false,
+  role: customRole,
 }) => {
-  const classes = ["tabs-trigger"];
-  if (isSelected) {
-    classes.push("tabs-trigger--active");
-  }
-  if (role) {
-    classes.push(`tabs-trigger--${role}`);
-  }
-  if (className) {
-    classes.push(className);
-  }
+  const { activeTab, setActiveTab } = useTabsContext();
+  const isActive = activeTab === value;
+  
+  // Generate a stable ID for the trigger and its associated panel
+  const tabId = React.useId();
+  const panelId = `panel-${tabId}`;
   
   const handleClick = React.useCallback(() => {
-    if (onSelect) {
-      onSelect(value);
+    if (!disabled) {
+      setActiveTab(value);
     }
-  }, [onSelect, value]);
+  }, [disabled, setActiveTab, value]);
+
+  // Build the class names
+  const classNames = ["tabs-trigger"];
+  if (isActive) classNames.push("tabs-trigger--active");
+  if (disabled) classNames.push("tabs-trigger--disabled");
+  if (customRole) classNames.push(`tabs-trigger--${customRole}`);
+  if (className) classNames.push(className);
 
   return (
     <button
-      className={classes.join(" ")}
-      onClick={handleClick}
       type="button"
-      aria-selected={isSelected}
+      role="tab"
+      id={tabId}
+      aria-selected={isActive}
+      aria-controls={panelId}
+      aria-disabled={disabled}
+      disabled={disabled}
+      className={classNames.join(" ")}
+      onClick={handleClick}
+      data-state={isActive ? "active" : "inactive"}
+      data-value={value}
     >
       {children}
     </button>
   );
 };
 
-// TabsContent component renders content only if its value matches the selected value.
-const TabsContent: React.FC<TabsContentProps & InternalTabsProps> = ({
+// TabsContent component
+const TabsContent: React.FC<TabsContentProps> = ({
   children,
   value,
   className,
-  selectedValue,
-}) =>
-  value === selectedValue ? (
-    <div className={`tabs-content ${className || ""}`}>{children}</div>
-  ) : null;
+}) => {
+  const { activeTab } = useTabsContext();
+  const isActive = activeTab === value;
+  
+  // Generate a stable ID for the panel
+  const panelId = React.useId();
+  const tabId = `tab-${panelId}`;
+  
+  // Don't render inactive tabs for performance and to avoid issues with forms
+  if (!isActive) return null;
+  
+  return (
+    <div 
+      role="tabpanel"
+      id={panelId}
+      aria-labelledby={tabId}
+      className={`tabs-content ${className || ""}`}
+      tabIndex={0}
+      data-state={isActive ? "active" : "inactive"}
+      data-value={value}
+    >
+      {children}
+    </div>
+  );
+};
 
-// Attach subcomponents to the main Tabs component.
-Tabs.List = TabsList;
-Tabs.Trigger = TabsTrigger;
-Tabs.Content = TabsContent;
+// Compound component structure
+const Tabs = Object.assign(TabsRoot, {
+  List: TabsList,
+  Trigger: TabsTrigger,
+  Content: TabsContent,
+});
 
 export { Tabs };
 
 /*
 English Comments:
-- Fixed tab selection by ensuring internal state updates correctly
-- Added useCallback to prevent unnecessary re-renders
-- Added aria-selected attribute for accessibility
-- Made sure value comparison uses strict equality
-- Made handler logic more robust when state is controlled or uncontrolled
+- Complete rewrite using React Context for state management
+- Added proper WAI-ARIA attributes for accessibility
+- Used HTML standard attributes instead of custom props on DOM elements
+- Added data-state attributes for styling based on component state
+- Implemented proper controlled/uncontrolled component pattern
+- Used React.useId() for stable, unique IDs
+- Used compound component pattern for better developer experience
 */

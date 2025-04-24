@@ -2,7 +2,7 @@
 // Last change: Updated implementation to match dark theme design with responsive layout
 
 import React, { useState } from "react";
-import "./hauler.cards.css";
+import "./fleet.cards.css";
 
 interface Vehicle {
   id: string;

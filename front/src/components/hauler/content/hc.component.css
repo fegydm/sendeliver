@@ -1,135 +1,123 @@
 /* File: front/src/components/hauler/content/hc.component.css */
-/* Last change: Enhanced visual appearance with gradient background, 3D effects, shadows and subtle animations */
-
-.tabs-content {
-  padding-left: 40px;
-  padding-right: 40px;
-}
-
+/* Last change: Added dark mode and active tab scaling matching hover effect */
 
 .hauler-page {
-background: linear-gradient(to bottom, 
-            var(--hauler-primary, #4a5568) 0%, 
-            color-mix(in srgb, var(--hauler-primary, #4a5568) 40%, #2d3748) 20%);
-          }
+  /* Gradient simulujúci --hauler-light odvodený z --hauler-primary */
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--hauler-h), calc(var(--hauler-s) - 10%), calc(var(--hauler-l) + 65%)) 0%, /* --hauler-light: hsl(110, 50%, 95%) */
+    hsl(var(--hauler-h), calc(var(--hauler-s) - 30%), calc(var(--hauler-l) + 30%)) 100% /* Tmavší odtieň */
+  );
+  padding: 0px;
+  /* Tab colors derived from --hauler-primary */
+  --tab-bg: hsl(var(--hauler-h), calc(var(--hauler-s) - 30%), calc(var(--hauler-l) + 30%)); /* --hauler-dark: hsl(110, 30%, 60%) */
+  --tab-text: white;
+  --tab-hover: hsl(var(--hauler-h), calc(var(--hauler-s) - 30%), calc(var(--hauler-l) + 42%)); /* --hauler-medium: hsl(110, 30%, 72%) */
+  --tab-active-bg: var(--color-canvas);
+  --tab-active-text: var(--color-text);
+}
 
+[data-theme="dark"] .hauler-page {
+  /* Gradient pre tmavú tému */
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--hauler-h), calc(var(--hauler-s) - 10%), calc(var(--hauler-l) + 20%)) 0%, /* Jemnejší odtieň (~ #2e7d32) */
+    hsl(var(--hauler-h), calc(var(--hauler-s) - 20%), calc(var(--hauler-l) + 10%)) 100% /* Tmavší odtieň (~ #1b5e20) */
+  );
+  /* Predefinované farby pre tmavú tému */
+  --tab-bg: hsl(var(--hauler-h), calc(var(--hauler-s) - 20%), calc(var(--hauler-l) + 15%)); /* ~ #388e3c */
+  --tab-text: #e0e0e0;
+  --tab-hover: hsl(var(--hauler-h), calc(var(--hauler-s) - 20%), calc(var(--hauler-l) + 27%)); /* ~ #66bb6a */
+  --tab-active-bg: hsl(40, 20%, 10%); /* ~ #1a1a1a */
+  --tab-active-text: #e0e0e0;
+}
 
+.tabs-content {
+  padding: 0;
+  margin: 0 40px;
+  background-color: var(--color-canvas);
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+}
 
-
-
-.hc-dark {
-  background: linear-gradient(to bottom, #2d3748 0%, #1a202c 100%);
+[data-theme="dark"] .tabs-content {
+  background-color: hsl(40, 20%, 10%); /* Tmavé pozadie */
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3); /* Výraznejší tieň */
 }
 
 .hc-title {
-  color: white;
+  color: var(--hauler-primary);
   font-size: 2rem;
   font-weight: bold;
   text-align: center;
-  padding: 15px 0 20px;
+  padding: 15px 40px 20px;
   margin: 0;
-  /* Add text shadow for depth */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  /* Add subtle glow effect */
-  position: relative;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-
+[data-theme="dark"] .hc-title {
+  color: hsl(var(--hauler-h), var(--hauler-s), calc(var(--hauler-l) + 15%)); /* Svetlejší odtieň pre kontrast (~ #4caf50) */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); /* Tmavší tieň */
+}
 
 .hc-menu-container {
-  position: relative;
   display: flex;
   gap: 8px;
-  margin: 0;
-  padding: 0 50px 0;
-  box-sizing: border-box;
-  overflow: visible !important;
+  padding: 0 50px;
   justify-content: space-between;
-  z-index: 2;
 }
 
 .hc-menu-item {
-  padding: 10px 0 8px;
-  border-radius: 8px 8px 0 0;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy animation */
-  background-color: #a0aec0;
-  color: white;
   flex: 1;
   min-width: 80px;
+  padding: 10px 0 8px;
+  border-radius: 8px 8px 0 0;
+  background-color: var(--tab-bg);
+  color: var(--tab-text);
+  text-align: center;
+  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease; /* Pridaný prechod pre tieň */
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
-  z-index: 3;
-  transform-origin: bottom center !important;
-  transform: translateY(0) scale(1) !important;
-  
-  /* 3D effect with top lighting */
-  background-image: linear-gradient(to bottom, 
-                     rgba(255, 255, 255, 0.15) 0%, 
-                     rgba(255, 255, 255, 0) 50%);
-  
-  /* Add subtle shadow for depth */
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1),
-              inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Jemný vonkajší tieň */
 }
 
-.hc-menu-item:hover {
-  transform: translateY(-1px) scale(1.03) !important;
-  background-color: #718096 !important;
-  z-index: 10 !important;
-  border-radius: 8px 8px 0 0 !important;
-  
-  /* Enhanced shadow on hover */
-  box-shadow: 0 -3px 7px rgba(0, 0, 0, 0.15),
-              inset 0 1px 2px rgba(255, 255, 255, 0.3);
+[data-theme="dark"] .hc-menu-item {
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3); /* Výraznejší tieň pre tmavú tému */
 }
 
-.hc-active {
-  background-color: #edf2f7;
-  color: #2d3748;
-  
-  /* Special gradient for active item */
-  background-image: linear-gradient(to bottom, 
-                     rgba(255, 255, 255, 0.5) 0%, 
-                     rgba(255, 255, 255, 0.2) 100%);
-  
-  /* Add subtle glow effect for active item */
-  box-shadow: 0 -2px 10px rgba(255, 255, 255, 0.1),
-              inset 0 1px 1px rgba(255, 255, 255, 0.5);
+.hc-menu-item.hc-active {
+  background-color: var(--tab-active-bg);
+  color: var(--tab-active-text);
+  transform: translateY(0px) scale(1.01); /* Rovnaké zväčšenie ako hover */
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.12); /* Jemne výraznejší tieň */
+  z-index: 1;
+  cursor: default; /* Normálny kurzor pre aktívny tab */
 }
 
-.hc-dark .hc-menu-item {
-  background-color: #2d3748;
-  color: white;
-  background-image: linear-gradient(to bottom, 
-                     rgba(255, 255, 255, 0.08) 0%, 
-                     rgba(255, 255, 255, 0) 50%);
+[data-theme="dark"] .hc-menu-item.hc-active {
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.4); /* Ešte výraznejší tieň */
+}
+
+.hc-menu-item:not(.hc-active):hover {
+  transform: translateY(-2px) scale(1.02); /* Posun hore o 2px a zväčšenie */
+  background-color: var(--tab-hover);
 }
 
 .hc-menu-icon {
   font-size: 1.2rem;
-  margin-bottom: 3px;
-  /* Add subtle shadow for 3D effect */
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
-  transition: transform 0.2s;
+  transition: transform 0.3s ease; /* Hladký prechod pre zväčšenie */
 }
 
-/* Optional: Small animation for icon on hover */
-.hc-menu-item:hover .hc-menu-icon {
-  transform: translateY(-0.1px);
+.hc-menu-item:not(.hc-active):hover .hc-menu-icon {
+  transform: scale(1.1); /* Jemnejšie zväčšenie ikony */
 }
 
 .hc-menu-title {
   font-size: 0.9rem;
   font-weight: 600;
-  position: relative;
-  display: inline-block;
-  margin-top: -2px;
-  /* Add subtle shadow for text */
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 .hc-menu-underline {
@@ -137,74 +125,42 @@ background: linear-gradient(to bottom,
   bottom: 6px;
   width: 70%;
   height: 2px;
-  /* Gradient that fades out on sides */
-  background: linear-gradient(to right, 
-              rgba(74, 85, 104, 0), 
-              rgba(74, 85, 104, 0.8) 20%, 
-              rgba(74, 85, 104, 0.8) 80%, 
-              rgba(74, 85, 104, 0));
+  background: linear-gradient(
+    to right,
+    transparent,
+    hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l)),
+    transparent
+  );
   transform: scaleX(0);
   transform-origin: center;
-  transition: transform 0.3s, opacity 0.3s;
-  opacity: 0.7;
+  transition: transform 0.3s ease;
 }
 
-.hc-menu-item:hover .hc-menu-underline {
+.hc-menu-item:not(.hc-active):hover .hc-menu-underline,
+.hc-menu-item.hc-active .hc-menu-underline {
   transform: scaleX(1);
-  opacity: 1;
-  /* Gradient that fades out on sides */
-  background: linear-gradient(to right, 
-              rgba(45, 55, 72, 0), 
-              rgba(45, 55, 72, 0.9) 20%, 
-              rgba(45, 55, 72, 0.9) 80%, 
-              rgba(45, 55, 72, 0));
-  /* Remove box-shadow */
-  box-shadow: none;
 }
 
-.hc-active .hc-menu-underline {
-  transform: scaleX(1);
-  opacity: 1;
-  /* Gradient that fades out on sides */
-  background: linear-gradient(to right, 
-              rgba(45, 55, 72, 0), 
-              rgba(45, 55, 72, 0.9) 20%, 
-              rgba(45, 55, 72, 0.9) 80%, 
-              rgba(45, 55, 72, 0));
-  /* Remove box-shadow */
-  box-shadow: none;
-}
-
-/* Add perspective to content for 3D effect */
 .hc-content {
-  padding: 20px;
-  background-color: #fff;
-  margin-top: 0;
-  position: relative;
-  z-index: 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px 40px;
+  background: var(--color-canvas);
+  min-height: 300px;
+}
+
+[data-theme="dark"] .hc-content {
+  background: hsl(40, 20%, 10%); /* Tmavé pozadie */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Výraznejší tieň */
 }
 
 .hc-placeholder {
   text-align: center;
-  font-size: 18px;
-  color: #666;
+  font-size: 1rem;
+  color: var(--tab-active-text);
   padding: 50px 0;
 }
 
-/* Add responsive adjustments */
 @media (max-width: 768px) {
-  .hc-menu-container {
-    justify-content: flex-start;
-    padding: 0 8px;
-    gap: 4px;
-  }
-  
-  .hc-menu-item {
-    min-width: 70px;
-  }
-  
-  .hc-menu-title {
-    font-size: 0.8rem;
-  }
+  .hc-menu-container { padding: 0 8px; gap: 4px; }
+  .hc-menu-item { min-width: 70px; }
+  .hc-menu-title { font-size: 0.8rem; }
 }

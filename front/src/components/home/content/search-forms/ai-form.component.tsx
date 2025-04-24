@@ -153,7 +153,7 @@ const AIForm: React.FC<AIFormProps> = ({ type, onAIRequest, className = "" }) =>
       {/* Tabs UI: Render tab triggers with additional class based on type */}
       <Tabs
   value={activeTab} // Use value instead of defaultValue for controlled component
-  onValueChange={setActiveTab}
+  onChange={setActiveTab}
   className={`ai-form__tabs ai-form__tabs--${type}`}
 >
   <Tabs.List>

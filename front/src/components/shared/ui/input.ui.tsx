@@ -1,5 +1,5 @@
 // File: ./front/src/components/ui/input.ui.tsx
-// Last change: Added postal-code variant with formatting support
+// Last change: Improved accessibility and added proper aria attributes
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
@@ -31,10 +31,16 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       mask,
       value,
       onChange,
+      id: providedId,
       ...props
     },
     ref
   ) => {
+    // Generate unique id if not provided
+    const generatedId = React.useId();
+    const id = providedId || `input-${generatedId}`;
+    const errorId = `${id}-error`;
+    
     const [isSymbolActive, setIsSymbolActive] = useState(false);
     const [displayValue, setDisplayValue] = useState(value);
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -142,7 +148,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className="input-container">
-        {label && <label className="input-label">{label}</label>}
+        {label && (
+          <label 
+            htmlFor={id} 
+            className="input-label"
+          >
+            {label}
+          </label>
+        )}
         <div className="input-wrapper">
           <input
             ref={(el) => {
@@ -150,6 +163,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               else if (ref) ref.current = el;
               inputRef.current = el;
             }}
+            id={id}
             className={inputClasses}
             type={type}
             value={displayValue}
@@ -157,6 +171,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             onKeyDown={handleKeyDown}
             onClick={handleCursorMove}
             onKeyUp={handleCursorMove}
+            aria-invalid={state === "error"}
+            aria-describedby={error ? errorId : undefined}
+            data-variant={variant}
+            data-state={state}
+            data-role={role}
             {...props}
           />
           {variant === "floating-enter" && (
@@ -164,12 +183,21 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               className={`input-enter-symbol ${
                 isSymbolActive ? "input-enter-symbol--active" : ""
               }`}
+              aria-hidden="true"
             >
               ↵
             </span>
           )}
         </div>
-        {error && <p className="input-error-message">{error}</p>}
+        {error && (
+          <p 
+            id={errorId} 
+            className="input-error-message" 
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
       </div>
     );
   }

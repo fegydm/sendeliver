@@ -1,8 +1,8 @@
-// File: front/src/components/sections/content/dashboard.component.tsx
-// Last change: Initial implementation of dashboard with vehicle stats and pie chart
+// File: ./front/src/components/hauler/content/HaulerDashboard.tsx
+// Last change: Fixed SVG attributes from kebab-case to camelCase for React compatibility
 
 import React, { useEffect, useState } from "react";
-import "./hauler.cards.css";
+import "./dashboard.cards.css";
 
 interface DashboardProps {
   // Props can be extended as needed
@@ -80,16 +80,16 @@ const HaulerDashboard: React.FC<DashboardProps> = () => {
             {/* Create pie chart sections with calculated percentages */}
             {/* This is a simplified version; in a real implementation, you'd calculate actual segment paths */}
             <circle className="pie-segment export-segment" cx="50" cy="50" r="40" 
-                    stroke-dasharray={`${exportPercentage} 100`} />
+                    strokeDasharray={`${exportPercentage} 100`} />
             <circle className="pie-segment import-segment" cx="50" cy="50" r="40" 
-                    stroke-dasharray={`${importPercentage} 100`} 
-                    stroke-dashoffset={`-${exportPercentage}`} />
+                    strokeDasharray={`${importPercentage} 100`} 
+                    strokeDashoffset={`-${exportPercentage}`} />
             <circle className="pie-segment ready-segment" cx="50" cy="50" r="40" 
-                    stroke-dasharray={`${readyPercentage} 100`} 
-                    stroke-dashoffset={`-${Number(exportPercentage) + Number(importPercentage)}`} />
+                    strokeDasharray={`${readyPercentage} 100`} 
+                    strokeDashoffset={`-${Number(exportPercentage) + Number(importPercentage)}`} />
             <circle className="pie-segment parking-segment" cx="50" cy="50" r="40" 
-                    stroke-dasharray={`${parkingPercentage} 100`} 
-                    stroke-dashoffset={`-${Number(exportPercentage) + Number(importPercentage) + Number(readyPercentage)}`} />
+                    strokeDasharray={`${parkingPercentage} 100`} 
+                    strokeDashoffset={`-${Number(exportPercentage) + Number(importPercentage) + Number(readyPercentage)}`} />
           </svg>
           
           <div className="chart-legend">

@@ -1,9 +1,39 @@
-/* File: front/src/styles/base/variables.css */
-/* Last updated: Added both light and dark mode theme variables */
+/* File: front/src/styles/base/variables-default.css */
+/* Last updated: Core theme variables separated and marked */
 
-/* Light Mode (Default) */
+/* === NEW CORE VARIABLES (USE THESE ONLY) === */
 :root {
-    /* Colors - Light Theme */
+
+   /* Canvas HSL variables */
+  --canvas-h: 210;
+  --canvas-s: 20%;
+  --canvas-l: 88%;
+  --color-canvas-neutral: #ffffff;
+  --color-canvas-warm: hsl(40, 30%, 98%);
+  --color-canvas-cool: hsl(210, 20%, 98%);
+  --color-canvas: hsl(var(--canvas-h), var(--canvas-s), var(--canvas-l));
+  --color-canvas-darker: hsl(var(--canvas-h), var(--canvas-s), calc(var(--canvas-l) - 10%)); /* Tmavší odtieň: hsl(40, 30%, 88%) */
+  --color-text: #333333;
+
+
+   --hauler-h: 110;
+   --hauler-s: 60%;
+   --hauler-l: 30%;
+   --hauler-primary: hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l));
+   --hauler-primary-hover: hsl(var(--hauler-h), var(--hauler-s), calc(var(--hauler-l) + 5%));
+
+   --sender-h: 290;
+   --sender-s: 40%;
+   --sender-l: 40%;
+   --sender-primary: hsl(var(--sender-h), var(--sender-s), var(--sender-l));
+   --sender-primary-hover: hsl(var(--sender-h), var(--sender-s), calc(var(--sender-l) + 5%));
+
+ 
+ }
+ 
+ /* === LEGACY VARIABLES (PRESERVE FOR BACKWARD COMPATIBILITY) === */
+ :root {
+    /* Global Colors */
     --color-page-bg: #ffffff;
     --color-navbar-bg: #f8f8f8;
     --color-footer-bg: #f5f5f5;
@@ -11,25 +41,21 @@
     --color-text-primary: #333333;
     --color-text-secondary: #666666;
     
-    /* Brand Colors - These remain consistent across themes */
+    /* Brand Colors (Static) */
     --logo-1-color: hsl(290, 87%, 53%);
-    --logo-2-color: hsl(106, 61%, 50%);
+    --logo-2-color: hsl(110, 60%, 50%);
     
-    /* Sender Theme - Light Mode */
-    --sender-primary: hsl(290, 40%, 40%);
-    --sender-primary-hover: hsl(290, 40%, 46%);
+    /* Sender Theme (Light) */
     --sender-light: hsl(290, 50%, 95%);
     --sender-medium: hsl(290, 50%, 90%);
     --sender-dark: hsl(290, 50%, 80%);
     
-    /* Hauler Theme - Light Mode */
-    --hauler-primary: hsl(110, 60%, 30%);
-    --hauler-primary-hover: hsl(110, 60%, 36%);
+    /* Hauler Theme (Light) */
     --hauler-light: hsl(110, 50%, 95%);
     --hauler-medium: hsl(110, 50%, 90%);
     --hauler-dark: hsl(110, 50%, 60%);
  
-    /* Form and UI Elements */
+    /* Form & UI Elements */
     --input-bg: #ffffff;
     --input-border: hsl(0, 0%, 50%);
     --input-text: #333333;
@@ -40,26 +66,18 @@
     --dropdown-hover: #f5f5f5;
     --label-text: hsl(0, 0%, 40%);
     
-    /* Heights */
+    /* Layout, Typography, Spacing, Shadows */
     --height-header: 100px;
     --height-footer: 200px;
     --height-banner: 300px;
- 
-    /* Modal offset */
     --modal-offset-top: 10vh;
- 
-    /* Font Sizes */
     --font-size-base: 16px;
     --font-size-lg: 20px;
     --font-size-sm: 14px;
- 
-    /* Spacing */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
- 
-    /* Common UI Elements */
     --border-radius: 6px;
     --common-spacing: 1rem;
     --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -67,41 +85,52 @@
     --transition-speed: 0.2s;
  }
  
- /* Dark Mode */
+ /* Dark Mode Overrides */
  [data-theme="dark"] {
-    /* Colors - Dark Theme */
+       /* Canvas HSL variables */
+       --canvas-h: 40; /* Zachovaný teplý odtieň */
+       --canvas-s: 20%; /* Znížená sýtosť pre subtilnejší efekt */
+       --canvas-l: 10%; /* Tmavé pozadie (~ #1a1a1a) */
+       --color-canvas-neutral: #ffffff; /* Zachované pre akcenty */
+       --color-canvas-warm: hsl(40, 20%, 15%); /* Tmavší teplý odtieň */
+       --color-canvas-cool: hsl(210, 15%, 15%); /* Tmavší chladný odtieň */
+       --color-canvas: hsl(var(--canvas-h), var(--canvas-s), var(--canvas-l)); /* ~ #1a1a1a */
+       --color-canvas-darker: hsl(var(--canvas-h), var(--canvas-s), calc(var(--canvas-l) - 3%)); /* ~ #121212 */
+     
+       /* Text */
+       --color-text: #e0e0e0; /* Svetlosivá pre čitateľnosť */
+     
+       /* Hauler variables */
+       --hauler-h: 110; /* Zachovaný odtieň (zelený) */
+       --hauler-s: 50%; /* Znížená sýtosť */
+       --hauler-l: 45%; /* Svetlejší pre kontrast (~ #2e7d32) */
+       --hauler-primary: hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l));
+       --hauler-primary-hover: hsl(var(--hauler-h), var(--hauler-s), calc(var(--hauler-l) + 10%)); /* Svetlejší hover (~ #4caf50) */
+     
+       /* Sender variables */
+       --sender-h: 290; /* Zachovaný odtieň (fialový) */
+       --sender-s: 35%; /* Znížená sýtosť */
+       --sender-l: 50%; /* Svetlejší pre kontrast (~ #7b1fa2) */
+       --sender-primary: hsl(var(--sender-h), var(--sender-s), var(--sender-l));
+       --sender-primary-hover: hsl(var(--sender-h), var(--sender-s), calc(var(--sender-l) + 10%)); /* Svetlejší hover (~ #ab47bc) */
+ 
+    /* Legacy overrides */
     --color-page-bg: #121212;
     --color-navbar-bg: #222222;
     --color-footer-bg: #333333;
     --color-modal-bg: #1e1e1e;
-    --color-text-primary: #ffffff;
     --color-text-secondary: #bbbbbb;
-    
-    /* Sender Theme - Dark Mode */
-    --sender-primary: hsl(290, 40%, 40%); /* Same color for brand recognition */
-    --sender-primary-hover: hsl(290, 40%, 46%);
-    --sender-light: hsl(290, 30%, 25%);
-    --sender-medium: hsl(290, 30%, 20%);
-    --sender-dark: hsl(290, 30%, 15%);
-    
-    /* Hauler Theme - Dark Mode */
-    --hauler-primary: hsl(110, 60%, 30%); /* Same color for brand recognition */
-    --hauler-primary-hover: hsl(110, 60%, 36%); 
     --hauler-light: hsl(110, 30%, 25%);
     --hauler-medium: hsl(110, 30%, 20%);
     --hauler-dark: hsl(110, 30%, 15%);
- 
-    /* Form and UI Elements */
     --input-bg: #333333;
     --input-border: #555555;
     --input-text: #ffffff;
     --input-placeholder: hsl(0, 0%, 50%);
-    --button-text: #ffffff;
     --dropdown-bg: #2a2a2a;
     --dropdown-border: #444444;
     --dropdown-hover: #3a3a3a;
-    
-    /* Shadows are more subtle in dark mode */
     --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.2);
     --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.3);
  }
+ 
