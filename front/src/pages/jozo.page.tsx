@@ -1,6 +1,6 @@
 // File: ./front/src/pages/jozo.page.tsx
 import { useState, useEffect, useRef } from "react";
-import PinForm from "@/components/elements/pin-form.element";
+import PinForm from "@/components/shared/elements/pin-form.element";
 import "@/styles/sections/jozo.page.css";
 import videoFile from "@/assets/jp.mp4";
 

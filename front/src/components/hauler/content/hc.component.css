@@ -1,7 +1,12 @@
 /* File: front/src/components/hauler/content/hc.component.css */
 /* Last change: Adjusted border-radius, full content border, active tab shifted down */
 
+
+
+
 .hauler-page {
+  --hauler-light: hsl(var(--hauler-h), 50%, 95%);
+  --hauler-dark: hsl(var(--hauler-h), 30%, 60%);
   background: linear-gradient(to bottom, var(--hauler-light) 0%, var(--hauler-dark) 100%);
   padding: 0px;
   --tab-bg: var(--hauler-mid);

@@ -1,107 +1,86 @@
-// ./front/src/components/pin-form.component.tsx
-import React, { useState, useEffect, useRef } from 'react';
-import "@/styles/components/pin-form.component.css"
+// File: front/src/components/shared/elements/pin-form.element.tsx
 
-// Interface defining the props for the component
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "@/styles/components/pin-form.component.css";
 interface PinFormProps {
-  onCorrectPin: () => void; // Callback function triggered on correct PIN
+  domain: string;                // napr. "hauler"
+  onCorrectPin: () => void;
 }
 
-// Functional component for the PIN input form
-const PinForm: React.FC<PinFormProps> = ({ onCorrectPin }) => {
-  const [pin, setPin] = useState<string>(''); // State to store the entered PIN
-  const [error, setError] = useState<boolean>(false); // State to indicate if there's an error
-  const correctPin = '1212'; // The correct PIN value
-  const inputRef = useRef<HTMLInputElement>(null); // Reference to the hidden input field
+const PinForm: React.FC<PinFormProps> = ({ domain, onCorrectPin }) => {
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
-  // Automatically focus on the input field when the component is mounted
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    inputRef.current?.focus();
   }, []);
 
-  // Handles changes in the PIN input field
-  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const verifyPin = async (value: string) => {
+    try {
+      const res = await fetch("/api/verify-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ domain, pin: value }),
+      });
+      const body = await res.json();
+      if (body.success) {
+        onCorrectPin();
+      } else {
+        throw new Error("Invalid PIN");
+      }
+    } catch {
+      setError("Nesprávny PIN");
+      setPin("");
+      setTimeout(() => setError(""), 1500);
+    }
+  };
 
-    // Ensure input is numeric and does not exceed 4 digits
-    if (value.length <= 4 && /^\d*$/.test(value)) {
-      setPin(value); // Update the PIN state
-      setError(false); // Reset error state
-
-      // If PIN reaches 4 digits, check for correctness
-      if (value.length === 4) {
-        if (value === correctPin) {
-          onCorrectPin(); // Trigger callback for correct PIN
-        } else {
-          setError(true); // Set error state for incorrect PIN
-          setTimeout(() => {
-            setPin(''); // Clear the PIN input
-            setError(false); // Reset error state after timeout
-          }, 1500); // 1.5 second delay for error feedback
-        }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    if (/^\d{0,4}$/.test(v)) {
+      setPin(v);
+      if (v.length === 4) {
+        verifyPin(v);
       }
     }
   };
 
-  // Handles form submission
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent form's default submission behavior
-
-    // Check if the entered PIN is correct
-    if (pin === correctPin) {
-      onCorrectPin(); // Trigger callback for correct PIN
-    } else {
-      setError(true); // Set error state for incorrect PIN
-      setTimeout(() => {
-        setPin(''); // Clear the PIN input
-        setError(false); // Reset error state after timeout
-      }, 1500); // 1.5 second delay for error feedback
-    }
-  };
-
   return (
-    <div 
-      className="pin-form-container" 
-      onClick={() => inputRef.current?.focus()} // Focus the input when the container is clicked
-    >
-      <form 
-        onSubmit={handleSubmit} 
-        className={`pin-form ${error ? 'error' : ''}`} // Add error class if there's an error
-      >
-        <h2 className="pin-form-title">Enter PIN</h2> {/* Form title */}
+    <div className="pin-form-container" onClick={() => inputRef.current?.focus()}>
+      <form onSubmit={(e) => e.preventDefault()} className={`pin-form ${error ? "error" : ""}`}>
+        <h2 className="pin-form-title">Enter PIN for {domain}</h2>
         <div className="pin-inputs">
-          {/* Render 4 boxes representing the PIN digits */}
           {[...Array(4)].map((_, i) => (
-            <div 
-              key={i} 
-              className={`pin-input 
-                ${error ? 'pin-input-error' : ''} 
-                ${pin.length === i ? 'pin-input-active' : ''}`} // Conditional classes for styles
-            >
-              {pin[i] ? pin[i] : ''} {/* Display the entered digit or leave empty */}
+            <div key={i} className={`pin-input ${pin.length === i && !error ? "pin-input-active" : ""}`}>
+              {pin[i] || ""}
             </div>
           ))}
         </div>
         <input
-          ref={inputRef} // Input field reference
-          type="tel" // Input type restricted to numeric keyboard
-          value={pin} // Bind the input value to the state
-          onChange={handlePinChange} // Handle changes in the input
-          className="hidden-input" // Hidden input for focus handling
-          maxLength={4} // Restrict input length to 4 characters
-          autoComplete="off" // Disable autocomplete
-          autoCorrect="off" // Disable autocorrect
-          spellCheck="false" // Disable spell check
-          autoFocus // Automatically focus the input
+          ref={inputRef}
+          type="tel"
+          value={pin}
+          onChange={handleChange}
+          className="hidden-input"
+          maxLength={4}
+          autoComplete="off"
+          inputMode="numeric"
         />
-        {error && (
-          <p className="error-message">Incorrect PIN</p> // Display error message if the PIN is incorrect
-        )}
+        {error && <p className="error-message">{error}</p>}
+
+        <div className="pin-form-footer">
+          <Link to="/" className="pin-form-home-link">Späť na domovskú stránku</Link>
+          <button type="button" className="pin-form-close-btn" onClick={() => navigate(-1)}>
+            Zatvoriť
+          </button>
+        </div>
       </form>
     </div>
   );
 };
 
-export default PinForm; // Export the component
+export default PinForm;

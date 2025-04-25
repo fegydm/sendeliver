@@ -40,7 +40,8 @@
   "include": [
     "src/**/*",
     "src/**/*.json",
-    "src/types/env.d.ts"
+    "src/types/env.d.ts",
+    "src/types/recharts.d.ts"
   ],
   "exclude": [
     "**/node_modules",

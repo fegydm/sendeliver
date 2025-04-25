@@ -1,55 +1,52 @@
-// File: src/pages/video.page.tsx
+// File: front/src/pages/video.page.tsx
+
 import { useEffect, useState, useRef } from "react";
 import useRouter from "@/hooks/useRouter";
 import PinForm from "@/components/shared/elements/pin-form.element";
 import "@/styles/sections/video.page.css";
 
-// Statically imported video files
+// Staticky importované video súbory
 import jozoVideo from "@/assets/jp.mp4";
 import lukyVideo from "@/assets/lh.mp4";
 
-// Mapping alias to statically imported video files
+// Map alias → video file
 const videoMap: Record<string, string> = {
   jozo: jozoVideo,
   luky: lukyVideo,
-  // add more mappings here
+  // add more mappings as needed
 };
 
 const VideoPage: React.FC = () => {
   const [isPinVerified, setIsPinVerified] = useState(false);
+  // In browser, setTimeout returns a number
+  const timerRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Use custom router hook to get route parameters
   const { params } = useRouter();
-  const alias = params.alias?.toLowerCase() || '';
-
-  // Determine video file based on alias, fallback to null if not found
-  const videoFile = alias && videoMap[alias] ? videoMap[alias] : null;
+  const alias = params.alias?.toLowerCase() || "";
+  const videoFile = videoMap[alias] || null;
 
   useEffect(() => {
     if (isPinVerified && videoFile) {
-      timerRef.current = setTimeout(() => {
+      // Clear any existing timeout
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
+      // Schedule auto-logout after 1 minute
+      timerRef.current = window.setTimeout(() => {
         setIsPinVerified(false);
       }, 60000);
 
       return () => {
-        if (timerRef.current) {
+        if (timerRef.current !== null) {
           clearTimeout(timerRef.current);
         }
       };
     }
-    return undefined;
   }, [isPinVerified, videoFile]);
 
-  const handlePlay = () => {
-    videoRef.current?.play();
-  };
-
-  const handlePause = () => {
-    videoRef.current?.pause();
-  };
-
+  const handlePlay = () => videoRef.current?.play();
+  const handlePause = () => videoRef.current?.pause();
   const handleStop = () => {
     if (videoRef.current) {
       videoRef.current.pause();
@@ -75,13 +72,22 @@ const VideoPage: React.FC = () => {
                 </video>
               </div>
               <div className="video-page__button-container">
-                <button onClick={handlePlay} className="video-page__button video-page__button--play">
+                <button
+                  onClick={handlePlay}
+                  className="video-page__button video-page__button--play"
+                >
                   Play
                 </button>
-                <button onClick={handlePause} className="video-page__button video-page__button--pause">
+                <button
+                  onClick={handlePause}
+                  className="video-page__button video-page__button--pause"
+                >
                   Pause
                 </button>
-                <button onClick={handleStop} className="video-page__button video-page__button--stop">
+                <button
+                  onClick={handleStop}
+                  className="video-page__button video-page__button--stop"
+                >
                   Stop
                 </button>
               </div>
@@ -91,7 +97,10 @@ const VideoPage: React.FC = () => {
           )
         ) : (
           <div className="video-page__overlay">
-            <PinForm onCorrectPin={() => setIsPinVerified(true)} />
+            <PinForm
+              domain={alias}
+              onCorrectPin={() => setIsPinVerified(true)}
+            />
           </div>
         )}
       </div>
