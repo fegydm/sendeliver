@@ -20,6 +20,7 @@
     "@faker-js/faker": "^9.7.0",
     "@mapbox/vector-tile": "^2.0.3",
     "@types/react": "^19.1.2",
+    "framer-motion": "^12.9.2",
     "leaflet": "^1.9.4",
     "maplibre-gl": "^5.4.0",
     "pbf": "^4.0.1",
