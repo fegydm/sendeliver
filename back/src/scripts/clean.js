@@ -5,11 +5,14 @@ import { join } from 'path';
 const paths = [
   'back/dist',
   'front/dist',
+  'packages/logger/dist',
   'node_modules',
   'back/node_modules',
   'front/node_modules',
+  'packages/logger/node_modules',
   'back/package-lock.json',
   'front/package-lock.json',
+  'packages/logger/package-lock.json',
   'package-lock.json'
 ];
 

@@ -1,89 +1,69 @@
-
-// File: ./front/src/components/hauler/content/HaulerWebCards.tsx
-// Last change: Complete implementation of web cards management with interactive previews and analytics
-
 import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import "./hauler.cards.css";
 import "./webcards.css";
 
-// Mock dáta pre webové vizitky
+// Mock dáta pre WebCardy
+interface WebCard {
+  id: number;
+  name: string;
+  domain: string; // napr. johntransport.sendeliver.com
+  subDomain?: string; // napr. akcia (pre akcia.johntransport.sendeliver.com)
+  status: "Aktívna" | "Neaktívna" | "Čaká na schválenie";
+  views: number;
+  color: string;
+  modules: string[];
+  createdAt: string;
+  customDomain?: string; // napr. johntransport.com
+}
+
 const mockWebCards: WebCard[] = [
   {
     id: 1,
-    name: "Hlavná firemná vizitka",
+    name: "Hlavná stránka",
     domain: "johntransport.sendeliver.com",
     status: "Aktívna",
     views: 245,
     color: "#4caf50",
-    logo: "https://via.placeholder.com/100",
-    description: "Profesionálna vizitka pre John Transport",
+    modules: ["Úvod", "Flotila", "Kontakt", "Voľné vozidlá"],
     createdAt: "2023-04-01",
   },
   {
     id: 2,
     name: "Promo stránka",
-    domain: "akcia.johntransport.com",
+    domain: "johntransport.sendeliver.com",
+    subDomain: "akcia",
     status: "Aktívna",
     views: 120,
     color: "#ff9800",
-    logo: "https://via.placeholder.com/100",
-    description: "Akčná ponuka na letné prepravy",
+    modules: ["Úvod", "Služby", "Novinky"],
     createdAt: "2023-04-15",
-  },
-  {
-    id: 3,
-    name: "Čakajúca vizitka",
-    domain: "new.sendeliver.com",
-    status: "Čaká na schválenie",
-    views: 0,
-    color: "#2196f3",
-    logo: "https://via.placeholder.com/100",
-    description: "Nová vizitka čaká na aktiváciu",
-    createdAt: "2023-04-20",
+    customDomain: "promo.johntransport.com",
   },
 ];
 
-// Mock dáta pre grafy
-const mockViewsTrend = {
-  data: [
-    { date: "2023-04-01", value: 50 },
-    { date: "2023-04-08", value: 100 },
-    { date: "2023-04-15", value: 180 },
-    { date: "2023-04-22", value: 365 },
-  ],
-  name: "Zobrazenia",
-  unit: "",
-  color: "#4caf50",
-};
-
-const mockViewsDistribution = mockWebCards.map(card => ({
-  name: card.name,
-  value: card.views,
-  color: card.color,
-}));
-
-const CHART_COLORS = ["#4caf50", "#ff9800", "#2196f3", "#f44336"];
-
-interface WebCard {
-  id: number;
-  name: string;
-  domain: string;
-  status: "Aktívna" | "Neaktívna" | "Čaká na schválenie";
-  views: number;
-  color: string;
-  logo: string;
-  description: string;
-  createdAt: string;
-}
+// Dostupné moduly
+const AVAILABLE_MODULES = [
+  "Úvod",
+  "Flotila",
+  "Poslanie",
+  "Kontakt",
+  "Voľné vozidlá",
+  "Služby",
+  "O nás",
+  "Referencie",
+  "Novinky",
+  "Kariéra",
+];
 
 const HaulerWebCards: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
-  const [previewCard, setPreviewCard] = useState<WebCard | null>(null);
+  const [editingCard, setEditingCard] = useState<WebCard | null>(null);
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const [domainError, setDomainError] = useState<string | null>(null);
+  const [domainInput, setDomainInput] = useState<string>("");
 
   // Simulácia načítania
   useEffect(() => {
@@ -101,12 +81,32 @@ const HaulerWebCards: React.FC = () => {
     localStorage.setItem("neregWebCards", JSON.stringify(mockWebCards));
   }, []);
 
+  // Reset domainInput pri otváraní editora
+  useEffect(() => {
+    if (showEditor) {
+      setDomainInput(editingCard?.domain.replace(".sendeliver.com", "") || "");
+    }
+  }, [showEditor, editingCard]);
+
   // Formátovanie dátumu
   const formatDate = (dateStr: string): string => {
     return new Intl.DateTimeFormat("sk-SK", { day: "numeric", month: "long", year: "numeric" }).format(new Date(dateStr));
   };
 
-  // Filtrovanie a vyhľadávanie vizitiek
+  // Validácia domény (mock)
+  const validateDomain = (domain: string, subDomain?: string): Promise<boolean> => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const fullDomain = subDomain ? `${subDomain}.${domain}` : domain;
+        const isTaken = mockWebCards.some(card => 
+          (card.subDomain ? `${card.subDomain}.${card.domain}` : card.domain) === fullDomain
+        );
+        resolve(!isTaken);
+      }, 500);
+    });
+  };
+
+  // Filtrovanie a vyhľadávanie WebCardov
   const filteredWebCards = useMemo(() => {
     let result = [...mockWebCards];
     if (filterStatus !== "all") {
@@ -115,262 +115,292 @@ const HaulerWebCards: React.FC = () => {
     if (searchTerm) {
       result = result.filter(card =>
         card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.domain.toLowerCase().includes(searchTerm.toLowerCase())
+        card.domain.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (card.subDomain && `${card.subDomain}.${card.domain}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (card.customDomain && card.customDomain.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
     return result;
   }, [filterStatus, searchTerm]);
 
-  // Custom tooltip pre grafy
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="custom-tooltip">
-          <p className="tooltip-label">{`Dátum: ${label}`}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={`item-${index}`} style={{ color: entry.color }}>
-              {`${entry.name}: ${entry.value} ${entry.payload.unit || "zobrazení"}`}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+  // Formulár na vytvorenie/úpravu WebCardu
+  const handleSaveWebCard = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const domain = `${formData.get("domain")}.sendeliver.com`;
+    const subDomain = formData.get("subDomain") as string || undefined;
+    const fullDomain = subDomain ? `${subDomain}.${domain}` : domain;
 
-  // Animácia pre karty
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    const isDomainAvailable = await validateDomain(domain, subDomain);
+    if (!isDomainAvailable && (!editingCard || editingCard.domain !== domain || editingCard.subDomain !== subDomain)) {
+      setDomainError(`Doména ${fullDomain} je už obsadená.`);
+      return;
+    }
+
+    const newCard: WebCard = {
+      id: editingCard ? editingCard.id : Date.now(),
+      name: formData.get("name") as string,
+      domain,
+      subDomain,
+      status: editingCard ? editingCard.status : "Čaká na schválenie",
+      views: editingCard ? editingCard.views : 0,
+      color: formData.get("color") as string,
+      modules: AVAILABLE_MODULES.filter(mod => formData.get(mod) === "on"),
+      createdAt: editingCard ? editingCard.createdAt : new Date().toISOString().split("T")[0],
+      customDomain: formData.get("customDomain") as string || undefined,
+    };
+    console.log("Uložený WebCard:", newCard);
+    setShowEditor(false);
+    setDomainError(null);
+    alert("WebCard uložený (placeholder)");
   };
 
   return (
     <div className="hauler-card webcards-container">
-      <motion.div 
-        className="webcards-header"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h2>Webové vizitky</h2>
+      <div className="webcards-header animate-in">
+        <h2>Webové stránky</h2>
         <div className="webcards-actions">
-          <button 
-            className="webcards-action-button" 
-            aria-label="Vytvoriť novú webovú vizitku"
-            onClick={() => setShowEditor(true)}
+          <button
+            className="webcards-action-button"
+            aria-label="Vytvoriť novú webovú stránku"
+            onClick={() => {
+              setEditingCard(null);
+              setShowEditor(true);
+            }}
           >
-            + Nová vizitka
+            + Nová stránka
           </button>
-          <button 
-            className="webcards-action-button secondary" 
+          <button
+            className="webcards-action-button secondary"
             aria-label="Exportovať štatistiky"
             onClick={() => alert("Export štatistík (placeholder)")}
           >
             Export
           </button>
         </div>
-      </motion.div>
+      </div>
 
       {isLoading ? (
-        <motion.div 
-          className="webcards-loading"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
+        <div className="webcards-loading animate-in">
           <div className="spinner"></div>
-          <p>Načítavam webové vizitky...</p>
-        </motion.div>
+          <p>Načítavam webové stránky...</p>
+        </div>
       ) : (
-        <AnimatePresence>
-          <motion.div 
-            className="webcards-content"
-            initial="hidden"
-            animate="visible"
-            variants={cardVariants}
-          >
-            {/* Prémiová sekcia */}
-            <motion.div className="premium-section" variants={cardVariants}>
-              <h3>Interaktívne webové vizitky</h3>
-              <p>Vytvorte si profesionálnu vizitku na subdoméne <strong>xyz.sendeliver.com</strong> alebo presmerujte vlastnú doménu. Prispôsobte si farby, logo, texty a obrázky. Len za <strong>98 € ročne</strong>!</p>
-            </motion.div>
+        <div className="webcards-content">
+          {/* Prémiová sekcia */}
+          <div className="premium-section animate-in">
+            <h3>Vaša vlastná webová stránka</h3>
+            <p>
+              Vytvorte si profesionálnu stránku na unikátnej subdoméne <strong>xyz.sendeliver.com</strong> alebo podsubdoméne ako <strong>akcia.xyz.sendeliver.com</strong>. Presmerujte vlastnú doménu a prispôsobte moduly. Len za <strong>98 € ročne</strong>!
+            </p>
+          </div>
 
-            {/* Grafy */}
-            <div className="webcards-charts">
-              <motion.div className="chart-card" variants={cardVariants}>
-                <h3 className="chart-title">Trend zobrazení</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={mockViewsTrend.data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                    <XAxis dataKey="date" tickFormatter={(date: string) => formatDate(date)} />
-                    <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="value" 
-                      stroke={mockViewsTrend.color} 
-                      name={mockViewsTrend.name} 
-                      unit={mockViewsTrend.unit}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </motion.div>
-              <motion.div className="chart-card" variants={cardVariants}>
-                <h3 className="chart-title">Rozdelenie zobrazení</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={mockViewsDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      dataKey="value"
-                      nameKey="name"
-                      label={({ name, percent }: { name: string; percent: number }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {mockViewsDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color || CHART_COLORS[index % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => `${value} zobrazení`} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </motion.div>
+          {/* Filtrovanie a vyhľadávanie */}
+          <div className="webcards-filters animate-in">
+            <div className="filter-group">
+              <label htmlFor="status-filter">Stav:</label>
+              <select
+                id="status-filter"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                aria-label="Filtrovať podľa stavu"
+              >
+                <option value="all">Všetky</option>
+                <option value="Aktívna">Aktívne</option>
+                <option value="Neaktívna">Neaktívne</option>
+                <option value="Čaká na schválenie">Čaká na schválenie</option>
+              </select>
             </div>
+            <div className="filter-group">
+              <label htmlFor="search">Hľadať:</label>
+              <input
+                id="search"
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Hľadať podľa názvu alebo domény"
+                aria-label="Vyhľadávanie webových stránok"
+              />
+            </div>
+          </div>
 
-            {/* Filtrovanie a vyhľadávanie */}
-            <motion.div className="webcards-filters" variants={cardVariants}>
-              <div className="filter-group">
-                <label htmlFor="status-filter">Stav:</label>
-                <select 
-                  id="status-filter" 
-                  value={filterStatus} 
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  aria-label="Filtrovať podľa stavu"
-                >
-                  <option value="all">Všetky</option>
-                  <option value="Aktívna">Aktívne</option>
-                  <option value="Neaktívna">Neaktívne</option>
-                  <option value="Čaká na schválenie">Čaká na schválenie</option>
-                </select>
-              </div>
-              <div className="filter-group">
-                <label htmlFor="search">Hľadať:</label>
-                <input
-                  id="search"
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Hľadať podľa názvu alebo domény"
-                  aria-label="Vyhľadávanie webových vizitiek"
-                />
-              </div>
-            </motion.div>
+          {/* Zoznam WebCardov */}
+          <div className="webcards-list">
+            {filteredWebCards.map(card => (
+              <div key={card.id} className="webcard-item animate-in">
+                <div className="webcard-info">
+                  <div className="webcard-name">{card.name}</div>
+                  <div className="webcard-domain">
+                    {card.subDomain ? `${card.subDomain}.${card.domain}` : card.customDomain || card.domain}
+                  </div>
+                  <div className="webcard-stats">
+                    <span className={`status-badge status-${card.status.toLowerCase().replace(" ", "-")}`}>
+                      {card.status}
+                    </span>
+                    <div className="webcard-views">{card.views} zobrazení</div>
+                    <div className="webcard-created">Vytvorené: {formatDate(card.createdAt)}</div>
+                  </div>
+                </div>
 
-            {/* Zoznam vizitiek */}
-            <motion.div className="webcards-list" variants={cardVariants}>
-              {filteredWebCards.map(card => (
-                <motion.div 
-                  key={card.id} 
-                  className="webcard-item"
-                  variants={cardVariants}
-                  onMouseEnter={() => setPreviewCard(card)}
-                  onMouseLeave={() => setPreviewCard(null)}
-                >
-                  <div className="webcard-preview">
-                    <div 
-                      className="webcard-preview-content" 
+                {/* Taby s modulmi */}
+                <div className="webcard-modules">
+                  <div className="module-tabs">
+                    {card.modules.map((module, index) => (
+                      <button
+                        key={module}
+                        className={`module-tab ${activeTab === index ? "active" : ""}`}
+                        onClick={() => setActiveTab(index)}
+                        aria-label={`Zobraziť modul ${module}`}
+                      >
+                        {module}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="module-content">
+                    <div
+                      className="module-card animate-in"
                       style={{ backgroundColor: card.color }}
                     >
-                      <img src={card.logo} alt={`Logo ${card.name}`} />
-                      <h3>{card.name}</h3>
-                      <p>{card.description}</p>
+                      <h3>{card.modules[activeTab]}</h3>
+                      <p>
+                        {card.modules[activeTab] === "Voľné vozidlá"
+                          ? "Dynamický zoznam vozidiel z administrátorského režimu (napr. ID, dostupnosť)."
+                          : `Prispôsobiteľný obsah pre modul ${card.modules[activeTab]}. Pridajte texty, obrázky a ďalšie prvky.`}
+                      </p>
                     </div>
                   </div>
-                  <div className="webcard-info">
-                    <div className="webcard-name">{card.name}</div>
-                    <div className="webcard-domain">{card.domain}</div>
-                    <div className="webcard-stats">
-                      <span className={`status-badge status-${card.status.toLowerCase().replace(" ", "-")}`}>
-                        {card.status}
-                      </span>
-                      <div className="webcard-views">{card.views} zobrazení</div>
-                      <div className="webcard-created">Vytvorené: {formatDate(card.createdAt)}</div>
-                    </div>
-                  </div>
-                  <div className="webcard-actions">
-                    <button 
-                      onClick={() => setShowEditor(true)}
-                      aria-label={`Upraviť vizitku ${card.name}`}
-                    >
-                      Upraviť
-                    </button>
-                    <button 
-                      onClick={() => alert(`Štatistiky pre ${card.name} (placeholder)`)}
-                      aria-label={`Zobraziť štatistiky ${card.name}`}
-                    >
-                      Štatistiky
-                    </button>
-                    <button 
-                      onClick={() => alert(`Deaktivovať ${card.name} (placeholder)`)}
-                      aria-label={`Deaktivovať vizitku ${card.name}`}
-                      className="secondary"
-                    >
-                      Deaktivovať
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
+                </div>
 
-            {/* Modál pre editor (placeholder) */}
-            {showEditor && (
-              <motion.div 
-                className="webcard-editor-modal"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <div className="editor-content">
-                  <h3>{previewCard ? `Úprava: ${previewCard.name}` : "Nová webová vizitka"}</h3>
-                  <div className="editor-form">
-                    <div className="form-group">
-                      <label htmlFor="name">Názov:</label>
-                      <input id="name" type="text" defaultValue={previewCard?.name || ""} />
+                <div className="webcard-actions">
+                  <button
+                    onClick={() => {
+                      setEditingCard(card);
+                      setShowEditor(true);
+                    }}
+                    aria-label={`Upraviť stránku ${card.name}`}
+                  >
+                    Upraviť
+                  </button>
+                  <button
+                    onClick={() => alert(`Štatistiky pre ${card.name} (placeholder)`)}
+                    aria-label={`Zobraziť štatistiky ${card.name}`}
+                  >
+                    Štatistiky
+                  </button>
+                  <button
+                    onClick={() => alert(`Deaktivovať ${card.name} (placeholder)`)}
+                    aria-label={`Deaktivovať stránku ${card.name}`}
+                    className="secondary"
+                  >
+                    Deaktivovať
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Modál pre editor */}
+          {showEditor && (
+            <div className={`webcard-editor-modal ${showEditor ? "animate-in" : "animate-out"}`}>
+              <div className="editor-content">
+                <h3>{editingCard ? `Úprava: ${editingCard.name}` : "Nová webová stránka"}</h3>
+                <form onSubmit={handleSaveWebCard}>
+                  <div className="form-group">
+                    <label htmlFor="name">Názov stránky:</label>
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      defaultValue={editingCard?.name || ""}
+                      required
+                      aria-required="true"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="domain">Subdoména:</label>
+                    <div className="domain-input">
+                      <input
+                        id="domain"
+                        name="domain"
+                        type="text"
+                        value={domainInput}
+                        onChange={(e) => {
+                          setDomainInput(e.target.value);
+                          setDomainError(null);
+                        }}
+                        placeholder="napr. johntransport"
+                        required
+                        aria-required="true"
+                      />
+                      <span>.sendeliver.com</span>
                     </div>
-                    <div className="form-group">
-                      <label htmlFor="domain">Doména:</label>
-                      <input id="domain" type="text" defaultValue={previewCard?.domain || "xyz.sendeliver.com"} />
+                    {domainError && <div className="error-message">{domainError}</div>}
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="subDomain">Podsubdoména (voliteľné):</label>
+                    <div className="domain-input">
+                      <input
+                        id="subDomain"
+                        name="subDomain"
+                        type="text"
+                        defaultValue={editingCard?.subDomain || ""}
+                        placeholder="napr. akcia"
+                        onChange={() => setDomainError(null)}
+                      />
+                      {domainInput && <span>.{domainInput}.sendeliver.com</span>}
                     </div>
-                    <div className="form-group">
-                      <label htmlFor="color">Farba:</label>
-                      <input id="color" type="color" defaultValue={previewCard?.color || "#4caf50"} />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="logo">Logo:</label>
-                      <input id="logo" type="file" accept="image/*" />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="description">Popis:</label>
-                      <textarea id="description" defaultValue={previewCard?.description || ""}></textarea>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="customDomain">Vlastná doména (voliteľné):</label>
+                    <input
+                      id="customDomain"
+                      name="customDomain"
+                      type="text"
+                      defaultValue={editingCard?.customDomain || ""}
+                      placeholder="napr. moja.domena.sk"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="color">Farba:</label>
+                    <input
+                      id="color"
+                      name="color"
+                      type="color"
+                      defaultValue={editingCard?.color || "#4caf50"}
+                      required
+                      aria-required="true"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Moduly:</label>
+                    <div className="modules-checkboxes">
+                      {AVAILABLE_MODULES.map(module => (
+                        <div key={module} className="module-checkbox">
+                          <input
+                            type="checkbox"
+                            id={module}
+                            name={module}
+                            defaultChecked={editingCard?.modules.includes(module)}
+                          />
+                          <label htmlFor={module}>{module}</label>
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <div className="editor-actions">
-                    <button onClick={() => setShowEditor(false)}>Zrušiť</button>
-                    <button onClick={() => {
+                    <button type="button" onClick={() => {
                       setShowEditor(false);
-                      alert("Uloženie vizitky (placeholder)");
+                      setDomainError(null);
                     }}>
-                      Uložiť
+                      Zrušiť
                     </button>
+                    <button type="submit">Uložiť</button>
                   </div>
-                </div>
-              </motion.div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

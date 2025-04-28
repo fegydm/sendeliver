@@ -1,30 +1,20 @@
 {
-  "name": "sendeliver-root",
+  "name": "sendeliver",
   "version": "1.0.0",
-  "type": "module",
-  "private": true,
   "scripts": {
-    "clean": "node back/src/scripts/clean.js",
-    "install": "cd back && npm install && cd ../front && npm install",
-    "build": "cd back && npm run build && cd ../front && npm run build",
-    "start": "cd back && npm start & cd front && npm run preview",
-    "dev": "node back/src/scripts/dev.js",
-    "reset": "npm run clean && npm run install && npm run build"
+   "clean": "node back/src/scripts/clean.js",
+    "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
+    "build": "npm run build:logger && npm run build:back && npm run build:front",
+    "build:logger": "cd packages/logger && npm run build",
+    "build:back": "cd back && npm run build",
+    "build:front": "cd front && npm run build"
   },
   "devDependencies": {
-    "@types/express": "^5.0.1",
-    "@types/leaflet": "^1.9.17",
-    "@types/recharts": "^2.0.1"
+    "concurrently": "^8.0.0"
   },
-  "dependencies": {
-    "@faker-js/faker": "^9.7.0",
-    "@mapbox/vector-tile": "^2.0.3",
-    "@types/react": "^19.1.2",
-    "framer-motion": "^12.9.2",
-    "leaflet": "^1.9.4",
-    "maplibre-gl": "^5.4.0",
-    "pbf": "^4.0.1",
-    "react": "^19.1.0",
-    "recharts": "^2.15.3"
-  }
+  "workspaces": [
+    "packages/*",
+    "back",
+    "front"
+  ]
 }

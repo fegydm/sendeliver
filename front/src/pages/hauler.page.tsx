@@ -1,59 +1,50 @@
-// File: front/src/pages/hauler.page.tsx
-// Last change: Fixed PinForm props and timer typing
-
+// File: src/pages/hauler.page.tsx
 import React, { useState, useEffect } from "react";
 import HaulerContent from "@/components/hauler/content/hauler.content.component";
 import PinForm from "@/components/shared/elements/pin-form.element";
 import "@/styles/sections/hauler.page.css";
 
+/**
+ * HaulerPage now relies on global auth and idle logic managed in App.tsx.
+ * Unified authentication and idle logic in App component.
+ */
 const HaulerPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>("dashboard");
-  const [isPinVerified, setIsPinVerified] = useState<boolean>(() =>
-    localStorage.getItem("pin-hauler-verified") === "true"
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() =>
+    localStorage.getItem("authenticated") === "true"
   );
 
-  // When PIN is verified, store flag and set up auto-logout
+  // Track current active tab for HaulerContent
+  const [activeTab, setActiveTab] = useState<string>("dashboard");
+
+  // Sync authentication state if changed in other tabs/windows
   useEffect(() => {
-    let timerId: number | undefined;
-    if (isPinVerified) {
-      // store verification in localStorage
-      localStorage.setItem("pin-hauler-verified", "true");
-
-      // schedule auto-logout in 1 minute
-      timerId = window.setTimeout(() => {
-        localStorage.removeItem("pin-hauler-verified");
-        setIsPinVerified(false);
-      }, 60_000);
-    }
-    return () => {
-      // clear timeout if it was set
-      if (timerId !== undefined) {
-        clearTimeout(timerId);
-      }
+    const handleStorage = () => {
+      setIsAuthenticated(localStorage.getItem("authenticated") === "true");
     };
-  }, [isPinVerified]);
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
-  // If not yet verified, show only PinForm
-  if (!isPinVerified) {
+  // Handler after correct PIN entry
+  const handleCorrectPin = () => {
+    localStorage.setItem("authenticated", "true");
+    setIsAuthenticated(true);
+  };
+
+  // Show PIN form overlay if not authenticated
+  if (!isAuthenticated) {
     return (
       <div className="hauler-page__overlay">
-        <PinForm
-          domain="hauler"                  
-          onCorrectPin={() => setIsPinVerified(true)}
-        />
+        <PinForm domain="hauler" onCorrectPin={handleCorrectPin} />
       </div>
     );
   }
 
-  // PIN verified → render full content
+  // Authenticated → render HaulerContent with props
   return (
     <div className="hauler-page">
       <HaulerContent activeTab={activeTab} setActiveTab={setActiveTab} />
-
-      {/* Under construction only for billing tab */}
-      {activeTab === "billing" && (
-        <div className="under-construction">Vyberte sekciu</div>
-      )}
     </div>
   );
 };

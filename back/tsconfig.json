@@ -6,7 +6,8 @@
     "moduleResolution": "NodeNext",
     "lib": ["ES2022", "DOM"],
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
+    "rootDirs": ["src", "../packages/logger/src"],
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -16,12 +17,13 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
-    "paths": {
-      "*": ["src/*"]
-    },
+    "paths": {},
+
     "types": ["node", "express", "ws"]
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
     "**/node_modules",
     "**/dist",

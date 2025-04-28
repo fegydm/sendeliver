@@ -1,5 +1,5 @@
 // File: src/App.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Routes, Route } from "react-router-dom";
 // Providers
 import { TranslationProvider } from "@/contexts/TranslationContext";
@@ -11,31 +11,44 @@ import Navigation from "@/components/shared/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
 import VideoPage from "@/pages/video.page";
-import NotFoundPage from "@/pages/notfound.page";
-import HomePage from "@/pages/home.page";
 import DocumentationPage from "@/pages/DocumentationPage";
+import HomePage from "@/pages/home.page";
+// Static pages moved to shared components
+import AboutPage from "@/components/shared/pages/AboutPage";
+import ContactPage from "@/components/shared/pages/ContactPage";
+import NotFoundPage from "@/pages/notfound.page";
 import FooterPage from "@/components/shared/footers/footer-page.component";
 import FooterTest from "@/components/shared/footers/footer-test.component";
 import FloatingButton from "@/components/shared/elements/floating-button.element";
 import useScrollBounce from "@/hooks/useScrollBounce";
 import PinForm from "@/components/shared/elements/pin-form.element";
 
-// Routes
-const ROUTES = {
+// Idle timeout: 3 minutes
+const IDLE_TIMEOUT = 3 * 60 * 1000;
+
+// Public routes (accessible without PIN)
+const PUBLIC_ROUTES = {
   HOME: "/",
-  SENDER: ["/sender", "/client", "/clients"],
-  HAULER: ["/hauler", "/carrier", "/carriers"],
-  TEST: "/test",
-  TEST2: "/test2",
-  TEST1: "/test1",
-  TEST3: "/test3",
+  ABOUT: "/about",
+  CONTACT: "/contact",
 } as const;
 
-// Idle timeout: 3 minutes
-const IDLE_TIMEOUT = 10 * 60 * 1000;
+// Protected routes (require PIN)
+const SENDER_ROUTES = ["/sender", "/client", "/clients"] as const;
+const HAULER_ROUTES = ["/hauler", "/carrier", "/carriers"] as const;
+const PROTECTED_SINGLE_ROUTES = {
+  DOCUMENTATION: "/dokumentacia",
+  VIDEO: "/:alias",
+} as const;
 
-// Main app content when authenticated and active
-const AppContent: React.FC = () => {
+interface AppContentProps {
+  authenticated: boolean;
+  idle: boolean;
+  onAuthenticated: () => void;
+}
+
+// Main content including routing, renders public and protected sections
+const AppContent: React.FC<AppContentProps> = ({ authenticated, idle, onAuthenticated }) => {
   useScrollBounce();
   const { theme } = useTheme();
   const [isTestFooterVisible, setIsTestFooterVisible] = useState(false);
@@ -45,11 +58,56 @@ const AppContent: React.FC = () => {
       <header><Navigation /></header>
       <main>
         <Routes>
-          <Route path={ROUTES.HOME} element={<HomePage />} />
-          {ROUTES.SENDER.map(path => <Route key={path} path={path} element={<SenderPage />} />)}
-          {ROUTES.HAULER.map(path => <Route key={path} path={path} element={<HaulerPage />} />)}
-          <Route path="/dokumentacia" element={<DocumentationPage />} />
-          <Route path="/:alias" element={<VideoPage />} />
+          {/* Public routes */}
+          <Route path={PUBLIC_ROUTES.HOME} element={<HomePage />} />
+          <Route path={PUBLIC_ROUTES.ABOUT} element={<AboutPage />} />
+          <Route path={PUBLIC_ROUTES.CONTACT} element={<ContactPage />} />
+
+          {/* Protected sender routes */}
+          {SENDER_ROUTES.map(path => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                authenticated && !idle
+                  ? <SenderPage />
+                  : <PinForm domain="sender" onCorrectPin={onAuthenticated} />
+              }
+            />
+          ))}
+
+          {/* Protected hauler routes */}
+          {HAULER_ROUTES.map(path => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                authenticated && !idle
+                  ? <HaulerPage />
+                  : <PinForm domain="hauler" onCorrectPin={onAuthenticated} />
+              }
+            />
+          ))}
+
+          {/* Protected single routes */}
+          <Route
+            path={PROTECTED_SINGLE_ROUTES.DOCUMENTATION}
+            element={
+              authenticated && !idle
+                ? <DocumentationPage />
+                : <PinForm domain="hauler" onCorrectPin={onAuthenticated} />
+            }
+          />
+          <Route
+            path={PROTECTED_SINGLE_ROUTES.VIDEO}
+            element={
+              authenticated && !idle
+                ? <VideoPage />
+                : <PinForm domain="hauler" onCorrectPin={onAuthenticated} />
+            }
+          />
+
+          {/* Fallback */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
@@ -62,62 +120,58 @@ const AppContent: React.FC = () => {
   );
 };
 
+// Root component manages authentication and idle timer
 const App: React.FC = () => {
-  const [authenticated, setAuthenticated] = useState(() => {
-    return localStorage.getItem("authenticated") === "true";
-  });
+  const [authenticated, setAuthenticated] = useState(() => localStorage.getItem("authenticated") === "true");
   const [idle, setIdle] = useState(false);
-  const [lastActivity, setLastActivity] = useState(Date.now());
+  const lastActivityRef = useRef(Date.now());
 
-  // Update lastActivity and reset idle on user interaction
+  // Listen for user activity globally
   useEffect(() => {
-    if (!authenticated) return;
-    const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];  
+    const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
     const handleActivity = () => {
-      setLastActivity(Date.now());
-      setIdle(false);
+      if (authenticated) {
+        lastActivityRef.current = Date.now();
+        if (idle) setIdle(false);
+      }
     };
     events.forEach(evt => window.addEventListener(evt, handleActivity));
-    // cleanup
-    return () => events.forEach(evt => window.removeEventListener(evt, handleActivity));
-  }, [authenticated]);
 
-  // Check idle timeout periodically
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (authenticated && Date.now() - lastActivity > IDLE_TIMEOUT) {
+    const interval = setInterval(() => {
+      if (authenticated && Date.now() - lastActivityRef.current > IDLE_TIMEOUT) {
         setIdle(true);
       }
     }, 1000);
-    return () => clearInterval(intervalId);
-  }, [authenticated, lastActivity]);
 
-  const handleCorrectPin = () => {
+    return () => {
+      events.forEach(evt => window.removeEventListener(evt, handleActivity));
+      clearInterval(interval);
+    };
+  }, [authenticated, idle]);
+
+  // Called after successful PIN entry
+  const handleAuthenticated = () => {
     localStorage.setItem("authenticated", "true");
     setAuthenticated(true);
+    lastActivityRef.current = Date.now();
     setIdle(false);
-    setLastActivity(Date.now());
   };
 
-  // Show PIN form until authenticated and active
-  if (!authenticated || idle) {
-    return <PinForm domain="hauler" onCorrectPin={handleCorrectPin} />;
-  }
-
-  return <AppContent />;
+  return (
+    <TranslationProvider>
+      <LanguagesProvider>
+        <CountriesProvider>
+          <ThemeProvider>
+            <AppContent
+              authenticated={authenticated}
+              idle={idle}
+              onAuthenticated={handleAuthenticated}
+            />
+          </ThemeProvider>
+        </CountriesProvider>
+      </LanguagesProvider>
+    </TranslationProvider>
+  );
 };
 
-// Root with providers
-const Root: React.FC = () => (
-  <TranslationProvider>
-    <LanguagesProvider>
-      <CountriesProvider>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
-      </CountriesProvider>
-    </LanguagesProvider>
-  </TranslationProvider>
-);
-
-export default Root;
+export default App;

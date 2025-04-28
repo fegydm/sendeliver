@@ -44,10 +44,11 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     fs: {
-      // English comment: Allow serving files from both front and back source directories
+      // Allow serving files from front, back, and shared logger
       allow: [
         path.resolve(__dirname),
-        path.resolve(__dirname, '../back/src')
+        path.resolve(__dirname, '../back/src'),
+        path.resolve(__dirname, '../packages/logger/src')
       ],
     },
     proxy: {
@@ -86,8 +87,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),      // English comment: Frontend source alias
-      'back': path.resolve(__dirname, '../back/src'), // English comment: Backend source alias
+      '@': path.resolve(__dirname, 'src'),      // Frontend source alias
+      'back': path.resolve(__dirname, '../back/src'), // Backend source alias
+      '@sendeliver/logger': path.resolve(__dirname, '../packages/logger/src') // Shared logger alias
     },
   },
   assetsInclude: ['**/*.webp'],
