@@ -13,6 +13,7 @@ import geoCountriesRouter from "./routes/geo.countries.routes.js";
 import geoLanguagesRouter from "./routes/geo.languages.routes.js";
 import geoTranslationsRouter from "./routes/geo.translations.routes.js";
 import mapsRouter from "./routes/maps.routes.js";
+import contactMessagesRoutes from './routes/contact.messages.routes.js';
 import vehiclesRouter from "./routes/vehicles.routes.js";
 import deliveryRouter from "./routes/delivery.routes.js";
 import externalDeliveriesRouter from "./routes/external.deliveries.routes.js";
@@ -109,6 +110,9 @@ app.use("/api/geo/countries", geoCountriesRouter);
 app.use("/api/geo/languages", geoLanguagesRouter);
 app.use("/api/geo/translations", geoTranslationsRouter);
 app.use("/api/maps", mapsRouter);
+
+app.use('/api/contact', contactMessagesRoutes);
+
 app.use("/api/vehicles", vehiclesRouter);
 app.use("/api", requirePinFor("hauler"), deliveryRouter);
 app.use(

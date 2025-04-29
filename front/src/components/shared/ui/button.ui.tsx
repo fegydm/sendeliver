@@ -1,4 +1,4 @@
-// File: ./front/src/components/ui/button.ui.tsx
+// File: ./front/src/components/shared/ui/button.ui.tsx
 // Last change: Added position prop and fixed variant handling
 
 import React from "react";

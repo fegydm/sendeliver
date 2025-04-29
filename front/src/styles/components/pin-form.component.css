@@ -13,6 +13,7 @@
 
 /* Styling for the PIN form */
 .pin-form {
+  position: relative; /* Added for absolute positioning of close button */
   background-color: white; /* White background for the form */
   padding: 2rem; /* Padding around the form content */
   border-radius: 0.5rem; /* Rounded corners */
@@ -23,11 +24,12 @@
 
 /* Title styling inside the PIN form */
 .pin-form-title {
-  font-size: 1.5rem; /* Larger font size for the title */
-  font-weight: bold; /* Bold text for emphasis */
-  text-align: center; /* Center-align the title */
-  margin-bottom: 1rem; /* Space below the title */
-  color: black; /* Explicitly set text color for the title */
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 1.5rem; /* Väčší odstup zhora */
+  margin-bottom: 1.5rem;
+  color: black;
 }
 
 /* Container for PIN input fields */
@@ -75,4 +77,51 @@
   color: red; /* Red text for error message */
   text-align: center; /* Center-align the message */
   margin-top: 0.5rem; /* Space above the message */
+}
+
+/* PIN form footer styling */
+.pin-form-footer {
+  margin-top: 1.5rem; /* Space above the footer */
+  display: flex;
+  justify-content: center;
+}
+
+/* Home link styling */
+.pin-form-home-link {
+  color: blue;
+  text-decoration: underline;
+  transition: color 0.3s;
+}
+
+.pin-form-home-link:hover {
+  color: darkblue;
+}
+
+/* Close button styling */
+.pin-form-close-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem; /* Väčší znak X */
+  font-weight: bold; /* Tučnejší znak */
+  z-index: 10;
+}
+
+.pin-form-close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05); /* Light gray on hover */
+  color: #333; /* Darker text on hover */
+}
+
+/* Security notice styling */
+.security-notice {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: #666;
+  text-align: center;
 }

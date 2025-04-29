@@ -1,13 +1,14 @@
 // File: front/src/components/shared/elements/pin-form.element.tsx
-// Last change: Added security logging for PIN attempts
+// Last change: Added close button with X symbol in the top-right corner
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { logger } from "@sendeliver/logger";
+import { Button }  from "@/components/shared/ui/button.ui";
 import "@/styles/components/pin-form.component.css";
 
 interface PinFormProps {
-  domain: string;                // napr. "hauler"
+  domain: string;                // e.g. "hauler"
   onCorrectPin: () => void;
 }
 
@@ -18,7 +19,7 @@ const PinForm: React.FC<PinFormProps> = ({ domain, onCorrectPin }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   
-  // Pre meranie rýchlosti zadávania
+  // For measuring typing speed
   const lastKeyTimeRef = useRef<number | null>(null);
   const typingPatternRef = useRef<number[]>([]);
 
@@ -53,14 +54,13 @@ const PinForm: React.FC<PinFormProps> = ({ domain, onCorrectPin }) => {
       const deviceInfo = collectDeviceInfo();
       setAttempts(prev => prev + 1);
       
-      // Log PIN attempt before verification
+      // Log PIN verification attempt (metadata only, no PIN value)
       logger.info(`PIN verification attempt`, {
         domain,
         attemptNumber: attempts + 1,
         timestamp: new Date().toISOString(),
         typingSpeed: typingPatternRef.current,
         hasTypingPattern: typingPatternRef.current.length > 0,
-        // Nelogujeme samotný PIN, iba metadáta
       });
       
       const res = await fetch("/api/verify-pin", {
@@ -70,14 +70,14 @@ const PinForm: React.FC<PinFormProps> = ({ domain, onCorrectPin }) => {
         body: JSON.stringify({ 
           domain, 
           pin: value,
-          deviceInfo // Posielame informácie o zariadení na server
+          deviceInfo // Sending device information for security
         }),
       });
       
       const body = await res.json();
       
       if (body.success) {
-        // Log successful PIN
+        // Log successful verification
         logger.info(`PIN verification successful`, {
           domain,
           timestamp: new Date().toISOString(),
@@ -87,19 +87,19 @@ const PinForm: React.FC<PinFormProps> = ({ domain, onCorrectPin }) => {
       } else {
         throw new Error("Invalid PIN");
       }
-    } catch (error) {
-      // Log failed PIN
+    } catch (err) {
+      // Log failed verification
       logger.warn(`PIN verification failed`, {
         domain,
         timestamp: new Date().toISOString(),
         attemptNumber: attempts + 1,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+        errorMessage: err instanceof Error ? err.message : 'Unknown error'
       });
       
-      setError("Nesprávny PIN");
+      setError("Incorrect PIN");
       setPin("");
       
-      // Reset pattern tracking
+      // Reset typing pattern tracking
       typingPatternRef.current = [];
       lastKeyTimeRef.current = null;
       
@@ -111,8 +111,8 @@ const PinForm: React.FC<PinFormProps> = ({ domain, onCorrectPin }) => {
     const now = performance.now();
     
     if (lastKeyTimeRef.current !== null) {
-      const timeSinceLastKey = now - lastKeyTimeRef.current;
-      typingPatternRef.current.push(Math.round(timeSinceLastKey));
+      const delta = now - lastKeyTimeRef.current;
+      typingPatternRef.current.push(Math.round(delta));
     }
     
     lastKeyTimeRef.current = now;
@@ -133,8 +133,19 @@ const PinForm: React.FC<PinFormProps> = ({ domain, onCorrectPin }) => {
 
   return (
     <div className="pin-form-container" onClick={() => inputRef.current?.focus()}>
-      <form onSubmit={(e) => e.preventDefault()} className={`pin-form ${error ? "error" : ""}`}>
+      <form onSubmit={e => e.preventDefault()} className={`pin-form ${error ? "error" : ""}`}>
+        <Button 
+          variant="close" 
+          size="icon" 
+          onClick={() => navigate(-1)}
+          className="pin-form-close-btn"
+          aria-label="Close"
+        >
+          ×
+        </Button>
+        
         <h2 className="pin-form-title">Enter PIN for {domain}</h2>
+        
         <div className="pin-inputs">
           {[...Array(4)].map((_, i) => (
             <div key={i} className={`pin-input ${pin.length === i && !error ? "pin-input-active" : ""}`}>
@@ -142,6 +153,7 @@ const PinForm: React.FC<PinFormProps> = ({ domain, onCorrectPin }) => {
             </div>
           ))}
         </div>
+        
         <input
           ref={inputRef}
           type="tel"
@@ -152,16 +164,14 @@ const PinForm: React.FC<PinFormProps> = ({ domain, onCorrectPin }) => {
           autoComplete="off"
           inputMode="numeric"
         />
+        
         {error && <p className="error-message">{error}</p>}
 
         <div className="pin-form-footer">
-          <Link to="/" className="pin-form-home-link">Späť na domovskú stránku</Link>
-          <button type="button" className="pin-form-close-btn" onClick={() => navigate(-1)}>
-            Zatvoriť
-          </button>
+          <Link to="/" className="pin-form-home-link">Back to Home Page</Link>
         </div>
-        
-        <p className="security-notice">Z bezpečnostných dôvodov monitorujeme prístupové pokusy.</p>
+
+        <p className="security-notice"></p>
       </form>
     </div>
   );

@@ -2,7 +2,7 @@
   "name": "sendeliver",
   "version": "1.0.0",
   "scripts": {
-   "clean": "node back/src/scripts/clean.js",
+    "clean": "node back/src/scripts/clean.js",
     "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
     "build": "npm run build:logger && npm run build:back && npm run build:front",
     "build:logger": "cd packages/logger && npm run build",
@@ -10,6 +10,9 @@
     "build:front": "cd front && npm run build"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.17",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
     "concurrently": "^8.0.0"
   },
   "workspaces": [

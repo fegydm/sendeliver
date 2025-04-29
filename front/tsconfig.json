@@ -33,9 +33,7 @@
     "checkJs": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "skipLibCheck": true,
-    "types": ["vite/client"],
-    "typeRoots": ["node_modules/@types", "src/types"]
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*",

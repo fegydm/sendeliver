@@ -24,7 +24,7 @@ import useScrollBounce from "@/hooks/useScrollBounce";
 import PinForm from "@/components/shared/elements/pin-form.element";
 
 // Idle timeout: 3 minutes
-const IDLE_TIMEOUT = 3 * 60 * 1000;
+const IDLE_TIMEOUT = 30 * 60 * 1000;
 
 // Public routes (accessible without PIN)
 const PUBLIC_ROUTES = {

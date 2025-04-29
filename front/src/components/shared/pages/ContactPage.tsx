@@ -1,5 +1,5 @@
 // File: ./front/src/components/shared/pages/ContactPage.tsx
-// Last change: Implemented contact form with validation and submission
+// Last change: Translated to English, maintained contact.messages schema for back-end connection
 
 import React, { useState } from 'react';
 import './ContactPage.css';
@@ -52,28 +52,28 @@ const ContactPage: React.FC = () => {
     let isValid = true;
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Meno je povinné';
+      newErrors.name = 'Name is required';
       isValid = false;
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email je povinný';
+      newErrors.email = 'Email is required';
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Neplatný email';
+      newErrors.email = 'Invalid email format';
       isValid = false;
     }
 
     if (!formData.subject.trim()) {
-      newErrors.subject = 'Predmet je povinný';
+      newErrors.subject = 'Subject is required';
       isValid = false;
     }
 
     if (!formData.message.trim()) {
-      newErrors.message = 'Správa je povinná';
+      newErrors.message = 'Message is required';
       isValid = false;
     } else if (formData.message.trim().length < 10) {
-      newErrors.message = 'Správa musí mať aspoň 10 znakov';
+      newErrors.message = 'Message must be at least 10 characters long';
       isValid = false;
     }
 
@@ -93,6 +93,7 @@ const ContactPage: React.FC = () => {
     setStatusMessage('');
 
     try {
+      // Using original endpoint for contact.messages schema
       const response = await fetch('/api/contact/submit', {
         method: 'POST',
         headers: {
@@ -108,7 +109,7 @@ const ContactPage: React.FC = () => {
       const data = await response.json();
       
       setSubmitStatus('success');
-      setStatusMessage('Vaša správa bola úspešne odoslaná. Ďakujeme za kontaktovanie.');
+      setStatusMessage('Your message has been successfully sent. Thank you for contacting us.');
       
       // Reset form
       setFormData({
@@ -121,7 +122,7 @@ const ContactPage: React.FC = () => {
     } catch (error) {
       console.error('Error submitting form:', error);
       setSubmitStatus('error');
-      setStatusMessage('Pri odosielaní správy nastala chyba. Skúste to prosím neskôr alebo nás kontaktujte emailom.');
+      setStatusMessage('An error occurred while sending your message. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
@@ -131,34 +132,8 @@ const ContactPage: React.FC = () => {
     <div className="contact-page">
       <div className="contact-container">
         <div className="contact-info">
-          <h1>Kontaktujte nás</h1>
-          <p>Máte otázky o našich službách? Vyplňte kontaktný formulár a my sa vám čoskoro ozveme.</p>
-          
-          <div className="contact-details">
-            <div className="contact-detail">
-              <div className="contact-icon">📧</div>
-              <div>
-                <h3>Email</h3>
-                <p>info@sendeliver.com</p>
-              </div>
-            </div>
-            
-            <div className="contact-detail">
-              <div className="contact-icon">📞</div>
-              <div>
-                <h3>Telefón</h3>
-                <p>+421 900 123 456</p>
-              </div>
-            </div>
-            
-            <div className="contact-detail">
-              <div className="contact-icon">📍</div>
-              <div>
-                <h3>Adresa</h3>
-                <p>Logistická 123, 831 04 Bratislava</p>
-              </div>
-            </div>
-          </div>
+          <h1>Contact Us</h1>
+          <p>Have questions about our services? Fill out the contact form and we'll get back to you soon.</p>
         </div>
         
         <div className="contact-form-container">
@@ -176,7 +151,7 @@ const ContactPage: React.FC = () => {
             )}
             
             <div className="form-group">
-              <label htmlFor="name">Meno</label>
+              <label htmlFor="name">Name</label>
               <input
                 type="text"
                 id="name"
@@ -204,7 +179,7 @@ const ContactPage: React.FC = () => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="subject">Predmet</label>
+              <label htmlFor="subject">Subject</label>
               <input
                 type="text"
                 id="subject"
@@ -218,7 +193,7 @@ const ContactPage: React.FC = () => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="message">Správa</label>
+              <label htmlFor="message">Message</label>
               <textarea
                 id="message"
                 name="message"
@@ -236,7 +211,7 @@ const ContactPage: React.FC = () => {
               className="submit-button"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Odosielam...' : 'Odoslať správu'}
+              {isSubmitting ? 'Sending...' : 'Send Message'}
             </button>
           </form>
         </div>
