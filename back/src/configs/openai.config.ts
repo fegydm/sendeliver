@@ -1,13 +1,18 @@
 // File: ./back/src/configs/openai.config.ts
-// Last change: Improved type safety and clarified AI configuration
 
+import { config as loadEnv } from "dotenv";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import OpenAI from "openai";
-import dotenv from "dotenv";
 
-// Načítanie premenných z .env súboru
-dotenv.config();
+// Determine __dirname in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// Rozšírenie typu pre ProcessEnv, aby bolo explicitné, že potrebujeme OPENAI_API_KEY
+// Load the .env file from the monorepo root (3 levels up)
+loadEnv({ path: resolve(__dirname, "../../../.env") });
+
+// Extend ProcessEnv interface to include our key
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
@@ -16,34 +21,28 @@ declare global {
   }
 }
 
-// Validácia existencie API kľúča v prostredí
+// Debug: skrátený výpis pre overenie načítania
+console.log("Loaded API key:", process.env.OPENAI_API_KEY?.substring(0, 5) + "…");
+
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("Environment variable OPENAI_API_KEY is not defined");
 }
 
-// Inštancia OpenAI API klienta s načítaným kľúčom
+// Instantiate the OpenAI client with the loaded key
 export const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Konfigurácia OpenAI API
+// Common AI configuration settings
 export const AI_CONFIG = {
-  // Model používaný na komunikáciu
   model: "gpt-4",
-  
-  // Parametre ovplyvňujúce odpoveď modelu
   temperature: 0.7,
   max_tokens: 500,
-
-  // Formát odpovede (výhradne JSON)
   response_format: { type: "json_object" } as const,
-
   /**
-   * Dynamický systémový prompt na základe typu používateľa a jazyka.
-   * 
-   * @param type - Typ požiadavky: "sender" alebo "hauler"
-   * @param language - Jazyk, v ktorom má AI odpovedať (predvolený: "sk")
-   * @returns Dynamicky generovaný prompt pre OpenAI
+   * Returns a system prompt tailored for either senders or haulers
+   * @param type  "sender" or "hauler"
+   * @param language  "sk" (Slovak) or other (English)
    */
   getSystemPrompt: (
     type: "sender" | "hauler",
@@ -54,9 +53,10 @@ export const AI_CONFIG = {
         ? `Si logistický AI asistent.`
         : `You are a logistics AI assistant.`;
 
-    // Generovanie promptu podľa typu
-    return type === "sender"
-      ? `${basePrompt} Pomáhaš odosielateľom analyzovať ich požiadavky na prepravu.`
-      : `${basePrompt} Pomáhaš prepravcom nájsť vhodné zákazky.`;
+    if (type === "sender") {
+      return `${basePrompt} Pomáhaš odosielateľom analyzovať ich požiadavky na prepravu.`;
+    } else {
+      return `${basePrompt} Pomáhaš prepravcom nájsť vhodné zákazky.`;
+    }
   },
 };

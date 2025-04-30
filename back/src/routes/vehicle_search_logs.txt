@@ -11250,3 +11250,61 @@
   }
 }
 [2025-04-29T12:58:52.589Z] 📊 Found 330 total vehicles, 51 within 300km, 10 after all filters
+[2025-04-30T11:35:53.643Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "2025-04-30T14:35:20.768Z",
+    "lat": 48.453,
+    "lng": 12.356
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-30T11:35:53.703Z] ❌ Vehicle service error: relation "deliveries" does not exist
+[2025-04-30T11:36:28.261Z] Received request body: {
+  "pickup": {
+    "country": {
+      "cc": "DE",
+      "flag": "/flags/4x3/optimized/de.svg"
+    },
+    "psc": "84137",
+    "city": "Vilsbiburg",
+    "time": "2025-04-30T14:35:20.768Z",
+    "lat": 48.453,
+    "lng": 12.356
+  },
+  "delivery": {
+    "country": {
+      "cc": "",
+      "flag": ""
+    },
+    "psc": "",
+    "city": "",
+    "time": "",
+    "lat": 0,
+    "lng": 0
+  },
+  "cargo": {
+    "pallets": 0,
+    "weight": 0
+  }
+}
+[2025-04-30T11:36:30.762Z] ❌ Vehicle service error: relation "deliveries" does not exist

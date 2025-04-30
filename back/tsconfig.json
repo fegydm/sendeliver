@@ -1,3 +1,4 @@
+// File: back/tsconfig.json
 {
   "name": "back/tsconfig",
   "compilerOptions": {
@@ -19,11 +20,10 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["node"]
+    // Tell TS to look into the root workspace's @types folder
+    "typeRoots": ["../node_modules/@types"]
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*"],
   "exclude": [
     "**/node_modules",
     "**/dist",

@@ -7,17 +7,24 @@
     "build": "npm run build:logger && npm run build:back && npm run build:front",
     "build:logger": "cd packages/logger && npm run build",
     "build:back": "cd back && npm run build",
-    "build:front": "cd front && npm run build"
+    "build:front": "cd front && npm run build",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.7.0"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.17",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
-    "concurrently": "^8.0.0"
+    "concurrently": "^8.0.0",
+    "prisma": "^6.7.0"
   },
   "workspaces": [
     "packages/*",
     "back",
-    "front"
+    "front",
+    "prisma"
   ]
 }

@@ -1,10 +1,11 @@
 /*
-File: ./front/src/contexts/AuthContext.tsx
-Last change: Added register function and updated login to use new backend API
-*/
+ * File: ./front/src/contexts/AuthContext.tsx
+ * Last change: Improved error handling, typing, and loading state management
+ */
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
+// User interface definition
 interface User {
   id: number;
   name: string;
@@ -13,25 +14,31 @@ interface User {
   permissions: string[];
 }
 
+// Auth context interface
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  loading: boolean;
+  error: string | null;
   register: (name: string, email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
 }
 
+// Create context with undefined as initial value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Auth provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load token from localStorage on init
+  // Load token from localStorage on initialization
   useEffect(() => {
     const storedToken = localStorage.getItem('auth_token');
     if (storedToken) {
@@ -42,18 +49,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Check if token is valid and get user data
+  // Check if token is valid and fetch user data
   const checkAuth = async (): Promise<boolean> => {
-    if (!token) return false;
+    if (!token) {
+      setLoading(false);
+      return false;
+    }
     try {
       setLoading(true);
-      const response = await axios.get('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
+      setError(null);
+      const response = await axios.get<{ data: User }>('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      const userData: User = response.data;
-      setUser(userData);
+      setUser(response.data.data);
       return true;
-    } catch (error) {
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      setError(error.response?.data?.message || 'Failed to verify authentication');
       logout();
       return false;
     } finally {
@@ -63,13 +75,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Register new user
   const register = async (name: string, email: string, password: string): Promise<void> => {
-    setLoading(true);
     try {
-      const response = await axios.post('/api/auth/register', { name, email, password });
+      setLoading(true);
+      setError(null);
+      const response = await axios.post<{ token: string; user: User }>('/api/auth/register', {
+        name,
+        email,
+        password,
+      });
       const { token: newToken, user: newUser } = response.data;
       localStorage.setItem('auth_token', newToken);
       setToken(newToken);
       setUser(newUser);
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      throw new Error(error.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -77,46 +97,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Login existing user
   const login = async (email: string, password: string): Promise<void> => {
-    setLoading(true);
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
+      setLoading(true);
+      setError(null);
+      const response = await axios.post<{ token: string; user: User }>('/api/auth/login', {
+        email,
+        password,
+      });
       const { token: newToken, user: newUser } = response.data;
       localStorage.setItem('auth_token', newToken);
       setToken(newToken);
       setUser(newUser);
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      throw new Error(error.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
   // Logout user
-  const logout = (): void => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('auth_token');
+  const logout = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+      await axios.post('/api/auth/logout', {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      console.error('Logout failed:', err);
+    } finally {
+      setUser(null);
+      setToken(null);
+      setLoading(false);
+      localStorage.removeItem('auth_token');
+    }
   };
 
+  // Derived state
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
-  if (loading) {
-    return <div>Loading authentication...</div>;
-  }
+  // Expose context values
+  const value: AuthContextType = {
+    user,
+    token,
+    isAuthenticated,
+    isAdmin,
+    loading,
+    error,
+    register,
+    login,
+    logout,
+    checkAuth,
+  };
 
-  return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated, isAdmin, register, login, logout, checkAuth }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook for easy usage
+// Hook for accessing auth context
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
-
-export default AuthContext;
