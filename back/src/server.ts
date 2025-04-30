@@ -1,8 +1,7 @@
-/*
-File: ./back/src/server.ts
-Last change: Added cookie-parser middleware for JWT auth cookies
-*/
-import express, { Request, Response, RequestHandler } from "express";
+// File: ./back/src/server.ts
+// Last change: Added public /api/verify-pin route and unified .env loading
+
+import express, { RequestHandler } from "express";
 import cors from "cors";
 import http from "http";
 import path from "path";
@@ -11,7 +10,9 @@ import morgan from "morgan";
 import * as ua from "express-useragent";
 import * as dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import { fileURLToPath } from "url";
 
+// Routers
 import aiRouter from "./routes/ai.routes.js";
 import geoCountriesRouter from "./routes/geo.countries.routes.js";
 import geoLanguagesRouter from "./routes/geo.languages.routes.js";
@@ -22,29 +23,43 @@ import vehiclesRouter from "./routes/vehicles.routes.js";
 import deliveryRouter from "./routes/delivery.routes.js";
 import externalDeliveriesRouter from "./routes/external.deliveries.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import verifyPinRouter from "./routes/verify-pin.routes.js"; // Public PIN verify
 import { authenticateJWT, checkRole } from "./middlewares/auth.middleware.js";
 
-dotenv.config();
+// ─────────── Derive __dirname in ESM ───────────
+// English comment: Compute __dirname from import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ─────────── Load .env from project root ───────────
+// English comment: Load environment variables once from root .env
+dotenv.config({
+  path: path.resolve(__dirname, "../..", ".env"),
+});
 
 const app = express();
 const server = http.createServer(app);
 
 // Global middleware
 app.use(express.json());
-app.use(cookieParser()); // Added cookie-parser middleware
+app.use(cookieParser()); // Added cookie-parser for auth cookies
 app.use(ua.express());
 morgan.token("isBot", (req) => (req as any).useragent.isBot ? "BOT" : "HUMAN");
 app.use(morgan(":remote-addr :method :url :status :response-time ms :isBot"));
-app.use(cors({ 
-  origin: ["http://localhost:3000", "http://localhost:5173", "https://sendeliver.com"], 
-  credentials: true // Important for cookies to work with CORS
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://sendeliver.com"
+  ],
+  credentials: true // Allow cookies over CORS
 }));
 
-// Authentication routes
+// Public routes
 app.use('/api/auth', authRoutes);
-
-// Public contact submission
 app.use('/api/contact/submit', contactMessagesRoutes);
+// Public PIN verification route (no auth required)
+app.use('/api/verify-pin', verifyPinRouter);
 
 // Admin routes for contact messages
 app.use(
@@ -54,7 +69,7 @@ app.use(
   contactMessagesRoutes
 );
 
-// Other API endpoints
+// Other public API endpoints
 app.use("/api/ai", aiRouter);
 app.use("/api/geo/countries", geoCountriesRouter);
 app.use("/api/geo/languages", geoLanguagesRouter);
@@ -70,7 +85,7 @@ app.use(
   deliveryRouter
 );
 
-// External deliveries only for client, carrier, superadmin
+// External deliveries (client, carrier, superadmin)
 app.use(
   "/api/external/deliveries",
   authenticateJWT,
@@ -78,20 +93,24 @@ app.use(
   externalDeliveriesRouter
 );
 
-// Healthcheck
+// Healthcheck endpoint
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
 // Static files and SPA fallback
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const projectRoot = path.resolve(__dirname, '../..');
 const frontendPath = path.join(projectRoot, process.env.FRONTEND_PATH || "");
 const publicPath = path.join(projectRoot, process.env.PUBLIC_PATH || "");
+
 [ ["/pics","pics"], ["/flags","flags"], ["/animations","animations"] ]
   .forEach(([url, dir]) => app.use(url, express.static(path.join(publicPath, dir))));
 app.use("/assets", express.static(path.join(frontendPath, "assets")));
-app.get("/", (_req, res) => res.sendFile(path.join(frontendPath, "index.html")));
+
+app.get("/", (_req, res) =>
+  res.sendFile(path.join(frontendPath, "index.html"))
+);
+
 const spaFallback: RequestHandler = (req, res) => {
   if (req.path.startsWith("/api")) {
     res.status(404).json({ error: "API endpoint not found" });
@@ -108,4 +127,6 @@ app.use(spaFallback);
 
 // Start server
 const PORT = parseInt(process.env.PORT || "5000", 10);
-server.listen(PORT, "0.0.0.0", () => console.log(`Server listening on port ${PORT}`));
+server.listen(PORT, "0.0.0.0", () =>
+  console.log(`Server listening on port ${PORT}`)
+);
