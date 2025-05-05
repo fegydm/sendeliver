@@ -4,7 +4,10 @@
 import React from "react";
 import { Tabs } from "@/components/shared/ui/tabs.ui";
 import HaulerDashboard from "./HaulerDashboard";
-import HaulerFleet from "./HaulerFleet";
+// import HaulerFleet from "./HaulerFleet";
+import HaulerFleetComponent from "../fleet/hauler.fleet.component";
+
+
 import HaulerPeople from "./HaulerPeople";
 import HaulerLogbook from "./HaulerLogbook";
 import HaulerExchange from "./HaulerExchange";
@@ -61,7 +64,7 @@ const HaulerContent: React.FC<HaulerContentProps> = ({ activeTab, setActiveTab }
 
       <Tabs.Content value="fleet">
         <div className="hauler-card">
-          <HaulerFleet />
+          <HaulerFleetComponent />
         </div>
       </Tabs.Content>
 

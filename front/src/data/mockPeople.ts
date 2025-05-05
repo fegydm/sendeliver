@@ -21,6 +21,7 @@ export interface Person {
   joinDate: string;
   vehicle?: string;
   notes?: string;
+ 
 }
 
 export interface Trip {

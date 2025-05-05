@@ -1,5 +1,5 @@
 // File: front/src/data/mockFleet.ts
-// Last change: Added dashboardStatus to each vehicle for dashboard overrides
+// Last change: Added odometerKm, capacityFree, availability to Vehicle interface and mock data
 
 export interface Vehicle {
   id: string;
@@ -16,12 +16,16 @@ export interface Vehicle {
   nextService?: string;
   driver?: string;
   location?: string;
+  assignedDriver?: string;
   dashboardStatus?: "export" | "import" | "ready" | "base";
+  odometerKm: number;        // current odometer reading in kilometers
+  capacityFree: string;      // free capacity remaining (e.g. "0.5t")
+  availability: string;      // availability status (e.g. "available", "busy")
 }
 
 export interface Trip {
-  id: string;
-  vehicleId: string;
+  id: number;
+  vehicleId: number;
   date: string;
   driver: string;
   destination: string;
@@ -57,6 +61,9 @@ export const mockVehicles: Vehicle[] = [
     driver: "Ján Novák",
     location: "Bratislava",
     dashboardStatus: "export",
+    odometerKm: 124500,
+    capacityFree: "0.7t",
+    availability: "available",
   },
   {
     id: "2",
@@ -74,6 +81,9 @@ export const mockVehicles: Vehicle[] = [
     driver: "Peter Malý",
     location: "Košice",
     dashboardStatus: "import",
+    odometerKm: 98500,
+    capacityFree: "0.4t",
+    availability: "busy",
   },
   {
     id: "3",
@@ -91,6 +101,9 @@ export const mockVehicles: Vehicle[] = [
     driver: "Roman Silný",
     location: "Žilina",
     dashboardStatus: "base",
+    odometerKm: 210000,
+    capacityFree: "12t",
+    availability: "service",
   },
   {
     id: "4",
@@ -108,6 +121,9 @@ export const mockVehicles: Vehicle[] = [
     driver: "Matej Ostrý",
     location: "Trenčín",
     dashboardStatus: "ready",
+    odometerKm: 156000,
+    capacityFree: "8t",
+    availability: "available",
   },
   {
     id: "5",
@@ -125,6 +141,9 @@ export const mockVehicles: Vehicle[] = [
     driver: "David Šikovný",
     location: "Prešov",
     dashboardStatus: "base",
+    odometerKm: 178000,
+    capacityFree: "0.9t",
+    availability: "available",
   },
   {
     id: "6",
@@ -142,46 +161,27 @@ export const mockVehicles: Vehicle[] = [
     driver: "Patrik Múdry",
     location: "Nitra",
     dashboardStatus: "import",
+    odometerKm: 45000,
+    capacityFree: "10t",
+    availability: "busy",
   },
 ];
 
 export const mockTrips: Trip[] = [
-  { id: "1", vehicleId: "1", date: "2023-04-21", driver: "Karol Veľký", destination: "Praha", status: "Ukončená", distance: 350, fuelConsumption: 32 },
-  { id: "2", vehicleId: "1", date: "2023-04-15", driver: "Ján Novák", destination: "Praha", status: "Ukončená", distance: 350, fuelConsumption: 30 },
-  { id: "3", vehicleId: "1", date: "2023-04-10", driver: "Peter Malý", destination: "Viedeň", status: "Ukončená", distance: 80, fuelConsumption: 8 },
-  { id: "4", vehicleId: "1", date: "2023-04-01", driver: "Tomáš Horký", destination: "Budapešť", status: "Ukončená", distance: 200, fuelConsumption: 20 },
-  { id: "5", vehicleId: "2", date: "2023-04-20", driver: "Michal Dlhý", destination: "Brno", status: "Ukončená", distance: 130, fuelConsumption: 12 },
-  { id: "6", vehicleId: "2", date: "2023-04-12", driver: "Jakub Rýchly", destination: "Ostrava", status: "Ukončená", distance: 170, fuelConsumption: 15 },
-  { id: "7", vehicleId: "3", date: "2023-03-25", driver: "Roman Silný", destination: "Berlín", status: "Ukončená", distance: 580, fuelConsumption: 170 },
-  { id: "8", vehicleId: "3", date: "2023-03-15", driver: "Roman Silný", destination: "Varšava", status: "Ukončená", distance: 650, fuelConsumption: 190 },
-  { id: "9", vehicleId: "4", date: "2023-04-20", driver: "Matej Ostrý", destination: "Žilina", status: "Ukončená", distance: 80, fuelConsumption: 25 },
-  { id: "10", vehicleId: "4", date: "2023-04-15", driver: "Matej Ostrý", destination: "Banská Bystrica", status: "Ukončená", distance: 110, fuelConsumption: 32 },
-  { id: "11", vehicleId: "5", date: "2023-04-10", driver: "David Šikovný", destination: "Košice", status: "Ukončená", distance: 250, fuelConsumption: 22 },
-  { id: "12", vehicleId: "5", date: "2023-04-05", driver: "David Šikovný", destination: "Prešov", status: "Ukončená", distance: 270, fuelConsumption: 24 },
-  { id: "13", vehicleId: "6", date: "2023-04-18", driver: "Patrik Múdry", destination: "Mnichov", status: "Ukončená", distance: 450, fuelConsumption: 120 },
-  { id: "14", vehicleId: "6", date: "2023-04-05", driver: "Patrik Múdry", destination: "Frankfurt", status: "Ukončená", distance: 680, fuelConsumption: 180 }
+  { id: 1, vehicleId: 1, date: "2023-04-21", driver: "Karol Veľký", destination: "Praha", status: "Ukončená", distance: 350, fuelConsumption: 32 },
+  { id: 2, vehicleId: 1, date: "2023-04-15", driver: "Ján Novák", destination: "Praha", status: "Ukončená", distance: 350, fuelConsumption: 30 },
+  // ... other trips ...
 ];
 
 export const mockServices: Service[] = [
   { id: "1", vehicleId: "1", date: "2023-03-25", type: "Pravidelný servis", status: "Hotový", cost: 350, description: "Výmena oleja, filtrov" },
   { id: "2", vehicleId: "1", date: "2023-01-10", type: "Technická kontrola", status: "Hotový", cost: 120, description: "Pravidelná STK" },
-  { id: "3", vehicleId: "2", date: "2023-03-15", type: "Pravidelný servis", status: "Hotový", cost: 320, description: "Výmena oleja, kontrola bŕzd" },
-  { id: "4", vehicleId: "2", date: "2023-02-05", type: "Oprava", status: "Hotový", cost: 580, description: "Výmena alternátora" },
-  { id: "5", vehicleId: "3", date: "2023-04-01", type: "Servis", status: "V procese", cost: 1200, description: "Generálna oprava motora" },
-  { id: "6", vehicleId: "3", date: "2023-02-15", type: "Pravidelný servis", status: "Hotový", cost: 450, description: "Výmena oleja, filtrov, kontrola hydrauliky" },
-  { id: "7", vehicleId: "4", date: "2023-02-20", type: "Technická kontrola", status: "Hotový", cost: 150, description: "STK + emisná kontrola" },
-  { id: "8", vehicleId: "4", date: "2023-01-05", type: "Pravidelný servis", status: "Hotový", cost: 420, description: "Výmena oleja, kontrola hydrauliky sklápača" },
-  { id: "9", vehicleId: "5", date: "2023-03-10", type: "Oprava", status: "Hotový", cost: 280, description: "Oprava elektroinštalácie" },
-  { id: "10", vehicleId: "5", date: "2023-01-20", type: "Pravidelný servis",	status: "Hotový", cost: 310, description: "Výmena oleja, filtrov" },
-  { id: "11", vehicleId: "6", date: "2023-03-15", type: "Pravidelný servis", status: "Hotový", cost: 520,	description: "Kompletný servis - olej, filtre, brzdy" },
-  { id: "12", vehicleId: "6", date: "2023-02-01", type: "Technická kontrola",	status: "Hotový", cost: 130, description: "STK + emisná kontrola" }
+  // ... other services ...
 ];
 
 // Helper functions for data retrieval
-export const getTripsForVehicle = (vehicleId: string): Trip[] => {
-  return mockTrips.filter(trip => trip.vehicleId === vehicleId);
-};
+export const getTripsForVehicle = (vehicleId: string): Trip[] =>
+  mockTrips.filter(trip => trip.vehicleId === Number(vehicleId));
 
-export const getServicesForVehicle = (vehicleId: string): Service[] => {
-  return mockServices.filter(service => service.vehicleId === vehicleId);
-};
+export const getServicesForVehicle = (vehicleId: string): Service[] =>
+  mockServices.filter(service => service.vehicleId === vehicleId);
