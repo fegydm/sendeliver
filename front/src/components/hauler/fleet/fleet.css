@@ -1,243 +1,305 @@
-/* File: front/src/components/hauler/fleet/fleet.css */
-
-/* Root card container */
-.fleet-card {
+/* Main container */
+.fleet-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  border: 2px solid #444; /* outline entire card */
-  margin: 8px;
-  background: #fafafa;
+  height: 100%;
+  width: 100%;
+  background: var(--color-canvas, #fff);
+  padding: 20px 40px; /* Match hc-content padding */
 }
 
-/* Toolbar area */
-.fleet-card > .toolbar {
-  border-bottom: 2px dashed #888;
-  padding: 8px;
-  background: #f0f0f0;
+/* Toolbar */
+.fleet-container .fleet-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--color-canvas, #fff);
+  border-bottom: 1px solid var(--hauler-primary, #2563eb);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  z-index: 10;
 }
 
-/* Main layout: sidebar + main panel */
-.fleet-container {
-  display: grid;
-  grid-template-columns: 240px 1fr;
+.fleet-container .fleet-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fleet-container .fleet-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fleet-container .fleet-count {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.fleet-container .fleet-toolbar button {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  background: var(--hauler-light, hsl(var(--hauler-h), 50%, 95%));
+  color: var(--color-text);
+  border: 1px solid var(--hauler-primary, #2563eb);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.fleet-container .fleet-toolbar button:hover {
+  background: var(--hauler-lighter, hsl(var(--hauler-h), 50%, 90%));
+}
+
+/* Content */
+.fleet-container .fleet-content {
+  display: flex;
   flex: 1;
   overflow: hidden;
+  background: var(--color-canvas, #fff);
+  border: 1px solid var(--hauler-primary, #2563eb);
+  border-radius: 6px;
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+  margin-top: 10px;
 }
 
 /* Sidebar */
-.fleet-sidebar {
-  border-right: 2px dashed #888;
-  padding: 8px;
-  overflow-y: auto;
-  background: #fff;
-}
-
-/* Main panel */
-.fleet-main {
-  padding: 8px;
+.fleet-container .fleet-sidebar {
+  width: 300px;
+  background: var(--color-canvas-darker, #f9fafb);
+  border-right: 1px solid var(--hauler-primary, #2563eb);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  padding: 8px 0;
 }
 
-/* Top modules wrapper */
-.top-modules {
-  display: flex;
-  gap: 8px;
-  border: 2px dashed #4a90e2;
-  padding: 8px;
-  margin-bottom: 8px;
-  background: #e8f4ff;
-}
-
-/* Individual module boxes */
-.top-modules .module {
+.fleet-container .fleet-sidebar .sidebar-list {
   flex: 1;
-  border: 1px solid #4a90e2;
-  padding: 8px;
-  background: #fff;
-  text-align: center;
-}
-
-/* Detail form area */
-.detail-form {
-  border: 2px dashed #50b848;
-  padding: 8px;
-  margin-bottom: 8px;
-  background: #f0fff4;
-}
-
-/* Bottom sections wrapper */
-.bottom-sections {
   display: flex;
   flex-direction: column;
+  background: var(--color-canvas-darker, #f9fafb);
+  border-radius: 4px;
+}
+
+.fleet-container .fleet-sidebar .sidebar-search {
+  padding: 8px;
+}
+
+.fleet-container .fleet-sidebar .sidebar-search input {
+  width: 100%;
+  padding: 6px 12px;
+  border: 1px solid var(--hauler-primary, #2563eb);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background: var(--hauler-light, hsl(var(--hauler-h), 50%, 95%));
+  color: var(--color-text);
+}
+
+.fleet-container .fleet-sidebar .sidebar-filters {
+  display: flex;
   gap: 8px;
-  border: 2px dashed #e29424;
   padding: 8px;
-  background: #fff8f0;
 }
 
-/* Section cards (VehicleTrips, VehicleServices) */
-.section-card {
-  border: 1px solid #e29424;
-  padding: 8px;
-  background: #fff;
+.fleet-container .fleet-sidebar .sidebar-filter-select {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid var(--hauler-primary, #2563eb);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background: var(--hauler-light, hsl(var(--hauler-h), 50%, 95%));
+  color: var(--color-text);
 }
-.photo-module {
-  border: 2px dashed #4a90e2;
-  padding: 4px;
-  background: #fff;
-  text-align: center;
+
+.fleet-container .fleet-sidebar .sidebar-table {
+  flex: 1;
+  overflow-y: auto;
 }
-.photo-module-img {
-  max-width: 100%;
-  max-height: 180px;
+
+.fleet-container .fleet-sidebar .sidebar-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.fleet-container .fleet-sidebar .sidebar-row:hover {
+  background: var(--hauler-lighter, hsl(var(--hauler-h), 50%, 90%));
+}
+
+.fleet-container .fleet-sidebar .sidebar-row.selected {
+  background: var(--color-canvas, #fff);
+  border-left: 4px solid var(--hauler-primary, #2563eb);
+  padding-left: 8px;
+}
+
+.fleet-container .fleet-sidebar .sidebar-cell {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fleet-container .fleet-sidebar .vehicle-photo-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-right: 12px;
+}
+
+.fleet-container .fleet-sidebar .vehicle-photo {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
-/* --- Top-moduly – pevná výška kontajnera --- */
-.top-modules .module {
-  max-width: 220px;      /* aby sa moduly zmestili do riadku */
-  flex: 1 1 220px;
+
+/* Details */
+.fleet-container .fleet-details {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background: var(--color-canvas, #fff);
 }
 
-/* --- Foto moduly --- */
-.photo-module.square img,
-.photo-module.circle img {
+.fleet-container .vehicle-photo-large-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  max-height: 150px;
+  overflow: hidden;
+}
+
+.fleet-container .vehicle-photo-wrapper {
+  width: 150px;
+  height: 150px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--hauler-primary, #2563eb);
+}
+
+.fleet-container .vehicle-photo-large {
   width: 100%;
-  height: 180px;         /* obmedzená výška */
+  height: 100%;
   object-fit: cover;
 }
 
-/* kruhová maska už v CSS z predchádzajúcej verzie */
-.photo-module.circle img {
-  border-radius: 50%;
+.fleet-container .fleet-details-scroll-container {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
 }
 
-/* --- Mapa --- */
-.fleet-module-map iframe {
-  width: 100%;
-  height: 180px;         /* rovnaká výška ako fotka */
-  border: 0;
+/* Top modules */
+.fleet-container .top-modules {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  max-height: 250px;
+  overflow-y: auto;
 }
 
-.fleet-module-map .map-placeholder {
+.fleet-container .top-modules > * {
+  flex: 1;
+  max-height: 250px;
+  overflow: hidden;
+  border: 1px solid var(--hauler-primary, #2563eb);
+  border-radius: 4px;
+  background: var(--hauler-light, hsl(var(--hauler-h), 50%, 95%));
+  padding: 8px;
+}
+
+/* Detail form */
+.fleet-container .detail-form {
+  margin-bottom: 16px;
+}
+
+.fleet-container .detail-form .vehicle-edit-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px;
+  background: var(--color-canvas-darker, #f9fafb);
+  border-radius: 8px;
+  border: 1px solid var(--hauler-primary, #2563eb);
+}
+
+.fleet-container .detail-form .vehicle-edit-form div {
+  display: flex;
+  flex-direction: column;
+}
+
+.fleet-container .detail-form .vehicle-edit-form label {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--color-text);
+}
+
+.fleet-container .detail-form .vehicle-edit-form input,
+.fleet-container .detail-form .vehicle-edit-form select {
+  padding: 6px 12px;
+  border: 1px solid var(--hauler-primary, #2563eb);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background: var(--hauler-light, hsl(var(--hauler-h), 50%, 95%));
+  color: var(--color-text);
+}
+
+/* Bottom sections */
+.fleet-container .bottom-sections {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--color-canvas-darker, #f9fafb);
+  border: 1px solid var(--hauler-primary, #2563eb);
+  border-radius: 8px;
+}
+
+/* Messages */
+.fleet-container .loading-message,
+.fleet-container .empty-message,
+.fleet-container .no-selection-message {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 180px;
-  background: #f4f4f4;
-  color: #666;
-  font-size: 0.9rem;
-}
-/* File: front/src/components/hauler/fleet/fleet.css */
-
-/* --- toolbar wrapper --- */
-.fleet-toolbar-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.toolbar-modules-btn {
-  margin-left: 6px;
-  border: none;
-  background: none;
-  font-size: 18px;
-  cursor: pointer;
+  flex: 1;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
 }
 
-/* --- dropdown --- */
-.modules-dropdown {
+/* Modules dropdown */
+.fleet-container .fleet-toolbar-wrapper .modules-dropdown {
   position: absolute;
-  top: 34px;
-  right: 0;
-  background: #fff;
-  border: 1px solid #bbb;
-  border-radius: 4px;
-  padding: 6px;
-  z-index: 1000;
-  width: 180px;
-  box-shadow: 0 2px 6px rgba(0,0,0,.15);
-}
-.module-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px;
-}
-.module-row:hover { background:#f5f5f5; }
-.drag-handle { cursor: grab; }
-
-/* --- drag handle v TopModules --- */
-.top-modules .module {
-  position: relative;
-}
-.top-modules .module::before {
-  content: "↕";
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  font-size: 12px;
-  cursor: grab;
-  opacity: .3;
-}
-/* --- Toolbar: wrapper + config button --- */
-.fleet-toolbar-wrapper {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-.toolbar-modules-btn {
-  margin-left: 6px;
-  border: none;
-  background: none;
-  font-size: 18px;
-  cursor: pointer;
+  top: 100%;
+  right: 16px;
+  background: var(--color-canvas, #fff);
+  border: 1px solid var(--hauler-primary, #2563eb);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 8px;
+  z-index: 10;
 }
 
-/* --- Dropdown so zoznamom modulov --- */
-.modules-dropdown {
-  position: absolute;
-  top: 34px;
-  right: 0;
-  width: 180px;
-  background: #fff;
-  border: 1px solid #bbb;
-  border-radius: 4px;
-  padding: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-}
-.module-row {
+.fleet-container .fleet-toolbar-wrapper .module-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px;
+  gap: 8px;
+  padding: 4px 8px;
+  cursor: move;
 }
-.module-row:hover {
-  background: #f5f5f5;
+
+.fleet-container .fleet-toolbar-wrapper .module-row:hover {
+  background: var(--hauler-lighter, hsl(var(--hauler-h), 50%, 90%));
 }
-.drag-handle {
+
+.fleet-container .fleet-toolbar-wrapper .drag-handle {
   cursor: grab;
 }
-.hint {
+
+.fleet-container .fleet-toolbar-wrapper .hint {
   display: block;
-  text-align: center;
-  font-size: 11px;
-  margin-top: 4px;
-  opacity: 0.6;
-}
-
-/* --- Draggable handle na samotných moduloch (vizuál v hornom rade) --- */
-.top-modules .module {
-  position: relative;
-}
-.top-modules .module::before {
-  content: "↕";
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  font-size: 12px;
-  opacity: 0.3;
-  cursor: grab;
+  margin-top: 8px;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
 }

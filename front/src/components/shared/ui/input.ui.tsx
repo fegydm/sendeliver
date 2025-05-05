@@ -1,4 +1,4 @@
-// File: ./front/src/components/ui/input.ui.tsx
+// File: ./front/src/components/shared/ui/input.ui.tsx
 // Last change: Improved accessibility and added proper aria attributes
 
 import React, { useState, useRef, useEffect, useCallback } from "react";

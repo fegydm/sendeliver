@@ -111,3 +111,73 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--spacing-lg);
 }
+
+
+/* --- Settings button on its own row, right-aligned --- */
+.hc-settings-button {
+  display: block;                    /* nový riadok */
+  margin: 0 var(--spacing-lg) var(--spacing-sm) auto; /* top 0, right veľké odsadenie, bottom malé odsadenie, left auto = zarovnanie doprava */
+}
+
+/* Modal content vertical layout */
+.hc-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Settings labels full width */
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* 1) Modal positioning under header, vertical scroll if needed */
+.hc-modal {
+  position: absolute;
+  top: calc(var(--height-header) + var(--spacing-md));
+  right: var(--spacing-lg);
+  background: var(--color-canvas);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-medium);
+  z-index: 20;
+
+  max-height: 60vh;     /* obmedzí výšku */
+  width: 220px;         /* nastav podľa potreby */
+  overflow-y: auto;     /* zvislý scroll */
+}
+
+/* Modal obsah ako zvislý stĺpec */
+.hc-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Checkbox labely full-width pre lepšie kliknutie */
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  width: 100%;
+}
+
+/* 2) Menu tabs row: horizontálny scroll a drag cursor */
+.hc-menu-container {
+  display: flex;
+  gap: var(--spacing-md);
+  overflow-x: auto;    /* vodorovný scroll */
+  padding: var(--spacing-sm) var(--spacing-lg);
+}
+
+
+
+/* Cursor grab/grabbing pre ťahanie kariet */
+.hc-menu-item {
+  cursor: grab;
+}
+.hc-menu-item:active {
+  cursor: grabbing;
+}

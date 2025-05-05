@@ -1,5 +1,5 @@
 // File: front/src/data/mockFleet.ts
-// Last change: Added odometerKm, capacityFree, availability to Vehicle interface and mock data
+// Last change: Added trailerIds and associatedTractorId to Vehicle interface and mock data
 
 export interface Vehicle {
   id: string;
@@ -18,9 +18,12 @@ export interface Vehicle {
   location?: string;
   assignedDriver?: string;
   dashboardStatus?: "export" | "import" | "ready" | "base";
-  odometerKm: number;        // current odometer reading in kilometers
-  capacityFree: string;      // free capacity remaining (e.g. "0.5t")
-  availability: string;      // availability status (e.g. "available", "busy")
+  odometerKm: number;
+  capacityFree: string;
+  availability: string;
+  // For coupling
+  trailerIds?: string[];           // for tractors: list of attached trailers
+  associatedTractorId?: string;    // for trailers: attached tractor
 }
 
 export interface Trip {
@@ -48,8 +51,8 @@ export const mockVehicles: Vehicle[] = [
   {
     id: "1",
     name: "Dodávka plachta titrol",
-    type: "Dodávka",
-    status: "Pripravená",
+    type: "van",
+    status: "available",
     image: "/vehicles/van1.jpg",
     brand: "Mercedes",
     plateNumber: "BA123XX",
@@ -64,32 +67,34 @@ export const mockVehicles: Vehicle[] = [
     odometerKm: 124500,
     capacityFree: "0.7t",
     availability: "available",
+    // no coupling for simple vans
   },
   {
     id: "2",
-    name: "Dodávka skriňa biela",
-    type: "Dodávka",
-    status: "Na trase",
-    image: "/vehicles/van2.jpg",
-    brand: "Peugeot",
-    plateNumber: "KE456YY",
-    manufactureYear: 2020,
-    capacity: "1.2t",
-    notes: "Chladiarenská úprava, vhodná pre potraviny",
-    lastService: "2023-04-10",
-    nextService: "2023-08-10",
-    driver: "Peter Malý",
-    location: "Košice",
-    dashboardStatus: "import",
-    odometerKm: 98500,
-    capacityFree: "0.4t",
-    availability: "busy",
+    name: "Trailer XYZ",
+    type: "trailer",
+    status: "available",
+    image: "/vehicles/trailer1.jpg",
+    brand: "Krone",
+    plateNumber: "TR123AB",
+    manufactureYear: 2018,
+    capacity: "24t",
+    notes: "Standardný náves",
+    lastService: "2023-02-20",
+    nextService: "2023-06-20",
+    driver: undefined,
+    location: "",
+    dashboardStatus: "base",
+    odometerKm: 0,
+    capacityFree: "24t",
+    availability: "available",
+    associatedTractorId: "3",
   },
   {
     id: "3",
     name: "Ťahač biely",
-    type: "Ťahač",
-    status: "Servis",
+    type: "tractor",
+    status: "service",
     image: "/vehicles/truck1.jpg",
     brand: "Volvo",
     plateNumber: "ZA789ZZ",
@@ -104,52 +109,34 @@ export const mockVehicles: Vehicle[] = [
     odometerKm: 210000,
     capacityFree: "12t",
     availability: "service",
+    trailerIds: ["2"],
   },
   {
     id: "4",
-    name: "Sklápač modrý",
-    type: "Sklápač",
-    status: "Pripravená",
-    image: "/vehicles/dumper1.jpg",
-    brand: "MAN",
-    plateNumber: "TN234AA",
-    manufactureYear: 2018,
-    capacity: "15t",
-    notes: "Stavebný materiál, štrk, piesok",
-    lastService: "2023-02-20",
-    nextService: "2023-06-20",
-    driver: "Matej Ostrý",
-    location: "Trenčín",
-    dashboardStatus: "ready",
-    odometerKm: 156000,
-    capacityFree: "8t",
+    name: "Trailer ABC",
+    type: "trailer",
+    status: "available",
+    image: "/vehicles/trailer2.jpg",
+    brand: "Schmitz",
+    plateNumber: "TR456CD",
+    manufactureYear: 2019,
+    capacity: "18t",
+    notes: "Low-bed náves",
+    lastService: "2023-03-10",
+    nextService: "2023-07-10",
+    driver: undefined,
+    location: "",
+    dashboardStatus: "base",
+    odometerKm: 0,
+    capacityFree: "18t",
     availability: "available",
+    associatedTractorId: "3",
   },
   {
     id: "5",
-    name: "Dodávka korba",
-    type: "Dodávka",
-    status: "Parkovisko",
-    image: "/vehicles/van3.jpg",
-    brand: "Fiat",
-    plateNumber: "PO567BB",
-    manufactureYear: 2017,
-    capacity: "1.1t",
-    notes: "Vhodná na prepravu materiálu, otvorená korba",
-    lastService: "2023-03-10",
-    nextService: "2023-07-10",
-    driver: "David Šikovný",
-    location: "Prešov",
-    dashboardStatus: "base",
-    odometerKm: 178000,
-    capacityFree: "0.9t",
-    availability: "available",
-  },
-  {
-    id: "6",
-    name: "Auto plachta",
-    type: "Nákladné",
-    status: "Na trase",
+    name: "Scania R500",
+    type: "tractor",
+    status: "available",
     image: "/vehicles/truck2.jpg",
     brand: "Scania",
     plateNumber: "NR890CC",
@@ -164,19 +151,18 @@ export const mockVehicles: Vehicle[] = [
     odometerKm: 45000,
     capacityFree: "10t",
     availability: "busy",
+    trailerIds: [],  // currently no attached trailers
   },
 ];
 
 export const mockTrips: Trip[] = [
-  { id: 1, vehicleId: 1, date: "2023-04-21", driver: "Karol Veľký", destination: "Praha", status: "Ukončená", distance: 350, fuelConsumption: 32 },
-  { id: 2, vehicleId: 1, date: "2023-04-15", driver: "Ján Novák", destination: "Praha", status: "Ukončená", distance: 350, fuelConsumption: 30 },
-  // ... other trips ...
+  { id: 1, vehicleId: 1, date: "2023-04-21", driver: "Karol Veľký", destination: "Praha", status: "completed", distance: 350, fuelConsumption: 32 },
+  { id: 2, vehicleId: 1, date: "2023-04-15", driver: "Ján Novák", destination: "Praha", status: "completed", distance: 350, fuelConsumption: 30 },
 ];
 
 export const mockServices: Service[] = [
-  { id: "1", vehicleId: "1", date: "2023-03-25", type: "Pravidelný servis", status: "Hotový", cost: 350, description: "Výmena oleja, filtrov" },
-  { id: "2", vehicleId: "1", date: "2023-01-10", type: "Technická kontrola", status: "Hotový", cost: 120, description: "Pravidelná STK" },
-  // ... other services ...
+  { id: "1", vehicleId: "1", date: "2023-03-25", type: "Pravidelný servis", status: "completed", cost: 350, description: "Výmena oleja, filtrov" },
+  { id: "2", vehicleId: "1", date: "2023-01-10", type: "Technická kontrola", status: "completed", cost: 120, description: "Pravidelná STK" },
 ];
 
 // Helper functions for data retrieval

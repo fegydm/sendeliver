@@ -1,4 +1,4 @@
-// File: ./front/src/components/shared/modules/SidebarList.tsx
+// File: ./front/src/components/shared/elements/SidebarList.tsx
 
 import React from "react";
 

@@ -4,17 +4,18 @@ import { Toolbar } from "@/components/shared/elements/Toolbar";
 import type { FleetModuleConfig } from "../interfaces";
 
 interface FleetToolbarProps {
-  /* search & basic handlers (z generického Toolbaru) */
   searchTerm: string;
   onSearchChange: (v: string) => void;
   onReset: () => void;
-
-  /* modules */
   modules: FleetModuleConfig[];
   onToggleModule: (key: string) => void;
   onMoveModule: (from: number, to: number) => void;
 }
 
+/**
+ * Fleet-specific toolbar wrapping the generic Toolbar component.
+ * Allows search, reset, and module configuration dropdown.
+ */
 export const FleetToolbar: React.FC<FleetToolbarProps> = ({
   searchTerm,
   onSearchChange,
@@ -34,21 +35,17 @@ export const FleetToolbar: React.FC<FleetToolbarProps> = ({
 
   return (
     <div className="fleet-toolbar-wrapper">
-      {/* base toolbar */}
+      {/* Generic Toolbar shared across all cards */}
       <Toolbar
+        selectedCount={modules.filter(m => m.visible).length}
+        totalCount={modules.length}
+        onReset={onReset}
+        onSettings={() => setOpen(!open)}
         searchTerm={searchTerm}
         onSearchChange={onSearchChange}
-        onReset={onReset}
-        isTableView={false}
-        onToggleView={() => {}}
       />
 
-      {/* config button */}
-      <button className="toolbar-modules-btn" onClick={() => setOpen(!open)}>
-        ⚙️
-      </button>
-
-      {/* dropdown */}
+      {/* Fleet-specific modules configuration dropdown */}
       {open && (
         <div className="modules-dropdown" onMouseLeave={() => setOpen(false)}>
           {modules.map((m, i) => (
@@ -57,7 +54,7 @@ export const FleetToolbar: React.FC<FleetToolbarProps> = ({
               className="module-row"
               draggable
               onDragStart={() => setDragIdx(i)}
-              onDragOver={(e) => e.preventDefault()}
+              onDragOver={e => e.preventDefault()}
               onDrop={() => handleDrop(i)}
             >
               <span className="drag-handle">↕</span>

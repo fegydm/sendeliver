@@ -1,7 +1,7 @@
 // File: front/src/components/hauler/fleet/sections/SideBar.tsx
 
 import React, { useState, useMemo } from "react";
-import { SidebarList, Column } from "@/components/shared/modules/SidebarList";
+import { SidebarList, Column } from "@/components/shared/elements/SidebarList";
 import type { Vehicle } from "@/data/mockFleet";
 
 interface SideBarProps {
