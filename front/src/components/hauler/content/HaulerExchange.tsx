@@ -1,10 +1,13 @@
 // File: ./front/src/components/hauler/content/HaulerExchange.tsx
-// Last change: Completed implementation of Exchange component with real-time offer updates
+// Last change: Fixed TypeScript error with ExchangeOffer status type
 
 import React, { useState, useEffect, useRef } from "react";
 import { ExchangeOffer, mockExchangeOffers, generateRandomOffer } from "../../../data/mockExchangeData";
 import "./hauler.cards.css";
 import "./exchange.css";
+
+// Definujeme typ pre status ponuky pre jednoduchšie použitie
+type OfferStatus = 'new' | 'viewed' | 'accepted' | 'rejected' | 'expired';
 
 // Typy filtrov
 interface FilterState {
@@ -15,7 +18,7 @@ interface FilterState {
   minWeight: number | null;
   maxWeight: number | null;
   fromDate: Date | null;
-  status: string[];
+  status: OfferStatus[]; // Opravený typ
 }
 
 // Pomocná funkcia pre formátovanie dátumu
@@ -253,7 +256,7 @@ const HaulerExchange: React.FC = () => {
     if (offer.status === 'new') {
       const updatedOffers = offers.map(o => {
         if (o.id === offer.id) {
-          return { ...o, status: 'viewed', updatedAt: new Date() };
+          return { ...o, status: 'viewed' as OfferStatus, updatedAt: new Date() };
         }
         return o;
       });
@@ -279,7 +282,7 @@ const HaulerExchange: React.FC = () => {
   const handleAcceptOffer = (offerId: string) => {
     const updatedOffers = offers.map(o => {
       if (o.id === offerId) {
-        return { ...o, status: 'accepted', updatedAt: new Date() };
+        return { ...o, status: 'accepted' as OfferStatus, updatedAt: new Date() };
       }
       return o;
     });
@@ -289,7 +292,7 @@ const HaulerExchange: React.FC = () => {
     if (selectedOffer && selectedOffer.id === offerId) {
       setSelectedOffer({
         ...selectedOffer,
-        status: 'accepted',
+        status: 'accepted' as OfferStatus,
         updatedAt: new Date()
       });
     }
@@ -301,7 +304,7 @@ const HaulerExchange: React.FC = () => {
   const handleRejectOffer = (offerId: string) => {
     const updatedOffers = offers.map(o => {
       if (o.id === offerId) {
-        return { ...o, status: 'rejected', updatedAt: new Date() };
+        return { ...o, status: 'rejected' as OfferStatus, updatedAt: new Date() };
       }
       return o;
     });
@@ -311,14 +314,14 @@ const HaulerExchange: React.FC = () => {
     if (selectedOffer && selectedOffer.id === offerId) {
       setSelectedOffer({
         ...selectedOffer,
-        status: 'rejected',
+        status: 'rejected' as OfferStatus,
         updatedAt: new Date()
       });
     }
   };
   
   // Získanie CSS triedy pre stav ponuky
-  const getStatusClass = (status: string): string => {
+  const getStatusClass = (status: OfferStatus): string => {
     switch (status) {
       case 'new': return 'status-new';
       case 'viewed': return 'status-viewed';
@@ -330,7 +333,7 @@ const HaulerExchange: React.FC = () => {
   };
   
   // Preklad stavu ponuky
-  const translateStatus = (status: string): string => {
+  const translateStatus = (status: OfferStatus): string => {
     switch (status) {
       case 'new': return 'Nová';
       case 'viewed': return 'Zobrazená';

@@ -1,6 +1,6 @@
 // File: front/src/components/hauler/people/modules/PeopleImageModule.tsx
 import React from "react";
-import { PhotoModule } from "@/components/shared/modules/PhotoModule";
+import { PhotoModule } from "@/components/shared/elements/PhotoCard";
 
 interface PeopleImageModuleProps {
   src: string;

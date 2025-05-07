@@ -1,6 +1,6 @@
 // File: front/src/components/hauler/fleet/modules/FleetDriverModule.tsx
 import React from "react";
-import { PhotoModule } from "@/components/shared/modules/PhotoModule";
+import { PhotoCard } from "@/components/shared/elements/PhotoCard";
 import type { Person } from "@/data/mockPeople";
 
 interface FleetDriverModuleProps {
@@ -16,11 +16,13 @@ interface FleetDriverModuleProps {
 export const FleetDriverModule: React.FC<FleetDriverModuleProps> = ({ driver }) => (
   <div className="fleet-module fleet-module-driver">
     {/* Rounded photo */}
-    <PhotoModule
+    <PhotoCard
       src={driver?.image ?? "/people/placeholder.jpg"}
       alt={driver ? `${driver.firstName} ${driver.lastName}` : "No driver"}
-      mask="circle"
       fallbackSrc="/people/placeholder.jpg"
+      size={140}
+      uploadable={false}
+      className="driver-photo rounded-full"
     />
 
     {/* Name & surname */}
@@ -29,3 +31,5 @@ export const FleetDriverModule: React.FC<FleetDriverModuleProps> = ({ driver }) 
     </div>
   </div>
 );
+
+export default FleetDriverModule;

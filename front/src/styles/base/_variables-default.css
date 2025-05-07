@@ -16,7 +16,7 @@
    --color-text-lighter: hsl(0, 0%, 30%);
 
    /* Hauler HSL variables */
-   --hauler-h: 185;
+   --hauler-h: 110;
    --hauler-s: 60%;
    --hauler-l: 30%;
    --hauler-primary: hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l));

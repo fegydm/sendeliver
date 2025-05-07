@@ -1,115 +1,89 @@
-// File: components/shared/elements/Toolbar.tsx
+// File: ./front/src/components/shared/elements/Toolbar.tsx
 import React from "react";
-import { Button } from "@/components/shared/ui/button.ui";
-import { Input } from "@/components/shared/ui/input.ui";
+
+export interface ToolbarAction {
+  /** Unique key for the action */
+  key: string;
+  /** Icon or node to render inside the button */
+  icon: React.ReactNode;
+  /** Accessible title/label for the action */
+  title: string;
+  /** Click handler */
+  onClick: () => void;
+  /** Disable the button if true */
+  disabled?: boolean;
+}
 
 export interface ToolbarProps {
   /** Number of selected items */
   selectedCount?: number;
   /** Total number of items */
   totalCount?: number;
-  /** Reset filters callback */
-  onReset?: () => void;
-  /** Expand/toggle detail-table view callback */
-  onToggleExpand?: () => void;
-  /** Settings callback */
-  onSettings?: () => void;
-  /** Delete callback */
-  onDelete?: () => void;
-  /** Add item callback */
-  onAdd?: () => void;
-  /** Search term and handler */
+  /** Current search term */
   searchTerm?: string;
+  /** Placeholder for the search input */
+  placeholder?: string;
+  /** Callback when search term changes */
   onSearchChange?: (value: string) => void;
+  /** Array of toolbar actions (buttons) */
+  actions?: ToolbarAction[];
+  /** Additional CSS class(es) for the toolbar container */
+  className?: string;
 }
 
 /**
- * Generic Toolbar with predefined buttons and search using shared UI components
+ * Generic Toolbar with count, search and custom actions.
  */
 export const Toolbar: React.FC<ToolbarProps> = ({
   selectedCount = 0,
   totalCount = 0,
-  onReset,
-  onToggleExpand,
-  onSettings,
-  onDelete,
-  onAdd,
   searchTerm = "",
+  placeholder = "Search...",
   onSearchChange,
+  actions = [],
+  className = ""
 }) => {
   return (
-    <div className="toolbar flex items-center justify-between bg-white p-2 shadow">
-      {/* Left group */}
-      <div className="toolbar-left flex items-center space-x-2">
-        <div className="font-medium">
+    <div role="toolbar" className={`toolbar ${className}`.trim()}>
+      {/* Left group: item count */}
+      <div className="toolbar__group toolbar__group--left">
+        <div className="toolbar__count">
           {selectedCount}/{totalCount}
         </div>
-        {onReset && (
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Show all"
-            onClick={onReset}
-          >
-            📑
-          </Button>
-        )}
-        {onToggleExpand && (
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Expand"
-            onClick={onToggleExpand}
-          >
-            ⤢
-          </Button>
-        )}
       </div>
 
-      {/* Center: search input */}
-      <div className="toolbar-center flex-1 px-4">
+      {/* Center group: search box */}
+      <div className="toolbar__group toolbar__group--center">
         {onSearchChange && (
-          <Input
-            variant="search"
-            value={searchTerm}
-            onChange={e => onSearchChange(e.target.value)}
-            placeholder="Search..."
-          />
+          <div className="toolbar__search">
+            <input
+              type="search"
+              role="searchbox"
+              className="toolbar__search-input"
+              value={searchTerm}
+              onChange={e => onSearchChange(e.target.value)}
+              placeholder={placeholder}
+              aria-label={placeholder}
+            />
+          </div>
         )}
       </div>
 
-      {/* Right group */}
-      <div className="toolbar-right flex items-center space-x-2">
-        {onSettings && (
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Settings"
-            onClick={onSettings}
+      {/* Right group: custom action buttons */}
+      <div className="toolbar__group toolbar__group--right">
+        {actions.map(act => (
+          <button
+            key={act.key}
+            className="toolbar__button"
+            title={act.title}
+            aria-label={act.title}
+            onClick={act.onClick}
+            disabled={act.disabled}
+            data-testid={`toolbar-btn-${act.key}`}
           >
-            ⚙️
-          </Button>
-        )}
-        {onDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Delete"
-            onClick={onDelete}
-          >
-            🗑️
-          </Button>
-        )}
-        {onAdd && (
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Add"
-            onClick={onAdd}
-          >
-            ＋
-          </Button>
-        )}
+            <span className="toolbar__icon">{act.icon}</span>
+          </button>
+        ))}
       </div>
     </div>
   );

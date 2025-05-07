@@ -1,11 +1,19 @@
 // File: front/src/data/mockFleet.ts
-// Last change: Added trailerIds and associatedTractorId to Vehicle interface and mock data
+// Updated: 10 vehicles, new 6-status enum (outbound • inbound • transit • standby • depot • maintenance)
+
+export type VehicleStatus =
+  | "outbound"
+  | "inbound"
+  | "transit"
+  | "standby"
+  | "depot"
+  | "maintenance";
 
 export interface Vehicle {
   id: string;
   name: string;
-  type: string;
-  status: string;
+  type: string;                // van | tractor | trailer | rigid | …
+  status: string;              // technical/lease state: available | busy | service…
   image: string;
   brand: string;
   plateNumber: string;
@@ -17,15 +25,224 @@ export interface Vehicle {
   driver?: string;
   location?: string;
   assignedDriver?: string;
-  dashboardStatus?: "export" | "import" | "ready" | "base";
+  dashboardStatus: VehicleStatus;
   odometerKm: number;
   capacityFree: string;
   availability: string;
-  // For coupling
-  trailerIds?: string[];           // for tractors: list of attached trailers
-  associatedTractorId?: string;    // for trailers: attached tractor
+  trailerIds?: string[];
+  associatedTractorId?: string;
 }
 
+/* ------------------------------------------------------------------ */
+/* 10 demo vehicles – každý nový status minimálne raz                 */
+/* ------------------------------------------------------------------ */
+export const mockVehicles: Vehicle[] = [
+  /** 1 ─ Outbound ****************************************************/
+  {
+    id: "1",
+    name: "Sprinter 311",
+    type: "van",
+    status: "available",
+    image: "/vehicles/van1.jpg",
+    brand: "Mercedes",
+    plateNumber: "BA-123XX",
+    manufactureYear: 2019,
+    capacity: "1.5 t",
+    notes: "Export náklad – Mníchov",
+    lastService: "2025-02-10",
+    nextService: "2025-08-10",
+    driver: "Ján Novák",
+    location: "Mníchov",
+    dashboardStatus: "outbound",
+    odometerKm: 148200,
+    capacityFree: "0 t",
+    availability: "busy",
+  },
+
+  /** 2 ─ Inbound *****************************************************/
+  {
+    id: "2",
+    name: "Scania R500",
+    type: "tractor",
+    status: "available",
+    image: "/vehicles/truck2.jpg",
+    brand: "Scania",
+    plateNumber: "NR-890CC",
+    manufactureYear: 2022,
+    capacity: "18 t",
+    notes: "Vezie spätný náklad FR → SK",
+    lastService: "2025-01-12",
+    nextService: "2025-07-12",
+    driver: "Patrik Múdry",
+    location: "Praha",
+    dashboardStatus: "inbound",
+    odometerKm: 67_500,
+    capacityFree: "6 t",
+    availability: "busy",
+  },
+
+  /** 3 ─ Transit (loaded) ********************************************/
+  {
+    id: "3",
+    name: "DAF XF Euro 6",
+    type: "tractor",
+    status: "available",
+    image: "/vehicles/truck3.jpg",
+    brand: "DAF",
+    plateNumber: "TT-333TT",
+    manufactureYear: 2020,
+    capacity: "24 t",
+    notes: "Transit IT → DE (plný)",
+    lastService: "2024-12-01",
+    nextService: "2025-05-30",
+    driver: "Róbert Hýbel",
+    location: "Frankfurt",
+    dashboardStatus: "transit",
+    odometerKm: 388_900,
+    capacityFree: "0 t",
+    availability: "busy",
+  },
+
+  /** 4 ─ Stand-by (empty) ********************************************/
+  {
+    id: "4",
+    name: "Trailer Low-bed",
+    type: "trailer",
+    status: "available",
+    image: "/vehicles/trailer2.jpg",
+    brand: "Schmitz",
+    plateNumber: "TR-456CD",
+    manufactureYear: 2019,
+    capacity: "18 t",
+    notes: "Čaká na load v Antverpách",
+    lastService: "2025-01-18",
+    nextService: "2025-07-18",
+    driver: undefined,
+    location: "Brusel",
+    dashboardStatus: "inbound",
+    odometerKm: 0,
+    capacityFree: "18 t",
+    availability: "available",
+  },
+
+  /** 5 ─ Depot *******************************************************/
+  {
+    id: "5",
+    name: "Iveco Daily",
+    type: "van",
+    status: "available",
+    image: "/vehicles/van2.jpg",
+    brand: "Iveco",
+    plateNumber: "PN-456YY",
+    manufactureYear: 2021,
+    capacity: "1.2 t",
+    notes: "Parkuje v Žiline",
+    driver: "Lucia Sokolová",
+    location: "Žilina",
+    dashboardStatus: "depot",
+    odometerKm: 43_300,
+    capacityFree: "1.2 t",
+    availability: "available",
+  },
+
+  /** 6 ─ Maintenance *************************************************/
+  {
+    id: "6",
+    name: "Volvo FH16",
+    type: "tractor",
+    status: "service",
+    image: "/vehicles/truck1.jpg",
+    brand: "Volvo",
+    plateNumber: "ZA-789ZZ",
+    manufactureYear: 2021,
+    capacity: "24 t",
+    notes: "Výmena brzdových kotúčov",
+    driver: "Roman Silný",
+    location: "Bratislava",
+    dashboardStatus: "maintenance",
+    odometerKm: 210_000,
+    capacityFree: "24 t",
+    availability: "service",
+  },
+
+  /** 7 ─ ďalšie outbound (demo) **************************************/
+  {
+    id: "7",
+    name: "Renault Master",
+    type: "van",
+    status: "available",
+    image: "/vehicles/van3.jpg",
+    brand: "Renault",
+    plateNumber: "KE-987TT",
+    manufactureYear: 2020,
+    capacity: "1.3 t",
+    driver: "Fedor Gajdoš",
+    location: "Viedeň",
+    dashboardStatus: "outbound",
+    odometerKm: 99_100,
+    capacityFree: "0 t",
+    availability: "busy",
+  },
+
+  /** 8 ─ inbound trailer *********************************************/
+  {
+    id: "8",
+    name: "Trailer Mega",
+    type: "trailer",
+    status: "available",
+    image: "/vehicles/trailer3.jpg",
+    brand: "Krone",
+    plateNumber: "KR-852JK",
+    manufactureYear: 2017,
+    capacity: "26 t",
+    location: "Berlín",
+    dashboardStatus: "inbound",
+    odometerKm: 0,
+    capacityFree: "6 t",
+    availability: "busy",
+  },
+
+  /** 9 ─ stand-by tractor ********************************************/
+  {
+    id: "9",
+    name: "MAN TGX",
+    type: "tractor",
+    status: "available",
+    image: "/vehicles/truck4.jpg",
+    brand: "MAN",
+    plateNumber: "BA-652AA",
+    manufactureYear: 2018,
+    capacity: "24 t",
+    driver: "Peter Kováč",
+    location: "Budapešť",
+    dashboardStatus: "standby",
+    odometerKm: 512_300,
+    capacityFree: "24 t",
+    availability: "available",
+  },
+
+  /** 10 ─ depot trailer **********************************************/
+  {
+    id: "10",
+    name: "Flatbed Trailer",
+    type: "trailer",
+    status: "available",
+    image: "/vehicles/placeholder.jpg",
+    brand: "Schwarzmüller",
+    plateNumber: "TT-741CZ",
+    manufactureYear: 2016,
+    capacity: "20 t",
+    location: "Trnava",
+    dashboardStatus: "depot",
+    odometerKm: 0,
+    capacityFree: "20 t",
+    availability: "available",
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Trips / Services môžu zostať ako boli – nezávislé na dashboardStatus */
+/* ------------------------------------------------------------------ */
 export interface Trip {
   id: number;
   vehicleId: number;
@@ -47,113 +264,7 @@ export interface Service {
   description: string;
 }
 
-export const mockVehicles: Vehicle[] = [
-  {
-    id: "1",
-    name: "Dodávka plachta titrol",
-    type: "van",
-    status: "available",
-    image: "/vehicles/van1.jpg",
-    brand: "Mercedes",
-    plateNumber: "BA123XX",
-    manufactureYear: 2019,
-    capacity: "1.5t",
-    notes: "Vhodná na menšie náklady, dosah celá EU",
-    lastService: "2023-03-15",
-    nextService: "2023-07-15",
-    driver: "Ján Novák",
-    location: "Bratislava",
-    dashboardStatus: "export",
-    odometerKm: 124500,
-    capacityFree: "0.7t",
-    availability: "available",
-    // no coupling for simple vans
-  },
-  {
-    id: "2",
-    name: "Trailer XYZ",
-    type: "trailer",
-    status: "available",
-    image: "/vehicles/trailer1.jpg",
-    brand: "Krone",
-    plateNumber: "TR123AB",
-    manufactureYear: 2018,
-    capacity: "24t",
-    notes: "Standardný náves",
-    lastService: "2023-02-20",
-    nextService: "2023-06-20",
-    driver: undefined,
-    location: "",
-    dashboardStatus: "base",
-    odometerKm: 0,
-    capacityFree: "24t",
-    availability: "available",
-    associatedTractorId: "3",
-  },
-  {
-    id: "3",
-    name: "Ťahač biely",
-    type: "tractor",
-    status: "service",
-    image: "/vehicles/truck1.jpg",
-    brand: "Volvo",
-    plateNumber: "ZA789ZZ",
-    manufactureYear: 2021,
-    capacity: "24t",
-    notes: "Dlhé trasy, vhodný na medzinárodnú prepravu",
-    lastService: "2023-04-01",
-    nextService: "2023-04-15",
-    driver: "Roman Silný",
-    location: "Žilina",
-    dashboardStatus: "base",
-    odometerKm: 210000,
-    capacityFree: "12t",
-    availability: "service",
-    trailerIds: ["2"],
-  },
-  {
-    id: "4",
-    name: "Trailer ABC",
-    type: "trailer",
-    status: "available",
-    image: "/vehicles/trailer2.jpg",
-    brand: "Schmitz",
-    plateNumber: "TR456CD",
-    manufactureYear: 2019,
-    capacity: "18t",
-    notes: "Low-bed náves",
-    lastService: "2023-03-10",
-    nextService: "2023-07-10",
-    driver: undefined,
-    location: "",
-    dashboardStatus: "base",
-    odometerKm: 0,
-    capacityFree: "18t",
-    availability: "available",
-    associatedTractorId: "3",
-  },
-  {
-    id: "5",
-    name: "Scania R500",
-    type: "tractor",
-    status: "available",
-    image: "/vehicles/truck2.jpg",
-    brand: "Scania",
-    plateNumber: "NR890CC",
-    manufactureYear: 2022,
-    capacity: "18t",
-    notes: "Nové vozidlo, vhodné na dlhé trasy",
-    lastService: "2023-03-15",
-    nextService: "2023-07-15",
-    driver: "Patrik Múdry",
-    location: "Nitra",
-    dashboardStatus: "import",
-    odometerKm: 45000,
-    capacityFree: "10t",
-    availability: "busy",
-    trailerIds: [],  // currently no attached trailers
-  },
-];
+
 
 export const mockTrips: Trip[] = [
   { id: 1, vehicleId: 1, date: "2023-04-21", driver: "Karol Veľký", destination: "Praha", status: "completed", distance: 350, fuelConsumption: 32 },

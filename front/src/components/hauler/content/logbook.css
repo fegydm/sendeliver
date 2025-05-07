@@ -590,14 +590,7 @@
   gap: 12px;
 }
 
-.button {
-  padding: 8px 16px;
-  border-radius: var(--border-radius);
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-}
+
 
 .button.primary {
   background-color: var(--hauler-primary);

@@ -1,3 +1,4 @@
+
 // File: front/src/components/hauler/fleet/sections/VehicleTrips.tsx
 
 import React from "react";
@@ -17,32 +18,32 @@ export const VehicleTrips: React.FC<VehicleTripsProps> = ({ vehicleId }) => {
   const trips: Trip[] = getTripsForVehicle(vehicleId);
 
   if (trips.length === 0) {
-    return <div className="section-card">Žiadne jazdy</div>;
+    return (
+      <div className="trips-list section-panel vehicle-trips__empty">
+        Žiadne jazdy
+      </div>
+    );
   }
 
   return (
-    <div className="section-card">
-      <h3>Jazdy</h3>
-      <table className="trips-table">
-        <thead>
-          <tr>
-            <th>Dátum</th>
-            <th>Vodič</th>
-            <th>Destinácia</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {trips.map(trip => (
-            <tr key={trip.id}>
-              <td>{trip.date}</td>
-              <td>{trip.driver}</td>
-              <td>{trip.destination}</td>
-              <td>{trip.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="trips-list section-panel vehicle-trips">
+      <h3 className="section-title vehicle-trips__title">Jazdy</h3>
+      <div className="trips-list">
+        <div className="table-header">
+          <span>Dátum</span>
+          <span>Vodič</span>
+          <span>Destinácia</span>
+          <span>Status</span>
+        </div>
+        {trips.map(trip => (
+          <div key={trip.id} className="table-row">
+            <span>{trip.date}</span>
+            <span>{trip.driver}</span>
+            <span>{trip.destination}</span>
+            <span>{trip.status}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

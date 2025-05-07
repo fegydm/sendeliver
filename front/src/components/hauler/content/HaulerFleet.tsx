@@ -118,6 +118,10 @@ const HaulerFleet: React.FC = () => {
       manufactureYear: new Date().getFullYear(),
       capacity: "",
       notes: "",
+      // Pridané chýbajúce povinné vlastnosti
+      odometerKm: 0,
+      capacityFree: "",
+      availability: "available"
     };
     
     setVehicles([newVehicle, ...vehicles]);
