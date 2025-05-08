@@ -69,6 +69,7 @@ const HaulerFleetComponent: React.FC = () => {
       odometerKm: 0,
       capacityFree: "0t",
       availability: "available",
+      dashboardStatus: "transit"
     };
     setVehicles(v => [newVehicle, ...v]);
     setSelected(newVehicle);
