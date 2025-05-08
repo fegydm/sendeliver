@@ -11,6 +11,7 @@
     "front"
   ],
   "scripts": {
+    "start": "npm --workspace=back run start",
     "clean": "node back/src/scripts/clean.js",
     "dev": "concurrently \"npm --workspace=front run dev\" \"npm --workspace=back run dev\"",
     "build": "npm run build:logger && npm run prisma:generate && npm run build:back && npm run build:front",
