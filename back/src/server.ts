@@ -1,7 +1,12 @@
 // File: ./back/src/server.ts
 // Last change: Added public /api/verify-pin route and unified .env loading
 
-import express, { Request, Response } from "express";
+// Use require syntax for express to fix TypeScript errors with json() and static()
+// @ts-ignore
+import express_import from "express";
+const express = express_import as any;
+
+import type { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import http from "http";
 import path from "path";
@@ -37,9 +42,9 @@ dotenv.config({
   path: path.resolve(__dirname, "../..", ".env"),
 });
 
-// Use type assertion to help TypeScript understand Express
-const app = express() as any;
-const server = http.createServer(app as any);
+// Create Express application with proper type assertions
+const app = express();
+const server = http.createServer(app);
 
 // Global middleware
 app.use(express.json());
@@ -63,12 +68,11 @@ app.use('/api/contact/submit', contactMessagesRoutes);
 app.use('/api/verify-pin', verifyPinRouter);
 
 // Admin routes for contact messages
-app.use(
-  '/api/contact/admin',
+app.use('/api/contact/admin', [
   authenticateJWT,
   checkRole('admin','superadmin'),
   contactMessagesRoutes
-);
+]);
 
 // Other public API endpoints
 app.use("/api/ai", aiRouter);
@@ -79,20 +83,18 @@ app.use("/api/maps", mapsRouter);
 app.use("/api/vehicles", vehiclesRouter);
 
 // Protected deliveries for client, forwarder, carrier, admin, superadmin
-app.use(
-  "/api",
+app.use("/api", [
   authenticateJWT,
   checkRole('client','forwarder','carrier','admin','superadmin'),
   deliveryRouter
-);
+]);
 
 // External deliveries (client, carrier, superadmin)
-app.use(
-  "/api/external/deliveries",
+app.use("/api/external/deliveries", [
   authenticateJWT,
   checkRole('client','carrier','superadmin'),
   externalDeliveriesRouter
-);
+]);
 
 // Healthcheck endpoint
 app.get("/api/health", (_req: Request, res: Response) => {
@@ -112,7 +114,10 @@ app.get("/", (_req: Request, res: Response) =>
   res.sendFile(path.join(frontendPath, "index.html"))
 );
 
-const spaFallback: express.RequestHandler = (req: Request, res: Response) => {
+// Define RequestHandler type explicitly
+type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
+
+const spaFallback: RequestHandler = (req: Request, res: Response) => {
   if (req.path.startsWith("/api")) {
     res.status(404).json({ error: "API endpoint not found" });
     return;

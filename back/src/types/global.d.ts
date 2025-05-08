@@ -54,7 +54,23 @@ declare module 'express' {
   export function static(root: string, options?: any): any;
 
   // Express factory function
-  function express(): Express.Application;
+  function express(): Application;
+  export interface Application {
+    use(middleware: any): Application;
+    use(path: string, middleware: any): Application;
+    get(path: string, ...handlers: any[]): Application;
+    post(path: string, ...handlers: any[]): Application;
+    put(path: string, ...handlers: any[]): Application;
+    delete(path: string, ...handlers: any[]): Application;
+    patch(path: string, ...handlers: any[]): Application;
+    listen(port: number, host?: string, callback?: () => void): Server;
+  }
+  
+  export interface Server {
+    address(): { port: number; family: string; address: string };
+    close(callback?: (err?: Error) => void): Server;
+  }
+  
   namespace express {
     export interface Application {
       use(middleware: any): Application;
@@ -67,7 +83,7 @@ declare module 'express' {
       listen(port: number, callback?: () => void): Application;
     }
   }
-  export = express;
+  export default express;
 }
 
 // WebSocket definitions
@@ -87,12 +103,14 @@ declare module 'ws' {
 // Other modules
 declare module 'cors' {
   function cors(options?: any): any;
-  export = cors;
+  export default cors;
 }
 
 declare module 'nodemailer' {
-  function createTransport(options: any): any;
-  export = { createTransport };
+  export function createTransport(options: any): any;
+  export default {
+    createTransport: createTransport
+  };
 }
 
 declare module 'express-serve-static-core' {
@@ -104,3 +122,7 @@ declare module 'express-serve-static-core' {
     };
   }
 }
+
+// Add these modules as well
+declare module '@sendeliver/logger';
+declare module 'express-useragent';
