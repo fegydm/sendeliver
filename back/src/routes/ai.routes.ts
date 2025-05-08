@@ -1,5 +1,5 @@
 // File: ./back/src/routes/ai.routes.ts
-// Last change: Fixed TypeScript errors related to request body typing and response methods
+// Last change: Fixed generic Request type
 
 import { Router, Request, Response } from "express";
 import { AIService } from "../services/ai.services.js";
@@ -112,10 +112,10 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
 
 // Geocoding Endpoint
 router.post("/geo", async (
-  req: Request<{}, {}, { pickup?: string; delivery?: string }>,
+  req: Request,
   res: Response
 ): Promise<void> => {
-  const { pickup, delivery } = req.body;
+  const { pickup, delivery } = req.body as { pickup?: string; delivery?: string };
 
   try {
     const results = await Promise.all([

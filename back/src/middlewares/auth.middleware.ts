@@ -1,19 +1,20 @@
-/*
-File: ./back/src/middlewares/auth.middleware.ts
-Last change: Updated to authenticate using JWT from cookies
-*/
+// File: ./back/src/middlewares/auth.middleware.ts
+// Last change: Fixed Express module augmentation
+
 import { RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { PrismaClient, Role } from '@prisma/client';
 
-// Augment Express Request interface
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: {
-      userId: number;
-      role: Role;
-      permissions: string[];
-    };
+// Správny spôsob augmentácie Express Request
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: number;
+        role: Role;
+        permissions: string[];
+      };
+    }
   }
 }
 

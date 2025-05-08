@@ -1,6 +1,6 @@
 // File: ./back/src/routes/vehicles.routes.ts
 // Router for vehicle search API endpoint, updated with centralized constants
-import { Request, Response } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
 import { Router } from "express";
 import { VehicleService } from "../services/vehicles.services.js";
 import * as fs from "fs/promises";
@@ -49,6 +49,11 @@ interface SearchRequestBody {
   pickup?: Partial<LocationData>;
   delivery?: Partial<LocationData>;
   cargo?: Partial<CargoData>;
+}
+
+// Create a typed request interface
+interface TypedRequest<T> extends ExpressRequest {
+  body: T;
 }
 
 interface Vehicle {
@@ -170,7 +175,7 @@ function filterVehiclesByFormCriteria(vehicles: Vehicle[], params: SearchRequest
 
 // Handle vehicle search request
 const handleSearchVehicles = async (
-  req: Request<{}, {}, SearchRequestBody>,
+  req: TypedRequest<SearchRequestBody>,
   res: Response
 ): Promise<void> => {
   try {

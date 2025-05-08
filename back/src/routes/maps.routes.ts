@@ -2,15 +2,22 @@
 // Last change: 2025-04-22
 // Description: Updated routes to support MVT generation and Slovak tiles under the correct path
 
-import express, { Request, Response } from 'express';
+import express, { Request as ExpressRequest, Response } from 'express';
 import mapsService from '../services/maps.services.js';
 
 const router = express.Router();
 
+// Create a typed request interface
+interface TypedRequest<P = {}, Q = {}, B = {}> extends ExpressRequest {
+  params: P;
+  query: Q;
+  body: B;
+}
+
 // Note: This router should be mounted at '/api/maps' in your main server file
 
 // GET /api/maps/boundaries
-router.get('/boundaries', async (req: Request, res: Response) => {
+router.get('/boundaries', async (req: TypedRequest<{}, { bbox?: string, zoom?: string }>, res: Response) => {
   try {
     const { bbox, zoom } = req.query;
     const zoomLevel = zoom ? parseInt(zoom as string, 10) : 2;
@@ -33,8 +40,16 @@ router.get('/boundaries', async (req: Request, res: Response) => {
   }
 });
 
+// Define interface for color update request body
+interface ColorUpdateBody {
+  colour: string;
+}
+
 // PUT /api/maps/boundaries/:id/color
-router.put('/boundaries/:id/color', async (req: Request, res: Response) => {
+router.put('/boundaries/:id/color', async (
+  req: TypedRequest<{ id: string }, {}, ColorUpdateBody>, 
+  res: Response
+) => {
   try {
     const { id } = req.params;
     const { colour } = req.body;
@@ -55,8 +70,16 @@ interface TileParams {
   y: string;
 }
 
+// Define TileQuery type for the optional layer parameter
+interface TileQuery {
+  layer?: string;
+}
+
 // GET /api/maps/tiles/:z/:x/:y.mvt
-router.get('/tiles/:z/:x/:y.mvt', async (req: Request<TileParams>, res: Response): Promise<void> => {
+router.get('/tiles/:z/:x/:y.mvt', async (
+  req: TypedRequest<TileParams, TileQuery>, 
+  res: Response
+): Promise<void> => {
   try {
     const { z, x, y } = req.params;
     // Optional layer query, default to 'boundaries'
@@ -104,7 +127,10 @@ router.get('/tiles/:z/:x/:y.mvt', async (req: Request<TileParams>, res: Response
 });
 
 // GET /api/maps/tiles/sk/:z/:x/:y.mvt - special Slovak boundaries
-router.get('/tiles/sk/:z/:x/:y.mvt', async (req: Request<TileParams>, res: Response): Promise<void> => {
+router.get('/tiles/sk/:z/:x/:y.mvt', async (
+  req: TypedRequest<TileParams>, 
+  res: Response
+): Promise<void> => {
   try {
     const { z, x, y } = req.params;
     const zoom = parseInt(z, 10);

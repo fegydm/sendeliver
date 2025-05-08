@@ -1,7 +1,7 @@
 // File: ./back/src/server.ts
 // Last change: Added public /api/verify-pin route and unified .env loading
 
-import express, { RequestHandler } from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import http from "http";
 import path from "path";
@@ -37,14 +37,15 @@ dotenv.config({
   path: path.resolve(__dirname, "../..", ".env"),
 });
 
-const app = express();
-const server = http.createServer(app);
+// Use type assertion to help TypeScript understand Express
+const app = express() as any;
+const server = http.createServer(app as any);
 
 // Global middleware
 app.use(express.json());
 app.use(cookieParser()); // Added cookie-parser for auth cookies
 app.use(ua.express());
-morgan.token("isBot", (req) => (req as any).useragent.isBot ? "BOT" : "HUMAN");
+morgan.token("isBot", (req: any) => req.useragent.isBot ? "BOT" : "HUMAN");
 app.use(morgan(":remote-addr :method :url :status :response-time ms :isBot"));
 app.use(cors({
   origin: [
@@ -94,7 +95,7 @@ app.use(
 );
 
 // Healthcheck endpoint
-app.get("/api/health", (_req, res) => {
+app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
@@ -107,11 +108,11 @@ const publicPath = path.join(projectRoot, process.env.PUBLIC_PATH || "");
   .forEach(([url, dir]) => app.use(url, express.static(path.join(publicPath, dir))));
 app.use("/assets", express.static(path.join(frontendPath, "assets")));
 
-app.get("/", (_req, res) =>
+app.get("/", (_req: Request, res: Response) =>
   res.sendFile(path.join(frontendPath, "index.html"))
 );
 
-const spaFallback: RequestHandler = (req, res) => {
+const spaFallback: express.RequestHandler = (req: Request, res: Response) => {
   if (req.path.startsWith("/api")) {
     res.status(404).json({ error: "API endpoint not found" });
     return;

@@ -1,5 +1,5 @@
 // File: ./back/src/routes/delivery.routes.ts
-// Last change: Added proper TypeScript typing for Express Request and Response
+// Last change: Replaced generic Request with simple type assertion
 
 import pkg from 'pg';
 const { Pool } = pkg;
@@ -32,7 +32,7 @@ interface DeliveryData {
 router.post(
   "/import-delivery",
   async (
-    req: Request<{}, {}, DeliveryData>,
+    req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
@@ -50,7 +50,7 @@ router.post(
         id_carrier,
         name_carrier,
         vehicle_type,
-      } = req.body;
+      } = req.body as DeliveryData;
 
       if (!id_pp || !delivery_date) {
         res.status(400).json({

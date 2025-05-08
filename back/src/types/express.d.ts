@@ -1,9 +1,8 @@
 // File: ./back/src/types/express.d.ts
-// Last change: Fixed type declarations for Express Request with Prisma Role
+// Last change: Extended Express type declarations with full interface support
 
 import { Role } from '@prisma/client';
 
-// Upravený súbor s deklaráciami pre Express
 declare global {
  namespace Express {
    interface Request {
@@ -12,6 +11,28 @@ declare global {
        role: Role;
        permissions: string[];
      };
+     body: any;
+     query: any;
+     params: any;
+     path: string;
+     cookies: { [key: string]: string };
+     headers: {
+       [key: string]: string | string[] | undefined;
+       authorization?: string;
+     };
+   }
+   
+   interface Response {
+     status(code: number): Response;
+     json(data: any): Response;
+     send(body?: any): Response;
+     sendFile(path: string, options?: any): void;
+     sendStatus(code: number): Response;
+     cookie(name: string, value: string, options?: any): Response;
+     clearCookie(name: string, options?: any): Response;
+     set(field: string, value: string): Response;
+     setHeader(name: string, value: string): Response;
+     end(): Response;
    }
  }
 }

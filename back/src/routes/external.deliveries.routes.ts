@@ -1,7 +1,4 @@
-// File: ./back/src/routes/external.deliveries.routes.ts
-// Last change: Translated comments to English and added proper TypeScript typings
-
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request as ExpressRequest, Response, NextFunction } from 'express';
 import pkg from 'pg';
 
 const { Pool } = pkg;
@@ -29,8 +26,13 @@ interface DeliveryData {
   vehicle_type?: string;
 }
 
+// Create a properly typed Request interface
+interface TypedRequest<T> extends ExpressRequest {
+  body: T;
+}
+
 // Middleware to verify API key from request header
-const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+const authMiddleware = (req: ExpressRequest, res: Response, next: NextFunction): void => {
   const apiKey = req.headers['x-api-key'];
 
   if (!apiKey || apiKey !== process.env.DELIVERY_API_KEY) {
@@ -46,7 +48,7 @@ router.post(
   '/import-delivery',
   authMiddleware,
   async (
-    req: Request<{}, {}, DeliveryData>,
+    req: TypedRequest<DeliveryData>,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
