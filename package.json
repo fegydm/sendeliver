@@ -1,23 +1,27 @@
 {
   "name": "sendeliver",
   "version": "1.0.0",
-  "scripts": {
-    "clean": "node back/src/scripts/clean.js",
-    "dev": "concurrently \"cd front && npm run dev\" \"cd back && npm run dev\"",
-    "build": "npm run build:logger && npm run build:back && npm run build:front",
-    "build:logger": "cd packages/logger && npm runuelva",
-    "build:back": "cd back && npm run build",
-    "build:front": "cd front && npm run build",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:generate": "prisma generate"
-  },
-  "devDependencies": {
-    "concurrently": "^8.0.0"
+  "private": true,
+  "prisma": {
+    "schema": "prisma/schema.prisma"
   },
   "workspaces": [
     "packages/*",
     "back",
-    "front",
-    "prisma"
-  ]
+    "front"
+  ],
+  "scripts": {
+    "clean": "node back/src/scripts/clean.js",
+    "dev": "concurrently \"npm --workspace=front run dev\" \"npm --workspace=back run dev\"",
+    "build": "npm run build:logger && npm run prisma:generate && npm run build:back && npm run build:front",
+    "build:logger": "npm --workspace=@sendeliver/logger run build",
+    "build:back":   "npm --workspace=back run build",
+    "build:front":  "npm --workspace=front run build",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate":  "prisma migrate dev",
+    "postinstall":     "npm run prisma:generate && npm run build:logger"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  }
 }

@@ -3,18 +3,18 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "nodemon --exec tsx src/server.ts",
-    "clean": "npx rimraf dist node_modules",
-    "build": "tsc --project tsconfig.json",
-    "format": "prettier --write \"**/*.{js,ts,json,md}\"",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "start":           "node dist/server.js",
+    "dev":             "nodemon --exec tsx src/server.ts",
+    "clean":           "npx rimraf dist node_modules",
+    "build":           "tsc -b tsconfig.json",
+    "format":          "prettier --write \"**/*.{js,ts,json,md}\"",
+    "test":            "jest",
+    "test:watch":      "jest --watch",
+    "test:coverage":   "jest --coverage"
   },
   "dependencies": {
-    "@prisma/client": "^6.7.0",
-    "@sendeliver/logger": "file:../packages/logger",
+    "@prisma/client": "*",
+  "@sendeliver/logger": "file:../packages/logger",
     "cors": "2.8.5",
     "dotenv": "16.4.5",
     "express": "5.0.1",

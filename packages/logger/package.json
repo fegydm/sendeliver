@@ -6,7 +6,7 @@
   "scripts": {
     "prepare": "npm run build",
     "build": "tsc -b tsconfig.json",
-    "clean": "rm -rf dist node_modules"
+   "clean": "rimraf dist node_modules"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
