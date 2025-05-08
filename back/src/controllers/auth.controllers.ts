@@ -8,14 +8,10 @@ import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
 import { OAuth2Client } from 'google-auth-library';
 
-interface RequestWithBody extends express.Request {
-  body: any;
-  user?: {
-    userId: number;
-    role: Role;
-    permissions: string[];
-  };
-}
+// Define request type directly as "any" to avoid namespace issues
+type Request = any;
+type Response = any;
+type NextFunction = (err?: any) => void;
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
@@ -25,9 +21,9 @@ const scrypt = promisify(_scrypt);
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 type Handler = (
-  req: RequestWithBody, 
-  res: express.Response, 
-  next: express.NextFunction
+  req: Request, 
+  res: Response, 
+  next: NextFunction
 ) => Promise<void> | void;
 
 async function hashPassword(password: string): Promise<string> {
@@ -42,7 +38,7 @@ async function verifyPassword(stored: string, password: string): Promise<boolean
   return key === derived.toString('hex');
 }
 
-function setAuthCookie(res: express.Response, userId: number, role: Role) {
+function setAuthCookie(res: Response, userId: number, role: Role) {
   const token = jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '7d' });
   
   res.cookie('auth', token, {
