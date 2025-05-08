@@ -1,25 +1,28 @@
-// File: ./back/src/configs/websocket.ts
-// Last change: Implementation of WebSocket server for real-time notifications
+// File: ./back/src/configs/websocket.config.ts
+// Last change: Complete rewrite with simpler type approach
 
-import WebSocket, { WebSocketServer as WSServer } from 'ws';
-import { Server } from 'http';
+import { Server } from 'ws';
+import { Server as HttpServer } from 'http';
 import { logger } from '@sendeliver/logger';
 import jwt from 'jsonwebtoken';
 
+// Prehlásenie, že používame any typy pre niektoré parametre
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 interface AdminClient {
-  ws: WebSocket;
+  ws: any; // WebSocket inštancia
   userId: string;
   isAdmin: boolean;
 }
 
 export class WebSocketServer {
-  private static wss: WSServer;
-  private static clients: Map<WebSocket, AdminClient> = new Map();
+  private static wss: any; // Server inštancia
+  private static clients: Map<any, AdminClient> = new Map();
   
-  public static initialize(server: Server): void {
-    this.wss = new WSServer({ server, path: '/ws' });
+  public static initialize(server: HttpServer): void {
+    this.wss = new Server({ server, path: '/ws' });
     
-    this.wss.on('connection', (ws: WebSocket, request) => {
+    this.wss.on('connection', (ws: any, request: any) => {
       // Extract token from query parameter
       const url = new URL(request.url || '', `http://${request.headers.host}`);
       const token = url.searchParams.get('token');
@@ -49,8 +52,18 @@ export class WebSocketServer {
         }));
         
         // Set up event handlers
-        ws.on('message', (message: string) => {
-          this.handleMessage(ws, message);
+        ws.on('message', (message: any) => {
+          let messageStr: string;
+          
+          if (Buffer.isBuffer(message)) {
+            messageStr = message.toString();
+          } else if (typeof message === 'string') {
+            messageStr = message;
+          } else {
+            messageStr = JSON.stringify(message);
+          }
+          
+          this.handleMessage(ws, messageStr);
         });
         
         ws.on('close', () => {
@@ -67,7 +80,7 @@ export class WebSocketServer {
     logger.info('WebSocket server initialized');
   }
   
-  private static handleMessage(ws: WebSocket, message: string): void {
+  private static handleMessage(ws: any, message: string): void {
     try {
       const data = JSON.parse(message);
       // Handle different message types here
@@ -82,7 +95,7 @@ export class WebSocketServer {
    */
   public static broadcastToAdmins(message: any): void {
     for (const [ws, client] of this.clients.entries()) {
-      if (client.isAdmin && ws.readyState === WebSocket.OPEN) {
+      if (client.isAdmin && ws.readyState === 1) { // 1 is OPEN state
         ws.send(JSON.stringify(message));
       }
     }
@@ -93,7 +106,7 @@ export class WebSocketServer {
    */
   public static sendToUser(userId: string, message: any): void {
     for (const [ws, client] of this.clients.entries()) {
-      if (client.userId === userId && ws.readyState === WebSocket.OPEN) {
+      if (client.userId === userId && ws.readyState === 1) { // 1 is OPEN state
         ws.send(JSON.stringify(message));
       }
     }
