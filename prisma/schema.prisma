@@ -1,4 +1,4 @@
-// File: ./back/prisma/schema.prisma
+// File: ./prisma/schema.prisma
 // Updated schema for Sendeliver auth with Google OAuth and sessions
 
 datasource db {
