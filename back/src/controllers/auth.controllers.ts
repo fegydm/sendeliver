@@ -1,8 +1,7 @@
-/*
-File: ./back/src/controllers/auth.controllers.ts
-Last change: Added HttpOnly cookies for JWT tokens
-*/
-import { RequestHandler } from 'express';
+// File: ./back/src/controllers/auth.controllers.ts
+// Last change: Fixed type issues with Express RequestHandler
+
+import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, Role } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
@@ -15,6 +14,9 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 dní v milisekundách
 const scrypt = promisify(_scrypt);
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+// Definovanie vlastného typu pre handler, aby sme sa vyhli problémom s RequestHandler
+type Handler = (req: Request, res: Response, next: NextFunction) => Promise<void> | void;
 
 // Helper: hash a password
 async function hashPassword(password: string): Promise<string> {
@@ -31,7 +33,7 @@ async function verifyPassword(stored: string, password: string): Promise<boolean
 }
 
 // Helper: set auth cookie
-function setAuthCookie(res: any, userId: number, role: Role) {
+function setAuthCookie(res: Response, userId: number, role: Role) {
   const token = jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '7d' });
   
   res.cookie('auth', token, {
@@ -45,7 +47,7 @@ function setAuthCookie(res: any, userId: number, role: Role) {
 }
 
 // Email/password registration
-export const registerUser: RequestHandler = async (req, res, next) => {
+export const registerUser: Handler = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
@@ -75,7 +77,7 @@ export const registerUser: RequestHandler = async (req, res, next) => {
 };
 
 // Email/password login
-export const loginUser: RequestHandler = async (req, res, next) => {
+export const loginUser: Handler = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -110,7 +112,7 @@ export const loginUser: RequestHandler = async (req, res, next) => {
 };
 
 // Google OAuth login/registration
-export const googleAuth: RequestHandler = async (req, res, next) => {
+export const googleAuth: Handler = async (req, res, next) => {
   try {
     const { idToken } = req.body;
     if (!idToken) {
@@ -147,7 +149,7 @@ export const googleAuth: RequestHandler = async (req, res, next) => {
 };
 
 // Logout user
-export const logoutUser: RequestHandler = (req, res) => {
+export const logoutUser: Handler = (req, res) => {
   res.clearCookie('auth', { 
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -159,7 +161,7 @@ export const logoutUser: RequestHandler = (req, res) => {
 };
 
 // Get current user profile
-export const getProfile: RequestHandler = async (req, res, next) => {
+export const getProfile: Handler = async (req, res, next) => {
   try {
     if (!req.user) {
       res.status(401).json({ error: 'Not authenticated' });

@@ -22,8 +22,6 @@
     "postinstall": "npm run prisma:generate && npm run build:logger"
   },
   "devDependencies": {
-    "@types/pg": "^8.15.0",
-    "@types/ws": "^8.18.1",
     "concurrently": "^8.0.0"
   }
 }
