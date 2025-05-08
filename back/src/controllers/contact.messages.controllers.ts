@@ -2,7 +2,7 @@
 // Last change: Added explicit any types to handler parameters
 
 // Handler to submit a new contact message
-export const createContactMessage = async (req: any, res: any, next: any) => {
+export const submitContactMessage = async (req: any, res: any, next: any) => {
   try {
     const { name, email, message } = req.body;
     // TODO: implement saving logic
