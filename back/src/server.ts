@@ -1,13 +1,10 @@
 // File: ./back/src/server.ts
-// Last change: Added public /api/verify-pin route and unified .env loading
+// Last change: Fixed req.method type error, removed cors/nodemailer
 
-// Use require syntax for express to fix TypeScript errors with json() and static()
-// @ts-ignore
 import express_import from "express";
 const express = express_import as any;
 
 import type { Request, Response, NextFunction } from "express";
-import cors from "cors";
 import http from "http";
 import path from "path";
 import fs from "fs";
@@ -23,58 +20,60 @@ import geoCountriesRouter from "./routes/geo.countries.routes.js";
 import geoLanguagesRouter from "./routes/geo.languages.routes.js";
 import geoTranslationsRouter from "./routes/geo.translations.routes.js";
 import mapsRouter from "./routes/maps.routes.js";
-import contactMessagesRoutes from './routes/contact.messages.routes.js';
+import contactMessagesRoutes from "./routes/contact.messages.routes.js";
 import vehiclesRouter from "./routes/vehicles.routes.js";
 import deliveryRouter from "./routes/delivery.routes.js";
 import externalDeliveriesRouter from "./routes/external.deliveries.routes.js";
 import authRoutes from "./routes/auth.routes.js";
-import verifyPinRouter from "./routes/verify-pin.routes.js"; // Public PIN verify
+import verifyPinRouter from "./routes/verify-pin.routes.js";
 import { authenticateJWT, checkRole } from "./middlewares/auth.middleware.js";
 
-// ─────────── Derive __dirname in ESM ───────────
-// English comment: Compute __dirname from import.meta.url
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ─────────── Load .env from project root ───────────
-// English comment: Load environment variables once from root .env
 dotenv.config({
   path: path.resolve(__dirname, "../..", ".env"),
 });
 
-// Create Express application with proper type assertions
 const app = express();
 const server = http.createServer(app);
 
-// Global middleware
 app.use(express.json());
-app.use(cookieParser()); // Added cookie-parser for auth cookies
+app.use(cookieParser());
 app.use(ua.express());
 morgan.token("isBot", (req: any) => req.useragent.isBot ? "BOT" : "HUMAN");
 app.use(morgan(":remote-addr :method :url :status :response-time ms :isBot"));
-app.use(cors({
-  origin: [
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const allowedOrigins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "https://sendeliver.com"
-  ],
-  credentials: true // Allow cookies over CORS
-}));
+  ];
+  const origin = req.headers.origin;
 
-// Public routes
+  if (typeof origin === "string" && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  if ((req as any).method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/contact/submit', contactMessagesRoutes);
-// Public PIN verification route (no auth required)
 app.use('/api/verify-pin', verifyPinRouter);
 
-// Admin routes for contact messages
 app.use('/api/contact/admin', [
   authenticateJWT,
-  checkRole('admin','superadmin'),
+  checkRole('admin', 'superadmin'),
   contactMessagesRoutes
 ]);
 
-// Other public API endpoints
 app.use("/api/ai", aiRouter);
 app.use("/api/geo/countries", geoCountriesRouter);
 app.use("/api/geo/languages", geoLanguagesRouter);
@@ -82,31 +81,27 @@ app.use("/api/geo/translations", geoTranslationsRouter);
 app.use("/api/maps", mapsRouter);
 app.use("/api/vehicles", vehiclesRouter);
 
-// Protected deliveries for client, forwarder, carrier, admin, superadmin
 app.use("/api", [
   authenticateJWT,
-  checkRole('client','forwarder','carrier','admin','superadmin'),
+  checkRole('client', 'forwarder', 'carrier', 'admin', 'superadmin'),
   deliveryRouter
 ]);
 
-// External deliveries (client, carrier, superadmin)
 app.use("/api/external/deliveries", [
   authenticateJWT,
-  checkRole('client','carrier','superadmin'),
+  checkRole('client', 'carrier', 'superadmin'),
   externalDeliveriesRouter
 ]);
 
-// Healthcheck endpoint
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
-// Static files and SPA fallback
 const projectRoot = path.resolve(__dirname, '../..');
 const frontendPath = path.join(projectRoot, process.env.FRONTEND_PATH || "");
 const publicPath = path.join(projectRoot, process.env.PUBLIC_PATH || "");
 
-[ ["/pics","pics"], ["/flags","flags"], ["/animations","animations"] ]
+[["/pics", "pics"], ["/flags", "flags"], ["/animations", "animations"]]
   .forEach(([url, dir]) => app.use(url, express.static(path.join(publicPath, dir))));
 app.use("/assets", express.static(path.join(frontendPath, "assets")));
 
@@ -114,7 +109,6 @@ app.get("/", (_req: Request, res: Response) =>
   res.sendFile(path.join(frontendPath, "index.html"))
 );
 
-// Define RequestHandler type explicitly
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
 const spaFallback: RequestHandler = (req: Request, res: Response) => {
@@ -131,7 +125,6 @@ const spaFallback: RequestHandler = (req: Request, res: Response) => {
 };
 app.use(spaFallback);
 
-// Start server
 const PORT = parseInt(process.env.PORT || "5000", 10);
 server.listen(PORT, "0.0.0.0", () =>
   console.log(`Server listening on port ${PORT}`)

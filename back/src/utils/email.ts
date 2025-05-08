@@ -1,8 +1,6 @@
-/*
-File: ./back/src/utils/email.ts
-Last change: Added TypeScript typings and fixed implicit any errors
-*/
-import nodemailer, { Transporter, SendMailOptions } from 'nodemailer';
+// File: ./back/src/utils/email.ts
+// Last change: Removed nodemailer, implemented logging-based email stub
+
 import { logger } from '@sendeliver/logger';
 import fs from 'fs';
 import path from 'path';
@@ -10,26 +8,6 @@ import Handlebars, { TemplateDelegate } from 'handlebars';
 
 // Email template cache
 const templates: Record<string, TemplateDelegate> = {};
-
-/**
- * Configure email transporter
- */
-const createTransporter = (): Transporter => {
-  const config = {
-    host: process.env.EMAIL_HOST || 'smtp.example.com',
-    port: parseInt(process.env.EMAIL_PORT || '587', 10),
-    secure: process.env.EMAIL_SECURE === 'true',
-    auth: {
-      user: process.env.EMAIL_USER || 'user@example.com',
-      pass: process.env.EMAIL_PASSWORD || 'password',
-    },
-    tls: {
-      rejectUnauthorized: process.env.NODE_ENV === 'production',
-    },
-  };
-
-  return nodemailer.createTransport(config);
-};
 
 /**
  * Load and compile email template
@@ -68,7 +46,7 @@ interface SendEmailOptions {
 }
 
 /**
- * Send an email
+ * Send an email (stub implementation, logs instead of sending)
  */
 export const sendEmail = async (options: SendEmailOptions): Promise<any> => {
   const {
@@ -80,7 +58,6 @@ export const sendEmail = async (options: SendEmailOptions): Promise<any> => {
   } = options;
 
   try {
-    const transporter = createTransporter();
     let html: string;
 
     if (template) {
@@ -92,7 +69,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<any> => {
       throw new Error('Either template or context.message is required');
     }
 
-    const mailOptions: SendMailOptions = {
+    const mailOptions = {
       from,
       to,
       subject,
@@ -100,17 +77,17 @@ export const sendEmail = async (options: SendEmailOptions): Promise<any> => {
       text: html.replace(/<[^>]*>/g, ''),
     };
 
-    const result = await transporter.sendMail(mailOptions);
-    logger.info(`Email sent to ${to}: ${subject}`);
-    return result;
+    // Log email instead of sending
+    logger.info(`Email would be sent: ${JSON.stringify(mailOptions)}`);
+    return { messageId: `stub-${Date.now()}`, status: 'logged' };
   } catch (error) {
-    logger.error(`Failed to send email to ${options.to}:`, error);
+    logger.error(`Failed to process email to ${options.to}:`, error);
     throw error;
   }
 };
 
 /**
- * Send a test email
+ * Send a test email (stub implementation, logs instead of sending)
  */
 export const sendTestEmail = async (): Promise<any> => {
   const testReceiver = process.env.EMAIL_TEST_RECEIVER || process.env.EMAIL_USER;
