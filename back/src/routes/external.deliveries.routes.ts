@@ -1,5 +1,9 @@
+// File: ./back/src/routes/external.deliveries.routes.ts
+
 import { Router, Request as ExpressRequest, Response, NextFunction } from 'express';
 import pkg from 'pg';
+
+console.log("[external.deliveries] Route loaded");
 
 const { Pool } = pkg;
 const router = Router();
@@ -34,19 +38,29 @@ interface TypedRequest<T> extends ExpressRequest {
 // Middleware to verify API key from request header
 const authMiddleware = (req: ExpressRequest, res: Response, next: NextFunction): void => {
   const apiKey = req.headers['x-api-key'];
+  console.log("[external.deliveries] Incoming request");
+  console.log("[external.deliveries] Provided API key:", apiKey);
+  console.log("[external.deliveries] Expected API key:", process.env.DELIVERY_API_KEY);
 
   if (!apiKey || apiKey !== process.env.DELIVERY_API_KEY) {
-    res.status(401).json({ error: 'Unauthorized' });
+    console.warn("[external.deliveries] 🔒 Unauthorized access attempt");
+    res.status(401).json({ status: 'NOT_OK', error: 'Unauthorized: Invalid or missing API key' });
     return;
   }
 
+  console.log("[external.deliveries] ✅ API key is valid");
   next();
 };
 
-// Route handler for inserting external deliveries
+// Log route load
+console.log("[external.deliveries] Route loaded");
+
+// Protect all routes under /api/external/deliveries
+router.use(authMiddleware);
+
+// POST /api/external/deliveries
 router.post(
-  '/import-delivery',
-  authMiddleware,
+  '/',
   async (
     req: TypedRequest<DeliveryData>,
     res: Response,
@@ -76,6 +90,7 @@ router.post(
         return;
       }
 
+      // Check for existing delivery by id_pp
       const existing = await pool.query(
         'SELECT 1 FROM external.deliveries WHERE id_pp = $1 LIMIT 1',
         [id_pp]
@@ -89,6 +104,7 @@ router.post(
         return;
       }
 
+      // Insert new delivery
       const result = await pool.query(
         `INSERT INTO external.deliveries 
          (delivery_id, delivery_date, delivery_time, delivery_type, 
@@ -112,12 +128,15 @@ router.post(
         ]
       );
 
+      console.log(`[external.deliveries] ✅ Delivery inserted: ${id_pp}`);
+
       res.status(201).json({
         status: 'OK',
         message: `✅ External delivery with ID_PP ${id_pp} was successfully recorded.`,
         data: result.rows[0]
       });
     } catch (error) {
+      console.error("[external.deliveries] ❌ Error:", error);
       next(error);
     }
   }

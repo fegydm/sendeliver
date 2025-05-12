@@ -1,5 +1,5 @@
 // File: ./back/src/server.ts
-// Last change: Fixed req.method type error, removed cors/nodemailer
+// Last change: Fixed route order for external deliveries
 
 import express_import from "express";
 const express = express_import as any;
@@ -41,6 +41,7 @@ const server = http.createServer(app);
 app.use(express.json());
 app.use(cookieParser());
 app.use(ua.express());
+
 morgan.token("isBot", (req: any) => req.useragent.isBot ? "BOT" : "HUMAN");
 app.use(morgan(":remote-addr :method :url :status :response-time ms :isBot"));
 
@@ -64,16 +65,23 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// 🟢 Verejné API bez autentifikácie
 app.use('/api/auth', authRoutes);
 app.use('/api/contact/submit', contactMessagesRoutes);
 app.use('/api/verify-pin', verifyPinRouter);
 
+// 🔒 Admin-only route
 app.use('/api/contact/admin', [
   authenticateJWT,
   checkRole('admin', 'superadmin'),
   contactMessagesRoutes
 ]);
 
+// 🔁 Mount external deliveries before protected /api/*
+console.log("[server.ts] 🔁 externalDeliveriesRouter mounted");
+app.use("/api/external/deliveries", externalDeliveriesRouter);
+
+// 🌍 Otvorené API moduly
 app.use("/api/ai", aiRouter);
 app.use("/api/geo/countries", geoCountriesRouter);
 app.use("/api/geo/languages", geoLanguagesRouter);
@@ -81,23 +89,19 @@ app.use("/api/geo/translations", geoTranslationsRouter);
 app.use("/api/maps", mapsRouter);
 app.use("/api/vehicles", vehiclesRouter);
 
+// 🔐 Chránené API
 app.use("/api", [
   authenticateJWT,
   checkRole('client', 'forwarder', 'carrier', 'admin', 'superadmin'),
   deliveryRouter
 ]);
 
-app.use("/api/external/deliveries", [
-  authenticateJWT,
-  checkRole('client', 'carrier', 'superadmin'),
-  externalDeliveriesRouter
-]);
-
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
-const projectRoot = path.resolve(__dirname, '../..');
+// 🖼️ Frontend assets
+const projectRoot = path.resolve(__dirname, "../..");
 const frontendPath = path.join(projectRoot, process.env.FRONTEND_PATH || "");
 const publicPath = path.join(projectRoot, process.env.PUBLIC_PATH || "");
 
@@ -109,6 +113,7 @@ app.get("/", (_req: Request, res: Response) =>
   res.sendFile(path.join(frontendPath, "index.html"))
 );
 
+// 🎯 Fallback pre SPA
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
 const spaFallback: RequestHandler = (req: Request, res: Response) => {
@@ -125,6 +130,7 @@ const spaFallback: RequestHandler = (req: Request, res: Response) => {
 };
 app.use(spaFallback);
 
+// 🚀 Štart servera
 const PORT = parseInt(process.env.PORT || "5000", 10);
 server.listen(PORT, "0.0.0.0", () =>
   console.log(`Server listening on port ${PORT}`)
