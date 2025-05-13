@@ -1,97 +1,652 @@
-/* File: front/src/components/hauler/content/dashboard.css  */
-/* — minimal first-half styles — */
+/* File: front/src/components/hauler/content/dashboard.css */
+/* Description: Styles for HaulerDashboard component */
+/* Last change: Updated for grayscale map, replaced Maintenance with Service, narrowed columns */
 
-/* ─────  Status colours (6) ───── */
+/* Status colors */
 :root {
-  --status-outbound:    #2389ff; /* azure   */
-  --status-transit:     #7a63ff; /* indigo  */
-  --status-inbound:     #1fbac7; /* turquoise */
-  --status-standby:     #b5bd00; /* khaki   */
-  --status-depot:       #6b7684; /* grey    */
-  --status-maintenance: #d726ff; /* magenta */
+  --status-outbound: #2389ff; /* azure */
+  --status-transit: #7a63ff; /* indigo */
+  --status-inbound: #1fbac7; /* turquoise */
+  --status-standby: #b5bd00; /* khaki */
+  --status-depot: #6b7684; /* grey */
+  --status-service: #d726ff; /* magenta */
+  --hauler-light: #f5f7fa;
+  --hauler-medium: #e0e4ea;
+  --hauler-dark: #2c3e50;
+  --hauler-primary: #3498db;
+  --color-text: #333;
+  --color-text-secondary: #666;
 }
 
-/* ─────  Wrapper & header  ───── */
+/* Main container */
 .dashboard {
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
   background: var(--hauler-light);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.dashboard__header { margin-bottom: 20px; }
-.dashboard__title  { margin: 0; font-size: 24px; color: var(--color-text); }
-
-/* ─────  Filter select  ───── */
-.dashboard__filter {
-  margin-bottom: 16px;
+/* Top toolbar */
+.dashboard__toolbar {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: var(--hauler-medium);
+  border-bottom: 1px solid var(--hauler-dark);
 }
-.dashboard__filter select {
-  padding: 6px 10px;
-  border: 1px solid var(--hauler-mid);
-  border-radius: 4px;
+
+.dashboard__title {
+  margin: 0;
+  font-size: 20px;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.dashboard__toolbar-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.dashboard__toolbar-button {
+  padding: 6px 12px;
   background: var(--hauler-light);
+  border: 1px solid var(--hauler-dark);
+  border-radius: 4px;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
 }
 
-/* ─────  Layout grid  (stats | map | chart)  ───── */
-.dashboard__grid{
-  display:grid;
-  grid-template-columns:1fr 3fr 1fr;   /* mapa (stred) = 3-krát širšia */
-  gap:20px;
+.dashboard__toolbar-button:hover {
+  background: var(--hauler-dark);
+  color: white;
 }
-@media (max-width:900px){ .dashboard__grid{ grid-template-columns:1fr; } }
 
-/* ─────  Stats squares  2×3  ───── */
-.dashboard__stats{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);  /* 2 stĺpce  */
-  grid-template-rows:repeat(3,1fr);      /* 3 riadky  */
-  gap:12px;
+.dashboard__toolbar-button.active {
+  background: var(--hauler-primary);
+  color: white;
+  border-color: var(--hauler-primary);
+}
+
+/* Main content layout */
+.dashboard__content {
+  display: grid;
+  grid-template-columns: 70px 160px 1fr;
+  grid-template-areas: "filters vehicles map";
+  gap: 16px;
+  padding: 16px;
+  height: calc(100% - 52px);
+  overflow: hidden;
+  position: relative;
+  transition: grid-template-columns 0.3s ease-out;
+}
+
+/* Adjust grid when charts are expanded */
+.dashboard__content--charts-expanded {
+  grid-template-columns: 70px 160px calc(100% - 500px);
+}
+
+/* Left column (status filters) */
+.dashboard__filters-column {
+  grid-area: filters;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard__reset-filter {
+  padding: 6px 8px;
+  background: var(--hauler-dark);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+  text-align: center;
+  font-size: 12px;
+}
+
+.dashboard__reset-filter:hover {
+  background: var(--hauler-primary);
+}
+
+.dashboard__status-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+/* Hover outline */
+.dashboard__status-filters::before {
+  content: "";
+  position: absolute;
+  width: 74px;
+  height: 44px;
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  opacity: 0;
+  transition: transform 0.2s, opacity 0.2s;
+  pointer-events: none;
+  z-index: 2;
+  transform: translateX(-2px) translateY(-2px);
+}
+
+.dashboard__status-filters:hover::before {
+  opacity: 1;
 }
 
 .dashboard__stat {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 4px;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s;
+  position: relative;
+  width: 70px;
+  height: 40px;
+}
+
+.dashboard__stat:hover ~ .dashboard__status-filters::before {
+  opacity: 0;
+}
+
+.dashboard__stat:hover {
+  transform: translateX(3px);
+}
+
+.dashboard__stat--active {
+  transform: translateX(3px);
+  box-shadow: 0 0 0 2px white, 0 0 0 4px var(--status-color);
+}
+
+.dashboard__stat--hover ~ .dashboard__status-filters::before,
+.dashboard__stat:hover ~ .dashboard__status-filters::before {
+  opacity: 1;
+  transform: translateY(calc(var(--hover-index, 0) * 48px)) translateX(-2px) translateY(-2px);
+}
+
+.dashboard__stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.dashboard__stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+/* Status indicator arrow */
+.dashboard__stat-indicator {
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid var(--status-color);
+}
+
+/* Status colors */
+.dashboard__stat--outbound { background: var(--status-outbound); }
+.dashboard__stat--inbound { background: var(--status-inbound); }
+.dashboard__stat--transit { background: var(--status-transit); }
+.dashboard__stat--standby { background: var(--status-standby); }
+.dashboard__stat--depot { background: var(--status-depot); }
+.dashboard__stat--service { background: var(--status-service); }
+
+/* Vehicle list (middle column) */
+.dashboard__vehicles-column {
+  grid-area: vehicles;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  background: var(--hauler-medium);
+  overflow: hidden;
+  margin-top: 38px; /* Align with first status square */
+  width: 160px;
+}
+
+.dashboard__vehicles-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--hauler-dark);
+  color: white;
+}
+
+.dashboard__vehicles-header h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.dashboard__select-all {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.dashboard__select-all input {
+  margin: 0;
+}
+
+.dashboard__vehicles-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.dashboard__vehicle-item {
+  margin-bottom: 6px;
+  padding: 6px;
+  background: var(--hauler-light);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard__vehicle-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.dashboard__vehicle-plate {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.dashboard__vehicle-icon {
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+}
+
+.dashboard__vehicle-destination {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.dashboard__vehicle-status {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 20px;
+  color: white;
+  font-size: 10px;
+}
+
+.dashboard__vehicle-status--outbound { background: var(--status-outbound); }
+.dashboard__vehicle-status--inbound { background: var(--status-inbound); }
+.dashboard__vehicle-status--transit { background: var(--status-transit); }
+.dashboard__vehicle-status--standby { background: var(--status-standby); }
+.dashboard__vehicle-status--depot { background: var(--status-depot); }
+.dashboard__vehicle-status--service { background: var(--status-service); }
+
+.dashboard__no-vehicles {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* Map container */
+.dashboard__map-container {
+  grid-area: map;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 700px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease-out;
+}
+
+.dashboard__map-element {
+  width: 100%;
+  height: 100%;
+}
+
+/* Map markers */
+.status-icon {
+  width: 18px;
+  height: 18px;
+  box-shadow: 0 0 0 2px #fff inset, 0 0 3px rgba(0, 0, 0, 0.4);
+}
+
+.status-icon--outbound,
+.status-icon--inbound,
+.status-icon--transit {
+  border-radius: 50%;
+}
+
+.status-icon--standby,
+.status-icon--depot,
+.status-icon--service {
+  border-radius: 3px;
+}
+
+/* Delay colors for moving statuses */
+.status-icon--outbound.delay--none,
+.status-icon--inbound.delay--none,
+.status-icon--transit.delay--none {
+  background: #28a745;
+}
+
+.status-icon--outbound.delay--minor,
+.status-icon--inbound.delay--minor,
+.status-icon--transit.delay--minor {
+  background: #fd7e14;
+}
+
+.status-icon--outbound.delay--major,
+.status-icon--inbound.delay--major,
+.status-icon--transit.delay--major {
+  background: #dc3545;
+}
+
+/* Static status colors */
+.status-icon--standby { background: var(--status-standby); }
+.status-icon--depot { background: var(--status-depot); }
+.status-icon--service { background: var(--status-service); }
+
+.marker--hidden .status-icon {
+  opacity: 0.3;
+}
+
+/* Charts sidebar */
+.dashboard__charts-sidebar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 80px;
+  height: calc(100% - 32px);
+  background: var(--hauler-light);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: width 0.3s ease-in-out;
+  overflow: hidden;
+  z-index: 3;
+}
+
+.dashboard__charts-sidebar.expanded {
+  width: 300px;
+}
+
+.dashboard__charts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--hauler-dark);
+  color: white;
+  border-radius: 8px 8px 0 0;
+}
+
+.dashboard__charts-header h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.dashboard__charts-toggle {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  padding: 18px;
-  color: #fff;
+  padding: 0;
+}
+
+/* Chart thumbnails in collapsed state */
+.dashboard__chart-thumbnails {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 8px;
+}
+
+.dashboard__thumbnail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   cursor: pointer;
-  aspect-ratio: 1;
+  transition: transform 0.2s;
 }
 
-/* farby podľa statusu */
-.dashboard__stat--outbound    { background: var(--status-outbound); }
-.dashboard__stat--transit     { background: var(--status-transit); }
-.dashboard__stat--inbound     { background: var(--status-inbound); }
-.dashboard__stat--standby     { background: var(--status-standby); }
-.dashboard__stat--depot       { background: var(--status-depot); }
-.dashboard__stat--maintenance { background: var(--status-maintenance); }
-
-.dashboard__stat-value { font-size: 28px; font-weight: 700; }
-.dashboard__stat-label { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; }
-
-
-/* ─────  Map status icons  ───── */
-.status-icon{
-  width:18px; height:18px; border-radius:50%;
-  box-shadow:0 0 0 2px #fff inset, 0 0 3px rgba(0,0,0,.4);
-}
-.status-icon--outbound    { background: var(--status-outbound); }
-.status-icon--transit     { background: var(--status-transit); }
-.status-icon--inbound     { background: var(--status-inbound); }
-.status-icon--standby     { background: var(--status-standby); }
-.status-icon--depot       { background: var(--status-depot); }
-.status-icon--maintenance { background: var(--status-maintenance); }
-
-
-.status-icon--depot{
-  background: var(--status-depot);
-  border-radius: 3px;         /* namiesto kruhu malý štvorec */
+.dashboard__thumbnail:hover {
+  transform: scale(1.05);
 }
 
-/* kečup pri schovaní */
-.marker--hidden .status-icon{ opacity:.3; }
+.dashboard__thumbnail-svg {
+  width: 60px;
+  height: 50px;
+  margin-bottom: 5px;
+  background: var(--hauler-medium);
+  border-radius: 4px;
+}
+
+.dashboard__thumbnail span {
+  font-size: 11px;
+  color: var(--color-text);
+  text-align: center;
+}
+
+/* Expanded chart view */
+.dashboard__chart-expanded {
+  padding: 12px;
+  height: calc(100% - 40px);
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard__chart-type-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dashboard__chart-type-toggle button {
+  padding: 4px 12px;
+  background: var(--hauler-medium);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 12px;
+}
+
+.dashboard__chart-type-toggle button.active {
+  background: var(--hauler-primary);
+}
+
+.dashboard__chart {
+  flex: 1;
+  width: 100%;
+  border: 1px solid var(--hauler-medium);
+  border-radius: 4px;
+  background: white;
+}
+
+/* Generate stat-specific hover position variables */
+.dashboard__stat:nth-child(1):hover ~ .dashboard__status-filters::before {
+  --hover-index: 0;
+}
+.dashboard__stat:nth-child(2):hover ~ .dashboard__status-filters::before {
+  --hover-index: 1;
+}
+.dashboard__stat:nth-child(3):hover ~ .dashboard__status-filters::before {
+  --hover-index: 2;
+}
+.dashboard__stat:nth-child(4):hover ~ .dashboard__status-filters::before {
+  --hover-index: 3;
+}
+.dashboard__stat:nth-child(5):hover ~ .dashboard__status-filters::before {
+  --hover-index: 4;
+}
+.dashboard__stat:nth-child(6):hover ~ .dashboard__status-filters::before {
+  --hover-index: 5;
+}
+
+/* Responsive */
+@media (max-width: 1300px) {
+  .dashboard__content--charts-expanded {
+    grid-template-columns: 70px 160px calc(100% - 500px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard__content {
+    grid-template-columns: 60px 140px 1fr;
+  }
+
+  .dashboard__stat {
+    width: 60px;
+  }
+
+  .dashboard__vehicles-column {
+    width: 140px;
+  }
+
+  .dashboard__content--charts-expanded {
+    grid-template-columns: 60px 140px calc(100% - 450px);
+  }
+
+  .dashboard__chart-expanded {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard__content {
+    grid-template-columns: 60px 130px 1fr;
+  }
+
+  .dashboard__stat {
+    width: 60px;
+  }
+
+  .dashboard__vehicles-column {
+    width: 130px;
+  }
+
+  .dashboard__content--charts-expanded {
+    grid-template-columns: 60px 130px calc(100% - 400px);
+  }
+
+  .dashboard__charts-sidebar.expanded {
+    width: 260px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard__content,
+  .dashboard__content--charts-expanded {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "filters"
+      "vehicles"
+      "map";
+    height: auto;
+  }
+
+  .dashboard__filters-column {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .dashboard__status-filters {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .dashboard__map-container {
+    height: 500px;
+  }
+
+  .dashboard__charts-sidebar {
+    position: fixed;
+    top: auto;
+    bottom: 16px;
+    right: 16px;
+    height: auto;
+    width: 70px;
+  }
+
+  .dashboard__charts-sidebar.expanded {
+    height: 400px;
+    width: 280px;
+  }
+
+  .dashboard__chart-thumbnails {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .dashboard__vehicles-column {
+    margin-top: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard__toolbar {
+    flex-direction: column;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .dashboard__content {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .dashboard__stat {
+    width: 55px;
+  }
+
+  .dashboard__stat-value {
+    font-size: 16px;
+  }
+
+  .dashboard__stat-label {
+    font-size: 9px;
+  }
+}
+
+/* Map container */
+.dashboard__map-element {
+  width: 100%;
+  height: 100%;
+  filter: grayscale(100%); /* Apply grayscale to map tiles */
+}

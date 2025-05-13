@@ -46,14 +46,17 @@ export interface Document {
   description: string;
 }
 
+// File: front/src/data/mockPeople.ts
+// Description: Updated vehicle field to reference vehicle IDs from mockFleet
+
 export const mockPeople: Person[] = [
-  { 
-    id: "1", 
-    firstName: "Ján", 
-    lastName: "Novák", 
-    position: "Vodič", 
-    status: "Aktívny", 
-    image: "/people/driver1.jpg", 
+  {
+    id: "1",
+    firstName: "Ján",
+    lastName: "Novák",
+    position: "Vodič",
+    status: "Aktívny",
+    image: "/people/driver1.jpg",
     email: "jan.novak@sendeliver.com",
     phone: "+421 903 123 456",
     birthDate: "1985-06-12",
@@ -65,16 +68,16 @@ export const mockPeople: Person[] = [
     zipCode: "82105",
     country: "Slovensko",
     joinDate: "2020-03-15",
-    vehicle: "Dodávka plachta titrol",
-    notes: "Skúsený vodič s výbornými referenciami"
+    vehicle: "1", // Sprinter 311
+    notes: "Skúsený vodič s výbornými referenciami",
   },
-  { 
-    id: "2", 
-    firstName: "Peter", 
-    lastName: "Malý", 
-    position: "Vodič", 
-    status: "Aktívny", 
-    image: "/people/driver2.jpg", 
+  {
+    id: "2",
+    firstName: "Peter",
+    lastName: "Malý",
+    position: "Vodič",
+    status: "Aktívny",
+    image: "/people/driver2.jpg",
     email: "peter.maly@sendeliver.com",
     phone: "+421 905 234 567",
     birthDate: "1990-11-23",
@@ -86,16 +89,16 @@ export const mockPeople: Person[] = [
     zipCode: "04001",
     country: "Slovensko",
     joinDate: "2021-05-10",
-    vehicle: "Dodávka skriňa biela",
-    notes: "Preferuje trasy do Českej republiky a Poľska"
+    vehicle: "7", // Renault Master
+    notes: "Preferuje trasy do Českej republiky a Poľska",
   },
-  { 
-    id: "3", 
-    firstName: "Roman", 
-    lastName: "Silný", 
-    position: "Vodič", 
-    status: "Dovolenka", 
-    image: "/people/driver3.jpg", 
+  {
+    id: "3",
+    firstName: "Roman",
+    lastName: "Silný",
+    position: "Vodič",
+    status: "Dovolenka",
+    image: "/people/driver3.jpg",
     email: "roman.silny@sendeliver.com",
     phone: "+421 908 345 678",
     birthDate: "1978-03-04",
@@ -107,16 +110,16 @@ export const mockPeople: Person[] = [
     zipCode: "01001",
     country: "Slovensko",
     joinDate: "2019-08-20",
-    vehicle: "Ťahač biely",
-    notes: "Špecialista na medzinárodnú prepravu"
+    vehicle: "6", // Volvo FH16
+    notes: "Špecialista na medzinárodnú prepravu",
   },
-  { 
-    id: "4", 
-    firstName: "Matej", 
-    lastName: "Ostrý", 
-    position: "Vodič", 
-    status: "Aktívny", 
-    image: "/people/driver4.jpg", 
+  {
+    id: "4",
+    firstName: "Matej",
+    lastName: "Ostrý",
+    position: "Vodič",
+    status: "Aktívny",
+    image: "/people/driver4.jpg",
     email: "matej.ostry@sendeliver.com",
     phone: "+421 904 456 789",
     birthDate: "1992-07-17",
@@ -128,16 +131,16 @@ export const mockPeople: Person[] = [
     zipCode: "91101",
     country: "Slovensko",
     joinDate: "2022-01-05",
-    vehicle: "Sklápač modrý",
-    notes: "Nový vodič, predtým pracoval v stavebníctve"
+    vehicle: "5", // Iveco Daily
+    notes: "Nový vodič, predtým pracoval v stavebníctve",
   },
-  { 
-    id: "5", 
-    firstName: "David", 
-    lastName: "Šikovný", 
-    position: "Vodič", 
-    status: "PN", 
-    image: "/people/driver5.jpg", 
+  {
+    id: "5",
+    firstName: "David",
+    lastName: "Šikovný",
+    position: "Vodič",
+    status: "PN",
+    image: "/people/driver5.jpg",
     email: "david.sikovny@sendeliver.com",
     phone: "+421 907 567 890",
     birthDate: "1983-12-30",
@@ -149,16 +152,16 @@ export const mockPeople: Person[] = [
     zipCode: "08001",
     country: "Slovensko",
     joinDate: "2020-11-11",
-    vehicle: "Dodávka korba",
-    notes: "Práceneschopný do 30.4.2023"
+    vehicle: undefined, // Žiadne vozidlo (PN)
+    notes: "Práceneschopný do 30.4.2023",
   },
-  { 
-    id: "6", 
-    firstName: "Patrik", 
-    lastName: "Múdry", 
-    position: "Vodič", 
-    status: "Aktívny", 
-    image: "/people/driver6.jpg", 
+  {
+    id: "6",
+    firstName: "Patrik",
+    lastName: "Múdry",
+    position: "Vodič",
+    status: "Aktívny",
+    image: "/people/driver6.jpg",
     email: "patrik.mudry@sendeliver.com",
     phone: "+421 902 678 901",
     birthDate: "1988-05-05",
@@ -170,16 +173,16 @@ export const mockPeople: Person[] = [
     zipCode: "94901",
     country: "Slovensko",
     joinDate: "2019-06-01",
-    vehicle: "Auto plachta",
-    notes: "Zaškolený na ADR prepravu"
+    vehicle: "2", // Scania R500
+    notes: "Zaškolený na ADR prepravu",
   },
-  { 
-    id: "7", 
-    firstName: "Mária", 
-    lastName: "Kovárová", 
-    position: "Dispečer", 
-    status: "Aktívny", 
-    image: "/people/staff1.jpg", 
+  {
+    id: "7",
+    firstName: "Mária",
+    lastName: "Kovárová",
+    position: "Dispečer",
+    status: "Aktívny",
+    image: "/people/staff1.jpg",
     email: "maria.kovarova@sendeliver.com",
     phone: "+421 906 789 012",
     birthDate: "1991-09-18",
@@ -188,15 +191,16 @@ export const mockPeople: Person[] = [
     zipCode: "82108",
     country: "Slovensko",
     joinDate: "2020-02-15",
-    notes: "Dispečer pre západné Slovensko"
+    vehicle: undefined, // Dispečer, žiadne vozidlo
+    notes: "Dispečer pre západné Slovensko",
   },
-  { 
-    id: "8", 
-    firstName: "Tomáš", 
-    lastName: "Rýchly", 
-    position: "Manažér", 
-    status: "Aktívny", 
-    image: "/people/staff2.jpg", 
+  {
+    id: "8",
+    firstName: "Tomáš",
+    lastName: "Rýchly",
+    position: "Manažér",
+    status: "Aktívny",
+    image: "/people/staff2.jpg",
     email: "tomas.rychly@sendeliver.com",
     phone: "+421 901 890 123",
     birthDate: "1980-02-25",
@@ -205,8 +209,9 @@ export const mockPeople: Person[] = [
     zipCode: "84105",
     country: "Slovensko",
     joinDate: "2018-05-01",
-    notes: "Zodpovedný za medzinárodnú prepravu"
-  }
+    vehicle: undefined, // Manažér, žiadne vozidlo
+    notes: "Zodpovedný za medzinárodnú prepravu",
+  },
 ];
 
 export const mockTrips: Trip[] = [

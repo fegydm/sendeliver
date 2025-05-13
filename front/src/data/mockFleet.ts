@@ -31,13 +31,17 @@ export interface Vehicle {
   availability: string;
   trailerIds?: string[];
   associatedTractorId?: string;
+  start?: string;
+  currentLocation?: string; 
+  destination?: string
 }
 
 /* ------------------------------------------------------------------ */
 /* 10 demo vehicles – každý nový status minimálne raz                 */
 /* ------------------------------------------------------------------ */
+
 export const mockVehicles: Vehicle[] = [
-  /** 1 ─ Outbound ****************************************************/
+  /** 1 ─ Outbound */
   {
     id: "1",
     name: "Sprinter 311",
@@ -51,15 +55,18 @@ export const mockVehicles: Vehicle[] = [
     notes: "Export náklad – Mníchov",
     lastService: "2025-02-10",
     nextService: "2025-08-10",
-    driver: "Ján Novák",
-    location: "Mníchov",
+    assignedDriver: "1", // Ján Novák
+    location: "location5", // Wien
+    start: "location1", // Hlavný sklad Bratislava
+    currentLocation: "location5", // Wien
+    destination: "location6", // Praha
     dashboardStatus: "outbound",
     odometerKm: 148200,
     capacityFree: "0 t",
     availability: "busy",
   },
 
-  /** 2 ─ Inbound *****************************************************/
+  /** 2 ─ Inbound */
   {
     id: "2",
     name: "Scania R500",
@@ -73,15 +80,18 @@ export const mockVehicles: Vehicle[] = [
     notes: "Vezie spätný náklad FR → SK",
     lastService: "2025-01-12",
     nextService: "2025-07-12",
-    driver: "Patrik Múdry",
-    location: "Praha",
+    assignedDriver: "6", // Patrik Múdry
+    location: "location6", // Praha
+    start: "location5", // Wien
+    currentLocation: "location6", // Praha
+    destination: "location8", // Centrála SenDeliver
     dashboardStatus: "inbound",
-    odometerKm: 67_500,
+    odometerKm: 67500,
     capacityFree: "6 t",
     availability: "busy",
   },
 
-  /** 3 ─ Transit (loaded) ********************************************/
+  /** 3 ─ Transit */
   {
     id: "3",
     name: "DAF XF Euro 6",
@@ -92,18 +102,21 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "TT-333TT",
     manufactureYear: 2020,
     capacity: "24 t",
-    notes: "Transit IT → DE (plný)",
+    notes: "Transit IT → DE",
     lastService: "2024-12-01",
     nextService: "2025-05-30",
-    driver: "Róbert Hýbel",
-    location: "Frankfurt",
+    assignedDriver: "3", // Roman Silný
+    location: "location5", // Wien (simuluje Frankfurt)
+    start: "location3", // Košice
+    currentLocation: "location5", // Wien
+    destination: "location6", // Praha
     dashboardStatus: "transit",
-    odometerKm: 388_900,
+    odometerKm: 388900,
     capacityFree: "0 t",
     availability: "busy",
   },
 
-  /** 4 ─ Stand-by (empty) ********************************************/
+  /** 4 ─ Standby */
   {
     id: "4",
     name: "Trailer Low-bed",
@@ -117,15 +130,15 @@ export const mockVehicles: Vehicle[] = [
     notes: "Čaká na load v Antverpách",
     lastService: "2025-01-18",
     nextService: "2025-07-18",
-    driver: undefined,
-    location: "Brusel",
-    dashboardStatus: "inbound",
+    assignedDriver: undefined,
+    location: "location5", // Wien (simuluje Brusel)
+    dashboardStatus: "standby",
     odometerKm: 0,
     capacityFree: "18 t",
     availability: "available",
   },
 
-  /** 5 ─ Depot *******************************************************/
+  /** 5 ─ Depot */
   {
     id: "5",
     name: "Iveco Daily",
@@ -137,15 +150,15 @@ export const mockVehicles: Vehicle[] = [
     manufactureYear: 2021,
     capacity: "1.2 t",
     notes: "Parkuje v Žiline",
-    driver: "Lucia Sokolová",
-    location: "Žilina",
+    assignedDriver: "4", // Matej Ostrý
+    location: "location4", // Žilina
     dashboardStatus: "depot",
-    odometerKm: 43_300,
+    odometerKm: 43300,
     capacityFree: "1.2 t",
     availability: "available",
   },
 
-  /** 6 ─ Maintenance *************************************************/
+  /** 6 ─ Maintenance */
   {
     id: "6",
     name: "Volvo FH16",
@@ -157,15 +170,15 @@ export const mockVehicles: Vehicle[] = [
     manufactureYear: 2021,
     capacity: "24 t",
     notes: "Výmena brzdových kotúčov",
-    driver: "Roman Silný",
-    location: "Bratislava",
+    assignedDriver: "3", // Roman Silný
+    location: "location8", // Centrála SenDeliver
     dashboardStatus: "maintenance",
-    odometerKm: 210_000,
+    odometerKm: 210000,
     capacityFree: "24 t",
     availability: "service",
   },
 
-  /** 7 ─ ďalšie outbound (demo) **************************************/
+  /** 7 ─ Outbound */
   {
     id: "7",
     name: "Renault Master",
@@ -176,15 +189,18 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "KE-987TT",
     manufactureYear: 2020,
     capacity: "1.3 t",
-    driver: "Fedor Gajdoš",
-    location: "Viedeň",
+    assignedDriver: "2", // Peter Malý
+    location: "location5", // Wien
+    start: "location8", // Centrála SenDeliver
+    currentLocation: "location5", // Wien
+    destination: "location6", // Praha
     dashboardStatus: "outbound",
-    odometerKm: 99_100,
+    odometerKm: 99100,
     capacityFree: "0 t",
     availability: "busy",
   },
 
-  /** 8 ─ inbound trailer *********************************************/
+  /** 8 ─ Inbound */
   {
     id: "8",
     name: "Trailer Mega",
@@ -195,14 +211,18 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "KR-852JK",
     manufactureYear: 2017,
     capacity: "26 t",
-    location: "Berlín",
+    assignedDriver: undefined,
+    location: "location5", // Wien (simuluje Berlín)
+    start: "location6", // Praha
+    currentLocation: "location5", // Wien
+    destination: "location8", // Centrála SenDeliver
     dashboardStatus: "inbound",
     odometerKm: 0,
     capacityFree: "6 t",
     availability: "busy",
   },
 
-  /** 9 ─ stand-by tractor ********************************************/
+  /** 9 ─ Standby */
   {
     id: "9",
     name: "MAN TGX",
@@ -213,15 +233,15 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "BA-652AA",
     manufactureYear: 2018,
     capacity: "24 t",
-    driver: "Peter Kováč",
-    location: "Budapešť",
+    assignedDriver: "1", // Ján Novák
+    location: "location7", // Odpočívadlo Trstín
     dashboardStatus: "standby",
-    odometerKm: 512_300,
+    odometerKm: 512300,
     capacityFree: "24 t",
     availability: "available",
   },
 
-  /** 10 ─ depot trailer **********************************************/
+  /** 10 ─ Depot */
   {
     id: "10",
     name: "Flatbed Trailer",
@@ -232,13 +252,16 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "TT-741CZ",
     manufactureYear: 2016,
     capacity: "20 t",
-    location: "Trnava",
+    assignedDriver: undefined,
+    location: "location2", // Trnava
     dashboardStatus: "depot",
     odometerKm: 0,
     capacityFree: "20 t",
     availability: "available",
   },
 ];
+
+// ... (rest of the file remains unchanged)
 
 /* ------------------------------------------------------------------ */
 /*  Trips / Services môžu zostať ako boli – nezávislé na dashboardStatus */
