@@ -1,19 +1,21 @@
 // File: front/src/data/mockFleet.ts
-// Updated: 10 vehicles, new 6-status enum (outbound • inbound • transit • standby • depot • maintenance)
+// Description: Mock vehicle data for fleet management
+// Last change: Changed VehicleStatus to enum for use as value in HaulerDashboard.tsx
 
-export type VehicleStatus =
-  | "outbound"
-  | "inbound"
-  | "transit"
-  | "standby"
-  | "depot"
-  | "maintenance";
+export enum VehicleStatus {
+  Outbound = "outbound",
+  Inbound = "inbound",
+  Transit = "transit",
+  Standby = "standby",
+  Depot = "depot",
+  Service = "service",
+}
 
 export interface Vehicle {
   id: string;
   name: string;
-  type: string;                // van | tractor | trailer | rigid | …
-  status: string;              // technical/lease state: available | busy | service…
+  type: string; // van | tractor | trailer | rigid | …
+  status: string; // technical/lease state: available | busy | service…
   image: string;
   brand: string;
   plateNumber: string;
@@ -22,26 +24,27 @@ export interface Vehicle {
   notes?: string;
   lastService?: string;
   nextService?: string;
-  driver?: string;
-  location?: string;
-  assignedDriver?: string;
+  assignedDriver?: string; // Driver ID from mockPeople.ts
+  assignedDispatcher?: string; // Dispatcher ID from mockPeople.ts
+  location?: string; // Location ID from mockLocations.ts (for static statuses)
+  start?: string; // Location ID from mockLocations.ts (for dynamic statuses)
+  currentLocation?: string; // Location ID from mockLocations.ts (for dynamic statuses)
+  destination?: string; // Location ID from mockLocations.ts (for dynamic statuses)
   dashboardStatus: VehicleStatus;
   odometerKm: number;
   capacityFree: string;
   availability: string;
   trailerIds?: string[];
   associatedTractorId?: string;
-  start?: string;
-  currentLocation?: string; 
-  destination?: string
+  positionColor?: "G" | "O" | "R"; // Green (no delay), Orange (minor delay), Red (major delay)
 }
 
 /* ------------------------------------------------------------------ */
-/* 10 demo vehicles – každý nový status minimálne raz                 */
+/* 10 demo vehicles – each status represented, aligned with routes     */
 /* ------------------------------------------------------------------ */
 
 export const mockVehicles: Vehicle[] = [
-  /** 1 ─ Outbound */
+  /** 1 ─ Outbound: Žilina → Wroclaw → Poznaň */
   {
     id: "1",
     name: "Sprinter 311",
@@ -52,21 +55,22 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "BA-123XX",
     manufactureYear: 2019,
     capacity: "1.5 t",
-    notes: "Export náklad – Mníchov",
+    notes: "Export náklad – Poľsko",
     lastService: "2025-02-10",
     nextService: "2025-08-10",
     assignedDriver: "1", // Ján Novák
-    location: "location5", // Wien
-    start: "location1", // Hlavný sklad Bratislava
-    currentLocation: "location5", // Wien
-    destination: "location6", // Praha
-    dashboardStatus: "outbound",
+    assignedDispatcher: "7", // Mária Kovárová
+    start: "location4", // Žilina
+    currentLocation: "location12", // Wroclaw
+    destination: "location13", // Poznaň
+    dashboardStatus: VehicleStatus.Outbound,
     odometerKm: 148200,
     capacityFree: "0 t",
     availability: "busy",
+    positionColor: "G", // No delay
   },
 
-  /** 2 ─ Inbound */
+  /** 2 ─ Inbound: Berlín → Praha → Trnava */
   {
     id: "2",
     name: "Scania R500",
@@ -77,21 +81,22 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "NR-890CC",
     manufactureYear: 2022,
     capacity: "18 t",
-    notes: "Vezie spätný náklad FR → SK",
+    notes: "Spätný náklad DE → SK",
     lastService: "2025-01-12",
     nextService: "2025-07-12",
     assignedDriver: "6", // Patrik Múdry
-    location: "location6", // Praha
-    start: "location5", // Wien
+    assignedDispatcher: "8", // Tomáš Rýchly
+    start: "location21", // Berlín
     currentLocation: "location6", // Praha
-    destination: "location8", // Centrála SenDeliver
-    dashboardStatus: "inbound",
+    destination: "location2", // Trnava
+    dashboardStatus: VehicleStatus.Inbound,
     odometerKm: 67500,
     capacityFree: "6 t",
     availability: "busy",
+    positionColor: "O", // Minor delay
   },
 
-  /** 3 ─ Transit */
+  /** 3 ─ Transit: Mníchov → Plzeň → Praha */
   {
     id: "3",
     name: "DAF XF Euro 6",
@@ -102,21 +107,22 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "TT-333TT",
     manufactureYear: 2020,
     capacity: "24 t",
-    notes: "Transit IT → DE",
+    notes: "Transit DE → CZ",
     lastService: "2024-12-01",
     nextService: "2025-05-30",
     assignedDriver: "3", // Roman Silný
-    location: "location5", // Wien (simuluje Frankfurt)
-    start: "location3", // Košice
-    currentLocation: "location5", // Wien
+    assignedDispatcher: "7", // Mária Kovárová
+    start: "location14", // Mníchov
+    currentLocation: "location15", // Plzeň
     destination: "location6", // Praha
-    dashboardStatus: "transit",
+    dashboardStatus: VehicleStatus.Transit,
     odometerKm: 388900,
     capacityFree: "0 t",
     availability: "busy",
+    positionColor: "R", // Major delay
   },
 
-  /** 4 ─ Standby */
+  /** 4 ─ Standby: Dortmund */
   {
     id: "4",
     name: "Trailer Low-bed",
@@ -127,18 +133,19 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "TR-456CD",
     manufactureYear: 2019,
     capacity: "18 t",
-    notes: "Čaká na load v Antverpách",
+    notes: "Čaká na load v Dortmunde",
     lastService: "2025-01-18",
     nextService: "2025-07-18",
-    assignedDriver: undefined,
-    location: "location5", // Wien (simuluje Brusel)
-    dashboardStatus: "standby",
+    assignedDriver: undefined, // Trailer, no driver
+    assignedDispatcher: "8", // Tomáš Rýchly
+    location: "location9", // Dortmund
+    dashboardStatus: VehicleStatus.Standby,
     odometerKm: 0,
     capacityFree: "18 t",
     availability: "available",
   },
 
-  /** 5 ─ Depot */
+  /** 5 ─ Depot: Žilina */
   {
     id: "5",
     name: "Iveco Daily",
@@ -151,14 +158,15 @@ export const mockVehicles: Vehicle[] = [
     capacity: "1.2 t",
     notes: "Parkuje v Žiline",
     assignedDriver: "4", // Matej Ostrý
+    assignedDispatcher: "7", // Mária Kovárová
     location: "location4", // Žilina
-    dashboardStatus: "depot",
+    dashboardStatus: VehicleStatus.Depot,
     odometerKm: 43300,
     capacityFree: "1.2 t",
     availability: "available",
   },
 
-  /** 6 ─ Maintenance */
+  /** 6 ─ Maintenance: Bratislava */
   {
     id: "6",
     name: "Volvo FH16",
@@ -171,14 +179,15 @@ export const mockVehicles: Vehicle[] = [
     capacity: "24 t",
     notes: "Výmena brzdových kotúčov",
     assignedDriver: "3", // Roman Silný
-    location: "location8", // Centrála SenDeliver
-    dashboardStatus: "maintenance",
+    assignedDispatcher: "7", // Mária Kovárová
+    location: "location8", // Centrála SenDeliver (Bratislava)
+    dashboardStatus: VehicleStatus.Service,
     odometerKm: 210000,
     capacityFree: "24 t",
     availability: "service",
   },
 
-  /** 7 ─ Outbound */
+  /** 7 ─ Outbound: Žilina → Montabaur → Kolín */
   {
     id: "7",
     name: "Renault Master",
@@ -190,17 +199,18 @@ export const mockVehicles: Vehicle[] = [
     manufactureYear: 2020,
     capacity: "1.3 t",
     assignedDriver: "2", // Peter Malý
-    location: "location5", // Wien
-    start: "location8", // Centrála SenDeliver
-    currentLocation: "location5", // Wien
-    destination: "location6", // Praha
-    dashboardStatus: "outbound",
+    assignedDispatcher: "8", // Tomáš Rýchly
+    start: "location4", // Žilina
+    currentLocation: "location10", // Montabaur
+    destination: "location11", // Kolín
+    dashboardStatus: VehicleStatus.Outbound,
     odometerKm: 99100,
     capacityFree: "0 t",
     availability: "busy",
+    positionColor: "G", // No delay
   },
 
-  /** 8 ─ Inbound */
+  /** 8 ─ Transit: Štokholm → Brémy → Amsterdam */
   {
     id: "8",
     name: "Trailer Mega",
@@ -211,18 +221,19 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "KR-852JK",
     manufactureYear: 2017,
     capacity: "26 t",
-    assignedDriver: undefined,
-    location: "location5", // Wien (simuluje Berlín)
-    start: "location6", // Praha
-    currentLocation: "location5", // Wien
-    destination: "location8", // Centrála SenDeliver
-    dashboardStatus: "inbound",
+    assignedDriver: undefined, // Trailer, no driver
+    assignedDispatcher: "8", // Tomáš Rýchly
+    start: "location16", // Štokholm
+    currentLocation: "location17", // Brémy
+    destination: "location18", // Amsterdam
+    dashboardStatus: VehicleStatus.Transit,
     odometerKm: 0,
     capacityFree: "6 t",
     availability: "busy",
+    positionColor: "O", // Minor delay
   },
 
-  /** 9 ─ Standby */
+  /** 9 ─ Standby: Trstín */
   {
     id: "9",
     name: "MAN TGX",
@@ -234,14 +245,15 @@ export const mockVehicles: Vehicle[] = [
     manufactureYear: 2018,
     capacity: "24 t",
     assignedDriver: "1", // Ján Novák
+    assignedDispatcher: "7", // Mária Kovárová
     location: "location7", // Odpočívadlo Trstín
-    dashboardStatus: "standby",
+    dashboardStatus: VehicleStatus.Standby,
     odometerKm: 512300,
     capacityFree: "24 t",
     availability: "available",
   },
 
-  /** 10 ─ Depot */
+  /** 10 ─ Depot: Trnava */
   {
     id: "10",
     name: "Flatbed Trailer",
@@ -252,19 +264,18 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "TT-741CZ",
     manufactureYear: 2016,
     capacity: "20 t",
-    assignedDriver: undefined,
+    assignedDriver: undefined, // Trailer, no driver
+    assignedDispatcher: "7", // Mária Kovárová
     location: "location2", // Trnava
-    dashboardStatus: "depot",
+    dashboardStatus: VehicleStatus.Depot,
     odometerKm: 0,
     capacityFree: "20 t",
     availability: "available",
   },
 ];
 
-// ... (rest of the file remains unchanged)
-
 /* ------------------------------------------------------------------ */
-/*  Trips / Services môžu zostať ako boli – nezávislé na dashboardStatus */
+/* Trips and Services remain unchanged                                 */
 /* ------------------------------------------------------------------ */
 export interface Trip {
   id: number;
@@ -287,11 +298,9 @@ export interface Service {
   description: string;
 }
 
-
-
 export const mockTrips: Trip[] = [
-  { id: 1, vehicleId: 1, date: "2023-04-21", driver: "Karol Veľký", destination: "Praha", status: "completed", distance: 350, fuelConsumption: 32 },
-  { id: 2, vehicleId: 1, date: "2023-04-15", driver: "Ján Novák", destination: "Praha", status: "completed", distance: 350, fuelConsumption: 30 },
+  { id: 1, vehicleId: 1, date: "2023-04-21", driver: "Ján Novák", destination: "location6", status: "completed", distance: 350, fuelConsumption: 32 },
+  { id: 2, vehicleId: 1, date: "2023-04-15", driver: "Ján Novák", destination: "location6", status: "completed", distance: 350, fuelConsumption: 30 },
 ];
 
 export const mockServices: Service[] = [
@@ -299,9 +308,21 @@ export const mockServices: Service[] = [
   { id: "2", vehicleId: "1", date: "2023-01-10", type: "Technická kontrola", status: "completed", cost: 120, description: "Pravidelná STK" },
 ];
 
-// Helper functions for data retrieval
+/* ------------------------------------------------------------------ */
+/* Helper functions for data retrieval                                 */
+/* ------------------------------------------------------------------ */
 export const getTripsForVehicle = (vehicleId: string): Trip[] =>
   mockTrips.filter(trip => trip.vehicleId === Number(vehicleId));
 
 export const getServicesForVehicle = (vehicleId: string): Service[] =>
   mockServices.filter(service => service.vehicleId === vehicleId);
+
+export const getVehiclesByStatus = (status: VehicleStatus): Vehicle[] =>
+  mockVehicles.filter(vehicle => vehicle.dashboardStatus === status);
+
+export const getDynamicVehiclesByColor = (color: "G" | "O" | "R"): Vehicle[] =>
+  mockVehicles.filter(
+    vehicle =>
+      [VehicleStatus.Outbound, VehicleStatus.Inbound, VehicleStatus.Transit].includes(vehicle.dashboardStatus) &&
+      vehicle.positionColor === color
+  );

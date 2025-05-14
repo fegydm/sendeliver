@@ -1,6 +1,6 @@
 // File: front/src/components/hauler/content/HaulerDashboard.tsx
 // Description: Dashboard component for vehicle fleet management with map, filters, and charts
-// Last change: Updated map to grayscale relief, replaced Maintenance with Service, narrowed columns
+// Last change: Optimized performance with useMemo, lazy loading markers, fixed marker positions
 
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -17,16 +17,8 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./dashboard.css";
-
-// Enum for vehicle status
-enum VehicleStatus {
-  Outbound = "outbound",
-  Inbound = "inbound",
-  Transit = "transit",
-  Standby = "standby",
-  Depot = "depot",
-  Service = "service", // Replaced Maintenance with Service
-}
+import { mockVehicles, VehicleStatus } from "../../../data/mockFleet";
+import mockLocations from "../../../data/mockLocations";
 
 // Enum for delay status
 enum DelayStatus {
@@ -34,6 +26,13 @@ enum DelayStatus {
   Minor = "minor",
   Major = "major",
 }
+
+// Map positionColor to DelayStatus
+const positionColorToDelayStatus: Record<string, DelayStatus> = {
+  G: DelayStatus.None,
+  O: DelayStatus.Minor,
+  R: DelayStatus.Major,
+};
 
 // Constants for status ordering and styling
 const STATUS_ORDER: VehicleStatus[] = [
@@ -51,7 +50,7 @@ const statusHex: Record<VehicleStatus, string> = {
   [VehicleStatus.Transit]: "#7a63ff",
   [VehicleStatus.Standby]: "#b5bd00",
   [VehicleStatus.Depot]: "#6b7684",
-  [VehicleStatus.Service]: "#d726ff", // Same color as Maintenance
+  [VehicleStatus.Service]: "#d726ff",
 };
 
 const statusLabels: Record<VehicleStatus, string> = {
@@ -63,7 +62,7 @@ const statusLabels: Record<VehicleStatus, string> = {
   [VehicleStatus.Service]: "Service",
 };
 
-// Mock vehicle data
+// Interface for vehicle data
 interface ExtendedVehicle {
   id: string;
   name: string;
@@ -74,96 +73,15 @@ interface ExtendedVehicle {
   start?: string;
   destination?: string;
   currentLocation?: string;
-  delayStatus?: DelayStatus;
+  positionColor?: "G" | "O" | "R";
 }
 
-const mockVehicles: ExtendedVehicle[] = [
-  {
-    id: "1",
-    name: "Truck 1",
-    plateNumber: "BA123AB",
-    type: "Truck",
-    dashboardStatus: VehicleStatus.Outbound,
-    location: "Bratislava",
-    start: "Praha",
-    destination: "Bratislava",
-    currentLocation: "Brno",
-    delayStatus: DelayStatus.Minor,
-  },
-  {
-    id: "2",
-    name: "Van 1",
-    plateNumber: "ZA456CD",
-    type: "Van",
-    dashboardStatus: VehicleStatus.Inbound,
-    location: "Viedeň",
-    start: "Budapešť",
-    destination: "Viedeň",
-    currentLocation: "Trnava",
-    delayStatus: DelayStatus.None,
-  },
-  {
-    id: "3",
-    name: "Lorry 1",
-    plateNumber: "BB789EF",
-    type: "Lorry",
-    dashboardStatus: VehicleStatus.Transit,
-    location: "Berlín",
-    start: "Frankfurt",
-    destination: "Berlín",
-    currentLocation: "Mníchov",
-    delayStatus: DelayStatus.Major,
-  },
-  {
-    id: "4",
-    name: "Trailer 1",
-    plateNumber: "KE101GH",
-    type: "Trailer",
-    dashboardStatus: VehicleStatus.Standby,
-    location: "Žilina",
-  },
-  {
-    id: "5",
-    name: "Truck 2",
-    plateNumber: "NR202IJ",
-    type: "Truck",
-    dashboardStatus: VehicleStatus.Depot,
-    location: "Trnava",
-  },
-  {
-    id: "6",
-    name: "Van 2",
-    plateNumber: "TT303KL",
-    type: "Van",
-    dashboardStatus: VehicleStatus.Service,
-    location: "Brno",
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/* Helpers & Lookup Tables                                            */
-/* ------------------------------------------------------------------ */
-
-// Coordinates for European cities (demo)
-const destinationCoords: Record<string, [number, number]> = {
-  Bratislava: [48.1486, 17.1077],
-  Praha: [50.0755, 14.4378],
-  Viedeň: [48.2082, 16.3738],
-  Budapešť: [47.4979, 19.0402],
-  Brno: [49.1951, 16.6068],
-  Berlín: [52.52, 13.405],
-  Frankfurt: [50.1109, 8.6821],
-  Mníchov: [48.1351, 11.582],
-  Žilina: [49.2231, 18.7394],
-  Trnava: [48.3774, 17.5872],
-};
-
-// Lookup for vehicle type images
+// Vehicle type images
 const vehicleTypeImages: Record<string, string> = {
-  Truck: "/vehicles/truck-icon.svg",
-  Van: "/vehicles/van-icon.svg",
-  Lorry: "/vehicles/lorry-icon.svg",
-  Trailer: "/vehicles/trailer-icon.svg",
+  tractor: "/vehicles/truck-icon.svg",
+  van: "/vehicles/van-icon.svg",
+  trailer: "/vehicles/trailer-icon.svg",
+  rigid: "/vehicles/lorry-icon.svg",
 };
 
 const defaultVehicleImage = "/vehicles/default-icon.svg";
@@ -175,7 +93,7 @@ const emptyStats = (): VehicleStats =>
     {} as VehicleStats,
   );
 
-// Two-line tick formatter (e.g., Out\nbound)
+// Two-line tick formatter
 const twoLine = (s: string) => s.replace(" ", "\n");
 
 /* ------------------------------------------------------------------ */
@@ -195,17 +113,31 @@ L.Icon.Default.mergeOptions({
 const HaulerDashboard: React.FC = () => {
   const [vehicles] = useState<ExtendedVehicle[]>(mockVehicles);
   const [stats, setStats] = useState<VehicleStats>(emptyStats);
-  const [filter, setFilter] = useState<VehicleStatus | "all">("all");
+  const [filters, setFilters] = useState<VehicleStatus[]>([]);
   const [hover, setHover] = useState<VehicleStatus | null>(null);
   const [chartType, setChartType] = useState<"bar" | "pie">("bar");
   const [selectedVehicles, setSelectedVehicles] = useState<Set<string>>(new Set());
   const [isAllSelected, setIsAllSelected] = useState(false);
   const [isChartExpanded, setIsChartExpanded] = useState(false);
+  const [isVehiclesExpanded, setIsVehiclesExpanded] = useState(false);
+  const [showFlags, setShowFlags] = useState(true);
+
+  // Memoize filtered vehicles to avoid unnecessary recalculations
+  const visible = React.useMemo(() => {
+    return vehicles.filter(
+      (v) =>
+        (filters.length === 0 || filters.includes(v.dashboardStatus)) &&
+        (selectedVehicles.size === 0 || selectedVehicles.has(v.id))
+    );
+  }, [vehicles, filters, selectedVehicles]);
 
   // Refs for map
   const mapDiv = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markers = useRef<Record<string, L.Marker>>({});
+  const routeLayers = useRef<Record<string, L.Polyline>>({});
+  const startMarkers = useRef<Record<string, L.Marker>>({});
+  const destinationMarkers = useRef<Record<string, L.Marker>>({});
 
   // Calculate stats on data load
   useEffect(() => {
@@ -214,81 +146,272 @@ const HaulerDashboard: React.FC = () => {
     setStats(s);
   }, [vehicles]);
 
-// Initialize Leaflet map
-useEffect(() => {
-  if (!mapDiv.current) return;
+  // Initialize Leaflet map (runs only once)
+  useEffect(() => {
+    if (!mapDiv.current) return;
 
-  // Remove old map
-  mapRef.current?.remove();
-  markers.current = {};
+    // Clean up any existing map
+    if (mapRef.current) {
+      mapRef.current.off();
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
 
-  const map = L.map(mapDiv.current).setView([49, 15], 6);
-  mapRef.current = map;
+    // Clear Leaflet attributes from container
+    mapDiv.current.innerHTML = "";
+    delete mapDiv.current.dataset.leafletId;
 
-  // Use OpenTopoMap with grayscale applied via CSS
-  L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-    attribution: "Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)",
-    subdomains: ["a", "b", "c"],
-  }).addTo(map);
+    const map = L.map(mapDiv.current, {
+      zoomAnimation: false, // Disable zoom animation to reduce tile requests
+      fadeAnimation: false, // Disable fade animation for faster rendering
+    }).setView([49, 15], 6);
+    mapRef.current = map;
 
-    // Helper: Create colored divIcon with delay status
-    const statusIcon = (st: VehicleStatus, delay?: DelayStatus) =>
-      L.divIcon({
-        className: `status-icon status-icon--${st} ${delay ? `delay--${delay}` : ""}`,
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
+    // Use OpenTopoMap with enhanced caching
+    L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+      attribution: "Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)",
+      subdomains: ["a", "b", "c"],
+      maxZoom: 17,
+      tileSize: 256,
+      updateWhenIdle: true,
+      keepBuffer: 6, // Increased buffer for smoother panning
+      crossOrigin: true // Enable CORS for better caching
+      // Optional: Switch to MapTiler if OpenTopoMap rate limits persist
+      // L.tileLayer("https://api.maptiler.com/maps/topo-v2/{z}/{x}/{y}.png?key=YOUR_MAPTILER_API_KEY", {
+      //   attribution: "Map data: © MapTiler, © OpenStreetMap contributors",
+      //   maxZoom: 17,
+      //   tileSize: 256,
+      //   updateWhenIdle: true,
+      //   keepBuffer: 6,
+      // })
+    }).addTo(map);
+
+    // Handle zoom and move updates
+    let debounceTimeout: NodeJS.Timeout | null = null;
+    const handleMapUpdate = () => {
+      if (!mapRef.current) return;
+      if (debounceTimeout) clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        mapRef.current!.invalidateSize();
+        Object.values(markers.current).forEach(marker => {
+          if (marker.getElement()) marker.setIcon(marker.getIcon());
+        });
+        Object.values(startMarkers.current).forEach(marker => {
+          if (marker.getElement()) marker.setIcon(marker.getIcon());
+        });
+        Object.values(destinationMarkers.current).forEach(marker => {
+          if (marker.getElement()) marker.setIcon(marker.getIcon());
+        });
+      }, 300); // Increased debounce to 300ms for zoom/move
+    };
+    map.on('zoomend moveend', handleMapUpdate); // Handle both zoom and move
+
+    // Cleanup
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.off('zoomend moveend', handleMapUpdate);
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      if (debounceTimeout) clearTimeout(debounceTimeout);
+    };
+  }, []);
+
+  // Update markers and routes
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Clear existing markers and routes
+    Object.values(markers.current).forEach(marker => marker.remove());
+    Object.values(routeLayers.current).forEach(route => route.remove());
+    Object.values(startMarkers.current).forEach(marker => marker.remove());
+    Object.values(destinationMarkers.current).forEach(marker => marker.remove());
+    markers.current = {};
+    routeLayers.current = {};
+    startMarkers.current = {};
+    destinationMarkers.current = {};
+
+    // Helper: Create colored divIcon for vehicle markers
+    const statusIcon = (status: VehicleStatus, positionColor?: "G" | "O" | "R") => {
+      const isDynamic = [VehicleStatus.Outbound, VehicleStatus.Inbound, VehicleStatus.Transit].includes(status);
+      const delayClass = positionColor ? `delay--${positionColorToDelayStatus[positionColor]}` : "";
+      const iconSize: [number, number] = isDynamic ? [26, 26] : [18, 18];
+      const iconAnchor: [number, number] = isDynamic ? [13, 26] : [9, 18]; // Adjusted anchor to center marker
+      return L.divIcon({
+        className: `vehicle-marker ${isDynamic ? "dynamic" : "static"} status-icon--${status} ${delayClass}`,
+        iconSize,
+        iconAnchor,
+        html: `<div class="marker-inner"></div>`,
       });
+    };
 
-    // Filter vehicles by status and selection
-    const visible = vehicles.filter(
-      (v) =>
-        (filter === "all" || v.dashboardStatus === filter) &&
-        (selectedVehicles.size === 0 || selectedVehicles.has(v.id))
-    );
+    // Helper: Create divIcon for start marker (dark gray flag with white 'S')
+    const startIcon = (status: VehicleStatus) => L.divIcon({
+      className: "start-marker",
+      iconSize: [24, 24],
+      iconAnchor: [4, 24], // Adjusted anchor to align with pole
+      html: `
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <!-- Flag: dark gray with white 'S' -->
+          <rect x="4" y="0" width="20" height="16" fill="#4a4a4a" stroke="#000" stroke-width="1"/>
+          <text x="14" y="12" font-size="10" font-weight="bold" fill="#fff" text-anchor="middle">S</text>
+          <!-- Pole -->
+          <line x1="4" y1="0" x2="4" y2="24" stroke="#000" stroke-width="2"/>
+          <!-- Status-colored circle -->
+          <circle cx="12" cy="20" r="5" fill="${statusHex[status]}"/>
+        </svg>
+      `,
+    });
+
+    // Helper: Create divIcon for destination marker (checkered flag)
+    const destinationIcon = (status: VehicleStatus) => L.divIcon({
+      className: "destination-marker",
+      iconSize: [24, 24],
+      iconAnchor: [4, 24], // Adjusted anchor to align with pole
+      html: `
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <!-- Checkered flag: 4x4 grid -->
+          <rect x="4" y="0" width="20" height="16" fill="#fff" stroke="#000" stroke-width="1"/>
+          <rect x="4" y="0" width="5" height="4" fill="#000"/>
+          <rect x="14" y="0" width="5" height="4" fill="#000"/>
+          <rect x="9" y="4" width="5" height="4" fill="#000"/>
+          <rect x="19" y="4" width="5" height="4" fill="#000"/>
+          <rect x="4" y="8" width="5" height="4" fill="#000"/>
+          <rect x="14" y="8" width="5" height="4" fill="#000"/>
+          <rect x="9" y="12" width="5" height="4" fill="#000"/>
+          <rect x="19" y="12" width="5" height="4" fill="#000"/>
+          <!-- Pole -->
+          <line x1="4" y1="0" x2="4" y2="24" stroke="#000" stroke-width="2"/>
+          <!-- Status-colored circle -->
+          <circle cx="12" cy="20" r="5" fill="${statusHex[status]}"/>
+        </svg>
+      `,
+    });
 
     visible.forEach((v) => {
-      if (!v.currentLocation && !v.location) return;
-      const coords = destinationCoords[v.currentLocation || v.location || ""];
-      if (!coords) return;
+      // Vehicle marker
+      const locationId = v.currentLocation || v.location;
+      if (!locationId) return;
+      const location = mockLocations.find((loc) => loc.id === locationId);
+      if (!location) return;
 
+      const coords: [number, number] = [location.latitude, location.longitude];
+      // Skip markers outside current map bounds
+      const bounds = mapRef.current!.getBounds();
+      if (!bounds.contains(coords)) return;
+
+      // Routes and start/destination markers for dynamic statuses (added first for layering)
+      if ([VehicleStatus.Outbound, VehicleStatus.Inbound, VehicleStatus.Transit].includes(v.dashboardStatus)) {
+        const routePoints: [number, number][] = [];
+        // Start
+        if (v.start && showFlags) {
+          const startLoc = mockLocations.find((loc) => loc.id === v.start);
+          if (startLoc) {
+            routePoints.push([startLoc.latitude, startLoc.longitude]);
+            const startMarker = L.marker([startLoc.latitude, startLoc.longitude], {
+              icon: startIcon(v.dashboardStatus),
+              zIndexOffset: 900,
+            })
+              .addTo(mapRef.current!)
+              .bindPopup(`Start: ${startLoc.city}`);
+            startMarkers.current[v.id] = startMarker;
+          }
+        } else if (v.start) {
+          const startLoc = mockLocations.find((loc) => loc.id === v.start);
+          if (startLoc) {
+            routePoints.push([startLoc.latitude, startLoc.longitude]);
+          }
+        }
+        // Current location
+        if (v.currentLocation) {
+          routePoints.push([location.latitude, location.longitude]);
+        }
+        // Destination
+        if (v.destination && showFlags) {
+          const destLoc = mockLocations.find((loc) => loc.id === v.destination);
+          if (destLoc) {
+            routePoints.push([destLoc.latitude, destLoc.longitude]);
+            const destMarker = L.marker([destLoc.latitude, destLoc.longitude], {
+              icon: destinationIcon(v.dashboardStatus),
+              zIndexOffset: 900,
+            })
+              .addTo(mapRef.current!)
+              .bindPopup(`Destination: ${destLoc.city}`);
+            destinationMarkers.current[v.id] = destMarker;
+          }
+        } else if (v.destination) {
+          const destLoc = mockLocations.find((loc) => loc.id === v.destination);
+          if (destLoc) {
+            routePoints.push([destLoc.latitude, destLoc.longitude]);
+          }
+        }
+        // Draw route
+        if (routePoints.length >= 2) {
+          const polyline = L.polyline(routePoints, {
+            color: statusHex[v.dashboardStatus],
+            weight: 3,
+            opacity: 0.6,
+          }).addTo(mapRef.current!);
+          routeLayers.current[v.id] = polyline;
+        }
+      }
+
+      // Vehicle marker (added after routes for layering)
       const popupContent = `
         <b>${v.name}</b><br>
         ${v.plateNumber}<br>
         ${statusLabels[v.dashboardStatus]}<br>
-        ${v.start ? `Start: ${v.start}<br>` : ""}
-        ${v.currentLocation ? `Current: ${v.currentLocation}<br>` : ""}
-        ${v.destination ? `Destination: ${v.destination}` : v.location || "No location"}
+        ${v.start ? `Start: ${mockLocations.find(loc => loc.id === v.start)?.city || v.start}<br>` : ""}
+        ${v.currentLocation ? `Current: ${mockLocations.find(loc => loc.id === v.currentLocation)?.city || v.currentLocation}<br>` : ""}
+        ${v.destination ? `Destination: ${mockLocations.find(loc => loc.id === v.destination)?.city || v.destination}` : v.location ? mockLocations.find(loc => loc.id === v.location)?.city || v.location : "No location"}
       `;
 
       const marker = L.marker(coords, {
-        icon: statusIcon(v.dashboardStatus, v.delayStatus),
+        icon: statusIcon(v.dashboardStatus, v.positionColor),
+        zIndexOffset: 1000,
       })
-        .addTo(map)
+        .addTo(mapRef.current!)
         .bindPopup(popupContent);
 
       markers.current[v.id] = marker;
     });
 
-    // Fit bounds if we have markers
-    if (Object.keys(markers.current).length > 0) {
-      const markerArray = Object.values(markers.current);
-      const bounds = L.featureGroup(markerArray).getBounds();
+    // Fit bounds to include all markers and routes
+    const allLayers: L.Layer[] = [];
+    Object.values(markers.current).forEach(marker => allLayers.push(marker));
+    Object.values(startMarkers.current).forEach(marker => allLayers.push(marker));
+    Object.values(destinationMarkers.current).forEach(marker => allLayers.push(marker));
+    Object.values(routeLayers.current).forEach(route => allLayers.push(route));
 
-      if (markerArray.length === 1) {
-        map.fitBounds(bounds, {
-          padding: [50, 50],
-          maxZoom: 10,
-        });
+    if (allLayers.length > 0) {
+      const bounds = L.featureGroup(allLayers).getBounds();
+      // Ensure bounds are valid
+      if (bounds.isValid()) {
+        if (allLayers.length === 1) {
+          mapRef.current!.fitBounds(bounds, {
+            padding: [50, 50],
+            maxZoom: 10,
+          });
+        } else {
+          mapRef.current!.fitBounds(bounds, {
+            padding: [50, 50],
+            maxZoom: 15, // Increased maxZoom for better visibility
+          });
+        }
       } else {
-        map.fitBounds(bounds, { padding: [50, 50] });
+        console.warn("Invalid bounds, falling back to default view");
+        mapRef.current!.setView([49, 15], 6);
       }
     }
 
-    // Handle chart expansion/collapse - resize map
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-  }, [vehicles, filter, selectedVehicles, isChartExpanded]);
+    // Handle column expansion/collapse
+    const timeout = setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    }, 300); // Increased delay to debounce
+    return () => clearTimeout(timeout); // Clean up timeout
+  }, [vehicles, filters, selectedVehicles, isChartExpanded, isVehiclesExpanded, showFlags, visible]);
 
   // Update marker visibility on hover
   useEffect(() => {
@@ -307,9 +430,9 @@ useEffect(() => {
     value: stats[s],
   }));
 
-  // Filter vehicles based on current filter
+  // Filter vehicles based on current filters
   const filteredVehicles = vehicles.filter(
-    (v) => filter === "all" || v.dashboardStatus === filter
+    (v) => filters.length === 0 || filters.includes(v.dashboardStatus)
   );
 
   // Handle select all vehicles
@@ -336,19 +459,47 @@ useEffect(() => {
     );
   };
 
-  // Reset status filter
+  // Handle status filter toggle
+  const handleToggleFilter = (status: VehicleStatus) => {
+    setFilters((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    );
+  };
+
+  // Handle reset filter (toggle all)
   const handleResetFilter = () => {
-    setFilter("all");
+    setFilters((prev) =>
+      prev.length === STATUS_ORDER.length ? [] : [...STATUS_ORDER]
+    );
   };
 
   // Toggle chart expansion
   const toggleChartExpansion = () => {
     setIsChartExpanded(!isChartExpanded);
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       if (mapRef.current) {
         mapRef.current.invalidateSize();
       }
     }, 300);
+    return () => clearTimeout(timeout);
+  };
+
+  // Toggle vehicles column expansion
+  const toggleVehiclesExpansion = () => {
+    setIsVehiclesExpanded(!isVehiclesExpanded);
+    const timeout = setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    }, 300);
+    return () => clearTimeout(timeout);
+  };
+
+  // Toggle flags visibility
+  const toggleFlags = () => {
+    setShowFlags(!showFlags);
   };
 
   return (
@@ -367,7 +518,7 @@ useEffect(() => {
       <div
         className={`dashboard__content ${
           isChartExpanded ? "dashboard__content--charts-expanded" : ""
-        }`}
+        } ${isVehiclesExpanded ? "dashboard__content--vehicles-expanded" : ""}`}
       >
         {/* Left column - status filters */}
         <div className="dashboard__filters-column">
@@ -380,62 +531,74 @@ useEffect(() => {
               <div
                 key={st}
                 className={`dashboard__stat dashboard__stat--${st} ${
-                  filter === st ? "dashboard__stat--active" : ""
+                  filters.includes(st) ? "dashboard__stat--active" : ""
                 } ${hover === st ? "dashboard__stat--hover" : ""}`}
                 style={{ background: statusHex[st], "--status-color": statusHex[st] } as React.CSSProperties}
                 onMouseEnter={() => setHover(st)}
                 onMouseLeave={() => setHover(null)}
-                onClick={() => setFilter(st)}
+                onClick={() => handleToggleFilter(st)}
               >
                 <div className="dashboard__stat-value">{stats[st]}</div>
                 <div className="dashboard__stat-label">{statusLabels[st]}</div>
-                {filter === st && <div className="dashboard__stat-indicator" />}
+                {filters.includes(st) && <div className="dashboard__stat-indicator" />}
               </div>
             ))}
           </div>
         </div>
 
         {/* Middle - vehicles list */}
-        <div className="dashboard__vehicles-column">
+        <div className={`dashboard__vehicles-column ${isVehiclesExpanded ? "expanded" : ""}`}>
           <div className="dashboard__vehicles-header">
             <h3>Vehicles</h3>
-            <div className="dashboard__select-all">
-              <input
-                type="checkbox"
-                id="selectAll"
-                checked={isAllSelected}
-                onChange={handleSelectAll}
-              />
-              <label htmlFor="selectAll">Select All</label>
+            <div className="dashboard__vehicles-actions">
+              <div className="dashboard__select-all">
+                <input
+                  type="checkbox"
+                  id="selectAll"
+                  checked={isAllSelected}
+                  onChange={handleSelectAll}
+                />
+                <label htmlFor="selectAll">Select All</label>
+              </div>
+              <button className="dashboard__vehicles-toggle" onClick={toggleVehiclesExpansion}>
+                {isVehiclesExpanded ? "«" : "»"}
+              </button>
             </div>
           </div>
 
           <div className="dashboard__vehicles-list">
             {filteredVehicles.length > 0 ? (
-              filteredVehicles.map((vehicle) => (
-                <div key={vehicle.id} className="dashboard__vehicle-item">
-                  <div className="dashboard__vehicle-row">
-                    <input
-                      type="checkbox"
-                      checked={selectedVehicles.has(vehicle.id)}
-                      onChange={() => handleSelectVehicle(vehicle.id)}
-                    />
-                    <div className="dashboard__vehicle-plate">{vehicle.plateNumber}</div>
-                    <img
-                      src={vehicleTypeImages[vehicle.type] || defaultVehicleImage}
-                      alt={vehicle.type}
-                      className="dashboard__vehicle-icon"
-                    />
-                  </div>
-                  <div className="dashboard__vehicle-destination">
-                    <div
-                      className={`dashboard__vehicle-status dashboard__vehicle-status--${vehicle.dashboardStatus}`}
-                    >
-                      {vehicle.location || "No destination"}
+              filteredVehicles.map((vehicle) => {
+                const locationId = vehicle.currentLocation || vehicle.location;
+                const locationName = locationId
+                  ? mockLocations.find((loc) => loc.id === locationId)?.city || "No location"
+                  : "No location";
+
+                return (
+                  <div key={vehicle.id} className="dashboard__vehicle-item">
+                    <div className="dashboard__vehicle-row">
+                      <input
+                        type="checkbox"
+                        checked={selectedVehicles.has(vehicle.id)}
+                        onChange={() => handleSelectVehicle(vehicle.id)}
+                      />
+                      <div className="dashboard__vehicle-plate">{vehicle.plateNumber}</div>
+                      <img
+                        src={vehicleTypeImages[vehicle.type] || defaultVehicleImage}
+                        alt={vehicle.type}
+                        className="dashboard__vehicle-icon"
+                      />
+                    </div>
+                    <div className="dashboard__vehicle-destination">
+                      <div
+                        className={`dashboard__vehicle-status dashboard__vehicle-status--${vehicle.dashboardStatus}`}
+                      >
+                        {locationName}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="dashboard__no-vehicles">No vehicles match the current filter</div>
             )}
@@ -444,6 +607,16 @@ useEffect(() => {
 
         {/* Right column - Map */}
         <div className="dashboard__map-container">
+          <div className="dashboard__map-controls">
+            <label className="dashboard__flag-toggle">
+              <input
+                type="checkbox"
+                checked={showFlags}
+                onChange={toggleFlags}
+              />
+              Show Start/Destination Flags
+            </label>
+          </div>
           <div ref={mapDiv} className="dashboard__map-element" />
         </div>
 
@@ -523,10 +696,10 @@ useEffect(() => {
                 }}
               >
                 <svg className="dashboard__thumbnail-svg dashboard__thumbnail-svg--bar">
-                  <rect x="5" y="10" width="8" height="30" fill={statusHex.outbound} />
-                  <rect x="18" y="15" width="8" height="25" fill={statusHex.inbound} />
-                  <rect x="31" y="5" width="8" height="35" fill={statusHex.transit} />
-                  <rect x="44" y="25" width="8" height="15" fill={statusHex.standby} />
+                  <rect x="5" y="10" width="8" height="30" fill={statusHex[VehicleStatus.Outbound]} />
+                  <rect x="18" y="15" width="8" height="25" fill={statusHex[VehicleStatus.Inbound]} />
+                  <rect x="31" y="5" width="8" height="35" fill={statusHex[VehicleStatus.Transit]} />
+                  <rect x="44" y="25" width="8" height="15" fill={statusHex[VehicleStatus.Standby]} />
                 </svg>
                 <span>Bar Chart</span>
               </div>
@@ -552,7 +725,7 @@ useEffect(() => {
                     cy="25"
                     r="20"
                     fill="transparent"
-                    stroke={statusHex.outbound}
+                    stroke={statusHex[VehicleStatus.Outbound]}
                     strokeWidth="20"
                     strokeDasharray="25 100"
                     strokeDashoffset="-40"
@@ -562,7 +735,7 @@ useEffect(() => {
                     cy="25"
                     r="20"
                     fill="transparent"
-                    stroke={statusHex.inbound}
+                    stroke={statusHex[VehicleStatus.Inbound]}
                     strokeWidth="20"
                     strokeDasharray="15 110"
                     strokeDashoffset="-65"
@@ -572,7 +745,7 @@ useEffect(() => {
                     cy="25"
                     r="20"
                     fill="transparent"
-                    stroke={statusHex.transit}
+                    stroke={statusHex[VehicleStatus.Transit]}
                     strokeWidth="20"
                     strokeDasharray="20 105"
                     strokeDashoffset="-80"

@@ -1,80 +1,229 @@
-// File: ./front/src/data/mockLocations.ts
-// Last change: Initial mock locations data for logbook component
+// File: front/src/data/mockLocations.ts
+// Description: Mock location data for vehicle fleet management
+// Last change: Added all required locations for vehicles and coordinates from HaulerDashboard.tsx
 
 export interface Location {
-    id: string;
-    name: string;
-    address: string;
-    city: string;
-    country: string;
-    type: "pickup" | "delivery" | "depot" | "rest";
-  }
-  
-  export const mockLocations: Location[] = [
-    {
-      id: "location1",
-      name: "Hlavný sklad Bratislava",
-      address: "Skladová 123",
-      city: "Bratislava",
-      country: "SK",
-      type: "pickup"
-    },
-    {
-      id: "location2",
-      name: "Distribučné centrum Trnava",
-      address: "Priemyselná 45",
-      city: "Trnava",
-      country: "SK",
-      type: "delivery"
-    },
-    {
-      id: "location3",
-      name: "Obchodné centrum Košice",
-      address: "Obchodná 78",
-      city: "Košice",
-      country: "SK",
-      type: "delivery"
-    },
-    {
-      id: "location4",
-      name: "Výrobný závod Žilina",
-      address: "Továrenská 15",
-      city: "Žilina",
-      country: "SK",
-      type: "pickup"
-    },
-    {
-      id: "location5",
-      name: "Centrálny sklad Wien",
-      address: "Lagerstraße 56",
-      city: "Wien",
-      country: "AT",
-      type: "delivery"
-    },
-    {
-      id: "location6",
-      name: "Showroom Praha",
-      address: "Showroomová 89",
-      city: "Praha",
-      country: "CZ",
-      type: "delivery"
-    },
-    {
-      id: "location7",
-      name: "Odpočívadlo Trstín",
-      address: "Diaľnica D1, km 67",
-      city: "Trstín",
-      country: "SK",
-      type: "rest"
-    },
-    {
-      id: "location8",
-      name: "Centrála SenDeliver",
-      address: "Logistická 1",
-      city: "Bratislava",
-      country: "SK",
-      type: "depot"
-    }
-  ];
-  
-  export default mockLocations;
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  country: string;
+  type: "pickup" | "delivery" | "depot" | "rest" | "service" | "standby";
+  latitude: number;
+  longitude: number;
+}
+
+export const mockLocations: Location[] = [
+  {
+    id: "location1",
+    name: "Hlavný sklad Bratislava",
+    address: "Skladová 123",
+    city: "Bratislava",
+    country: "SK",
+    type: "pickup",
+    latitude: 48.1486,
+    longitude: 17.1077,
+  },
+  {
+    id: "location2",
+    name: "Distribučné centrum Trnava",
+    address: "Priemyselná 45",
+    city: "Trnava",
+    country: "SK",
+    type: "depot",
+    latitude: 48.3774,
+    longitude: 17.5872,
+  },
+  {
+    id: "location3",
+    name: "Obchodné centrum Košice",
+    address: "Obchodná 78",
+    city: "Košice",
+    country: "SK",
+    type: "delivery",
+    latitude: 48.7164,
+    longitude: 21.2611,
+  },
+  {
+    id: "location4",
+    name: "Výrobný závod Žilina",
+    address: "Továrenská 15",
+    city: "Žilina",
+    country: "SK",
+    type: "depot",
+    latitude: 49.2231,
+    longitude: 18.7394,
+  },
+  {
+    id: "location5",
+    name: "Centrálny sklad Wien",
+    address: "Lagerstraße 56",
+    city: "Wien",
+    country: "AT",
+    type: "delivery",
+    latitude: 48.2082,
+    longitude: 16.3738,
+  },
+  {
+    id: "location6",
+    name: "Showroom Praha",
+    address: "Showroomová 89",
+    city: "Praha",
+    country: "CZ",
+    type: "delivery",
+    latitude: 50.0755,
+    longitude: 14.4378,
+  },
+  {
+    id: "location7",
+    name: "Odpočívadlo Trstín",
+    address: "Diaľnica D1, km 67",
+    city: "Trstín",
+    country: "SK",
+    type: "rest",
+    latitude: 48.5333,
+    longitude: 17.4333,
+  },
+  {
+    id: "location8",
+    name: "Centrála SenDeliver",
+    address: "Logistická 1",
+    city: "Bratislava",
+    country: "SK",
+    type: "service",
+    latitude: 48.1486,
+    longitude: 17.1077,
+  },
+  {
+    id: "location9",
+    name: "Standby Dortmund",
+    address: "Hafenstraße 12",
+    city: "Dortmund",
+    country: "DE",
+    type: "standby",
+    latitude: 51.5136,
+    longitude: 7.4653,
+  },
+  {
+    id: "location10",
+    name: "Logistické centrum Montabaur",
+    address: "Industriepark 45",
+    city: "Montabaur",
+    country: "DE",
+    type: "delivery",
+    latitude: 50.4356,
+    longitude: 7.8259,
+  },
+  {
+    id: "location11",
+    name: "Sklad Kolín",
+    address: "Werftstraße 33",
+    city: "Köln",
+    country: "DE",
+    type: "delivery",
+    latitude: 50.9375,
+    longitude: 6.9603,
+  },
+  {
+    id: "location12",
+    name: "Distribučné centrum Wroclaw",
+    address: "Przemysłowa 67",
+    city: "Wrocław",
+    country: "PL",
+    type: "delivery",
+    latitude: 51.1079,
+    longitude: 17.0385,
+  },
+  {
+    id: "location13",
+    name: "Sklad Poznaň",
+    address: "Magazynowa 22",
+    city: "Poznań",
+    country: "PL",
+    type: "delivery",
+    latitude: 52.4064,
+    longitude: 16.9252,
+  },
+  {
+    id: "location14",
+    name: "Logistické centrum Mníchov",
+    address: "Industriestraße 88",
+    city: "München",
+    country: "DE",
+    type: "pickup",
+    latitude: 48.1351,
+    longitude: 11.5820,
+  },
+  {
+    id: "location15",
+    name: "Sklad Plzeň",
+    address: "Průmyslová 19",
+    city: "Plzeň",
+    country: "CZ",
+    type: "delivery",
+    latitude: 49.7384,
+    longitude: 13.3736,
+  },
+  {
+    id: "location16",
+    name: "Distribučné centrum Štokholm",
+    address: "Lagerstigen 44",
+    city: "Stockholm",
+    country: "SE",
+    type: "pickup",
+    latitude: 59.3293,
+    longitude: 18.0686,
+  },
+  {
+    id: "location17",
+    name: "Sklad Brémy",
+    address: "Hafenstraße 77",
+    city: "Bremen",
+    country: "DE",
+    type: "delivery",
+    latitude: 53.0793,
+    longitude: 8.8017,
+  },
+  {
+    id: "location18",
+    name: "Logistické centrum Amsterdam",
+    address: "Industrielaan 55",
+    city: "Amsterdam",
+    country: "NL",
+    type: "delivery",
+    latitude: 52.3676,
+    longitude: 4.9041,
+  },
+  {
+    id: "location19",
+    name: "Sklad Paríž",
+    address: "Rue de l'Industrie 66",
+    city: "Paris",
+    country: "FR",
+    type: "pickup",
+    latitude: 48.8566,
+    longitude: 2.3522,
+  },
+  {
+    id: "location20",
+    name: "Distribučné centrum Wels",
+    address: "Gewerbestraße 23",
+    city: "Wels",
+    country: "AT",
+    type: "delivery",
+    latitude: 48.1561,
+    longitude: 14.0247,
+  },
+  {
+    id: "location21",
+    name: "Logistické centrum Berlín",
+    address: "Industriestraße 99",
+    city: "Berlin",
+    country: "DE",
+    type: "pickup",
+    latitude: 52.5200,
+    longitude: 13.4050,
+  },
+];
+
+export default mockLocations;
