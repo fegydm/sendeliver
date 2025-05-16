@@ -1,6 +1,6 @@
 // File: front/src/data/mockLocations.ts
-// Description: Mock location data for vehicle fleet management
-// Last change: Added all required locations for vehicles and coordinates from HaulerDashboard.tsx
+// Description: Mock location data for vehicle fleet management (now with parking & new cities for Zaragoza–Heilbronn–Ostrava trip)
+// Last change: Added parking locations, Zaragoza & Ostrava for inbound+break; added parking types for parking markers
 
 export interface Location {
   id: string;
@@ -8,9 +8,10 @@ export interface Location {
   address: string;
   city: string;
   country: string;
-  type: "pickup" | "delivery" | "depot" | "rest" | "service" | "standby";
+  type: "pickup" | "delivery" | "depot" | "rest" | "service" | "standby" | "parking";
   latitude: number;
   longitude: number;
+  status?: "free" | "occupied"; // only for parking
 }
 
 export const mockLocations: Location[] = [
@@ -56,13 +57,13 @@ export const mockLocations: Location[] = [
   },
   {
     id: "location5",
-    name: "Centrálny sklad Wien",
-    address: "Lagerstraße 56",
-    city: "Wien",
-    country: "AT",
+    name: "Centrálny sklad Brno",
+    address: "Brněnská 27",
+    city: "Brno",
+    country: "CZ",
     type: "delivery",
-    latitude: 48.2082,
-    longitude: 16.3738,
+    latitude: 49.1951,
+    longitude: 16.6068,
   },
   {
     id: "location6",
@@ -223,6 +224,61 @@ export const mockLocations: Location[] = [
     type: "pickup",
     latitude: 52.5200,
     longitude: 13.4050,
+  },
+
+  // ------- NEW LOCATIONS for BREAK TRIP & PARKINGS --------
+
+  {
+    id: "location25",
+    name: "Zaragoza Truck Center",
+    address: "Av. Alcalde Caballero 56",
+    city: "Zaragoza",
+    country: "ES",
+    type: "pickup",
+    latitude: 41.6488,
+    longitude: -0.8891,
+  },
+  {
+    id: "parking1",
+    name: "Heilbronn Parking",
+    address: "Am Europaplatz",
+    city: "Heilbronn",
+    country: "DE",
+    type: "parking",
+    latitude: 49.1402,
+    longitude: 9.2205,
+    status: "free",
+  },
+  {
+    id: "parking2",
+    name: "Ostrava Parking",
+    address: "Ostravská 123",
+    city: "Ostrava",
+    country: "CZ",
+    type: "parking",
+    latitude: 49.8207,
+    longitude: 18.2623,
+    status: "occupied",
+  },
+  {
+    id: "location30",
+    name: "Ostrava Central Hub",
+    address: "Nádražní 1",
+    city: "Ostrava",
+    country: "CZ",
+    type: "delivery",
+    latitude: 49.8209,
+    longitude: 18.2625,
+  },
+  {
+    id: "location31",
+    name: "Heilbronn Terminal",
+    address: "Terminalstr. 5",
+    city: "Heilbronn",
+    country: "DE",
+    type: "delivery",
+    latitude: 49.1439,
+    longitude: 9.2180,
   },
 ];
 

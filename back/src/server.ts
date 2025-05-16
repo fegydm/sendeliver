@@ -1,10 +1,7 @@
 // File: ./back/src/server.ts
-// Last change: Fixed route order for external deliveries
+// Last change: Kompatibilita s TS strict/noImplicitAny – explicitné 'any' v CORS a error middleware
 
-import express_import from "express";
-const express = express_import as any;
-
-import type { Request, Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import http from "http";
 import path from "path";
 import fs from "fs";
@@ -36,7 +33,7 @@ dotenv.config({
 });
 
 const app = express();
-const server = http.createServer(app);
+const server = http.createServer(app as any);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -45,7 +42,8 @@ app.use(ua.express());
 morgan.token("isBot", (req: any) => req.useragent.isBot ? "BOT" : "HUMAN");
 app.use(morgan(":remote-addr :method :url :status :response-time ms :isBot"));
 
-app.use((req: Request, res: Response, next: NextFunction) => {
+// --- CORS middleware s explicitným any pre TS strict ---
+app.use(function (req: any, res: any, next: any) {
   const allowedOrigins = [
     "http://localhost:3000",
     "http://localhost:5173",
@@ -57,9 +55,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key");
   res.setHeader("Access-Control-Allow-Credentials", "true");
-  if ((req as any).method === "OPTIONS") {
+  if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
   next();
@@ -116,7 +114,7 @@ app.get("/", (_req: Request, res: Response) =>
 // 🎯 Fallback pre SPA
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
-const spaFallback: RequestHandler = (req: Request, res: Response) => {
+const spaFallback: RequestHandler = (req, res) => {
   if (req.path.startsWith("/api")) {
     res.status(404).json({ error: "API endpoint not found" });
     return;
@@ -129,6 +127,21 @@ const spaFallback: RequestHandler = (req: Request, res: Response) => {
   }
 };
 app.use(spaFallback);
+
+// --- Global JSON error handler s explicitným any pre TS strict ---
+app.use(function (err: any, req: any, res: any, next: any) {
+  if (res.headersSent) {
+    return next(err);
+  }
+  if (req.path && req.path.startsWith('/api')) {
+    res.status(err.status || 500).json({
+      status: 'NOT_OK',
+      error: err.message || 'Internal server error'
+    });
+  } else {
+    res.status(err.status || 500).send(`<h1>Server Error</h1><pre>${err.message || 'Unknown error'}</pre>`);
+  }
+});
 
 // 🚀 Štart servera
 const PORT = parseInt(process.env.PORT || "5000", 10);
