@@ -1,46 +1,14 @@
 // File: front/src/components/hauler/content/HaulerDashboardFilters.tsx
-// Last change: Moved filters, vehicle list and charts into a single Filters subcomponent
 
 import React, { useMemo } from "react";
 import "./dashboard.filters.css";
 import {
   VehicleStatus,
   Vehicle,
+  STATUS_ORDER,      // ← presunuté z mockFleet.ts
+  statusHex,        // ← presunuté z mockFleet.ts
+  statusLabels,     // ← presunuté z mockFleet.ts
 } from "../../../data/mockFleet";
-
-// Farby pre statusy
-const statusHex: Record<VehicleStatus, string> = {
-  [VehicleStatus.Outbound]: "#2389ff",
-  [VehicleStatus.Inbound]: "#1fbac7",
-  [VehicleStatus.Transit]: "#7a63ff",
-  [VehicleStatus.Waiting]: "#5958c8",
-  [VehicleStatus.Break]: "#34495e",
-  [VehicleStatus.Standby]: "#b5bd00",
-  [VehicleStatus.Depot]: "#6b7684",
-  [VehicleStatus.Service]: "#d726ff",
-};
-
-const statusLabels: Record<VehicleStatus, string> = {
-  [VehicleStatus.Outbound]: "Out bound",
-  [VehicleStatus.Inbound]: "In bound",
-  [VehicleStatus.Transit]: "Transit",
-  [VehicleStatus.Waiting]: "Waiting",
-  [VehicleStatus.Break]: "Break",
-  [VehicleStatus.Standby]: "Standby",
-  [VehicleStatus.Depot]: "Depot",
-  [VehicleStatus.Service]: "Service",
-};
-
-const STATUS_ORDER: VehicleStatus[] = [
-  VehicleStatus.Outbound,
-  VehicleStatus.Inbound,
-  VehicleStatus.Transit,
-  VehicleStatus.Waiting,
-  VehicleStatus.Break,
-  VehicleStatus.Standby,
-  VehicleStatus.Depot,
-  VehicleStatus.Service,
-];
 
 // Typy pre props
 interface HaulerDashboardFiltersProps {
@@ -90,15 +58,6 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
     }, {} as Record<VehicleStatus, number>);
   }, [vehicles]);
 
-  // Pomocný formatter pre graf (dvojriadkový label)
-  const twoLine = (s: string) => s.replace(" ", "\n");
-
-  // Chart data
-  const chartData = STATUS_ORDER.map((s) => ({
-    name: statusLabels[s],
-    value: stats[s],
-  }));
-
   // Typ obrázkov podľa typu auta (ikony)
   const vehicleTypeImages: Record<string, string> = {
     tractor: "/vehicles/truck-icon.svg",
@@ -108,6 +67,16 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
   };
   const defaultVehicleImage = "/vehicles/default-icon.svg";
 
+  // Zoradenie podľa STATUS_ORDER v rámci filtrovaných
+  const sortedFilteredVehicles = useMemo(() => {
+    return filteredVehicles.slice().sort((a, b) => {
+      return (
+        STATUS_ORDER.indexOf(a.dashboardStatus) -
+        STATUS_ORDER.indexOf(b.dashboardStatus)
+      );
+    });
+  }, [filteredVehicles]);
+
   return (
     <>
       {/* Filters (ľavý stĺpec) */}
@@ -116,7 +85,7 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
           All Vehicles
         </button>
         <div className="dashboard__status-filters">
-          {STATUS_ORDER.map((st, idx) => (
+          {STATUS_ORDER.map((st) => (
             <div
               key={st}
               className={`dashboard__stat dashboard__stat--${st} ${
@@ -159,9 +128,9 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
             </button>
           </div>
         </div>
-        <div className="dashboard__vehicles-list">
-          {filteredVehicles.length > 0 ? (
-            filteredVehicles.map((vehicle) => {
+        <div className={`dashboard__vehicles-list${filters.length === 0 ? " dashboard__vehicles-list--dimmed" : ""}`}>
+          {sortedFilteredVehicles.length > 0 ? (
+            sortedFilteredVehicles.map((vehicle) => {
               const locationName = vehicle.currentLocation
                 ? vehicle.currentLocation
                 : vehicle.location

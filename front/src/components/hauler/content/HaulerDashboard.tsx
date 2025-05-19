@@ -67,20 +67,25 @@ const HaulerDashboard: React.FC = () => {
   };
 
   // Handler pre filter (status)
-  const handleToggleFilter = (status: VehicleStatus) => {
-    setFilters((prev) =>
-      prev.includes(status)
-        ? prev.filter((s) => s !== status)
-        : [...prev, status]
-    );
-  };
+ const handleToggleFilter = (status: VehicleStatus) => {
+  setFilters((prev) => {
+    if (prev.includes(status)) {
+      const next = prev.filter((s) => s !== status);
+      return next; // tu necháme pokojne [], aby vznikol “null filter”
+    } else {
+      return [...prev, status];
+    }
+  });
+};
 
   // Handler pre “All Vehicles” / reset filtra
-  const handleResetFilter = () => {
-    setFilters((prev) =>
-      prev.length === 0 ? [...Object.values(VehicleStatus)] : []
-    );
-  };
+const handleResetFilter = () => {
+  setFilters((prev) =>
+    prev.length === Object.values(VehicleStatus).length
+      ? []
+      : [...Object.values(VehicleStatus)]
+  );
+};
 
   // Handler pre hover nad statusom
   const handleStatusHover = (status: VehicleStatus | null) => {

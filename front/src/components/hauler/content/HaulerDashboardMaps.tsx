@@ -1,49 +1,12 @@
-// File: front/src/components/hauler/content/HaulerDashboardMaps.tsx
-// Last change: TypeScript errors fixed, explicit enum casts, Location typing, parking marker fix
-
 import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./dashboard.maps.css";
 import { Vehicle, VehicleStatus } from "../../../data/mockFleet";
-import mockLocations, { Location } from "../../../data/mockLocations";
+import mockLocations from "../../../data/mockLocations";
+import { addVehicleMarkers, addCurrentCircles, addParkingMarkers } from "./MapMarkers";
+import { addRoutePolylines, addFlagMarkers } from "./MapRoutes";
 
-// Enum pre delay status
-enum DelayStatus {
-  None = "none",
-  Minor = "minor",
-  Major = "major",
-}
-
-const positionColorToDelayStatus: Record<string, DelayStatus> = {
-  G: DelayStatus.None,
-  O: DelayStatus.Minor,
-  R: DelayStatus.Major,
-};
-
-const statusHex: Record<VehicleStatus, string> = {
-  [VehicleStatus.Outbound]: "#2389ff",
-  [VehicleStatus.Inbound]: "#1fbac7",
-  [VehicleStatus.Transit]: "#7a63ff",
-  [VehicleStatus.Waiting]: "#5958c8",
-  [VehicleStatus.Break]: "#34495e",
-  [VehicleStatus.Standby]: "#b5bd00",
-  [VehicleStatus.Depot]: "#6b7684",
-  [VehicleStatus.Service]: "#d726ff",
-};
-
-const statusLabels: Record<VehicleStatus, string> = {
-  [VehicleStatus.Outbound]: "Out bound",
-  [VehicleStatus.Inbound]: "In bound",
-  [VehicleStatus.Transit]: "Transit",
-  [VehicleStatus.Waiting]: "Waiting",
-  [VehicleStatus.Break]: "Break",
-  [VehicleStatus.Standby]: "Standby",
-  [VehicleStatus.Depot]: "Depot",
-  [VehicleStatus.Service]: "Service",
-};
-
-// Props s typmi
 interface HaulerDashboardMapsProps {
   vehicles: Vehicle[];
   visibleVehicles: Vehicle[];
@@ -69,36 +32,48 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
 }) => {
   const mapDiv = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const markers = useRef<Record<string, L.Marker>>({});
-  const routeLayers = useRef<Record<string, L.Polyline>>({});
-  const startMarkers = useRef<Record<string, L.Marker>>({});
-  const destinationMarkers = useRef<Record<string, L.Marker>>({});
-  const parkingMarkers = useRef<Record<string, L.Marker>>({});
 
-  // Leaflet Sprite fix
+  const vehicleMarkers = useRef<Record<string, L.Marker>>({});
+  const currentCircles = useRef<Record<string, L.CircleMarker>>({});
+  const parkingMarkers = useRef<Record<string, L.Marker>>({});
+  const routeLayers = useRef<Record<string, L.Polyline>>({});
+  const startFlagMarkers = useRef<Record<string, L.Marker>>({});
+  const destFlagMarkers = useRef<Record<string, L.Marker>>({});
+
+  const defaultFitBounds = useRef<L.LatLngBounds | null>(null);
+  const defaultZoom = useRef<number | null>(null);
+
+  const dimAll = filters.length === 0;
+
+  const allPossibleStatuses: VehicleStatus[] = [
+    VehicleStatus.Outbound,
+    VehicleStatus.Inbound,
+    VehicleStatus.Transit,
+    VehicleStatus.Waiting,
+    VehicleStatus.Break,
+    VehicleStatus.Standby,
+    VehicleStatus.Depot,
+    VehicleStatus.Service,
+  ];
+
   useEffect(() => {
     delete (L.Icon.Default.prototype as any)._getIconUrl;
     L.Icon.Default.mergeOptions({
-      iconRetinaUrl:
-        "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
       iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
       shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
     });
   }, []);
 
-  // Inicializácia mapy len raz
   useEffect(() => {
     if (!mapDiv.current) return;
-
     if (mapRef.current) {
       mapRef.current.off();
       mapRef.current.remove();
       mapRef.current = null;
     }
-
     mapDiv.current.innerHTML = "";
     delete mapDiv.current.dataset.leafletId;
-
     const map = L.map(mapDiv.current, {
       zoomAnimation: false,
       fadeAnimation: false,
@@ -115,32 +90,19 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
       crossOrigin: true,
     }).addTo(map);
 
-    // Re-validate veľkosť na resize, zoom, move
     let debounceTimeout: NodeJS.Timeout | null = null;
     const handleMapUpdate = () => {
       if (!mapRef.current) return;
       if (debounceTimeout) clearTimeout(debounceTimeout);
       debounceTimeout = setTimeout(() => {
         mapRef.current!.invalidateSize();
-        Object.values(markers.current).forEach(marker => {
-          if (marker.getElement()) marker.setIcon(marker.getIcon());
-        });
-        Object.values(startMarkers.current).forEach(marker => {
-          if (marker.getElement()) marker.setIcon(marker.getIcon());
-        });
-        Object.values(destinationMarkers.current).forEach(marker => {
-          if (marker.getElement()) marker.setIcon(marker.getIcon());
-        });
-        Object.values(parkingMarkers.current).forEach(marker => {
-          if (marker.getElement()) marker.setIcon(marker.getIcon());
-        });
       }, 300);
     };
-    map.on('zoomend moveend', handleMapUpdate);
+    map.on("zoomend moveend", handleMapUpdate);
 
     return () => {
       if (mapRef.current) {
-        mapRef.current.off('zoomend moveend', handleMapUpdate);
+        mapRef.current.off("zoomend moveend", handleMapUpdate);
         mapRef.current.remove();
         mapRef.current = null;
       }
@@ -150,238 +112,157 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
 
   useEffect(() => {
     if (!mapRef.current) return;
-
-    Object.values(markers.current).forEach(marker => marker.remove());
-    Object.values(routeLayers.current).forEach(route => route.remove());
-    Object.values(startMarkers.current).forEach(marker => marker.remove());
-    Object.values(destinationMarkers.current).forEach(marker => marker.remove());
-    Object.values(parkingMarkers.current).forEach(marker => marker.remove());
-    markers.current = {};
-    routeLayers.current = {};
-    startMarkers.current = {};
-    destinationMarkers.current = {};
-    parkingMarkers.current = {};
-
-    // Status ikonky
-    const statusIcon = (status: VehicleStatus, positionColor?: "G" | "O" | "R") => {
-      const isDynamic = [
-        VehicleStatus.Outbound,
-        VehicleStatus.Inbound,
-        VehicleStatus.Transit,
-        VehicleStatus.Waiting,
-        VehicleStatus.Break,
-      ].includes(status);
-      const delayClass = positionColor ? `delay--${positionColorToDelayStatus[positionColor]}` : "";
-      if (isDynamic) {
-        return L.divIcon({
-          className: `vehicle-marker dynamic status-icon--${status} ${delayClass}`,
-          iconSize: [26, 26],
-          iconAnchor: [13, 13],
-          html: `<div class="marker-inner"></div>`,
-        });
+    const latlngs: [number, number][] = [];
+    vehicles.forEach((v) => {
+      const primaryLoc = mockLocations.find((l) => l.id === (v.currentLocation || v.location));
+      if (primaryLoc) latlngs.push([primaryLoc.latitude, primaryLoc.longitude]);
+      if (v.start) {
+        const startLoc = mockLocations.find((l) => l.id === v.start);
+        if (startLoc) latlngs.push([startLoc.latitude, startLoc.longitude]);
       }
-      return L.divIcon({
-        className: `vehicle-marker static status-icon--${status} ${delayClass}`,
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
-        html: `<div class="marker-inner"></div>`,
-      });
-    };
-
-    // Start/destination/parking ikonky
-    const startIcon = (status: VehicleStatus) => L.divIcon({
-      className: "start-marker",
-      iconSize: [24, 24],
-      iconAnchor: [4, 24],
-      html: `<svg width="24" height="24" viewBox="0 0 24 24">
-          <rect x="4" y="0" width="20" height="16" fill="#4a4a4a" stroke="#000" stroke-width="1"/>
-          <text x="14" y="12" font-size="10" font-weight="bold" fill="#fff" text-anchor="middle">S</text>
-          <line x1="4" y1="0" x2="4" y2="24" stroke="#000" stroke-width="2"/>
-          <circle cx="12" cy="20" r="5" fill="${statusHex[status as VehicleStatus]}"/>
-        </svg>`
-    });
-
-    const destinationIcon = (status: VehicleStatus) => L.divIcon({
-      className: "destination-marker",
-      iconSize: [24, 24],
-      iconAnchor: [4, 24],
-      html: `<svg width="24" height="24" viewBox="0 0 24 24">
-          <rect x="4" y="0" width="20" height="16" fill="#fff" stroke="#000" stroke-width="1"/>
-          <rect x="4" y="0" width="5" height="4" fill="#000"/>
-          <rect x="14" y="0" width="5" height="4" fill="#000"/>
-          <rect x="9" y="4" width="5" height="4" fill="#000"/>
-          <rect x="19" y="4" width="5" height="4" fill="#000"/>
-          <rect x="4" y="8" width="5" height="4" fill="#000"/>
-          <rect x="14" y="8" width="5" height="4" fill="#000"/>
-          <rect x="9" y="12" width="5" height="4" fill="#000"/>
-          <rect x="19" y="12" width="5" height="4" fill="#000"/>
-          <line x1="4" y1="0" x2="4" y2="24" stroke="#000" stroke-width="2"/>
-          <circle cx="12" cy="20" r="5" fill="${statusHex[status as VehicleStatus]}"/>
-        </svg>`
-    });
-
-    const parkingIcon = (status: "free" | "occupied") => L.divIcon({
-      className: `parking-marker parking-marker--${status}`,
-      iconSize: [22, 22],
-      iconAnchor: [11, 11],
-      html: `<div class="parking-marker-inner">${status === "free"
-        ? `<svg width="22" height="22"><circle cx="11" cy="11" r="10" fill="#34495e" stroke="#27ae60" stroke-width="3"/><text x="11" y="15" text-anchor="middle" font-size="13" fill="#fff" font-family="Arial" font-weight="bold">P</text></svg>`
-        : `<svg width="22" height="22"><circle cx="11" cy="11" r="10" fill="#34495e" stroke="#e74c3c" stroke-width="3"/><text x="11" y="15" text-anchor="middle" font-size="13" fill="#fff" font-family="Arial" font-weight="bold">P</text></svg>`
-      }</div>`
-    });
-
-    const parkingLocations: Location[] = mockLocations.filter(loc => loc.type === "parking");
-
-    visibleVehicles.forEach((v) => {
-      const locationId = v.currentLocation || v.location;
-      if (!locationId) return;
-      const location = mockLocations.find((loc) => loc.id === locationId);
-      if (!location) return;
-      const coords: [number, number] = [location.latitude, location.longitude];
-      const bounds = mapRef.current!.getBounds();
-      if (!bounds.contains(coords)) return;
-
-      // Trasy
-      if (
-        [VehicleStatus.Outbound, VehicleStatus.Inbound, VehicleStatus.Transit, VehicleStatus.Waiting, VehicleStatus.Break].includes(
-          v.dashboardStatus as VehicleStatus
-        )
-      ) {
-        const routePoints: [number, number][] = [];
-        // Start
-        if (v.start && showFlags) {
-          const startLoc = mockLocations.find((loc) => loc.id === v.start);
-          if (startLoc) {
-            routePoints.push([startLoc.latitude, startLoc.longitude]);
-            const startMarker = L.marker([startLoc.latitude, startLoc.longitude], {
-              icon: startIcon(v.dashboardStatus as VehicleStatus),
-              zIndexOffset: 900,
-            }).addTo(mapRef.current!).bindPopup(`Start: ${startLoc.city}`);
-            startMarkers.current[v.id] = startMarker;
-          }
-        } else if (v.start) {
-          const startLoc = mockLocations.find((loc) => loc.id === v.start);
-          if (startLoc) routePoints.push([startLoc.latitude, startLoc.longitude]);
-        }
-        // Current location
-        if (v.currentLocation) {
-          routePoints.push([location.latitude, location.longitude]);
-        }
-        // Destination
-        if (v.destination && showFlags) {
-          const destLoc = mockLocations.find((loc) => loc.id === v.destination);
-          if (destLoc) {
-            routePoints.push([destLoc.latitude, destLoc.longitude]);
-            const destMarker = L.marker([destLoc.latitude, destLoc.longitude], {
-              icon: destinationIcon(v.dashboardStatus as VehicleStatus),
-              zIndexOffset: 900,
-            }).addTo(mapRef.current!).bindPopup(`Destination: ${destLoc.city}`);
-            destinationMarkers.current[v.id] = destMarker;
-          }
-        } else if (v.destination) {
-          const destLoc = mockLocations.find((loc) => loc.id === v.destination);
-          if (destLoc) routePoints.push([destLoc.latitude, destLoc.longitude]);
-        }
-        if (routePoints.length >= 2) {
-          const polyline = L.polyline(routePoints, {
-            color: statusHex[v.dashboardStatus as VehicleStatus],
-            weight: 3,
-            opacity: 0.6,
-          }).addTo(mapRef.current!);
-          routeLayers.current[v.id] = polyline;
-        }
-      }
-
-      // Vehicle marker
-      const marker = L.marker(coords, {
-        icon: statusIcon(v.dashboardStatus as VehicleStatus, v.positionColor),
-        zIndexOffset: 1000,
-      }).addTo(mapRef.current!);
-      markers.current[v.id] = marker;
-
-      // Parking marker (nájdi najbližší parking podľa vzdialenosti)
-      if (
-        [VehicleStatus.Outbound, VehicleStatus.Inbound, VehicleStatus.Transit, VehicleStatus.Break].includes(
-          v.dashboardStatus as VehicleStatus
-        )
-      ) {
-        let nearestParking: Location | null = null;
-        let minDist = Infinity;
-        parkingLocations.forEach((park: Location) => {
-          const dLat = (park.latitude - coords[0]) * Math.PI / 180;
-          const dLon = (park.longitude - coords[1]) * Math.PI / 180;
-          const a =
-            Math.sin(dLat / 2) ** 2 +
-            Math.cos(coords[0] * Math.PI / 180) *
-              Math.cos(park.latitude * Math.PI / 180) *
-              Math.sin(dLon / 2) ** 2;
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-          const dist = 6371 * c;
-          if (dist < minDist) {
-            minDist = dist;
-            nearestParking = park;
-          }
-        });
-        if (nearestParking) {
-          const parkMarker = L.marker(
-            [nearestParking.latitude, nearestParking.longitude],
-            {
-              icon: parkingIcon(
-                (nearestParking.status || "free") as "free" | "occupied"
-              ),
-              zIndexOffset: 950,
-            }
-          )
-            .addTo(mapRef.current!)
-            .bindPopup(`Parking: ${nearestParking.city}`);
-          parkingMarkers.current[v.id] = parkMarker;
-        }
+      if (v.destination) {
+        const destLoc = mockLocations.find((l) => l.id === v.destination);
+        if (destLoc) latlngs.push([destLoc.latitude, destLoc.longitude]);
       }
     });
-
-    // Fit bounds na všetky vrstvy
-    const allLayers: L.Layer[] = [
-      ...Object.values(markers.current),
-      ...Object.values(startMarkers.current),
-      ...Object.values(destinationMarkers.current),
-      ...Object.values(routeLayers.current),
-      ...Object.values(parkingMarkers.current),
-    ];
-    if (allLayers.length > 0) {
-      const bounds = L.featureGroup(allLayers).getBounds();
-      if (bounds.isValid()) {
-        mapRef.current!.fitBounds(bounds, {
-          padding: [50, 50],
-          maxZoom: 15,
-        });
-      }
+    console.log(`MAP: Updating defaultFitBounds, vehicles:`, vehicles.map(v => ({ id: v.id, status: v.status, locations: { current: v.currentLocation || v.location, start: v.start, destination: v.destination } })));
+    console.log(`MAP: Latlngs for defaultFitBounds:`, latlngs);
+    if (latlngs.length > 0) {
+      defaultFitBounds.current = L.latLngBounds(latlngs);
+      defaultZoom.current = mapRef.current.getBoundsZoom(defaultFitBounds.current);
+      console.log(`MAP: defaultFitBounds set:`, defaultFitBounds.current.toBBoxString(), `defaultZoom:`, defaultZoom.current);
+    } else {
+      defaultFitBounds.current = null;
+      defaultZoom.current = null;
+      console.log(`MAP: No valid latlngs for defaultFitBounds`);
     }
-
-    const timeout = setTimeout(() => {
-      if (mapRef.current) mapRef.current.invalidateSize();
-    }, 300);
-    return () => clearTimeout(timeout);
-
-  }, [
-    vehicles,
-    visibleVehicles,
-    filters,
-    selectedVehicles,
-    showFlags,
-    isChartExpanded,
-    isVehiclesExpanded,
-  ]);
+  }, [vehicles]);
 
   useEffect(() => {
-    Object.entries(markers.current).forEach(([id, m]) => {
-      const el = m.getElement();
-      if (!el) return;
-      const v = vehicles.find((v) => v.id === id);
-      if (!v) return;
-      el.style.opacity =
-        !hover || v.dashboardStatus === hover ? "1" : "0.1";
+    if (!mapRef.current) return;
+
+    console.log(`MAP: Redrawing map, filters:`, filters, `visibleVehicles:`, visibleVehicles.map(v => ({ id: v.id, status: v.status })));
+
+    mapRef.current.eachLayer((layer) => {
+      if (layer instanceof L.TileLayer) return;
+      layer.remove();
     });
-  }, [hover, vehicles]);
+
+    const allMode = filters.length === 0;
+    const isAllStatusesSelected = filters.length === allPossibleStatuses.length && allPossibleStatuses.every(status => filters.includes(status));
+    const vehiclesToRender = allMode || isAllStatusesSelected ? vehicles : visibleVehicles;
+    console.log(`MAP: Adding layers for vehicles:`, vehiclesToRender.map(v => ({ id: v.id, status: v.status })));
+
+    vehicleMarkers.current = addVehicleMarkers(mapRef.current, vehiclesToRender, dimAll);
+    currentCircles.current = addCurrentCircles(mapRef.current, vehiclesToRender, dimAll);
+    parkingMarkers.current = addParkingMarkers(mapRef.current, vehiclesToRender, dimAll);
+    routeLayers.current = addRoutePolylines(mapRef.current, vehiclesToRender, dimAll);
+
+    if (showFlags) {
+      const flags = addFlagMarkers(mapRef.current, vehiclesToRender, dimAll);
+      startFlagMarkers.current = flags.start;
+      destFlagMarkers.current = flags.destination;
+      console.log(`MAP: Flags added:`, Object.keys(startFlagMarkers.current));
+    } else {
+      startFlagMarkers.current = {};
+      destFlagMarkers.current = {};
+      console.log(`MAP: Flags disabled`);
+    }
+
+    const allLayers: L.Layer[] = [
+      ...Object.values(vehicleMarkers.current),
+      ...Object.values(currentCircles.current),
+      ...Object.values(parkingMarkers.current),
+      ...Object.values(routeLayers.current),
+      ...Object.values(startFlagMarkers.current),
+      ...Object.values(destFlagMarkers.current),
+    ];
+    console.log(`MAP: Total layers added:`, allLayers.length);
+
+    if (allLayers.length > 0) {
+      if ((allMode || isAllStatusesSelected) && defaultFitBounds.current && defaultFitBounds.current.isValid()) {
+        console.log(`MAP: Fitting to defaultFitBounds:`, defaultFitBounds.current.toBBoxString());
+        mapRef.current.fitBounds(defaultFitBounds.current, {
+          padding: [20, 20],
+          maxZoom: defaultZoom.current || 8,
+        });
+        if (defaultZoom.current) {
+          mapRef.current.setZoom(defaultZoom.current);
+          console.log(`MAP: Set zoom to:`, defaultZoom.current);
+        }
+      } else if (allMode) {
+        const latlngs = vehicles
+          .map((v) => {
+            const loc = mockLocations.find((l) => l.id === (v.currentLocation || v.location));
+            return loc ? [loc.latitude, loc.longitude] : null;
+          })
+          .filter(Boolean) as [number, number][];
+        console.log(`MAP: ALL mode fallback, latlngs:`, latlngs);
+        if (latlngs.length > 0) {
+          const bounds = L.latLngBounds(latlngs);
+          mapRef.current.fitBounds(bounds, { padding: [20, 20], maxZoom: 8 });
+          console.log(`MAP: Fitted to fallback bounds:`, bounds.toBBoxString());
+        } else {
+          console.log(`MAP: No valid latlngs for ALL mode fallback`);
+        }
+      } else {
+        const filteredLayers = [];
+        for (const vehicle of visibleVehicles) {
+          if (vehicleMarkers.current[vehicle.id]) filteredLayers.push(vehicleMarkers.current[vehicle.id]);
+          if (currentCircles.current[vehicle.id]) filteredLayers.push(currentCircles.current[vehicle.id]);
+          if (parkingMarkers.current[vehicle.id]) filteredLayers.push(parkingMarkers.current[vehicle.id]);
+          if (routeLayers.current[vehicle.id]) filteredLayers.push(routeLayers.current[vehicle.id]);
+          if (startFlagMarkers.current[vehicle.id]) filteredLayers.push(startFlagMarkers.current[vehicle.id]);
+          if (destFlagMarkers.current[vehicle.id]) filteredLayers.push(destFlagMarkers.current[vehicle.id]);
+        }
+        console.log(`MAP: Filtered layers for visibleVehicles:`, filteredLayers.length, visibleVehicles.map(v => v.id));
+        if (filteredLayers.length > 0) {
+          const bounds = L.featureGroup(filteredLayers).getBounds();
+          if (bounds.isValid()) {
+            let maxZoom = 8;
+            if (
+              bounds.getNorthEast().lat - bounds.getSouthWest().lat > 5 ||
+              bounds.getNorthEast().lng - bounds.getSouthWest().lng > 5
+            ) {
+              maxZoom = 7;
+            }
+            mapRef.current.fitBounds(bounds, {
+              padding: [20, 20],
+              maxZoom,
+            });
+            console.log(`MAP: Fitted to filtered bounds:`, bounds.toBBoxString(), `maxZoom:`, maxZoom);
+          } else {
+            console.log(`MAP: Invalid bounds for filtered layers`);
+          }
+        } else {
+          console.log(`MAP: No filtered layers to fit`);
+        }
+      }
+    } else {
+      console.log(`MAP: No layers to display`);
+    }
+
+    mapRef.current.invalidateSize();
+    console.log(`MAP: Map invalidated`);
+  }, [vehicles, visibleVehicles, filters, selectedVehicles, showFlags, isChartExpanded, isVehiclesExpanded]);
+
+  useEffect(() => {
+    const shouldDim = filters.length === 0;
+    console.log(`MAP: Applying dim logic, shouldDim:`, shouldDim);
+    [vehicleMarkers.current, currentCircles.current, parkingMarkers.current, startFlagMarkers.current, destFlagMarkers.current].forEach(
+      (refMap) =>
+        Object.values(refMap).forEach((layer: any) => {
+          if (layer.getElement && layer.getElement()) {
+            layer.getElement()!.style.opacity = shouldDim ? "0.15" : "1";
+          } else if (layer.setStyle) {
+            layer.setStyle({ opacity: shouldDim ? 0.15 : 0.6 });
+          }
+        })
+    );
+    Object.values(routeLayers.current).forEach((polyline) => {
+      polyline.setStyle({ opacity: shouldDim ? 0.15 : 0.6 });
+    });
+  }, [filters]);
 
   return (
     <div className="dashboard__map-container">

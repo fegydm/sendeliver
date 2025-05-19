@@ -13,6 +13,41 @@ export enum VehicleStatus {
   Service = "service",
 }
 
+// Status constants for dashboards/filters/charts/maps
+export const statusHex: Record<VehicleStatus, string> = {
+  [VehicleStatus.Outbound]: "#2389ff",
+  [VehicleStatus.Inbound]: "#1fbac7",
+  [VehicleStatus.Transit]: "#7a63ff",
+  [VehicleStatus.Waiting]: "#5958c8",
+  [VehicleStatus.Break]: "#34495e",
+  [VehicleStatus.Standby]: "#b5bd00",
+  [VehicleStatus.Depot]: "#6b7684",
+  [VehicleStatus.Service]: "#d726ff",
+};
+
+export const statusLabels: Record<VehicleStatus, string> = {
+  [VehicleStatus.Outbound]: "Out bound",
+  [VehicleStatus.Inbound]: "In bound",
+  [VehicleStatus.Transit]: "Transit",
+  [VehicleStatus.Waiting]: "Waiting",
+  [VehicleStatus.Break]: "Break",
+  [VehicleStatus.Standby]: "Standby",
+  [VehicleStatus.Depot]: "Depot",
+  [VehicleStatus.Service]: "Service",
+};
+
+// Status order for filters/sorting
+export const STATUS_ORDER: VehicleStatus[] = [
+  VehicleStatus.Outbound,
+  VehicleStatus.Inbound,
+  VehicleStatus.Transit,
+  VehicleStatus.Waiting,
+  VehicleStatus.Break,
+  VehicleStatus.Standby,
+  VehicleStatus.Depot,
+  VehicleStatus.Service,
+];
+
 export interface Vehicle {
   id: string;
   name: string;
