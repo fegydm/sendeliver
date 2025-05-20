@@ -1,9 +1,11 @@
 // File: front/src/components/hauler/content/MapMarkers.ts
+// Last change: Fixed TypeScript errors and simplified parking marker logic
+
 import L from "leaflet";
 import { Vehicle, VehicleStatus, statusHex } from "../../../data/mockFleet";
-import mockLocations, { Location } from "../../../data/mockLocations";
+import mockLocations from "../../../data/mockLocations";
 
-// Main vehicle markers
+// Main vehicle markers (dynamic gradient pie + static)
 export function addVehicleMarkers(
   map: L.Map,
   vehicles: Vehicle[],
@@ -13,9 +15,10 @@ export function addVehicleMarkers(
   vehicles.forEach((v) => {
     const locationId = v.currentLocation || v.location;
     if (!locationId) return;
-    const location = mockLocations.find((loc) => loc.id === locationId);
-    if (!location) return;
-    const coords: [number, number] = [location.latitude, location.longitude];
+    const loc = mockLocations.find((l) => l.id === locationId);
+    if (!loc) return;
+    const coords: [number, number] = [loc.latitude, loc.longitude];
+
     const isDynamic = [
       VehicleStatus.Outbound,
       VehicleStatus.Inbound,
@@ -24,23 +27,37 @@ export function addVehicleMarkers(
       VehicleStatus.Break,
     ].includes(v.dashboardStatus);
 
+    const color = statusHex[v.dashboardStatus];
+
+    const html = isDynamic
+      ? `<div class="marker-gradient-pie" style="background: conic-gradient(
+           #fff 0deg 90deg,
+           ${color} 90deg 180deg,
+           #fff 180deg 270deg,
+           ${color} 270deg 360deg
+         );"><div class="marker-gradient-inner"></div></div>`
+      : `<div class="marker-static"></div>`;
+
     const marker = L.marker(coords, {
       icon: L.divIcon({
-        className: `vehicle-marker ${isDynamic ? "dynamic" : "static"} status-icon--${v.dashboardStatus}`,
+        className: `vehicle-marker ${isDynamic ? "dynamic" : "static"} status--${v.dashboardStatus}`,
         iconSize: isDynamic ? [26, 26] : [18, 18],
         iconAnchor: isDynamic ? [13, 13] : [9, 9],
-        html: `<div class="marker-inner"></div>`,
+        html,
       }),
-      zIndexOffset: 1000,
+      zIndexOffset: isDynamic ? 1000 : 800,
     }).addTo(map);
 
-    if (dimAll && marker.getElement()) marker.getElement()!.style.opacity = "0.15";
+    if (dimAll && marker.getElement()) {
+      marker.getElement()!.style.opacity = "0.15";
+    }
+
     markers[v.id] = marker;
   });
   return markers;
 }
 
-// Current location circle marker
+// Current location circle markers
 export function addCurrentCircles(
   map: L.Map,
   vehicles: Vehicle[],
@@ -48,16 +65,18 @@ export function addCurrentCircles(
 ): Record<string, L.CircleMarker> {
   const circles: Record<string, L.CircleMarker> = {};
   vehicles.forEach((v) => {
-    const locationId = v.currentLocation || v.location;
+    const locationId = v.currentLocation;
     if (!locationId) return;
-    const location = mockLocations.find((loc) => loc.id === locationId);
-    if (!location) return;
-    const coords: [number, number] = [location.latitude, location.longitude];
+    const loc = mockLocations.find((l) => l.id === locationId);
+    if (!loc) return;
+    const coords: [number, number] = [loc.latitude, loc.longitude];
+
+    const color = statusHex[v.dashboardStatus];
 
     const circle = L.circleMarker(coords, {
-      radius: 9,
-      color: "#fff",
-      fillColor: statusHex[v.dashboardStatus],
+      radius: 8,
+      color,
+      fillColor: color,
       fillOpacity: dimAll ? 0.15 : 0.75,
       weight: 2,
     }).addTo(map);
@@ -67,78 +86,36 @@ export function addCurrentCircles(
   return circles;
 }
 
-// Parking marker
+// Parking markers (use nearestParking property)
 export function addParkingMarkers(
   map: L.Map,
   vehicles: Vehicle[],
   dimAll: boolean
 ): Record<string, L.Marker> {
-  const parkingMarkers: Record<string, L.Marker> = {};
-  const parkingLocations = mockLocations.filter(
-    (loc): loc is Location & { type: "parking" } => loc.type === "parking"
-  );
+  const parking: Record<string, L.Marker> = {};
 
   vehicles.forEach((v) => {
-    // Only for dynamic vehicles
-    if (
-      ![
-        VehicleStatus.Outbound,
-        VehicleStatus.Inbound,
-        VehicleStatus.Transit,
-        VehicleStatus.Break,
-      ].includes(v.dashboardStatus)
-    )
-      return;
+    if (!v.nearestParking) return;
+    const loc = mockLocations.find((l) => l.id === v.nearestParking);
+    if (!loc) return;
+    const coords: [number, number] = [loc.latitude, loc.longitude];
 
-    const locationId = v.currentLocation || v.location;
-    if (!locationId) return;
-    const location = mockLocations.find((loc) => loc.id === locationId);
-    if (!location) return;
-    const coords: [number, number] = [location.latitude, location.longitude];
+    const marker = L.marker(coords, {
+      icon: L.divIcon({
+        className: "parking-marker",
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+        html: `<div class="marker-static"></div>`,
+      }),
+      zIndexOffset: 900,
+    }).addTo(map);
 
-    // Find nearest parking
-    let nearestParking: (Location & { type: "parking" }) | null = null;
-    let minDist = Infinity;
-    parkingLocations.forEach((park) => {
-      const dLat = (park.latitude - coords[0]) * Math.PI / 180;
-      const dLon = (park.longitude - coords[1]) * Math.PI / 180;
-      const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(coords[0] * Math.PI / 180) *
-        Math.cos(park.latitude * Math.PI / 180) *
-        Math.sin(dLon / 2) ** 2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const dist = 6371 * c;
-      if (dist < minDist) {
-        minDist = dist;
-        nearestParking = park;
-      }
-    });
-
-    if (nearestParking) {
-      const parking = nearestParking as Location;
-      const parkMarker = L.marker(
-        [parking.latitude, parking.longitude],
-        {
-          icon: L.divIcon({
-            className: `parking-marker parking-marker--${parking.status || "free"}`,
-            iconSize: [22, 22],
-            iconAnchor: [11, 11],
-            html: `<div class="parking-marker-inner">${
-              parking.status === "free"
-                ? `<svg width="22" height="22"><circle cx="11" cy="11" r="10" fill="#34495e" stroke="#27ae60" stroke-width="3"/><text x="11" y="15" text-anchor="middle" font-size="13" fill="#fff" font-family="Arial" font-weight="bold">P</text></svg>`
-                : `<svg width="22" height="22"><circle cx="11" cy="11" r="10" fill="#34495e" stroke="#e74c3c" stroke-width="3"/><text x="11" y="15" text-anchor="middle" font-size="13" fill="#fff" font-family="Arial" font-weight="bold">P</text></svg>`
-            }</div>`,
-          }),
-          zIndexOffset: 950,
-        }
-      )
-        .addTo(map)
-        .bindPopup(`Parking: ${parking.city}`);
-      if (dimAll && parkMarker.getElement()) parkMarker.getElement()!.style.opacity = "0.15";
-      parkingMarkers[v.id] = parkMarker;
+    if (dimAll && marker.getElement()) {
+      marker.getElement()!.style.opacity = "0.15";
     }
+
+    parking[v.id] = marker;
   });
 
-  return parkingMarkers;
+  return parking;
 }

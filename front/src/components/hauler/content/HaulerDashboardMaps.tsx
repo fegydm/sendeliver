@@ -1,3 +1,4 @@
+// File: front/src/components/hauler/content/HaulerDashboardMaps.tsx
 import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -56,6 +57,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     VehicleStatus.Service,
   ];
 
+  // Initialize Leaflet default icon URLs
   useEffect(() => {
     delete (L.Icon.Default.prototype as any)._getIconUrl;
     L.Icon.Default.mergeOptions({
@@ -65,6 +67,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     });
   }, []);
 
+  // Create map instance
   useEffect(() => {
     if (!mapDiv.current) return;
     if (mapRef.current) {
@@ -74,6 +77,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     }
     mapDiv.current.innerHTML = "";
     delete mapDiv.current.dataset.leafletId;
+
     const map = L.map(mapDiv.current, {
       zoomAnimation: false,
       fadeAnimation: false,
@@ -81,7 +85,8 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     mapRef.current = map;
 
     L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-      attribution: "Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)",
+      attribution:
+        "Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)",
       subdomains: ["a", "b", "c"],
       maxZoom: 17,
       tileSize: 256,
@@ -110,38 +115,44 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     };
   }, []);
 
+  // Compute defaultFitBounds including start and destination
   useEffect(() => {
     if (!mapRef.current) return;
     const latlngs: [number, number][] = [];
+
     vehicles.forEach((v) => {
-      const primaryLoc = mockLocations.find((l) => l.id === (v.currentLocation || v.location));
+      // primary (current or static)
+      const primaryLoc = mockLocations.find(
+        (l) => l.id === (v.currentLocation || v.location)
+      );
       if (primaryLoc) latlngs.push([primaryLoc.latitude, primaryLoc.longitude]);
+
+      // start
       if (v.start) {
         const startLoc = mockLocations.find((l) => l.id === v.start);
-        if (startLoc) latlngs.push([startLoc.latitude, startLoc.longitude]);
+        if (startLoc)
+          latlngs.push([startLoc.latitude, startLoc.longitude]);
       }
+      // destination
       if (v.destination) {
         const destLoc = mockLocations.find((l) => l.id === v.destination);
-        if (destLoc) latlngs.push([destLoc.latitude, destLoc.longitude]);
+        if (destLoc)
+          latlngs.push([destLoc.latitude, destLoc.longitude]);
       }
     });
-    console.log(`MAP: Updating defaultFitBounds, vehicles:`, vehicles.map(v => ({ id: v.id, status: v.status, locations: { current: v.currentLocation || v.location, start: v.start, destination: v.destination } })));
-    console.log(`MAP: Latlngs for defaultFitBounds:`, latlngs);
+
     if (latlngs.length > 0) {
       defaultFitBounds.current = L.latLngBounds(latlngs);
       defaultZoom.current = mapRef.current.getBoundsZoom(defaultFitBounds.current);
-      console.log(`MAP: defaultFitBounds set:`, defaultFitBounds.current.toBBoxString(), `defaultZoom:`, defaultZoom.current);
     } else {
       defaultFitBounds.current = null;
       defaultZoom.current = null;
-      console.log(`MAP: No valid latlngs for defaultFitBounds`);
     }
   }, [vehicles]);
 
+  // Draw and update all layers
   useEffect(() => {
     if (!mapRef.current) return;
-
-    console.log(`MAP: Redrawing map, filters:`, filters, `visibleVehicles:`, visibleVehicles.map(v => ({ id: v.id, status: v.status })));
 
     mapRef.current.eachLayer((layer) => {
       if (layer instanceof L.TileLayer) return;
@@ -149,24 +160,40 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     });
 
     const allMode = filters.length === 0;
-    const isAllStatusesSelected = filters.length === allPossibleStatuses.length && allPossibleStatuses.every(status => filters.includes(status));
-    const vehiclesToRender = allMode || isAllStatusesSelected ? vehicles : visibleVehicles;
-    console.log(`MAP: Adding layers for vehicles:`, vehiclesToRender.map(v => ({ id: v.id, status: v.status })));
+    const isAllStatusesSelected =
+      filters.length === allPossibleStatuses.length &&
+      allPossibleStatuses.every((st) => filters.includes(st));
+    const vehiclesToRender =
+      allMode || isAllStatusesSelected ? vehicles : visibleVehicles;
 
-    vehicleMarkers.current = addVehicleMarkers(mapRef.current, vehiclesToRender, dimAll);
-    currentCircles.current = addCurrentCircles(mapRef.current, vehiclesToRender, dimAll);
-    parkingMarkers.current = addParkingMarkers(mapRef.current, vehiclesToRender, dimAll);
-    routeLayers.current = addRoutePolylines(mapRef.current, vehiclesToRender, dimAll);
+    vehicleMarkers.current = addVehicleMarkers(
+      mapRef.current,
+      vehiclesToRender,
+      dimAll
+    );
+    currentCircles.current = addCurrentCircles(
+      mapRef.current,
+      vehiclesToRender,
+      dimAll
+    );
+    parkingMarkers.current = addParkingMarkers(
+      mapRef.current,
+      vehiclesToRender,
+      dimAll
+    );
+    routeLayers.current = addRoutePolylines(
+      mapRef.current,
+      vehiclesToRender,
+      dimAll
+    );
 
     if (showFlags) {
       const flags = addFlagMarkers(mapRef.current, vehiclesToRender, dimAll);
       startFlagMarkers.current = flags.start;
       destFlagMarkers.current = flags.destination;
-      console.log(`MAP: Flags added:`, Object.keys(startFlagMarkers.current));
     } else {
       startFlagMarkers.current = {};
       destFlagMarkers.current = {};
-      console.log(`MAP: Flags disabled`);
     }
 
     const allLayers: L.Layer[] = [
@@ -177,87 +204,48 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
       ...Object.values(startFlagMarkers.current),
       ...Object.values(destFlagMarkers.current),
     ];
-    console.log(`MAP: Total layers added:`, allLayers.length);
 
     if (allLayers.length > 0) {
-      if ((allMode || isAllStatusesSelected) && defaultFitBounds.current && defaultFitBounds.current.isValid()) {
-        console.log(`MAP: Fitting to defaultFitBounds:`, defaultFitBounds.current.toBBoxString());
+      // primary/default bounds
+      if ((allMode || isAllStatusesSelected) && defaultFitBounds.current?.isValid()) {
         mapRef.current.fitBounds(defaultFitBounds.current, {
-          padding: [20, 20],
+          padding: [10, 10],
           maxZoom: defaultZoom.current || 8,
         });
         if (defaultZoom.current) {
           mapRef.current.setZoom(defaultZoom.current);
-          console.log(`MAP: Set zoom to:`, defaultZoom.current);
-        }
-      } else if (allMode) {
-        const latlngs = vehicles
-          .map((v) => {
-            const loc = mockLocations.find((l) => l.id === (v.currentLocation || v.location));
-            return loc ? [loc.latitude, loc.longitude] : null;
-          })
-          .filter(Boolean) as [number, number][];
-        console.log(`MAP: ALL mode fallback, latlngs:`, latlngs);
-        if (latlngs.length > 0) {
-          const bounds = L.latLngBounds(latlngs);
-          mapRef.current.fitBounds(bounds, { padding: [20, 20], maxZoom: 8 });
-          console.log(`MAP: Fitted to fallback bounds:`, bounds.toBBoxString());
-        } else {
-          console.log(`MAP: No valid latlngs for ALL mode fallback`);
-        }
-      } else {
-        const filteredLayers = [];
-        for (const vehicle of visibleVehicles) {
-          if (vehicleMarkers.current[vehicle.id]) filteredLayers.push(vehicleMarkers.current[vehicle.id]);
-          if (currentCircles.current[vehicle.id]) filteredLayers.push(currentCircles.current[vehicle.id]);
-          if (parkingMarkers.current[vehicle.id]) filteredLayers.push(parkingMarkers.current[vehicle.id]);
-          if (routeLayers.current[vehicle.id]) filteredLayers.push(routeLayers.current[vehicle.id]);
-          if (startFlagMarkers.current[vehicle.id]) filteredLayers.push(startFlagMarkers.current[vehicle.id]);
-          if (destFlagMarkers.current[vehicle.id]) filteredLayers.push(destFlagMarkers.current[vehicle.id]);
-        }
-        console.log(`MAP: Filtered layers for visibleVehicles:`, filteredLayers.length, visibleVehicles.map(v => v.id));
-        if (filteredLayers.length > 0) {
-          const bounds = L.featureGroup(filteredLayers).getBounds();
-          if (bounds.isValid()) {
-            let maxZoom = 8;
-            if (
-              bounds.getNorthEast().lat - bounds.getSouthWest().lat > 5 ||
-              bounds.getNorthEast().lng - bounds.getSouthWest().lng > 5
-            ) {
-              maxZoom = 7;
-            }
-            mapRef.current.fitBounds(bounds, {
-              padding: [20, 20],
-              maxZoom,
-            });
-            console.log(`MAP: Fitted to filtered bounds:`, bounds.toBBoxString(), `maxZoom:`, maxZoom);
-          } else {
-            console.log(`MAP: Invalid bounds for filtered layers`);
-          }
-        } else {
-          console.log(`MAP: No filtered layers to fit`);
         }
       }
-    } else {
-      console.log(`MAP: No layers to display`);
     }
 
     mapRef.current.invalidateSize();
-    console.log(`MAP: Map invalidated`);
-  }, [vehicles, visibleVehicles, filters, selectedVehicles, showFlags, isChartExpanded, isVehiclesExpanded]);
+  }, [
+    vehicles,
+    visibleVehicles,
+    filters,
+    selectedVehicles,
+    showFlags,
+    isChartExpanded,
+    isVehiclesExpanded,
+  ]);
 
+  // Dim logic
   useEffect(() => {
     const shouldDim = filters.length === 0;
-    console.log(`MAP: Applying dim logic, shouldDim:`, shouldDim);
-    [vehicleMarkers.current, currentCircles.current, parkingMarkers.current, startFlagMarkers.current, destFlagMarkers.current].forEach(
-      (refMap) =>
-        Object.values(refMap).forEach((layer: any) => {
-          if (layer.getElement && layer.getElement()) {
-            layer.getElement()!.style.opacity = shouldDim ? "0.15" : "1";
-          } else if (layer.setStyle) {
-            layer.setStyle({ opacity: shouldDim ? 0.15 : 0.6 });
-          }
-        })
+    [
+      vehicleMarkers.current,
+      currentCircles.current,
+      parkingMarkers.current,
+      startFlagMarkers.current,
+      destFlagMarkers.current,
+    ].forEach((refMap) =>
+      Object.values(refMap).forEach((layer: any) => {
+        if (layer.getElement?.()) {
+          layer.getElement()!.style.opacity = shouldDim ? "0.15" : "1";
+        } else if (layer.setStyle) {
+          layer.setStyle({ opacity: shouldDim ? 0.15 : 0.6 });
+        }
+      })
     );
     Object.values(routeLayers.current).forEach((polyline) => {
       polyline.setStyle({ opacity: shouldDim ? 0.15 : 0.6 });

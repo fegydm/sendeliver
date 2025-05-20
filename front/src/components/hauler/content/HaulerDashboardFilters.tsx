@@ -1,16 +1,13 @@
-// File: front/src/components/hauler/content/HaulerDashboardFilters.tsx
-
 import React, { useMemo } from "react";
 import "./dashboard.filters.css";
 import {
   VehicleStatus,
   Vehicle,
-  STATUS_ORDER,      // ← presunuté z mockFleet.ts
-  statusHex,        // ← presunuté z mockFleet.ts
-  statusLabels,     // ← presunuté z mockFleet.ts
+  STATUS_ORDER,
+  statusHex,
+  statusLabels,
 } from "../../../data/mockFleet";
 
-// Typy pre props
 interface HaulerDashboardFiltersProps {
   vehicles: Vehicle[];
   filteredVehicles: Vehicle[];
@@ -50,7 +47,6 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
   onChartExpand,
   onVehiclesExpand,
 }) => {
-  // Štatistiky podľa statusu
   const stats = useMemo(() => {
     return STATUS_ORDER.reduce((acc, st) => {
       acc[st] = vehicles.filter((v) => v.dashboardStatus === st).length;
@@ -58,7 +54,6 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
     }, {} as Record<VehicleStatus, number>);
   }, [vehicles]);
 
-  // Typ obrázkov podľa typu auta (ikony)
   const vehicleTypeImages: Record<string, string> = {
     tractor: "/vehicles/truck-icon.svg",
     van: "/vehicles/van-icon.svg",
@@ -67,7 +62,6 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
   };
   const defaultVehicleImage = "/vehicles/default-icon.svg";
 
-  // Zoradenie podľa STATUS_ORDER v rámci filtrovaných
   const sortedFilteredVehicles = useMemo(() => {
     return filteredVehicles.slice().sort((a, b) => {
       return (
@@ -77,12 +71,16 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
     });
   }, [filteredVehicles]);
 
+  const allPossibleStatuses = STATUS_ORDER;
+  const isAllFiltersSelected =
+    filters.length === allPossibleStatuses.length &&
+    allPossibleStatuses.every((status) => filters.includes(status));
+
   return (
     <>
-      {/* Filters (ľavý stĺpec) */}
       <div className="dashboard__filters-column">
         <button className="dashboard__reset-filter" onClick={onResetFilter}>
-          All Vehicles
+          {isAllFiltersSelected ? "Reset" : "Select All"}
         </button>
         <div className="dashboard__status-filters">
           {STATUS_ORDER.map((st) => (
@@ -103,14 +101,19 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
             >
               <div className="dashboard__stat-value">{stats[st]}</div>
               <div className="dashboard__stat-label">{statusLabels[st]}</div>
-              {filters.includes(st) && <div className="dashboard__stat-indicator" />}
+              {filters.includes(st) && (
+                <div className="dashboard__stat-indicator" />
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Vehicles (stredný panel) */}
-      <div className={`dashboard__vehicles-column ${isVehiclesExpanded ? "expanded" : ""}`}>
+      <div
+        className={`dashboard__vehicles-column ${
+          isVehiclesExpanded ? "expanded" : ""
+        }`}
+      >
         <div className="dashboard__vehicles-header">
           <h3>Vehicles</h3>
           <div className="dashboard__vehicles-actions">
@@ -123,12 +126,19 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
               />
               <label htmlFor="selectAll">Select All</label>
             </div>
-            <button className="dashboard__vehicles-toggle" onClick={onVehiclesExpand}>
+            <button
+              className="dashboard__vehicles-toggle"
+              onClick={onVehiclesExpand}
+            >
               {isVehiclesExpanded ? "«" : "»"}
             </button>
           </div>
         </div>
-        <div className={`dashboard__vehicles-list${filters.length === 0 ? " dashboard__vehicles-list--dimmed" : ""}`}>
+        <div
+          className={`dashboard__vehicles-list${
+            filters.length === 0 ? " dashboard__vehicles-list--dimmed" : ""
+          }`}
+        >
           {sortedFilteredVehicles.length > 0 ? (
             sortedFilteredVehicles.map((vehicle) => {
               const locationName = vehicle.currentLocation
@@ -144,7 +154,9 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
                       checked={selectedVehicles.has(vehicle.id)}
                       onChange={() => onSelectVehicle(vehicle.id)}
                     />
-                    <div className="dashboard__vehicle-plate">{vehicle.plateNumber}</div>
+                    <div className="dashboard__vehicle-plate">
+                      {vehicle.plateNumber}
+                    </div>
                     <img
                       src={vehicleTypeImages[vehicle.type] || defaultVehicleImage}
                       alt={vehicle.type}
@@ -169,8 +181,11 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
         </div>
       </div>
 
-      {/* Charts (pravý sidebar) */}
-      <div className={`dashboard__charts-sidebar ${isChartExpanded ? "expanded" : ""}`}>
+      <div
+        className={`dashboard__charts-sidebar ${
+          isChartExpanded ? "expanded" : ""
+        }`}
+      >
         <div className="dashboard__charts-header">
           <h3>Charts</h3>
           <button className="dashboard__charts-toggle" onClick={onChartExpand}>
@@ -194,9 +209,15 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
               </button>
             </div>
             <div className="dashboard__chart">
-              {/* Tu napojíš Recharts alebo iný graf podľa potreby */}
-              {/* ... */}
-              <div style={{padding: '1em', color: '#888', fontSize: '12px'}}>Bar/Pie chart placeholder</div>
+              <div
+                style={{
+                  padding: "1em",
+                  color: "#888",
+                  fontSize: "12px",
+                }}
+              >
+                Bar/Pie chart placeholder
+              </div>
             </div>
           </div>
         ) : (
@@ -209,10 +230,34 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
               }}
             >
               <svg className="dashboard__thumbnail-svg dashboard__thumbnail-svg--bar">
-                <rect x="5" y="10" width="8" height="30" fill={statusHex[VehicleStatus.Outbound]} />
-                <rect x="18" y="15" width="8" height="25" fill={statusHex[VehicleStatus.Inbound]} />
-                <rect x="31" y="5" width="8" height="35" fill={statusHex[VehicleStatus.Transit]} />
-                <rect x="44" y="25" width="8" height="15" fill={statusHex[VehicleStatus.Standby]} />
+                <rect
+                  x="5"
+                  y="10"
+                  width="8"
+                  height="30"
+                  fill={statusHex[VehicleStatus.Outbound]}
+                />
+                <rect
+                  x="18"
+                  y="15"
+                  width="8"
+                  height="25"
+                  fill={statusHex[VehicleStatus.Inbound]}
+                />
+                <rect
+                  x="31"
+                  y="5"
+                  width="8"
+                  height="35"
+                  fill={statusHex[VehicleStatus.Transit]}
+                />
+                <rect
+                  x="44"
+                  y="25"
+                  width="8"
+                  height="15"
+                  fill={statusHex[VehicleStatus.Standby]}
+                />
               </svg>
               <span>Bar Chart</span>
             </div>

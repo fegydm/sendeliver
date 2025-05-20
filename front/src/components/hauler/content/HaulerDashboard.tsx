@@ -10,12 +10,9 @@ import mockLocations from "../../../data/mockLocations";
 import HaulerDashboardMaps from "./HaulerDashboardMaps";
 import HaulerDashboardFilters from "./HaulerDashboardFilters";
 
-// Prípadne doplníš import typov, helperov...
-
-// Enum pre DelayStatus a mapovanie positionColor → DelayStatus (ak bude treba pre maps)
+// ... prípadne ďalšie importy
 
 const HaulerDashboard: React.FC = () => {
-  // Stav, filter, vybrané, expanzie, flags, hover, atď.
   const [vehicles] = useState(mockVehicles);
   const [filters, setFilters] = useState<VehicleStatus[]>([]);
   const [selectedVehicles, setSelectedVehicles] = useState<Set<string>>(new Set());
@@ -42,7 +39,7 @@ const HaulerDashboard: React.FC = () => {
     ), [vehicles, filters]
   );
 
-  // Handler pre “Select All”
+  // Handler pre “Select All”/Reset
   const handleSelectAll = () => {
     if (isAllSelected) {
       setSelectedVehicles(new Set());
@@ -67,39 +64,36 @@ const HaulerDashboard: React.FC = () => {
   };
 
   // Handler pre filter (status)
- const handleToggleFilter = (status: VehicleStatus) => {
-  setFilters((prev) => {
-    if (prev.includes(status)) {
-      const next = prev.filter((s) => s !== status);
-      return next; // tu necháme pokojne [], aby vznikol “null filter”
-    } else {
-      return [...prev, status];
-    }
-  });
-};
+  const handleToggleFilter = (status: VehicleStatus) => {
+    setFilters((prev) => {
+      if (prev.includes(status)) {
+        const next = prev.filter((s) => s !== status);
+        return next;
+      } else {
+        return [...prev, status];
+      }
+    });
+  };
 
   // Handler pre “All Vehicles” / reset filtra
-const handleResetFilter = () => {
-  setFilters((prev) =>
-    prev.length === Object.values(VehicleStatus).length
-      ? []
-      : [...Object.values(VehicleStatus)]
-  );
-};
+  const handleResetFilter = () => {
+    setFilters((prev) =>
+      prev.length === Object.values(VehicleStatus).length
+        ? []
+        : [...Object.values(VehicleStatus)]
+    );
+  };
 
   // Handler pre hover nad statusom
   const handleStatusHover = (status: VehicleStatus | null) => {
     setHover(status);
   };
 
-  // Handler pre expanziu/collapse grafov a vozidiel
   const toggleChartExpansion = () => setIsChartExpanded((prev) => !prev);
   const toggleVehiclesExpansion = () => setIsVehiclesExpanded((prev) => !prev);
 
-  // Handler pre prepnutie chart typu
   const handleChartType = (type: "bar" | "pie") => setChartType(type);
 
-  // Handler pre prepnutie zobrazovania vlajok (mapa)
   const toggleFlags = () => setShowFlags((prev) => !prev);
 
   // Základná štruktúra dashboardu
