@@ -1,0 +1,254 @@
+/* File: front/src/components/shared/elements/OpacityControl.css */
+/* Last change: Updated with proper positioning and double-arrow icons */
+
+/* Container */
+.oc {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin: 4px;
+  height: 28px;
+}
+
+/* Toggle button */
+.oc-toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background-color: transparent;
+  border: 1px solid #666;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.oc-toggle:hover {
+  border-color: #333;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.oc-toggle--disabled {
+  border-color: #ccc;
+  color: #999;
+}
+
+.oc-toggle .grayscale {
+  filter: grayscale(100%);
+}
+
+/* Arrow button with double arrow icons */
+.oc-arrow {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background-color: #f9fafb;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  font-size: 14px;
+}
+
+.oc-arrow-icon {
+  display: inline-block;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.oc-arrow:hover {
+  background-color: #f3f4f6;
+}
+
+.oc-arrow--open {
+  background-color: #e5e7eb;
+}
+
+/* Slider container - aligned to top-right */
+.oc-slider {
+  position: absolute;
+  left: 60px;
+  top: 0;
+  background-color: #ffffff;
+  width: 80px;
+  height: 180px;
+  border-radius: 8px;
+  padding: 12px 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+}
+
+.oc-slider-content {
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
+/* Tick marks - now visible on the left */
+.oc-ticks {
+  position: relative;
+  height: 100%;
+  margin-right: 12px;
+  font-size: 10px;
+  color: #6b7280;
+  width: 30px;
+  text-align: right;
+}
+
+.oc-tick {
+  position: absolute;
+  right: 0;
+  width: 6px;
+  height: 1px;
+  background-color: #9ca3af;
+}
+
+.oc-tick-label {
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.oc-tick--100 {
+  top: 0%;
+}
+
+.oc-tick--75 {
+  top: 25%;
+}
+
+.oc-tick--50 {
+  top: 50%;
+}
+
+.oc-tick--25 {
+  top: 75%;
+}
+
+.oc-tick--0 {
+  top: 100%;
+}
+
+/* Slider track */
+.oc-track {
+  position: relative;
+  width: 8px;
+  height: 150px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Slider fill */
+.oc-fill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background-color: #3b82f6;
+  border-radius: 4px;
+}
+
+/* Slider thumb */
+.oc-thumb {
+  position: absolute;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  background-color: #ffffff;
+  border: 2px solid #3b82f6;
+  border-radius: 50%;
+  transform: translate(-50%, 50%);
+  cursor: grab;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+.oc-thumb:active {
+  cursor: grabbing;
+}
+
+/* Percentage bubble - showing on the right of thumb */
+.oc-bubble {
+  position: absolute;
+  right: -28px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #3b82f6;
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 5px;
+  border-radius: 10px;
+  white-space: nowrap;
+  min-width: 36px;
+  text-align: center;
+}
+
+.oc-bubble::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 4px;
+  border-style: solid;
+  border-color: transparent #3b82f6 transparent transparent;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .oc-slider {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+  
+  .oc-track {
+    background-color: #4b5563;
+  }
+  
+  .oc-thumb {
+    background-color: #1f2937;
+  }
+  
+  .oc-arrow {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+  }
+  
+  .oc-toggle {
+    border-color: #6b7280;
+    color: #e5e7eb;
+  }
+  
+  .oc-toggle--disabled {
+    border-color: #4b5563;
+    color: #9ca3af;
+  }
+  
+  .oc-ticks {
+    color: #9ca3af;
+  }
+  
+  .oc-tick {
+    background-color: #6b7280;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .oc-slider {
+    left: auto;
+    right: 0;
+    top: 30px;
+  }
+}

@@ -1,6 +1,4 @@
 /* File: front/src/components/hauler/content/dashboard.maps.css */
-
-/* Container for the whole map */
 .dashboard__map-container {
   position: relative;
   width: 100%;
@@ -8,16 +6,12 @@
   min-height: 700px;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
-
-/* Inner map div */
 .dashboard__map-element {
   width: 100%;
   height: 100%;
 }
-
-/* Controls overlay */
 .dashboard__map-controls {
   position: absolute;
   top: 10px;
@@ -26,51 +20,43 @@
   background: var(--hauler-light);
   padding: 5px 10px;
   border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
-
 .dashboard__flag-toggle {
   display: flex;
   align-items: center;
   font-size: 12px;
 }
-
 .dashboard__flag-toggle input {
   margin-right: 5px;
 }
-
-/* Grayscale tiles */
 .dashboard__map-element .leaflet-tile {
   filter: grayscale(100%);
 }
-
-/* Base styling for custom divIcons */
 .vehicle-marker {
   box-sizing: border-box;
-  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
 }
-
 .vehicle-marker.static {
   width: 18px;
   height: 18px;
+  transform: translate(-50%,-50%);
+  z-index: 800;
 }
-
 .vehicle-marker.dynamic {
   width: 26px;
   height: 26px;
+  transform: translate(-50%,-50%);
+  z-index: 1000;
 }
-
-/* Static square marker */
 .marker-static {
   width: 18px;
   height: 18px;
   border-radius: 3px;
   background: #6c757d;
   border: 2px solid #fff;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 0 2px rgba(0,0,0,0.12);
 }
-
-/* Animated pie-gradient marker */
 .marker-gradient-pie {
   width: 26px;
   height: 26px;
@@ -83,30 +69,123 @@
   justify-content: center;
   box-sizing: border-box;
 }
-
 .marker-gradient-inner {
   width: 14px;
   height: 14px;
   border-radius: 50%;
   background: #fff;
   border: 2px solid #fff;
-  box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 6px 0 rgba(0,0,0,0.1);
   position: relative;
   z-index: 1;
 }
-
-/* Speed variants (override animation-duration) */
 .vehicle-marker.dynamic.speed-slow .marker-gradient-pie {
   animation-duration: 2.8s;
 }
-
 .vehicle-marker.dynamic.speed-fast .marker-gradient-pie {
   animation-duration: 0.7s;
 }
-
-/* Spinning keyframes */
 @keyframes marker-spin {
   to {
     transform: rotate(360deg);
   }
+}
+.map-controls-container {
+  position: absolute;
+  top: 80px;
+  left: 2px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  padding: 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.map-flag-control {
+  border: 1px solid #2389ff;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.9);
+}
+.map-polyline-control {
+  border: 1px solid #7a63ff;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.9);
+}
+.parking-marker {
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%,-50%);
+  z-index: 900;
+}
+.flag-marker {
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%,-100%);
+  z-index: 900;
+}
+.current-circle {
+  stroke-width: 2;
+  fill-opacity: 0.75;
+  width: 16px;
+  height: 16px;
+  z-index: 850;
+}
+.route-polyline {
+  opacity: 0.8;
+  z-index: 700;
+}
+.dimmed {
+  opacity: 0.15;
+  fill-opacity: 0.15;
+}
+.status-outbound {
+  background-color: #2389ff;
+  fill: #2389ff;
+  stroke: #2389ff;
+}
+.status-inbound {
+  background-color: #1fbac7;
+  fill: #1fbac7;
+  stroke: #1fbac7;
+}
+.status-transit {
+  background-color: #7a63ff;
+  fill: #7a63ff;
+  stroke: #7a63ff;
+}
+.status-waiting {
+  background-color: #5958c8;
+  fill: #5958c8;
+  stroke: #5958c8;
+}
+.status-break {
+  background-color: #34495e;
+  fill: #34495e;
+  stroke: #34495e;
+}
+.status-standby {
+  background-color: #b5bd00;
+  fill: #b5bd00;
+  stroke: #b5bd00;
+}
+.status-depot {
+  background-color: #6b7684;
+  fill: #6b7684;
+  stroke: #6b7684;
+}
+.status-service {
+  background-color: #d726ff;
+  fill: #d726ff;
+  stroke: #d726ff;
+}
+.route-polyline.start-current {
+  opacity: 0.8;
+  z-index: 700;
+  stroke-dasharray: 5,5;
+}
+.route-polyline.current-destination {
+  opacity: 0.8;
+  z-index: 700;
 }
