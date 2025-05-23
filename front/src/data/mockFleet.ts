@@ -1,6 +1,5 @@
 // File: front/src/data/mockFleet.ts
-// Description: Mock vehicle data for fleet management – now with nearestParking property for each dynamic vehicle
-// Last change: Added nearestParking to Vehicle, set correct parking for each dynamic vehicle
+// Last change: Updated currentLocation for Wroclaw (ID 1), nearestParking for ID 1, 2, 3, 8
 
 export enum VehicleStatus {
   Outbound = "outbound",
@@ -76,6 +75,7 @@ export interface Vehicle {
   associatedTractorId?: string;
   positionColor?: "G" | "O" | "R"; // Green (no delay), Orange (minor delay), Red (major delay)
   onBreak?: boolean; // For dynamic vehicles, true if driver is on break
+  speed?: number; // Speed in km/h for dynamic vehicles
 }
 
 export const mockVehicles: Vehicle[] = [
@@ -96,15 +96,16 @@ export const mockVehicles: Vehicle[] = [
     assignedDriver: "1", // Ján Novák
     assignedDispatcher: "7", // Mária Kovárová
     start: "location4", // Žilina
-    currentLocation: "location12", // Wroclaw
+    currentLocation: "location32", // Wroclaw Current
     destination: "location13", // Poznaň
-    nearestParking: "parking1",
+    nearestParking: "parking3", // Korzensko Parking
     dashboardStatus: VehicleStatus.Outbound,
     odometerKm: 148200,
     capacityFree: "0 t",
     availability: "busy",
     positionColor: "G",
     onBreak: false,
+    speed: 80,
   },
 
   /** 2 ─ Inbound: Berlín → Brno → Trnava */
@@ -126,13 +127,14 @@ export const mockVehicles: Vehicle[] = [
     start: "location21", // Berlín
     currentLocation: "location5", // Brno
     destination: "location2", // Trnava
-    nearestParking: "parking2",
+    nearestParking: "parking7", // Starovicky Parking
     dashboardStatus: VehicleStatus.Inbound,
     odometerKm: 67500,
     capacityFree: "6 t",
     availability: "busy",
     positionColor: "O",
     onBreak: false,
+    speed: 85,
   },
 
   /** 3 ─ Transit: Mníchov → Plzeň → Praha */
@@ -154,13 +156,14 @@ export const mockVehicles: Vehicle[] = [
     start: "location14", // Mníchov
     currentLocation: "location15", // Plzeň
     destination: "location6", // Praha
-    nearestParking: "parking1",
+    nearestParking: "parking4", // Myto Parking
     dashboardStatus: VehicleStatus.Transit,
     odometerKm: 388900,
     capacityFree: "0 t",
     availability: "busy",
     positionColor: "R",
     onBreak: false,
+    speed: 90,
   },
 
   /** 4 ─ Standby: Dortmund */
@@ -184,6 +187,7 @@ export const mockVehicles: Vehicle[] = [
     odometerKm: 0,
     capacityFree: "18 t",
     availability: "available",
+    speed: 0,
   },
 
   /** 5 ─ Depot: Žilina */
@@ -205,6 +209,7 @@ export const mockVehicles: Vehicle[] = [
     odometerKm: 43300,
     capacityFree: "1.2 t",
     availability: "available",
+    speed: 0,
   },
 
   /** 6 ─ Maintenance: Bratislava */
@@ -226,9 +231,10 @@ export const mockVehicles: Vehicle[] = [
     odometerKm: 210000,
     capacityFree: "24 t",
     availability: "service",
+    speed: 0,
   },
 
-  /** 7 ─ Outbound: Žilina → Montabaur → Kolín */
+  /** 7 ─ Waiting: Žilina → Montabaur → Kolín */
   {
     id: "7",
     name: "Renault Master",
@@ -239,18 +245,20 @@ export const mockVehicles: Vehicle[] = [
     plateNumber: "KE-987TT",
     manufactureYear: 2020,
     capacity: "1.3 t",
+    notes: "Čakanie na dokumenty v Montabauri",
     assignedDriver: "2",
     assignedDispatcher: "8",
     start: "location4", // Žilina
     currentLocation: "location10", // Montabaur
     destination: "location11", // Kolín
-    nearestParking: "parking1",
-    dashboardStatus: VehicleStatus.Outbound,
+    nearestParking: "parking5", // Montabaur Parking
+    dashboardStatus: VehicleStatus.Waiting,
     odometerKm: 99100,
     capacityFree: "0 t",
     availability: "busy",
     positionColor: "G",
     onBreak: false,
+    speed: 0,
   },
 
   /** 8 ─ Transit: Štokholm → Brémy → Amsterdam */
@@ -269,13 +277,14 @@ export const mockVehicles: Vehicle[] = [
     start: "location16", // Štokholm
     currentLocation: "location17", // Brémy
     destination: "location18", // Amsterdam
-    nearestParking: "parking1",
+    nearestParking: "parking6", // Oldenburg Parking
     dashboardStatus: VehicleStatus.Transit,
     odometerKm: 0,
     capacityFree: "6 t",
     availability: "busy",
     positionColor: "O",
     onBreak: false,
+    speed: 80,
   },
 
   /** 9 ─ Standby: Trstín */
@@ -296,6 +305,7 @@ export const mockVehicles: Vehicle[] = [
     odometerKm: 512300,
     capacityFree: "24 t",
     availability: "available",
+    speed: 0,
   },
 
   /** 10 ─ Depot: Trnava */
@@ -316,6 +326,7 @@ export const mockVehicles: Vehicle[] = [
     odometerKm: 0,
     capacityFree: "20 t",
     availability: "available",
+    speed: 0,
   },
 
   /** 11 ─ Inbound s break: Zaragoza → Heilbronn (parking) → Ostrava */
@@ -337,13 +348,14 @@ export const mockVehicles: Vehicle[] = [
     start: "location25", // Zaragoza
     currentLocation: "parking1", // Heilbronn Parking
     destination: "location30", // Ostrava
-    nearestParking: "parking1",
-    dashboardStatus: VehicleStatus.Inbound,
+    nearestParking: "parking1", // Heilbronn Parking
+    dashboardStatus: VehicleStatus.Break,
     odometerKm: 198300,
     capacityFree: "3 t",
     availability: "busy",
     positionColor: "G",
     onBreak: true,
+    speed: 0,
   },
 ];
 

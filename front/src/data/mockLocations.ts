@@ -1,6 +1,5 @@
 // File: front/src/data/mockLocations.ts
-// Description: Mock location data for vehicle fleet management (now with parking & new cities for Zaragoza–Heilbronn–Ostrava trip)
-// Last change: Added parking locations, Zaragoza & Ostrava for inbound+break; added parking types for parking markers
+// Last change: Added Wroclaw Current (location32), updated parking names and coordinates (Korzensko, Myto, Oldenburg, Starovicky)
 
 export interface Location {
   id: string;
@@ -129,7 +128,7 @@ export const mockLocations: Location[] = [
     id: "location12",
     name: "Distribučné centrum Wroclaw",
     address: "Przemysłowa 67",
-    city: "Wrocław",
+    city: "Wroclaw",
     country: "PL",
     type: "delivery",
     latitude: 51.1079,
@@ -225,9 +224,6 @@ export const mockLocations: Location[] = [
     latitude: 52.5200,
     longitude: 13.4050,
   },
-
-  // ------- NEW LOCATIONS for BREAK TRIP & PARKINGS --------
-
   {
     id: "location25",
     name: "Zaragoza Truck Center",
@@ -247,18 +243,18 @@ export const mockLocations: Location[] = [
     type: "parking",
     latitude: 49.1402,
     longitude: 9.2205,
-    status: "free",
+    status: "occupied", // Vozidlo ID 11 je tu na prestávke
   },
   {
-    id: "parking2",
-    name: "Ostrava Parking",
-    address: "Ostravská 123",
-    city: "Ostrava",
-    country: "CZ",
+    id: "parking3",
+    name: "Korzensko Parking",
+    address: "Korzenska 5",
+    city: "Wroclaw",
+    country: "PL",
     type: "parking",
-    latitude: 49.8207,
-    longitude: 18.2623,
-    status: "occupied",
+    latitude: 51.5541,
+    longitude: 16.8748,
+    status: "free",
   },
   {
     id: "location30",
@@ -279,6 +275,60 @@ export const mockLocations: Location[] = [
     type: "delivery",
     latitude: 49.1439,
     longitude: 9.2180,
+  },
+  {
+    id: "parking4",
+    name: "Myto Parking",
+    address: "Myto 12",
+    city: "Plzeň",
+    country: "CZ",
+    type: "parking",
+    latitude: 49.7857,
+    longitude: 13.7205,
+    status: "free",
+  },
+  {
+    id: "parking5",
+    name: "Montabaur Parking",
+    address: "Parkplatz 20",
+    city: "Montabaur",
+    country: "DE",
+    type: "parking",
+    latitude: 50.4357,
+    longitude: 7.8258,
+    status: "free",
+  },
+  {
+    id: "parking6",
+    name: "Oldenburg Parking",
+    address: "Oldenburg 8",
+    city: "Oldenburg",
+    country: "DE",
+    type: "parking",
+    latitude: 53.1142,
+    longitude: 8.2688,
+    status: "free",
+  },
+  {
+    id: "parking7",
+    name: "Starovicky Parking",
+    address: "Starovicky 3",
+    city: "Brno",
+    country: "CZ",
+    type: "parking",
+    latitude: 48.9061,
+    longitude: 16.7843,
+    status: "free",
+  },
+  {
+    id: "location32",
+    name: "Wroclaw Current",
+    address: "Trasa 67",
+    city: "Wroclaw",
+    country: "PL",
+    type: "rest",
+    latitude: 51.5540,
+    longitude: 16.8747,
   },
 ];
 

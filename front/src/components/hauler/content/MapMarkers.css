@@ -1,0 +1,205 @@
+/* File: front/src/components/hauler/content/MapMarkers.css */
+/* Last change: Added greyscale filter for tiles and styles for greyscale/parking icons */
+
+.vehicle-marker {
+  box-sizing: border-box;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
+}
+
+.vehicle-marker.static {
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%,-50%);
+  z-index: 800;
+}
+
+.vehicle-marker.dynamic {
+  width: 26px;
+  height: 26px;
+  transform: translate(-50%,-50%);
+  z-index: 1000;
+}
+
+.marker-static {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background: #6c757d;
+  border: 2px solid #fff;
+  box-shadow: 0 0 2px rgba(0,0,0,0.12);
+}
+
+.marker-gradient-pie {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  position: relative;
+  animation: marker-spin 1.3s linear infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.marker-gradient-inner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #fff;
+  box-shadow: 0 0 6px 0 rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.vehicle-marker.dynamic.speed-slow .marker-gradient-pie {
+  animation-duration: 2.8s;
+}
+
+.vehicle-marker.dynamic.speed-fast .marker-gradient-pie {
+  animation-duration: 0.7s;
+}
+
+.parking-marker {
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%,-50%);
+  z-index: 900;
+}
+
+.flag-marker {
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%,-100%);
+  z-index: 900;
+}
+
+.current-circle {
+  stroke-width: 2;
+  fill-opacity: 0.75;
+  width: 16px;
+  height: 16px;
+  z-index: 850;
+}
+
+.route-polyline {
+  opacity: 0.8;
+  z-index: 700;
+}
+
+.route-polyline.start-current {
+  stroke: #0000FF;
+  stroke-width: 5;
+}
+
+.route-polyline.current-destination {
+  stroke: #FF0000;
+  stroke-width: 5;
+  stroke-dasharray: 10,10;
+}
+
+.route-polyline.start-destination {
+  stroke: #808080;
+  stroke-width: 3;
+  opacity: 0.5;
+}
+
+.dimmed {
+  opacity: 0.15;
+  fill-opacity: 0.15;
+}
+
+.status-outbound {
+  background-color: #2389ff;
+  fill: #2389ff;
+  stroke: #2389ff;
+}
+
+.status-inbound {
+  background-color: #1fbac7;
+  fill: #1fbac7;
+  stroke: #1fbac7;
+}
+
+.status-transit {
+  background-color: #7a63ff;
+  fill: #7a63ff;
+  stroke: #7a63ff;
+}
+
+.status-waiting {
+  background-color: #5958c8;
+  fill: #5958c8;
+  stroke: #5958c8;
+}
+
+.status-break {
+  background-color: #34495e;
+  fill: #34495e;
+  stroke: #34495e;
+}
+
+.status-standby {
+  background-color: #b5bd00;
+  fill: #b5bd00;
+  stroke: #b5bd00;
+}
+
+.status-depot {
+  background-color: #6b7684;
+  fill: #6b7684;
+  stroke: #6b7684;
+}
+
+.status-service {
+  background-color: #d726ff;
+  fill: #d726ff;
+  stroke: #d726ff;
+}
+
+.spinning-wheel {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #000;
+  border-top: 4px solid #00FF00;
+  border-radius: 50%;
+  animation: spin linear infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.8);
+}
+
+.spinning-wheel span {
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+}
+
+.leaflet-tile.greyscale-tile {
+  filter: grayscale(var(--greyscale-value, 0));
+}
+
+.oc-greyscale-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.oc-parking-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes marker-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

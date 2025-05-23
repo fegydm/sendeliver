@@ -1,8 +1,11 @@
 // File: front/src/components/shared/elements/OpacityControl.tsx
-// Last change: Simplified to switch toggle0 to toggle1 on first slider move, no extra effects
+// Last change: Stable toggle0 at 0%, toggle1 at 1-100%, no blinking, kept ref-based logic
 
 import React, { useState, useRef } from 'react';
 import './OpacityControl.css';
+
+// Konfigurovateľný threshold pre zapamätanie hodnôt
+const MIN_REMEMBER_THRESHOLD = 10; // Hodnoty pod 10% sa nezapamätávajú
 
 export interface OpacityControlProps {
   id: string;
@@ -37,30 +40,57 @@ const OpacityControl: React.FC<OpacityControlProps> = ({
   const [value, setValue] = useState(initialValue);
   const sliderRef = useRef<HTMLDivElement>(null);
   const sliderTrackRef = useRef<HTMLDivElement>(null);
+  const currentValueRef = useRef(value);
+  const currentToggleRef = useRef(toggleState);
+  const lastNonZeroValueRef = useRef(initialValue >= MIN_REMEMBER_THRESHOLD ? initialValue : 50);
   const isOpen = openSlider === id;
 
+  // Sync refs s aktuálnymi hodnotami
+  currentValueRef.current = value;
+  currentToggleRef.current = toggleState;
+
   const applyValue = (newValue: number) => {
-  const clampedValue = Math.max(0, Math.min(100, newValue));
-  setValue(clampedValue);
-  
-  // Automatické prepínanie toggle podľa hodnoty
-  const newToggleState = clampedValue === 0 ? 0 : 1;
-  
-  if (newToggleState !== toggleState) {
-    setToggleState(newToggleState);
-    onToggle(newToggleState);
-  }
-  
-  onChange(clampedValue / 100);
-};
+    const clampedValue = Math.max(0, Math.min(100, newValue));
+    
+    // Ak sa hodnota nezmenila, preskoč
+    if (Math.abs(clampedValue - currentValueRef.current) < 0.1) {
+      return;
+    }
+    
+    // Zapamätaj si poslednú rozumnú hodnotu
+    if (clampedValue >= MIN_REMEMBER_THRESHOLD) {
+      lastNonZeroValueRef.current = clampedValue;
+    }
+    
+    setValue(clampedValue);
+    currentValueRef.current = clampedValue;
+    
+    // Automatické prepínanie toggle podľa hodnoty
+    const newToggleState = clampedValue === 0 ? 0 : 1;
+    
+    if (newToggleState !== currentToggleRef.current) {
+      setToggleState(newToggleState);
+      currentToggleRef.current = newToggleState;
+      onToggle(newToggleState);
+    }
+    
+    onChange(clampedValue / 100);
+  };
 
   const handleToggle = () => {
-    const newToggleState = toggleState === 1 ? 0 : 1;
-    setToggleState(newToggleState);
-    onToggle(newToggleState);
+    const newToggleState = currentToggleRef.current === 1 ? 0 : 1;
+    
     if (newToggleState === 0) {
+      // Vypína sa - nastav na 0
+      setToggleState(0);
+      currentToggleRef.current = 0;
+      onToggle(0);
       setValue(0);
+      currentValueRef.current = 0;
       onChange(0);
+    } else {
+      // Zapína sa - obnov poslednú rozumnú hodnotu
+      applyValue(lastNonZeroValueRef.current);
     }
   };
 
@@ -84,18 +114,22 @@ const OpacityControl: React.FC<OpacityControlProps> = ({
     const trackHeight = trackRect.height;
     const trackTop = trackRect.top;
     let lastUpdate = 0;
+    
     const moveHandler = (moveEvent: MouseEvent) => {
       const now = performance.now();
-      if (now - lastUpdate < 50) return;
+      if (now - lastUpdate < 32) return; // 30 FPS throttling
       lastUpdate = now;
+      
       const rawPercentage = 100 - ((moveEvent.clientY - trackTop) / trackHeight * 100);
       const percentage = Math.max(0, rawPercentage);
       applyValue(percentage);
     };
+    
     const upHandler = () => {
       document.removeEventListener('mousemove', moveHandler);
       document.removeEventListener('mouseup', upHandler);
     };
+    
     document.addEventListener('mousemove', moveHandler);
     document.addEventListener('mouseup', upHandler);
   };

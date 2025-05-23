@@ -1,9 +1,11 @@
 // File: front/src/components/hauler/content/MapMarkers.ts
-// Last change: Fixed TS2345 errors for polyline LatLngExpression type
+// Last change: Updated addParkingMarkers to include SVG icon and free/occupied status colors
+
 import L from "leaflet";
 import { Vehicle, VehicleStatus, statusHex } from "@/data/mockFleet";
 import StartFlag from "@/assets/flags/StartFlag.svg";
 import FinishFlag from "@/assets/flags/FinishFlag.svg";
+import "./MapMarkers.css";
 
 const DYNAMIC_STATUSES: VehicleStatus[] = [
   VehicleStatus.Outbound,
@@ -81,12 +83,14 @@ export function addParkingMarkers(
       icon: L.divIcon({
         className: [
           "parking-marker",
-          "status-static",
+          `status-${loc.status || 'free'}`,
           dimAll ? "dimmed" : "",
         ].join(" "),
-        html: "",
+        html: `<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7" stroke="#333" stroke-width="2" /><text x="5" y="12" fill="#333" font-size="10" font-weight="bold">P</text></svg>`,
+        iconSize: [18, 18],
       }),
     }).addTo(map);
+    marker.bindTooltip(`${loc.name} (${loc.status || 'free'})`, { direction: 'top', offset: [0, -10] });
     parking[v.id] = marker;
   });
   return parking;
