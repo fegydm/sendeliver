@@ -1,5 +1,5 @@
 // File: front/src/components/hauler/content/MapMarkers.ts
-// Last change: Updated addParkingMarkers to include SVG icon and free/occupied status colors
+// Last change: Added route markers and updated polylines for solid/dashed routes
 
 import L from "leaflet";
 import { Vehicle, VehicleStatus, statusHex } from "@/data/mockFleet";
@@ -102,7 +102,9 @@ export function addRoutePolylines(
   dimAll: boolean,
   mockLocations: typeof import("@/data/mockLocations").default,
   showPolylines: boolean,
-  polylineOpacity: number
+  polylineOpacity: number,
+  showRoutes: boolean,
+  routeOpacity: number
 ): Record<string, L.Polyline> {
   const layers: Record<string, L.Polyline> = {};
   vehicles.forEach((v) => {
@@ -110,57 +112,76 @@ export function addRoutePolylines(
     const start = v.start && mockLocations.find((l) => l.id === v.start);
     const curr = v.currentLocation && mockLocations.find((l) => l.id === v.currentLocation);
     const dest = v.destination && mockLocations.find((l) => l.id === v.destination);
-    if (showPolylines) {
-      const pts: [number, number][] = [];
-      if (start) pts.push([start.latitude, start.longitude]);
-      if (curr) pts.push([curr.latitude, curr.longitude]);
-      if (dest) pts.push([dest.latitude, dest.longitude]);
-      if (pts.length < 2) return;
-      const poly = L.polyline(pts, {
+    if (showRoutes && start && curr) {
+      const startCurr: [number, number][] = [
+        [start.latitude, start.longitude],
+        [curr.latitude, curr.longitude],
+      ];
+      const poly1 = L.polyline(startCurr as L.LatLngExpression[], {
         className: [
           "route-polyline",
+          "start-current",
           `status-${v.dashboardStatus}`,
           dimAll ? "dimmed" : "",
         ].join(" "),
-        opacity: polylineOpacity,
+        opacity: routeOpacity,
       }).addTo(map);
-      layers[v.id] = poly;
-    } else {
-      if (start && curr) {
-        const startCurr: [number, number][] = [
-          [start.latitude, start.longitude],
-          [curr.latitude, curr.longitude],
-        ];
-        const poly1 = L.polyline(startCurr as L.LatLngExpression[], {
-          className: [
-            "route-polyline",
-            "start-current",
-            `status-${v.dashboardStatus}`,
-            dimAll ? "dimmed" : "",
-          ].join(" "),
-          opacity: polylineOpacity,
-        }).addTo(map);
-        layers[`${v.id}-start`] = poly1;
-      }
-      if (curr && dest) {
-        const currDest: [number, number][] = [
-          [curr.latitude, curr.longitude],
-          [dest.latitude, dest.longitude],
-        ];
-        const poly2 = L.polyline(currDest as L.LatLngExpression[], {
-          className: [
-            "route-polyline",
-            "current-destination",
-            `status-${v.dashboardStatus}`,
-            dimAll ? "dimmed" : "",
-          ].join(" "),
-          opacity: polylineOpacity,
-        }).addTo(map);
-        layers[`${v.id}-dest`] = poly2;
-      }
+      layers[`${v.id}-start`] = poly1;
+    }
+    if (showRoutes && curr && dest) {
+      const currDest: [number, number][] = [
+        [curr.latitude, curr.longitude],
+        [dest.latitude, dest.longitude],
+      ];
+      const poly2 = L.polyline(currDest as L.LatLngExpression[], {
+        className: [
+          "route-polyline",
+          "current-destination",
+          `status-${v.dashboardStatus}`,
+          dimAll ? "dimmed" : "",
+        ].join(" "),
+        opacity: routeOpacity,
+        dashArray: "5, 5",
+      }).addTo(map);
+      layers[`${v.id}-dest`] = poly2;
     }
   });
   return layers;
+}
+
+export function addRouteMarkers(
+  map: L.Map,
+  vehicles: Vehicle[],
+  dimAll: boolean,
+  mockLocations: typeof import("@/data/mockLocations").default
+): Record<string, L.CircleMarker> {
+  const markers: Record<string, L.CircleMarker> = {};
+  vehicles.forEach((v) => {
+    if (!DYNAMIC_STATUSES.includes(v.dashboardStatus)) return;
+    const points = [
+      v.start && mockLocations.find((l) => l.id === v.start),
+      v.currentLocation && mockLocations.find((l) => l.id === v.currentLocation),
+      v.destination && mockLocations.find((l) => l.id === v.destination),
+    ];
+    points.forEach((loc, index) => {
+      if (!loc) return;
+      const key = `${v.id}-${index === 0 ? 'start' : index === 1 ? 'current' : 'destination'}`;
+      const marker = L.circleMarker([loc.latitude, loc.longitude], {
+        className: [
+          "route-marker",
+          `status-${v.dashboardStatus}`,
+          dimAll ? "dimmed" : "",
+        ].join(" "),
+        radius: 6,
+        color: statusHex[v.dashboardStatus],
+        fillColor: statusHex[v.dashboardStatus],
+        fillOpacity: 1,
+        weight: 2,
+      }).addTo(map);
+      markers[key] = marker;
+    });
+  });
+  return markers;
 }
 
 export function addFlagMarkers(
