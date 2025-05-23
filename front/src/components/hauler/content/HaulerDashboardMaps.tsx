@@ -1,7 +1,7 @@
 // File: front/src/components/hauler/content/HaulerDashboardMaps.tsx
-// Last change: Added vehicle detail modal with click handlers - removed duplicate code
+// Last change: Fixed fadeAnimation TypeScript error and optimized greyscale application
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./dashboard.maps.css";
@@ -20,7 +20,6 @@ import {
   addPolylineClickHandlers
 } from "./MapMarkerHandler";
 import VehicleDetailModal from "./VehicleDetailModal";
-
 import OpacityControl from "@/components/shared/elements/OpacityControl";
 import FinishFlag from "@/assets/flags/FinishFlag.svg";
 
@@ -136,19 +135,89 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     }
   };
 
-  const toggleLayerVisibility = (layers: Record<string, L.Layer>, visible: boolean) => {
-    Object.values(layers).forEach((layer) => {
-      if (visible) {
-        if (!mapRef.current?.hasLayer(layer)) {
-          mapRef.current?.addLayer(layer);
-        }
-      } else {
-        if (mapRef.current?.hasLayer(layer)) {
-          mapRef.current?.removeLayer(layer);
-        }
+  // Apply greyscale filter to new tiles when they load - optimized to prevent flickering
+  const applyGreyscaleToNewTiles = useCallback(() => {
+    if (!mapRef.current) return;
+    
+    const grayscalePercent = (1 - greyscaleValue) * 100;
+    const filterValue = grayscalePercent > 0 ? `grayscale(${grayscalePercent}%)` : '';
+    
+    // Apply filter to tile pane container first (this covers new tiles immediately)
+    const tilePane = document.querySelector('.leaflet-tile-pane');
+    if (tilePane) {
+      (tilePane as HTMLElement).style.filter = filterValue;
+      (tilePane as HTMLElement).style.transition = 'none';
+    }
+    
+    // Then apply to individual tiles as backup
+    const tiles = document.querySelectorAll(".leaflet-tile");
+    tiles.forEach((tile) => {
+      (tile as HTMLElement).style.filter = '';  // Remove individual filters since pane has it
+      (tile as HTMLElement).style.transition = 'none';
+    });
+    
+    // Keep markers colorful by applying counter-filter to marker containers
+    const markerPane = document.querySelector('.leaflet-marker-pane');
+    if (markerPane && grayscalePercent > 0) {
+      // Apply reverse filter to marker pane to counteract the tile pane filter
+      (markerPane as HTMLElement).style.filter = 'grayscale(0%)';
+    } else if (markerPane) {
+      (markerPane as HTMLElement).style.filter = '';
+    }
+    
+    const overlayPane = document.querySelector('.leaflet-overlay-pane');
+    if (overlayPane && grayscalePercent > 0) {
+      (overlayPane as HTMLElement).style.filter = 'grayscale(0%)';
+    } else if (overlayPane) {
+      (overlayPane as HTMLElement).style.filter = '';
+    }
+  }, [greyscaleValue]);
+
+  // Toggle layer visibility without map recalculation
+  const toggleMarkersVisibility = useCallback((visible: boolean) => {
+    Object.values(vehicleMarkers.current).forEach((marker) => {
+      const element = marker.getElement();
+      if (element) {
+        (element as HTMLElement).style.display = visible ? '' : 'none';
       }
     });
-  };
+  }, []);
+
+  const toggleCirclesVisibility = useCallback((visible: boolean) => {
+    Object.values(currentCircles.current).forEach((circle) => {
+      const element = circle.getElement();
+      if (element) {
+        (element as HTMLElement).style.display = visible ? '' : 'none';
+      }
+    });
+  }, []);
+
+  const togglePolylinesVisibility = useCallback((visible: boolean) => {
+    Object.values(routeLayers.current).forEach((polyline) => {
+      const element = polyline.getElement();
+      if (element) {
+        (element as HTMLElement).style.display = visible ? '' : 'none';
+      }
+    });
+  }, []);
+
+  const toggleFlagsVisibility = useCallback((visible: boolean) => {
+    [...Object.values(startFlagMarkers.current), ...Object.values(destFlagMarkers.current)].forEach((marker) => {
+      const element = marker.getElement();
+      if (element) {
+        (element as HTMLElement).style.display = visible ? '' : 'none';
+      }
+    });
+  }, []);
+
+  const toggleParkingVisibility = useCallback((visible: boolean) => {
+    Object.values(parkingMarkers.current).forEach((marker) => {
+      const element = marker.getElement();
+      if (element) {
+        (element as HTMLElement).style.display = visible ? '' : 'none';
+      }
+    });
+  }, []);
 
   // Initialize map
   useEffect(() => {
@@ -163,7 +232,6 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
 
     const map = L.map(mapDiv.current, {
       zoomAnimation: false,
-      fadeAnimation: false,
     }).setView([49, 15], 6);
 
     mapRef.current = map;
@@ -179,15 +247,41 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
       className: "greyscale-tile",
     }).addTo(map);
 
-    const invalidate = () => map.invalidateSize();
+    // Apply initial greyscale state to tile layer container via CSS
+    const tileLayerContainer = document.querySelector('.leaflet-tile-pane');
+    if (tileLayerContainer) {
+      const grayscalePercent = (1 - greyscaleValue) * 100;
+      const filterValue = grayscalePercent > 0 ? `grayscale(${grayscalePercent}%)` : '';
+      (tileLayerContainer as HTMLElement).style.filter = filterValue;
+      (tileLayerContainer as HTMLElement).style.transition = 'none';
+    }
+
+    // Apply greyscale immediately to any existing tiles
+    setTimeout(applyGreyscaleToNewTiles, 0);
+
+    const invalidate = () => {
+      map.invalidateSize();
+      // Apply greyscale to tiles after map operations
+      setTimeout(applyGreyscaleToNewTiles, 100);
+    };
+    
+    // Listen for tile loading events to apply greyscale immediately
+    map.on("tileloadstart", applyGreyscaleToNewTiles); // Apply as soon as tile starts loading
+    map.on("tileload", applyGreyscaleToNewTiles);
+    map.on("tileerror", applyGreyscaleToNewTiles);
+    map.on("zoomstart", applyGreyscaleToNewTiles); // Apply before zoom animation
     map.on("zoomend moveend", invalidate);
 
     return () => {
+      map.off("tileloadstart", applyGreyscaleToNewTiles);
+      map.off("tileload", applyGreyscaleToNewTiles);
+      map.off("tileerror", applyGreyscaleToNewTiles);
+      map.off("zoomstart", applyGreyscaleToNewTiles);
       map.off("zoomend moveend", invalidate);
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [applyGreyscaleToNewTiles, greyscaleValue]);
 
   // Calculate default bounds
   useEffect(() => {
@@ -254,11 +348,10 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     Object.values(flags.start).forEach((m) => applyOpacity(m, flagOpacity));
     Object.values(flags.destination).forEach((m) => applyOpacity(m, flagOpacity));
 
-    // Toggle visibility
-    toggleLayerVisibility(flags.start, showFlags);
-    toggleLayerVisibility(flags.destination, showFlags);
-    toggleLayerVisibility(rl, showPolylines);
-    toggleLayerVisibility(pm, showParking);
+    // Toggle visibility using display instead of add/remove layers
+    toggleFlagsVisibility(showFlags);
+    togglePolylinesVisibility(showPolylines);
+    toggleParkingVisibility(showParking);
 
     // Fit bounds
     if (defaultFitBounds.current?.isValid()) {
@@ -267,13 +360,12 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     }
 
     map.invalidateSize();
-  }, [vehicles, visibleVehicles, filters, dimAll, showPolylines, polylineOpacity, showParking, parkingOpacity, showFlags, flagOpacity]);
+  }, [vehicles, visibleVehicles, filters, dimAll, showPolylines, polylineOpacity, showParking, parkingOpacity, showFlags, flagOpacity, toggleFlagsVisibility, togglePolylinesVisibility, toggleParkingVisibility]);
 
-  // Individual control effects
+  // Individual control effects - now using display toggle instead of layer add/remove
   useEffect(() => {
-    toggleLayerVisibility(startFlagMarkers.current, showFlags);
-    toggleLayerVisibility(destFlagMarkers.current, showFlags);
-  }, [showFlags]);
+    toggleFlagsVisibility(showFlags);
+  }, [showFlags, toggleFlagsVisibility]);
 
   useEffect(() => {
     Object.values(startFlagMarkers.current).forEach((m) => applyOpacity(m, flagOpacity));
@@ -281,16 +373,16 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
   }, [flagOpacity]);
 
   useEffect(() => {
-    toggleLayerVisibility(routeLayers.current, showPolylines);
-  }, [showPolylines]);
+    togglePolylinesVisibility(showPolylines);
+  }, [showPolylines, togglePolylinesVisibility]);
 
   useEffect(() => {
     Object.values(routeLayers.current).forEach((pl) => applyOpacity(pl, polylineOpacity));
   }, [polylineOpacity]);
 
   useEffect(() => {
-    toggleLayerVisibility(parkingMarkers.current, showParking);
-  }, [showParking]);
+    toggleParkingVisibility(showParking);
+  }, [showParking, toggleParkingVisibility]);
 
   useEffect(() => {
     Object.values(parkingMarkers.current).forEach((m) => applyOpacity(m, parkingOpacity));
@@ -298,10 +390,37 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
 
   useEffect(() => {
     if (mapRef.current) {
-      const tiles = document.querySelectorAll(".leaflet-tile.greyscale-tile");
-      tiles.forEach((tile) => {
-        (tile as HTMLElement).style.filter = `grayscale(${(1 - greyscaleValue) * 100}%)`;
-      });
+      console.log('[Greyscale Debug] Effect triggered, greyscaleValue:', greyscaleValue);
+      
+      // Reversed logic: greyscaleValue 1 = color, greyscaleValue 0 = grayscale
+      const grayscalePercent = (1 - greyscaleValue) * 100;
+      console.log('[Greyscale Debug] Calculated grayscalePercent:', grayscalePercent);
+      
+      // Apply greyscale ONLY to tile pane to prevent flickering
+      const tilePane = document.querySelector('.leaflet-tile-pane');
+      if (tilePane) {
+        const filterValue = grayscalePercent > 0 ? `grayscale(${grayscalePercent}%)` : '';
+        (tilePane as HTMLElement).style.filter = filterValue;
+        (tilePane as HTMLElement).style.transition = 'none';
+        console.log('[Greyscale Debug] Applied to tile pane:', filterValue);
+      }
+      
+      // Ensure markers stay colorful by counter-filtering their containers
+      const markerPane = document.querySelector('.leaflet-marker-pane');
+      if (markerPane) {
+        const counterFilter = grayscalePercent > 0 ? 'grayscale(0%)' : '';
+        (markerPane as HTMLElement).style.filter = counterFilter;
+        console.log('[Greyscale Debug] Applied counter-filter to markers:', counterFilter);
+      }
+      
+      const overlayPane = document.querySelector('.leaflet-overlay-pane');
+      if (overlayPane) {
+        const counterFilter = grayscalePercent > 0 ? 'grayscale(0%)' : '';
+        (overlayPane as HTMLElement).style.filter = counterFilter;
+        console.log('[Greyscale Debug] Applied counter-filter to overlays:', counterFilter);
+      }
+      
+      console.log('[Greyscale Debug] Greyscale application complete');
     }
   }, [greyscaleValue]);
 
@@ -317,10 +436,17 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
       <div className="map-controls-container">
         <OpacityControl
           id="greyscale-control"
-          onToggle={() => setGreyscaleValue(greyscaleValue === 0 ? 1 : 0)}
-          onChange={(value) => setGreyscaleValue(value / 100)}
+          onToggle={() => {
+            const newValue = greyscaleValue === 0 ? 1 : 0;
+            console.log('[Greyscale Debug] Toggle clicked, changing from', greyscaleValue, 'to', newValue);
+            setGreyscaleValue(newValue);
+          }}
+          onChange={(value) => {
+            console.log('[Greyscale Debug] Slider changed, raw value:', value, 'keeping as is:', value);
+            setGreyscaleValue(value);
+          }}
           initialToggleState={greyscaleValue > 0 ? 1 : 0}
-          initialValue={greyscaleValue * 100}
+          initialValue={greyscaleValue}
           color="#2389ff"
           toggleIcon={<GreyscaleIcon enabled={greyscaleValue > 0} />}
           openSlider={openSlider}
@@ -332,7 +458,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
           onToggle={onToggleFlags}
           onChange={setFlagOpacity}
           initialToggleState={showFlags ? 1 : 0}
-          initialValue={flagOpacity * 100}
+          initialValue={flagOpacity}
           color="#2389ff"
           toggleIcon={<FlagIcon enabled={showFlags} />}
           openSlider={openSlider}
@@ -344,7 +470,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
           onToggle={() => setShowParking(!showParking)}
           onChange={setParkingOpacity}
           initialToggleState={showParking ? 1 : 0}
-          initialValue={parkingOpacity * 100}
+          initialValue={parkingOpacity}
           color="#00FF00"
           toggleIcon={<ParkingIcon enabled={showParking} />}
           openSlider={openSlider}
@@ -356,7 +482,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
           onToggle={() => setShowPolylines(!showPolylines)}
           onChange={setPolylineOpacity}
           initialToggleState={showPolylines ? 1 : 0}
-          initialValue={polylineOpacity * 100}
+          initialValue={polylineOpacity}
           color="#7a63ff"
           toggleIcon={<PolylineIcon enabled={showPolylines} />}
           openSlider={openSlider}
