@@ -1,6 +1,7 @@
 /* File: front/src/components/hauler/content/MapMarkers.css */
-/* Last change: Added greyscale filter for tiles and styles for greyscale/parking icons */
+/* Last change: Updated route polylines to use single status color and merged with existing styles */
 
+/* Vehicle markers - keeping original structure */
 .vehicle-marker {
   box-sizing: border-box;
   filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
@@ -61,6 +62,13 @@
   animation-duration: 0.7s;
 }
 
+/* Additional styles for slow speed statuses */
+.vehicle-marker.dynamic.status-Waiting .marker-gradient-pie,
+.vehicle-marker.dynamic.status-Break .marker-gradient-pie {
+  animation-duration: 3s; /* Slower animation for zero speed statuses */
+}
+
+/* Parking markers - keeping original structure */
 .parking-marker {
   width: 18px;
   height: 18px;
@@ -68,6 +76,7 @@
   z-index: 900;
 }
 
+/* Flag markers - keeping original structure */
 .flag-marker {
   width: 24px;
   height: 24px;
@@ -75,6 +84,7 @@
   z-index: 900;
 }
 
+/* Current position circles - keeping original structure */
 .current-circle {
   stroke-width: 2;
   fill-opacity: 0.75;
@@ -83,33 +93,88 @@
   z-index: 850;
 }
 
+/* POLYLINES - Triangular filled areas between 3 points (start-current-destination) */
 .route-polyline {
+  opacity: 0.3;
+  z-index: 650;
+  stroke-width: 1;
+  stroke-opacity: 0.5;
+  fill-opacity: 0.2;
+}
+
+/* Triangular area colors by status */
+.route-polyline.status-Outbound { 
+  fill: #2389ff; 
+  stroke: #2389ff; 
+}
+.route-polyline.status-Inbound { 
+  fill: #1fbac7; 
+  stroke: #1fbac7; 
+}
+.route-polyline.status-Transit { 
+  fill: #7a63ff; 
+  stroke: #7a63ff; 
+}
+.route-polyline.status-Waiting { 
+  fill: #5958c8; 
+  stroke: #5958c8; 
+}
+.route-polyline.status-Break { 
+  fill: #34495e; 
+  stroke: #34495e; 
+}
+
+/* ROUTES - Actual road paths (start->current and current->destination) */
+.route-path {
   opacity: 0.8;
   z-index: 700;
+  stroke-width: 4;
+  fill: none;
 }
 
-.route-polyline.start-current {
-  stroke: #0000FF;
-  stroke-width: 5;
+/* Completed route segment (start to current) - solid line */
+.route-path.start-current.status-Outbound { stroke: #2389ff; }
+.route-path.start-current.status-Inbound { stroke: #1fbac7; }
+.route-path.start-current.status-Transit { stroke: #7a63ff; }
+.route-path.start-current.status-Waiting { stroke: #5958c8; }
+.route-path.start-current.status-Break { stroke: #34495e; }
+
+/* Remaining route segment (current to destination) - dashed line */
+.route-path.current-destination.status-Outbound { 
+  stroke: #2389ff;
+  stroke-dasharray: 8,4;
+}
+.route-path.current-destination.status-Inbound { 
+  stroke: #1fbac7;
+  stroke-dasharray: 8,4;
+}
+.route-path.current-destination.status-Transit { 
+  stroke: #7a63ff;
+  stroke-dasharray: 8,4;
+}
+.route-path.current-destination.status-Waiting { 
+  stroke: #5958c8;
+  stroke-dasharray: 8,4;
+}
+.route-path.current-destination.status-Break { 
+  stroke: #34495e;
+  stroke-dasharray: 8,4;
 }
 
-.route-polyline.current-destination {
-  stroke: #FF0000;
-  stroke-width: 5;
-  stroke-dasharray: 10,10;
+/* Route markers for waypoints along the actual route */
+.route-marker {
+  stroke-width: 2;
+  fill-opacity: 0.8;
+  z-index: 750;
 }
 
-.route-polyline.start-destination {
-  stroke: #808080;
-  stroke-width: 3;
-  opacity: 0.5;
-}
-
+/* Dimmed state */
 .dimmed {
   opacity: 0.15;
   fill-opacity: 0.15;
 }
 
+/* Status colors - keeping original colors */
 .status-outbound {
   background-color: #2389ff;
   fill: #2389ff;
@@ -158,6 +223,7 @@
   stroke: #d726ff;
 }
 
+/* Spinning wheel (keeping original) */
 .spinning-wheel {
   width: 40px;
   height: 40px;
@@ -177,6 +243,7 @@
   color: #000;
 }
 
+/* Greyscale and control icons (keeping original) */
 .leaflet-tile.greyscale-tile {
   filter: grayscale(var(--greyscale-value, 0));
 }
@@ -193,6 +260,7 @@
   font-weight: bold;
 }
 
+/* Animations - keeping original */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -202,4 +270,20 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Hover effects for interactive elements */
+.vehicle-marker:hover,
+.current-circle:hover,
+.route-marker:hover {
+  cursor: pointer;
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+.parking-marker:hover,
+.flag-marker:hover {
+  cursor: pointer;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+  transition: filter 0.2s ease;
 }

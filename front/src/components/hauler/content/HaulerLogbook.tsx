@@ -1,13 +1,13 @@
 // File: ./front/src/components/hauler/content/HaulerLogbook.tsx
-// Last change: Updated implementation to work with existing data structure
+// Last change: Updated to work with new mock data structure and added missing functions
 
 import React, { useState, useEffect } from "react";
-import { Vehicle, Trip, mockVehicles } from "../../../data/mockFleet";
-import { Person, mockPeople, mockTrips } from "../../../data/mockPeople";
+import { Vehicle, VehicleStatus, mockVehicles, parseStatus, getDelayColor } from "../../../data/mockFleet";
+import { Person, Trip, mockPeople, mockTrips, getTripsForPerson } from "../../../data/mockPeople";
 import "./hauler.cards.css";
 import "./logbook.css";
 
-// Typy pre knihu jázd
+// Types for logbook
 interface Location {
   id: string;
   name: string;
@@ -37,9 +37,11 @@ interface LogbookEntry {
   status: "active" | "completed" | "planned";
   stops: TripStop[];
   notes: string;
+  distance?: number;
+  duration?: number;
 }
 
-// Mock lokality
+// Mock locations
 const mockLocations: Location[] = [
   {
     id: "location1",
@@ -97,27 +99,59 @@ const mockLocations: Location[] = [
   }
 ];
 
-// Mock dáta pre knihu jázd vytvorené z existujúcich mockTrips a pridaných zastávok
+// Helper function to get vehicle trips from mockPeople trips
+export const getTripsForVehicle = (vehicleId: string): Trip[] => {
+  // Find people assigned to this vehicle
+  const assignedPeople = mockPeople.filter(person => person.vehicle === vehicleId);
+  
+  // Get all trips for these people
+  const trips: Trip[] = [];
+  assignedPeople.forEach(person => {
+    const personTrips = getTripsForPerson(person.id);
+    trips.push(...personTrips);
+  });
+  
+  return trips;
+};
+
+// Helper function to get vehicle services (mock for now)
+export const getServicesForVehicle = (vehicleId: string): Array<{id: string, date: string, type: string, status: string}> => {
+  // Mock services based on vehicle ID
+  const services = [
+    { id: `${vehicleId}-s1`, date: "2024-01-10", type: "Výmena oleja", status: "Completed" },
+    { id: `${vehicleId}-s2`, date: "2024-01-25", type: "Kontrola bŕzd", status: "Scheduled" },
+  ];
+  
+  return services.filter(() => Math.random() > 0.5); // Random for demo
+};
+
+// Create mock logbook entries from existing mockTrips
 const createMockLogbookEntries = (): LogbookEntry[] => {
-  // Vyberieme len prvých pár jázd pre jednoduchosť
-  const selectedTrips = mockTrips.slice(0, 5);
+  // Use first few trips for simplicity
+  const selectedTrips = mockTrips.slice(0, 8);
   
   return selectedTrips.map(trip => {
-    // Vytvoriť základnú jazdu
+    // Find the person who made this trip
+    const person = mockPeople.find(p => p.id === trip.personId);
+    const vehicleId = person?.vehicle || "1"; // Default to vehicle 1 if no vehicle assigned
+    
+    // Create basic trip entry
     const entry: LogbookEntry = {
       id: `logbook-${trip.id}`,
-      vehicleId: `vehicle-${trip.id}`, // Prepojenie na mockVehicles by vyžadovalo ďalšie prispôsobenie
+      vehicleId: vehicleId,
       personId: trip.personId,
       startDate: trip.date,
       endDate: trip.status === "Ukončená" ? trip.date : null,
       status: trip.status === "Ukončená" ? "completed" : "active",
       stops: [],
-      notes: `Jazda do ${trip.destination}`
+      notes: `Jazda do ${trip.destination}`,
+      distance: trip.distance,
+      duration: trip.duration
     };
     
-    // Vytvoriť zastávky pre jazdu
-    const pickupLocationId = `location${(parseInt(trip.id) % 3) + 1}`;
-    const deliveryLocationId = `location${((parseInt(trip.id) + 3) % 6) + 1}`;
+    // Create stops for the trip
+    const pickupLocationId = `location${(parseInt(trip.id) % 6) + 1}`;
+    const deliveryLocationId = `location${((parseInt(trip.id) + 2) % 6) + 1}`;
     
     entry.stops = [
       {
@@ -132,7 +166,7 @@ const createMockLogbookEntries = (): LogbookEntry[] => {
       {
         id: `stop-${trip.id}-2`,
         locationId: deliveryLocationId,
-        arrivalTime: trip.date, // V reálnej aplikácii by to bol neskorší čas
+        arrivalTime: trip.date,
         departureTime: trip.status === "Ukončená" ? trip.date : null,
         type: "delivery",
         status: trip.status === "Ukončená" ? "completed" : "pending",
@@ -140,8 +174,8 @@ const createMockLogbookEntries = (): LogbookEntry[] => {
       }
     ];
     
-    // Pre niektoré jazdy pridať aj zastávku na odpočinok
-    if (parseInt(trip.id) % 2 === 0) {
+    // Add rest stop for some trips
+    if (parseInt(trip.id) % 3 === 0) {
       entry.stops.push({
         id: `stop-${trip.id}-3`,
         locationId: "location3",
@@ -168,18 +202,17 @@ const HaulerLogbook: React.FC = () => {
   const [isAddStopModalOpen, setIsAddStopModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Filtre
+  // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [driverFilter, setDriverFilter] = useState("all");
   const [vehicleFilter, setVehicleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
 
-  // Načítanie údajov
+  // Load data
   useEffect(() => {
     const loadData = () => {
       setIsLoading(true);
-      // Simulácia načítania dát z API
       setTimeout(() => {
         const mockLogbookEntries = createMockLogbookEntries();
         setEntries(mockLogbookEntries);
@@ -198,9 +231,9 @@ const HaulerLogbook: React.FC = () => {
     loadData();
   }, []);
 
-  // Aplikácia filtrov
+  // Apply filters
   const filteredEntries = entries.filter(entry => {
-    // Fulltextové vyhľadávanie
+    // Full-text search
     const vehicleName = vehicles.find(v => v.id === entry.vehicleId)?.name || "";
     const driver = drivers.find(d => d.id === entry.personId);
     const driverName = driver ? `${driver.firstName} ${driver.lastName}` : "";
@@ -211,16 +244,16 @@ const HaulerLogbook: React.FC = () => {
     const searchText = `${vehicleName} ${driverName} ${stopNames}`.toLowerCase();
     const matchesSearch = searchTerm === "" || searchText.includes(searchTerm.toLowerCase());
     
-    // Filtrovanie podľa vodiča
+    // Filter by driver
     const matchesDriver = driverFilter === "all" || entry.personId === driverFilter;
     
-    // Filtrovanie podľa vozidla
+    // Filter by vehicle
     const matchesVehicle = vehicleFilter === "all" || entry.vehicleId === vehicleFilter;
     
-    // Filtrovanie podľa stavu
+    // Filter by status
     const matchesStatus = statusFilter === "all" || entry.status === statusFilter;
     
-    // Filtrovanie podľa dátumu
+    // Filter by date
     let matchesDate = true;
     if (dateFilter === "today") {
       const today = new Date().toISOString().split("T")[0];
@@ -237,21 +270,19 @@ const HaulerLogbook: React.FC = () => {
     return matchesSearch && matchesDriver && matchesVehicle && matchesStatus && matchesDate;
   });
 
-  // Výber záznamu
+  // Select entry
   const handleSelectEntry = (entry: LogbookEntry) => {
     setSelectedEntry(entry);
   };
 
-  // Formátovanie dátumu/času
+  // Format date/time
   const formatDateTime = (dateTimeString: string | null) => {
     if (!dateTimeString) return "—";
     
-    // Kontrola či je v ISO formáte
     let date;
     if (dateTimeString.includes("T")) {
       date = new Date(dateTimeString);
     } else {
-      // Ak je len dátum bez času, pridáme čas
       date = new Date(`${dateTimeString}T00:00:00`);
     }
     
@@ -264,16 +295,14 @@ const HaulerLogbook: React.FC = () => {
     }).format(date);
   };
   
-  // Zjednodušené formátovanie dátumu
+  // Format date only
   const formatDate = (dateTimeString: string | null) => {
     if (!dateTimeString) return "—";
     
-    // Kontrola či je v ISO formáte
     let date;
     if (dateTimeString.includes("T")) {
       date = new Date(dateTimeString);
     } else {
-      // Ak je len dátum bez času, pridáme čas
       date = new Date(`${dateTimeString}T00:00:00`);
     }
     
@@ -284,28 +313,37 @@ const HaulerLogbook: React.FC = () => {
     }).format(date);
   };
   
-  // Získanie názvu lokality
+  // Get location name
   const getLocationName = (locationId: string) => {
     return locations.find(l => l.id === locationId)?.name || "Neznáma lokalita";
   };
   
-  // Získanie názvu vodiča
+  // Get driver name
   const getDriverName = (personId: string) => {
     const driver = drivers.find(d => d.id === personId);
     return driver ? `${driver.firstName} ${driver.lastName}` : "Neznámy vodič";
   };
   
-  // Získanie názvu vozidla
+  // Get vehicle name
   const getVehicleName = (vehicleId: string) => {
     return vehicles.find(v => v.id === vehicleId)?.name || "Neznáme vozidlo";
   };
 
-  // Pridanie novej jazdy
+  // Get vehicle dashboard status color
+  const getVehicleStatusColor = (vehicleId: string) => {
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    if (vehicle) {
+      return getDelayColor(vehicle.dashboardStatus);
+    }
+    return "#808080";
+  };
+
+  // Add new entry
   const handleAddEntry = () => {
     setIsNewEntryModalOpen(true);
   };
   
-  // Vytvorenie novej jazdy
+  // Create new entry
   const createNewEntry = (formData: any) => {
     const newEntry: LogbookEntry = {
       id: `trip${Date.now()}`,
@@ -342,13 +380,13 @@ const HaulerLogbook: React.FC = () => {
     setIsNewEntryModalOpen(false);
   };
   
-  // Pridanie zastávky k existujúcej jazde
+  // Add stop to existing entry
   const handleAddStop = () => {
     if (!selectedEntry) return;
     setIsAddStopModalOpen(true);
   };
   
-  // Vytvorenie novej zastávky
+  // Create new stop
   const addStopToEntry = (formData: any) => {
     if (!selectedEntry) return;
     
@@ -372,7 +410,7 @@ const HaulerLogbook: React.FC = () => {
     setIsAddStopModalOpen(false);
   };
 
-  // Získanie farby pre status
+  // Get status color
   const getStatusColor = (status: string) => {
     switch(status) {
       case "active": return "status-chip active";
@@ -383,7 +421,7 @@ const HaulerLogbook: React.FC = () => {
     }
   };
   
-  // Formátovanie pre zobrazenie statusu
+  // Format status for display
   const formatStatus = (status: string) => {
     switch(status) {
       case "active": return "Aktívna";
@@ -397,7 +435,7 @@ const HaulerLogbook: React.FC = () => {
     }
   };
 
-  // Resetovanie filtrov
+  // Reset filters
   const handleResetFilters = () => {
     setSearchTerm("");
     setDriverFilter("all");
@@ -408,7 +446,7 @@ const HaulerLogbook: React.FC = () => {
 
   return (
     <div className="logbook-container">
-      {/* Horný toolbar */}
+      {/* Top toolbar */}
       <div className="logbook-toolbar">
         <div className="logbook-toolbar-left">
           <span className="logbook-count">{filteredEntries.length} jázd</span>
@@ -434,9 +472,9 @@ const HaulerLogbook: React.FC = () => {
         </div>
       </div>
 
-      {/* Hlavný obsah */}
+      {/* Main content */}
       <div className="logbook-content">
-        {/* Bočný panel so zoznamom jázd */}
+        {/* Sidebar with trips list */}
         <div className="logbook-sidebar">
           <div className="logbook-search-container">
             <input 
@@ -510,7 +548,9 @@ const HaulerLogbook: React.FC = () => {
                   >
                     <div className="entry-date">{formatDate(entry.startDate)}</div>
                     <div className="entry-info">
-                      <div className="entry-driver">{getDriverName(entry.personId)}</div>
+                      <div className="entry-driver" style={{ color: getVehicleStatusColor(entry.vehicleId) }}>
+                        {getDriverName(entry.personId)}
+                      </div>
                       <div className="entry-vehicle">{getVehicleName(entry.vehicleId)}</div>
                       <div className="entry-stops">
                         {firstStop && (
@@ -520,6 +560,12 @@ const HaulerLogbook: React.FC = () => {
                           <span> → {getLocationName(lastStop.locationId)}</span>
                         )}
                       </div>
+                      {entry.distance && (
+                        <div className="entry-stats">
+                          <span>{entry.distance} km</span>
+                          {entry.duration && <span> • {entry.duration}h</span>}
+                        </div>
+                      )}
                     </div>
                     <div className={`entry-status ${getStatusColor(entry.status)}`}>
                       {formatStatus(entry.status)}
@@ -531,7 +577,7 @@ const HaulerLogbook: React.FC = () => {
           </div>
         </div>
         
-        {/* Detailný pohľad */}
+        {/* Detail view */}
         <div className="logbook-details">
           {selectedEntry ? (
             <div className="entry-details-content">
@@ -587,6 +633,20 @@ const HaulerLogbook: React.FC = () => {
                     <div className="details-label">Koniec</div>
                     <div className="details-value">{formatDateTime(selectedEntry.endDate)}</div>
                   </div>
+
+                  {selectedEntry.distance && (
+                    <div className="details-row">
+                      <div className="details-label">Vzdialenosť</div>
+                      <div className="details-value">{selectedEntry.distance} km</div>
+                    </div>
+                  )}
+
+                  {selectedEntry.duration && (
+                    <div className="details-row">
+                      <div className="details-label">Trvanie</div>
+                      <div className="details-value">{selectedEntry.duration} hodín</div>
+                    </div>
+                  )}
                   
                   <div className="details-row">
                     <div className="details-label">Poznámky</div>
@@ -647,7 +707,7 @@ const HaulerLogbook: React.FC = () => {
         </div>
       </div>
       
-      {/* Modal pre novú jazdu - len ako príklad, v reálnej aplikácii by bol kompletný formulár */}
+      {/* Modal for new trip */}
       {isNewEntryModalOpen && (
         <div className="modal">
           <div className="modal-content">
@@ -661,10 +721,9 @@ const HaulerLogbook: React.FC = () => {
             <div className="modal-body">
               <form onSubmit={(e) => {
                 e.preventDefault();
-                // Tu by bol kód na spracovanie formulára
                 const formData = {
-                  vehicleId: vehicles[0].id,
-                  personId: drivers[0].id,
+                  vehicleId: vehicles[0]?.id || "1",
+                  personId: drivers[0]?.id || "1",
                   startDate: new Date().toISOString(),
                   pickupLocationId: "location1",
                   pickupTime: new Date().toISOString(),
@@ -674,7 +733,6 @@ const HaulerLogbook: React.FC = () => {
                 };
                 createNewEntry(formData);
               }}>
-                {/* Formulárové polia by tu boli implementované */}
                 <div className="form-footer">
                   <button type="button" onClick={() => setIsNewEntryModalOpen(false)} className="button secondary">
                     Zrušiť
@@ -689,7 +747,7 @@ const HaulerLogbook: React.FC = () => {
         </div>
       )}
       
-      {/* Modal pre pridanie zastávky - len ako príklad, v reálnej aplikácii by bol kompletný formulár */}
+      {/* Modal for adding stop */}
       {isAddStopModalOpen && (
         <div className="modal">
           <div className="modal-content">
@@ -703,7 +761,6 @@ const HaulerLogbook: React.FC = () => {
             <div className="modal-body">
               <form onSubmit={(e) => {
                 e.preventDefault();
-                // Tu by bol kód na spracovanie formulára
                 const formData = {
                   locationId: "location3",
                   arrivalTime: new Date(Date.now() + 7200000).toISOString(),
@@ -712,7 +769,6 @@ const HaulerLogbook: React.FC = () => {
                 };
                 addStopToEntry(formData);
               }}>
-                {/* Formulárové polia by tu boli implementované */}
                 <div className="form-footer">
                   <button type="button" onClick={() => setIsAddStopModalOpen(false)} className="button secondary">
                     Zrušiť

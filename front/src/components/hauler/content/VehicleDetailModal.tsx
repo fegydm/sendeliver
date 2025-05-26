@@ -1,8 +1,8 @@
 // File: front/src/components/hauler/content/VehicleDetailModal.tsx
-// Last change: Compact modal with vehicle details
+// Last change: Fixed TS2339 by replacing speed with activity in status formatting
 
 import React from 'react';
-import { Vehicle, statusHex } from '@/data/mockFleet';
+import { Vehicle, parseStatus, getDirectionColor, getDelayColor, statusColors, delayColors } from '@/data/mockFleet';
 import { mockPeople } from '@/data/mockPeople';
 import './vehicle-detail-modal.css';
 
@@ -24,7 +24,7 @@ interface VehicleDetailModalProps {
   locations: Location[];
 }
 
-// Výpočet vzdialenosti medzi dvoma bodmi
+// Calculate distance between two points
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -44,7 +44,30 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
 }) => {
   if (!isOpen || !vehicle) return null;
   
-  // Získanie údajov o lokáciách
+  // Parse status for color and display
+  const parsed = parseStatus(vehicle.dashboardStatus);
+  const directionColor = getDirectionColor(vehicle.dashboardStatus);
+  const delayColor = getDelayColor(vehicle.dashboardStatus);
+  
+  // Format dashboard status for display
+  const formatDashboardStatus = (status: string): string => {
+    if (parsed.category === "dynamic") {
+      const direction = parsed.direction === "outbound" ? "Odchod" : 
+                       parsed.direction === "inbound" ? "Príchod" : "Tranzit";
+      const activity = parsed.activity === "moving" ? "V pohybe" : 
+                      parsed.activity === "waiting" ? "Čaká" : "Prestávka";
+      const delay = parsed.delay === "ontime" ? "Včas" : 
+                   parsed.delay === "delayed" ? "Meškanie" : "Kritické";
+      return `${direction} - ${activity} (${delay})`;
+    } else {
+      const type = parsed.type === "standby" ? "Pohotovosť" : 
+                  parsed.type === "depot" ? "Depo" : "Servis";
+      const delay = parsed.delay === "ontime" ? "Včas" : "Meškanie";
+      return `${type} (${delay})`;
+    }
+  };
+  
+  // Get location data
   const currentLocation = vehicle.currentLocation 
     ? locations.find(loc => loc.id === vehicle.currentLocation) 
     : null;
@@ -57,7 +80,7 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
     ? locations.find(loc => loc.id === vehicle.destination) 
     : null;
   
-  // Výpočet ETA, ak máme potrebné údaje
+  // Calculate ETA if we have necessary data
   let eta: string = 'N/A';
   let remainingDistance: string = 'N/A';
   if (currentLocation && destinationLocation && vehicle.speed && vehicle.speed > 0) {
@@ -76,7 +99,7 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
     remainingDistance = `${distance.toFixed(1)} km`;
   }
   
-  // Zistenie mena vodiča
+  // Get driver name
   const driverName = vehicle.assignedDriver 
     ? mockPeople.find(p => p.id === vehicle.assignedDriver)?.firstName + ' ' + 
       mockPeople.find(p => p.id === vehicle.assignedDriver)?.lastName
@@ -85,9 +108,9 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
   return (
     <div className="vehicle-modal-overlay" onClick={onClose}>
       <div className="vehicle-modal-content" onClick={e => e.stopPropagation()}>
-        <div className="vehicle-modal-header" style={{ backgroundColor: statusHex[vehicle.dashboardStatus] }}>
+        <div className="vehicle-modal-header" style={{ backgroundColor: delayColor }}>
           <h2>{vehicle.name}</h2>
-          <span className="vehicle-status">{vehicle.dashboardStatus}</span>
+          <span className="vehicle-status">{formatDashboardStatus(vehicle.dashboardStatus)}</span>
           <button className="vehicle-modal-close" onClick={onClose}>×</button>
         </div>
         
@@ -108,12 +131,31 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
               <span className="info-label">Rýchlosť:</span>
               <span className="info-value">{vehicle.speed ? `${vehicle.speed} km/h` : 'Stojí'}</span>
             </div>
+
+            <div className="vehicle-info-row">
+              <span className="info-label">Kapacita:</span>
+              <span className="info-value">{vehicle.capacity}</span>
+              
+              <span className="info-label">Voľná kapacita:</span>
+              <span className="info-value">{vehicle.capacityFree}</span>
+            </div>
+
+            <div className="vehicle-info-row">
+              <span className="info-label">Tachometer:</span>
+              <span className="info-value">{vehicle.odometerKm.toLocaleString()} km</span>
+              
+              <span className="info-label">Dostupnosť:</span>
+              <span className="info-value" style={{ color: vehicle.availability === 'available' ? '#4CAF50' : '#FF9800' }}>
+                {vehicle.availability === 'available' ? 'Dostupné' : 
+                 vehicle.availability === 'busy' ? 'Obsadené' : 'Servis'}
+              </span>
+            </div>
           </div>
           
           <div className="vehicle-route-section">
             {startLocation && (
               <div className="route-point">
-                <div className="route-marker start"></div>
+                <div className="route-marker start" style={{ backgroundColor: directionColor }}></div>
                 <div className="route-details">
                   <div className="route-label">Štart</div>
                   <div className="route-location">{startLocation.name}</div>
@@ -123,7 +165,7 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
             
             {currentLocation && (
               <div className="route-point current">
-                <div className="route-marker current"></div>
+                <div className="route-marker current" style={{ backgroundColor: directionColor }}></div>
                 <div className="route-details">
                   <div className="route-label">Aktuálna poloha</div>
                   <div className="route-location">{currentLocation.name}</div>
@@ -133,7 +175,7 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
             
             {destinationLocation && (
               <div className="route-point">
-                <div className="route-marker destination"></div>
+                <div className="route-marker destination" style={{ backgroundColor: directionColor }}></div>
                 <div className="route-details">
                   <div className="route-label">Cieľ</div>
                   <div className="route-location">{destinationLocation.name}</div>
@@ -154,6 +196,13 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
               </div>
             )}
           </div>
+
+          {vehicle.notes && (
+            <div className="vehicle-notes-section">
+              <div className="section-title">Poznámky:</div>
+              <div className="notes-content">{vehicle.notes}</div>
+            </div>
+          )}
         </div>
         
         <div className="vehicle-modal-footer">

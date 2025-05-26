@@ -1,409 +1,228 @@
+
 // File: front/src/data/mockFleet.ts
-// Last change: Updated currentLocation for Wroclaw (ID 1), nearestParking for ID 1, 2, 3, 8
+// Last change: Added type annotations for parseStatus and statusColors to fix TS7006 and TS7053, renamed speed to activity for filters
 
-export enum VehicleStatus {
-  Outbound = "outbound",
-  Inbound = "inbound",
-  Transit = "transit",
-  Waiting = "waiting",
-  Break = "break",
-  Standby = "standby",
-  Depot = "depot",
-  Service = "service",
-}
 
-// Status constants for dashboards/filters/charts/maps
-export const statusHex: Record<VehicleStatus, string> = {
-  [VehicleStatus.Outbound]: "#2389ff",
-  [VehicleStatus.Inbound]: "#1fbac7",
-  [VehicleStatus.Transit]: "#7a63ff",
-  [VehicleStatus.Waiting]: "#5958c8",
-  [VehicleStatus.Break]: "#34495e",
-  [VehicleStatus.Standby]: "#b5bd00",
-  [VehicleStatus.Depot]: "#6b7684",
-  [VehicleStatus.Service]: "#d726ff",
-};
+ function getTripsForVehicle(vehicleId: string): any[] {
+   // Placeholder: Return empty array for trips; implement actual logic as needed
+   return [];
+ }
 
-export const statusLabels: Record<VehicleStatus, string> = {
-  [VehicleStatus.Outbound]: "Out bound",
-  [VehicleStatus.Inbound]: "In bound",
-  [VehicleStatus.Transit]: "Transit",
-  [VehicleStatus.Waiting]: "Waiting",
-  [VehicleStatus.Break]: "Break",
-  [VehicleStatus.Standby]: "Standby",
-  [VehicleStatus.Depot]: "Depot",
-  [VehicleStatus.Service]: "Service",
-};
+  function getServicesForVehicle(vehicleId: string): any[] {
+   // Placeholder: Return empty array for services; implement actual logic as needed
+   return [];
+ }
 
-// Status order for filters/sorting
-export const STATUS_ORDER: VehicleStatus[] = [
-  VehicleStatus.Outbound,
-  VehicleStatus.Inbound,
-  VehicleStatus.Transit,
-  VehicleStatus.Waiting,
-  VehicleStatus.Break,
-  VehicleStatus.Standby,
-  VehicleStatus.Depot,
-  VehicleStatus.Service,
-];
+// Define filter categories
+const DYNAMIC_ACTIVITIES = ['moving', 'waiting', 'break'] as const;
+const DYNAMIC_DIRECTIONS = ['outbound', 'inbound', 'transit'] as const;
+const STATIC_TYPES = ['standby', 'depot', 'service'] as const;
+const DELAYS = ['ontime', 'delayed', 'critical'] as const;
 
-export interface Vehicle {
+// Define types
+type DynamicActivity = typeof DYNAMIC_ACTIVITIES[number];
+type DynamicDirection = typeof DYNAMIC_DIRECTIONS[number];
+type StaticType = typeof STATIC_TYPES[number];
+type Delay = typeof DELAYS[number];
+
+interface Vehicle {
   id: string;
   name: string;
-  type: string; // van | tractor | trailer | rigid | …
-  status: string; // technical/lease state: available | busy | service…
+  type: string;
+  dashboardStatus: string;
+  speed: number;
+  currentLocation?: string;
+  location?: string;
+  start?: string;
+  destination?: string;
+  nearestParking?: string;
   image: string;
   brand: string;
   plateNumber: string;
   manufactureYear: number;
   capacity: string;
-  notes?: string;
-  lastService?: string;
-  nextService?: string;
-  assignedDriver?: string; // Driver ID from mockPeople.ts
-  assignedDispatcher?: string; // Dispatcher ID from mockPeople.ts
-  location?: string; // Location ID from mockLocations.ts (for static statuses)
-  start?: string; // Location ID from mockLocations.ts (for dynamic statuses)
-  currentLocation?: string; // Location ID from mockLocations.ts (for dynamic statuses)
-  destination?: string; // Location ID from mockLocations.ts (for dynamic statuses)
-  nearestParking?: string; // Location ID from mockLocations.ts (for nearest parking)
-  dashboardStatus: VehicleStatus;
-  odometerKm: number;
   capacityFree: string;
+  odometerKm: number;
   availability: string;
-  trailerIds?: string[];
-  associatedTractorId?: string;
-  positionColor?: "G" | "O" | "R"; // Green (no delay), Orange (minor delay), Red (major delay)
-  onBreak?: boolean; // For dynamic vehicles, true if driver is on break
-  speed?: number; // Speed in km/h for dynamic vehicles
+  assignedDriver?: string;
+  assignedDispatcher?: string;
+  notes: string;
 }
 
-export const mockVehicles: Vehicle[] = [
-  /** 1 ─ Outbound: Žilina → Wroclaw → Poznaň */
-  {
-    id: "1",
-    name: "Sprinter 311",
-    type: "van",
-    status: "available",
-    image: "/vehicles/van1.jpg",
-    brand: "Mercedes",
-    plateNumber: "BA-123XX",
-    manufactureYear: 2019,
-    capacity: "1.5 t",
-    notes: "Export náklad – Poľsko",
-    lastService: "2025-02-10",
-    nextService: "2025-08-10",
-    assignedDriver: "1", // Ján Novák
-    assignedDispatcher: "7", // Mária Kovárová
-    start: "location4", // Žilina
-    currentLocation: "location32", // Wroclaw Current
-    destination: "location13", // Poznaň
-    nearestParking: "parking3", // Korzensko Parking
-    dashboardStatus: VehicleStatus.Outbound,
-    odometerKm: 148200,
-    capacityFree: "0 t",
-    availability: "busy",
-    positionColor: "G",
-    onBreak: false,
-    speed: 80,
-  },
+interface DynamicStatus {
+  category: 'dynamic';
+  direction: DynamicDirection;
+  activity: DynamicActivity;
+  delay: Delay;
+}
 
-  /** 2 ─ Inbound: Berlín → Brno → Trnava */
-  {
-    id: "2",
-    name: "Scania R500",
-    type: "tractor",
-    status: "available",
-    image: "/vehicles/truck2.jpg",
-    brand: "Scania",
-    plateNumber: "NR-890CC",
-    manufactureYear: 2022,
-    capacity: "18 t",
-    notes: "Spätný náklad DE → SK",
-    lastService: "2025-01-12",
-    nextService: "2025-07-12",
-    assignedDriver: "6", // Patrik Múdry
-    assignedDispatcher: "8", // Tomáš Rýchly
-    start: "location21", // Berlín
-    currentLocation: "location5", // Brno
-    destination: "location2", // Trnava
-    nearestParking: "parking7", // Starovicky Parking
-    dashboardStatus: VehicleStatus.Inbound,
-    odometerKm: 67500,
-    capacityFree: "6 t",
-    availability: "busy",
-    positionColor: "O",
-    onBreak: false,
-    speed: 85,
-  },
+interface StaticStatus {
+  category: 'static';
+  type: StaticType;
+  delay: Delay;
+}
 
-  /** 3 ─ Transit: Mníchov → Plzeň → Praha */
-  {
-    id: "3",
-    name: "DAF XF Euro 6",
-    type: "tractor",
-    status: "available",
-    image: "/vehicles/truck3.jpg",
-    brand: "DAF",
-    plateNumber: "TT-333TT",
-    manufactureYear: 2020,
-    capacity: "24 t",
-    notes: "Transit DE → CZ",
-    lastService: "2024-12-01",
-    nextService: "2025-05-30",
-    assignedDriver: "3", // Roman Silný
-    assignedDispatcher: "7", // Mária Kovárová
-    start: "location14", // Mníchov
-    currentLocation: "location15", // Plzeň
-    destination: "location6", // Praha
-    nearestParking: "parking4", // Myto Parking
-    dashboardStatus: VehicleStatus.Transit,
-    odometerKm: 388900,
-    capacityFree: "0 t",
-    availability: "busy",
-    positionColor: "R",
-    onBreak: false,
-    speed: 90,
-  },
+type Status = DynamicStatus | StaticStatus;
 
-  /** 4 ─ Standby: Dortmund */
+const mockVehicles: Vehicle[] = [
   {
-    id: "4",
-    name: "Trailer Low-bed",
-    type: "trailer",
-    status: "available",
-    image: "/vehicles/trailer2.jpg",
-    brand: "Schmitz",
-    plateNumber: "TR-456CD",
-    manufactureYear: 2019,
-    capacity: "18 t",
-    notes: "Čaká na load v Dortmunde",
-    lastService: "2025-01-18",
-    nextService: "2025-07-18",
-    assignedDriver: undefined,
-    assignedDispatcher: "8",
-    location: "location9", // Dortmund
-    dashboardStatus: VehicleStatus.Standby,
-    odometerKm: 0,
-    capacityFree: "18 t",
-    availability: "available",
-    speed: 0,
-  },
-
-  /** 5 ─ Depot: Žilina */
-  {
-    id: "5",
-    name: "Iveco Daily",
-    type: "van",
-    status: "available",
-    image: "/vehicles/van2.jpg",
-    brand: "Iveco",
-    plateNumber: "PN-456YY",
-    manufactureYear: 2021,
-    capacity: "1.2 t",
-    notes: "Parkuje v Žiline",
-    assignedDriver: "4",
-    assignedDispatcher: "7",
-    location: "location4", // Žilina
-    dashboardStatus: VehicleStatus.Depot,
-    odometerKm: 43300,
-    capacityFree: "1.2 t",
-    availability: "available",
-    speed: 0,
-  },
-
-  /** 6 ─ Maintenance: Bratislava */
-  {
-    id: "6",
-    name: "Volvo FH16",
-    type: "tractor",
-    status: "service",
-    image: "/vehicles/truck1.jpg",
+    id: "uuid-001",
+    name: "Truck A",
+    type: "truck",
+    dashboardStatus: "dynamic.outbound.moving.ontime",
+    speed: 60,
+    currentLocation: "loc1",
+    start: "loc2",
+    destination: "dest1",
+    image: "/vehicles/truck.jpg",
     brand: "Volvo",
-    plateNumber: "ZA-789ZZ",
-    manufactureYear: 2021,
-    capacity: "24 t",
-    notes: "Výmena brzdových kotúčov",
-    assignedDriver: "3",
-    assignedDispatcher: "7",
-    location: "location8", // Centrála SenDeliver (Bratislava)
-    dashboardStatus: VehicleStatus.Service,
-    odometerKm: 210000,
-    capacityFree: "24 t",
-    availability: "service",
-    speed: 0,
-  },
-
-  /** 7 ─ Waiting: Žilina → Montabaur → Kolín */
-  {
-    id: "7",
-    name: "Renault Master",
-    type: "van",
-    status: "available",
-    image: "/vehicles/van3.jpg",
-    brand: "Renault",
-    plateNumber: "KE-987TT",
+    plateNumber: "BA123CD",
     manufactureYear: 2020,
-    capacity: "1.3 t",
-    notes: "Čakanie na dokumenty v Montabauri",
-    assignedDriver: "2",
-    assignedDispatcher: "8",
-    start: "location4", // Žilina
-    currentLocation: "location10", // Montabaur
-    destination: "location11", // Kolín
-    nearestParking: "parking5", // Montabaur Parking
-    dashboardStatus: VehicleStatus.Waiting,
-    odometerKm: 99100,
-    capacityFree: "0 t",
+    capacity: "20t",
+    capacityFree: "5t",
+    odometerKm: 150000,
     availability: "busy",
-    positionColor: "G",
-    onBreak: false,
+    assignedDriver: "Ján Novák",
+    assignedDispatcher: "Peter Kováč",
+    notes: "Regular maintenance scheduled",
+  },
+  {
+    id: "uuid-002",
+    name: "Van B",
+    type: "van",
+    dashboardStatus: "dynamic.outbound.break.ontime",
     speed: 0,
-  },
-
-  /** 8 ─ Transit: Štokholm → Brémy → Amsterdam */
-  {
-    id: "8",
-    name: "Trailer Mega",
-    type: "trailer",
-    status: "available",
-    image: "/vehicles/trailer3.jpg",
-    brand: "Krone",
-    plateNumber: "KR-852JK",
-    manufactureYear: 2017,
-    capacity: "26 t",
-    assignedDriver: undefined,
-    assignedDispatcher: "8",
-    start: "location16", // Štokholm
-    currentLocation: "location17", // Brémy
-    destination: "location18", // Amsterdam
-    nearestParking: "parking6", // Oldenburg Parking
-    dashboardStatus: VehicleStatus.Transit,
-    odometerKm: 0,
-    capacityFree: "6 t",
+    currentLocation: "loc3",
+    start: "loc1",
+    destination: "dest2",
+    image: "/vehicles/van.jpg",
+    brand: "Mercedes",
+    plateNumber: "KE456EF",
+    manufactureYear: 2019,
+    capacity: "3t",
+    capacityFree: "1t",
+    odometerKm: 80000,
     availability: "busy",
-    positionColor: "O",
-    onBreak: false,
-    speed: 80,
+    assignedDriver: "Anna Kováčová",
+    notes: "Driver on break",
   },
-
-  /** 9 ─ Standby: Trstín */
   {
-    id: "9",
-    name: "MAN TGX",
-    type: "tractor",
-    status: "available",
-    image: "/vehicles/truck4.jpg",
+    id: "uuid-003",
+    name: "Truck C",
+    type: "truck",
+    dashboardStatus: "dynamic.inbound.moving.ontime",
+    speed: 50,
+    currentLocation: "loc4",
+    start: "dest1",
+    destination: "loc1",
+    image: "/vehicles/truck.jpg",
     brand: "MAN",
-    plateNumber: "BA-652AA",
-    manufactureYear: 2018,
-    capacity: "24 t",
-    assignedDriver: "1",
-    assignedDispatcher: "7",
-    location: "location7", // Odpočívadlo Trstín
-    dashboardStatus: VehicleStatus.Standby,
-    odometerKm: 512300,
-    capacityFree: "24 t",
-    availability: "available",
-    speed: 0,
-  },
-
-  /** 10 ─ Depot: Trnava */
-  {
-    id: "10",
-    name: "Flatbed Trailer",
-    type: "trailer",
-    status: "available",
-    image: "/vehicles/placeholder.jpg",
-    brand: "Schwarzmüller",
-    plateNumber: "TT-741CZ",
-    manufactureYear: 2016,
-    capacity: "20 t",
-    assignedDriver: undefined,
-    assignedDispatcher: "7",
-    location: "location2", // Trnava
-    dashboardStatus: VehicleStatus.Depot,
-    odometerKm: 0,
-    capacityFree: "20 t",
-    availability: "available",
-    speed: 0,
-  },
-
-  /** 11 ─ Inbound s break: Zaragoza → Heilbronn (parking) → Ostrava */
-  {
-    id: "11",
-    name: "DAF Zaragoza",
-    type: "tractor",
-    status: "available",
-    image: "/vehicles/truck5.jpg",
-    brand: "DAF",
-    plateNumber: "ZA-999AA",
+    plateNumber: "TT789GH",
     manufactureYear: 2021,
-    capacity: "24 t",
-    notes: "Inbound Spain → CZ, driver on break",
-    lastService: "2025-01-10",
-    nextService: "2025-07-10",
-    assignedDriver: "2",
-    assignedDispatcher: "8",
-    start: "location25", // Zaragoza
-    currentLocation: "parking1", // Heilbronn Parking
-    destination: "location30", // Ostrava
-    nearestParking: "parking1", // Heilbronn Parking
-    dashboardStatus: VehicleStatus.Break,
-    odometerKm: 198300,
-    capacityFree: "3 t",
+    capacity: "18t",
+    capacityFree: "4t",
+    odometerKm: 120000,
     availability: "busy",
-    positionColor: "G",
-    onBreak: true,
+    assignedDriver: "Martin Hruška",
+    notes: "",
+  },
+  {
+    id: "uuid-004",
+    name: "Van D",
+    type: "van",
+    dashboardStatus: "static.standby.ontime",
     speed: 0,
+    currentLocation: "loc1",
+    image: "/vehicles/van.jpg",
+    brand: "Ford",
+    plateNumber: "ZA012IJ",
+    manufactureYear: 2018,
+    capacity: "2.5t",
+    capacityFree: "2.5t",
+    odometerKm: 95000,
+    availability: "available",
+    notes: "Ready for assignment",
+  },
+  {
+    id: "uuid-005",
+    name: "Trailer E",
+    type: "trailer",
+    dashboardStatus: "static.depot.ontime",
+    speed: 0,
+    currentLocation: "loc5",
+    image: "/vehicles/trailer.jpg",
+    brand: "Schmitz",
+    plateNumber: "NR345KL",
+    manufactureYear: 2020,
+    capacity: "25t",
+    capacityFree: "25t",
+    odometerKm: 50000,
+    availability: "available",
+    notes: "In depot",
   },
 ];
 
-// Trips and Services (unchanged) ...
-export interface Trip {
-  id: number;
-  vehicleId: number;
-  date: string;
-  driver: string;
-  destination: string;
-  status: string;
-  distance: number;
-  fuelConsumption: number;
+function parseStatus(status: string): Status {
+  const parts = status.split('.');
+  if (parts[0] === 'dynamic') {
+    return {
+      category: 'dynamic',
+      direction: parts[1] as DynamicDirection,
+      activity: parts[2] as DynamicActivity,
+      delay: parts[3] as Delay,
+    };
+  }
+  return {
+    category: 'static',
+    type: parts[1] as StaticType,
+    delay: parts[2] as Delay,
+  };
 }
 
-export interface Service {
-  id: string;
-  vehicleId: string;
-  date: string;
-  type: string;
-  status: string;
-  cost: number;
-  description: string;
+const statusColors: Record<DynamicDirection | DynamicActivity | StaticType, string> = {
+  outbound: '#2389ff',
+  inbound: '#ff8c00',
+  transit: '#00cc00',
+  moving: '#00cc00',
+  waiting: '#ff8c00',
+  break: '#ff0000',
+  standby: '#808080',
+  depot: '#4b0082',
+  service: '#ff4500',
+};
+
+const delayColors: Record<Delay, string> = {
+  ontime: '#00cc00',
+  delayed: '#ff8c00',
+  critical: '#ff0000',
+};
+
+function getDirectionColor(status: string): string {
+  const parsed = parseStatus(status);
+  if (parsed.category === 'dynamic') {
+    return statusColors[parsed.direction] || '#808080';
+  }
+  return statusColors[parsed.type] || '#808080';
 }
 
-export const mockTrips: Trip[] = [
-  { id: 1, vehicleId: 1, date: "2023-04-21", driver: "Ján Novák", destination: "location6", status: "completed", distance: 350, fuelConsumption: 32 },
-  { id: 2, vehicleId: 1, date: "2023-04-15", driver: "Ján Novák", destination: "location6", status: "completed", distance: 350, fuelConsumption: 30 },
-];
+function getDelayColor(status: string): string {
+  const parsed = parseStatus(status);
+  return delayColors[parsed.delay] || '#808080';
+}
 
-export const mockServices: Service[] = [
-  { id: "1", vehicleId: "1", date: "2023-03-25", type: "Pravidelný servis", status: "completed", cost: 350, description: "Výmena oleja, filtrov" },
-  { id: "2", vehicleId: "1", date: "2023-01-10", type: "Technická kontrola", status: "completed", cost: 120, description: "Pravidelná STK" },
-];
-
-// Helper functions ...
-export const getTripsForVehicle = (vehicleId: string): Trip[] =>
-  mockTrips.filter(trip => trip.vehicleId === Number(vehicleId));
-
-export const getServicesForVehicle = (vehicleId: string): Service[] =>
-  mockServices.filter(service => service.vehicleId === vehicleId);
-
-export const getVehiclesByStatus = (status: VehicleStatus): Vehicle[] =>
-  mockVehicles.filter(vehicle => vehicle.dashboardStatus === status);
-
-export const getDynamicVehiclesByColor = (color: "G" | "O" | "R"): Vehicle[] =>
-  mockVehicles.filter(
-    vehicle =>
-      [VehicleStatus.Outbound, VehicleStatus.Inbound, VehicleStatus.Transit].includes(vehicle.dashboardStatus) &&
-      vehicle.positionColor === color
-  );
+export {
+    DYNAMIC_ACTIVITIES,
+    DYNAMIC_DIRECTIONS,
+    STATIC_TYPES,
+    DELAYS,
+    mockVehicles,
+    parseStatus,
+    statusColors,
+    delayColors,
+    getDirectionColor,
+    getDelayColor,
+    getTripsForVehicle,
+    getServicesForVehicle,
+    
+}
+export type { Vehicle }

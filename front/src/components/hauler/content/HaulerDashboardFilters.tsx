@@ -1,32 +1,60 @@
-import React, { useMemo } from "react";
+
+// File: front/src/components/hauler/content/HaulerDashboardFilters.tsx
+// Last change: Fixed TS2322, TS7053, TS2345, added AND/OR toggle, Activity/Direction/Standstill sections
+
+import React, { useMemo, useState } from "react";
 import "./dashboard.filters.css";
 import {
-  VehicleStatus,
   Vehicle,
-  STATUS_ORDER,
-  statusHex,
-  statusLabels,
+  parseStatus,
+  getDirectionColor,
+  getDelayColor,
+  statusColors,
+  delayColors,
+  DYNAMIC_ACTIVITIES,
+  DYNAMIC_DIRECTIONS,
+  STATIC_TYPES,
 } from "../../../data/mockFleet";
 
 interface HaulerDashboardFiltersProps {
   vehicles: Vehicle[];
   filteredVehicles: Vehicle[];
   selectedVehicles: Set<string>;
-  filters: VehicleStatus[];
-  hover: VehicleStatus | null;
+  filters: FilterCategory[];
+  hover: FilterCategory | null;
   isAllSelected: boolean;
   chartType: "bar" | "pie";
   isChartExpanded: boolean;
   isVehiclesExpanded: boolean;
   onSelectAll: () => void;
   onSelectVehicle: (id: string) => void;
-  onToggleFilter: (status: VehicleStatus) => void;
+  onToggleFilter: (filter: FilterCategory) => void;
   onResetFilter: () => void;
-  onStatusHover: (status: VehicleStatus | null) => void;
+  onStatusHover: (filter: FilterCategory | null) => void;
   onChartType: (type: "bar" | "pie") => void;
   onChartExpand: () => void;
   onVehiclesExpand: () => void;
 }
+
+type FilterCategory = 'outbound' | 'inbound' | 'transit' | 'moving' | 'waiting' | 'break' | 'standby' | 'depot' | 'service';
+
+const FILTER_GROUPS: Record<'Activity' | 'Direction' | 'Standstill', FilterCategory[]> = {
+  Activity: ['moving', 'waiting', 'break'],
+  Direction: ['outbound', 'inbound', 'transit'],
+  Standstill: ['standby', 'depot', 'service'],
+};
+
+const FILTER_LABELS: Record<FilterCategory, string> = {
+  outbound: "Outbound",
+  inbound: "Inbound",
+  transit: "Transit",
+  moving: "Moving",
+  waiting: "Waiting",
+  break: "Break",
+  standby: "Standby",
+  depot: "Depot",
+  service: "Service",
+};
 
 const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
   vehicles,
@@ -47,34 +75,135 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
   onChartExpand,
   onVehiclesExpand,
 }) => {
+  const [isAndLogic, setIsAndLogic] = useState(true);
+
   const stats = useMemo(() => {
-    return STATUS_ORDER.reduce((acc, st) => {
-      acc[st] = vehicles.filter((v) => v.dashboardStatus === st).length;
-      return acc;
-    }, {} as Record<VehicleStatus, number>);
-  }, [vehicles]);
+    const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f));
+    const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f));
+    const activeStandstill = filters.filter(f => FILTER_GROUPS.Standstill.includes(f));
+
+    const result: Record<FilterCategory, { current: number; total: number }> = {
+      outbound: { current: 0, total: 0 }, inbound: { current: 0, total: 0 }, transit: { current: 0, total: 0 },
+      moving: { current: 0, total: 0 }, waiting: { current: 0, total: 0 }, break: { current: 0, total: 0 },
+      standby: { current: 0, total: 0 }, depot: { current: 0, total: 0 }, service: { current: 0, total: 0 },
+    };
+
+    vehicles.forEach((v) => {
+      const parsed = parseStatus(v.dashboardStatus);
+      const isDynamic = parsed.category === 'dynamic';
+      const direction = isDynamic ? parsed.direction : null;
+      const activity = isDynamic ? parsed.activity : null;
+      const type = parsed.category === 'static' ? parsed.type : null;
+
+      // Total counts
+      if (isDynamic) {
+        if (direction) result[direction].total++;
+        if (activity) result[activity].total++;
+      } else if (type) {
+        result[type].total++;
+      }
+
+      // Current counts based on active filters
+      let matches = false;
+      if (isDynamic) {
+        const matchesDirection = activeDirection.length === 0 || (direction && activeDirection.includes(direction));
+        const matchesActivity = activeActivity.length === 0 || (activity && activeActivity.includes(activity));
+        matches = isAndLogic ? (matchesDirection ?? false) && (matchesActivity ?? false) : (matchesDirection ?? false) || (matchesActivity ?? false);
+      } else if (type) {
+        matches = activeStandstill.length === 0 || activeStandstill.includes(type);
+      }
+
+      if (matches) {
+        if (isDynamic) {
+          if (direction) result[direction].current++;
+          if (activity) result[activity].current++;
+        } else if (type) {
+          result[type].current++;
+        }
+      }
+    });
+
+    console.log('[Leaflet Filter UI] Computed stats:', result);
+    return result;
+  }, [vehicles, filters, isAndLogic]);
+
+  const activeFilterDescription = useMemo(() => {
+    const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f)).map(f => FILTER_LABELS[f]);
+    const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f)).map(f => FILTER_LABELS[f]);
+    const activeStandstill = filters.filter(f => FILTER_GROUPS.Standstill.includes(f)).map(f => FILTER_LABELS[f]);
+
+    const parts: string[] = [];
+    if (activeDirection.length > 0) parts.push(activeDirection.join(', '));
+    if (activeActivity.length > 0) parts.push(activeActivity.join(', '));
+    if (activeStandstill.length > 0) parts.push(activeStandstill.join(', '));
+
+    if (parts.length === 0) return "No filters active";
+    return `Active: ${parts.join(isAndLogic ? ' AND ' : ' OR ')}`;
+  }, [filters, isAndLogic]);
 
   const vehicleTypeImages: Record<string, string> = {
     tractor: "/vehicles/truck-icon.svg",
     van: "/vehicles/van-icon.svg",
     trailer: "/vehicles/trailer-icon.svg",
-    rigid: "/vehicles/lorry-icon.svg",
+    truck: "/vehicles/lorry-icon.svg",
   };
   const defaultVehicleImage = "/vehicles/default-icon.svg";
 
   const sortedFilteredVehicles = useMemo(() => {
     return filteredVehicles.slice().sort((a, b) => {
-      return (
-        STATUS_ORDER.indexOf(a.dashboardStatus) -
-        STATUS_ORDER.indexOf(b.dashboardStatus)
-      );
+      const aCategory = parseStatus(a.dashboardStatus).category;
+      const bCategory = parseStatus(b.dashboardStatus).category;
+      
+      if (aCategory !== bCategory) {
+        return aCategory === 'dynamic' ? -1 : 1;
+      }
+      
+      return a.name.localeCompare(b.name);
     });
   }, [filteredVehicles]);
 
-  const allPossibleStatuses = STATUS_ORDER;
-  const isAllFiltersSelected =
-    filters.length === allPossibleStatuses.length &&
-    allPossibleStatuses.every((status) => filters.includes(status));
+  const allPossibleFilters = [...DYNAMIC_DIRECTIONS, ...DYNAMIC_ACTIVITIES, ...STATIC_TYPES];
+  const isAllFiltersSelected = filters.length === allPossibleFilters.length && allPossibleFilters.every((filter) => filters.includes(filter));
+
+  const getFilterColor = (filter: FilterCategory): string => {
+    return statusColors[filter] || "#808080";
+  };
+
+  const getTooltip = (filter: FilterCategory): string => {
+    const group = Object.keys(FILTER_GROUPS).find(g => FILTER_GROUPS[g as keyof typeof FILTER_GROUPS].includes(filter)) || '';
+    return `Filter vehicles by ${FILTER_LABELS[filter]} (${group})`;
+  };
+
+  const isFilterDisabled = (filter: FilterCategory): boolean => {
+    if (isAndLogic && stats[filter].current === 0) return true;
+    const group = Object.keys(FILTER_GROUPS).find(g => FILTER_GROUPS[g as keyof typeof FILTER_GROUPS].includes(filter));
+    if (group === 'Activity') {
+      const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f));
+      const activeOtherActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f) && f !== filter);
+      return activeDirection.length > 0 && activeOtherActivity.length > 0 && stats[filter].current === 0;
+    }
+    if (group === 'Direction') {
+      const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f));
+      const activeOtherDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f) && f !== filter);
+      return activeActivity.length > 0 && activeOtherDirection.length > 0 && stats[filter].current === 0;
+    }
+    return false;
+  };
+
+  const isVehicleDisabled = (vehicle: Vehicle): boolean => {
+    const parsed = parseStatus(vehicle.dashboardStatus);
+    const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f));
+    const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f));
+    const activeStandstill = filters.filter(f => FILTER_GROUPS.Standstill.includes(f));
+
+    if (parsed.category === 'dynamic') {
+      const matchesDirection = activeDirection.length === 0 || activeDirection.includes(parsed.direction);
+      const matchesActivity = activeActivity.length === 0 || activeActivity.includes(parsed.activity);
+      return isAndLogic ? !(matchesDirection && matchesActivity) : !(matchesDirection || matchesActivity);
+    } else {
+      return activeStandstill.length > 0 && !activeStandstill.includes(parsed.type);
+    }
+  };
 
   return (
     <>
@@ -82,30 +211,66 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
         <button className="dashboard__reset-filter" onClick={onResetFilter}>
           {isAllFiltersSelected ? "Reset" : "Select All"}
         </button>
+        <div className="dashboard__filter-logic">
+          <label className="dashboard__logic-toggle">
+            <span>AND</span>
+            <input
+              type="checkbox"
+              checked={!isAndLogic}
+              onChange={() => setIsAndLogic(!isAndLogic)}
+            />
+            <span className="dashboard__logic-switch"></span>
+            <span>OR</span>
+          </label>
+        </div>
         <div className="dashboard__status-filters">
-          {STATUS_ORDER.map((st) => (
-            <div
-              key={st}
-              className={`dashboard__stat dashboard__stat--${st} ${
-                filters.includes(st) ? "dashboard__stat--active" : ""
-              } ${hover === st ? "dashboard__stat--hover" : ""}`}
-              style={{
-                background: statusHex[st],
-                "--status-color": statusHex[st],
-                width: "60px",
-                fontWeight: 400,
-              } as React.CSSProperties}
-              onMouseEnter={() => onStatusHover(st)}
-              onMouseLeave={() => onStatusHover(null)}
-              onClick={() => onToggleFilter(st)}
-            >
-              <div className="dashboard__stat-value">{stats[st]}</div>
-              <div className="dashboard__stat-label">{statusLabels[st]}</div>
-              {filters.includes(st) && (
-                <div className="dashboard__stat-indicator" />
-              )}
+          {Object.entries(FILTER_GROUPS).map(([group, groupFilters]) => (
+            <div key={group} className="dashboard__filter-section">
+              <h4 className="dashboard__filter-section-title">{group}</h4>
+              <div className="dashboard__filter-group">
+                {groupFilters.map((filter) => {
+                  const filterColor = getFilterColor(filter);
+                  const disabled = isFilterDisabled(filter);
+                  return (
+                    <div
+                      key={filter}
+                      className={`dashboard__stat dashboard__stat--${filter} ${
+                        filters.includes(filter) ? "dashboard__stat--active" : ""
+                      } ${hover === filter && !disabled ? "dashboard__stat--hover" : ""} ${
+                        disabled ? "dashboard__stat--disabled" : ""
+                      }`}
+                      style={{
+                        background: filterColor,
+                        "--status-color": filterColor,
+                        width: "70px",
+                        fontWeight: 400,
+                        opacity: disabled ? 0.6 : 1,
+                        transition: 'opacity 0.2s ease',
+                      } as React.CSSProperties}
+                      title={getTooltip(filter)}
+                      onMouseEnter={() => !disabled && onStatusHover(filter)}
+                      onMouseLeave={() => !disabled && onStatusHover(null)}
+                      onClick={() => !disabled && onToggleFilter(filter)}
+                    >
+                      <div className="dashboard__stat-value">{`${stats[filter].current}(${stats[filter].total})`}</div>
+                      <div className="dashboard__stat-label">
+                        {FILTER_LABELS[filter]}
+                        {filter === 'moving' && (
+                          <div className="dashboard__moving-indicator">▶</div>
+                        )}
+                      </div>
+                      {filters.includes(filter) && (
+                        <div className="dashboard__stat-indicator" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ))}
+          <div className="dashboard__active-filters">
+            {activeFilterDescription}
+          </div>
         </div>
       </div>
 
@@ -123,6 +288,7 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
                 id="selectAll"
                 checked={isAllSelected}
                 onChange={onSelectAll}
+                disabled={filters.length > 0 && sortedFilteredVehicles.length === 0}
               />
               <label htmlFor="selectAll">Select All</label>
             </div>
@@ -146,16 +312,31 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
                 : vehicle.location
                 ? vehicle.location
                 : "No location";
+              
+              const parsed = parseStatus(vehicle.dashboardStatus);
+              const isMoving = parsed.category === "dynamic" && parsed.activity === "moving";
+              const disabled = isVehicleDisabled(vehicle);
+              
               return (
-                <div key={vehicle.id} className="dashboard__vehicle-item">
+                <div
+                  key={vehicle.id}
+                  className={`dashboard__vehicle-item ${disabled ? "dashboard__vehicle-item--disabled" : ""}`}
+                  style={{ opacity: disabled ? 0.6 : 1 }}
+                >
                   <div className="dashboard__vehicle-row">
                     <input
                       type="checkbox"
                       checked={selectedVehicles.has(vehicle.id)}
                       onChange={() => onSelectVehicle(vehicle.id)}
+                      disabled={disabled}
                     />
                     <div className="dashboard__vehicle-plate">
                       {vehicle.plateNumber}
+                      {isMoving && (
+                        <span className="dashboard__vehicle-moving" title="Moving">
+                          ▶
+                        </span>
+                      )}
                     </div>
                     <img
                       src={vehicleTypeImages[vehicle.type] || defaultVehicleImage}
@@ -165,9 +346,18 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
                   </div>
                   <div className="dashboard__vehicle-destination">
                     <div
-                      className={`dashboard__vehicle-status dashboard__vehicle-status--${vehicle.dashboardStatus}`}
+                      className={`dashboard__vehicle-status dashboard__vehicle-status--${parsed.category}`}
+                      style={{ 
+                        color: getDelayColor(vehicle.dashboardStatus),
+                        borderLeft: `3px solid ${getDirectionColor(vehicle.dashboardStatus)}`
+                      }}
                     >
                       {locationName}
+                      {vehicle.speed && vehicle.speed > 0 && (
+                        <span className="dashboard__vehicle-speed">
+                          {vehicle.speed} km/h
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -235,28 +425,28 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
                   y="10"
                   width="8"
                   height="30"
-                  fill={statusHex[VehicleStatus.Outbound]}
+                  fill={statusColors.outbound}
                 />
                 <rect
                   x="18"
                   y="15"
                   width="8"
                   height="25"
-                  fill={statusHex[VehicleStatus.Inbound]}
+                  fill={statusColors.inbound}
                 />
                 <rect
                   x="31"
                   y="5"
                   width="8"
                   height="35"
-                  fill={statusHex[VehicleStatus.Transit]}
+                  fill={statusColors.transit}
                 />
                 <rect
                   x="44"
                   y="25"
                   width="8"
                   height="15"
-                  fill={statusHex[VehicleStatus.Standby]}
+                  fill={statusColors.standby}
                 />
               </svg>
               <span>Bar Chart</span>
@@ -283,7 +473,7 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
                   cy="25"
                   r="20"
                   fill="transparent"
-                  stroke={statusHex[VehicleStatus.Outbound]}
+                  stroke={statusColors.outbound}
                   strokeWidth="20"
                   strokeDasharray="25 100"
                   strokeDashoffset="-40"
@@ -293,7 +483,7 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
                   cy="25"
                   r="20"
                   fill="transparent"
-                  stroke={statusHex[VehicleStatus.Inbound]}
+                  stroke={statusColors.inbound}
                   strokeWidth="20"
                   strokeDasharray="15 110"
                   strokeDashoffset="-65"
@@ -303,7 +493,7 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
                   cy="25"
                   r="20"
                   fill="transparent"
-                  stroke={statusHex[VehicleStatus.Transit]}
+                  stroke={statusColors.transit}
                   strokeWidth="20"
                   strokeDasharray="20 105"
                   strokeDashoffset="-80"

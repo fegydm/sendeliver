@@ -1,13 +1,45 @@
-// File: ./front/src/components/hauler/content/HaulerFleet.tsx
-// Last change: Updated to use fixed image position with scrollable details
+// File: front/src/components/hauler/content/HaulerFleet.tsx
+// Last change: Fixed TS2322 by removing status property, fixed TS2339 by replacing speed with activity
 
 import React, { useState, useEffect } from "react";
-import { Vehicle, Trip, Service, mockVehicles, mockTrips, mockServices, getTripsForVehicle, getServicesForVehicle } from "../../../data/mockFleet";
-import "./hauler.cards.css"; // Common hauler card styles
-import "./fleet.cards.css"; // Fleet specific styles
+import { Vehicle, mockVehicles, parseStatus, getDirectionColor, getDelayColor } from "../../../data/mockFleet";
+import "./hauler.cards.css";
+import "./fleet.cards.css";
+
+interface Trip {
+  id: string;
+  date: string;
+  driver: string;
+  destination: string;
+  status: string;
+}
+
+interface Service {
+  id: string;
+  date: string;
+  type: string;
+  status: string;
+}
+
+const mockTrips: Trip[] = [
+  { id: "1", date: "2024-01-15", driver: "Ján Novák", destination: "Berlin", status: "Completed" },
+  { id: "2", date: "2024-01-20", driver: "Peter Kováč", destination: "Vienna", status: "In Progress" },
+];
+
+const mockServices: Service[] = [
+  { id: "1", date: "2024-01-10", type: "Oil Change", status: "Completed" },
+  { id: "2", date: "2024-01-25", type: "Brake Check", status: "Scheduled" },
+];
+
+const getTripsForVehicle = (vehicleId: string): Trip[] => {
+  return mockTrips.filter(trip => Math.random() > 0.5);
+};
+
+const getServicesForVehicle = (vehicleId: string): Service[] => {
+  return mockServices.filter(service => Math.random() > 0.5);
+};
 
 const HaulerFleet: React.FC = () => {
-  // State management
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [vehicleTrips, setVehicleTrips] = useState<Trip[]>([]);
@@ -18,9 +50,7 @@ const HaulerFleet: React.FC = () => {
   const [isTableView, setIsTableView] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Načítanie mock dát pri prvom renderovaní
   useEffect(() => {
-    // Simulácia načítania dát z API
     const loadData = () => {
       setIsLoading(true);
       setTimeout(() => {
@@ -35,7 +65,6 @@ const HaulerFleet: React.FC = () => {
       }, 500);
     };
 
-    // Vytvorenie placeholder obrázku pre prípad chýbajúcich fotiek
     const createPlaceholder = () => {
       const placeholder = new Image();
       placeholder.src = "/vehicles/placeholder.jpg";
@@ -45,83 +74,84 @@ const HaulerFleet: React.FC = () => {
     loadData();
   }, []);
 
-  // Dostupné typy vozidiel pre filter
   const vehicleTypes = ["Všetky", ...Array.from(new Set(vehicles.map(v => v.type)))];
-  
-  // Dostupné stavy pre filter
-  const vehicleStatuses = ["Všetky", "Pripravená", "Na trase", "Servis", "Parkovisko"];
+  const vehicleStatuses = ["Všetky", "available", "busy", "service"];
 
-  // Filtrovanie vozidiel
   const filteredVehicles = vehicles.filter(v => {
     const matchesSearch = v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          v.plateNumber.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === "Všetky" || v.type === typeFilter;
-    const matchesStatus = statusFilter === "Všetky" || v.status === statusFilter;
+    const matchesStatus = statusFilter === "Všetky" || v.availability === statusFilter;
     
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  // Výber vozidla a načítanie súvisiacich údajov
   const handleSelectVehicle = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
     setVehicleTrips(getTripsForVehicle(vehicle.id));
     setVehicleServices(getServicesForVehicle(vehicle.id));
   };
 
-  // Reset filtrov
   const handleResetFilters = () => {
     setSearchTerm("");
     setTypeFilter("Všetky");
     setStatusFilter("Všetky");
   };
 
-  // Zmena pohľadu (detail/tabuľka)
   const toggleViewMode = () => {
     setIsTableView(!isTableView);
   };
 
-  // Formátovanie pre stavový indikátor
-  const getStatusClass = (status: string) => {
-    switch(status) {
-      case "Pripravená": return "ready";
-      case "Na trase": return "route";
-      case "Servis": return "service";
-      case "Parkovisko": return "parking";
+  const getStatusClass = (availability: string) => {
+    switch(availability) {
+      case "available": return "ready";
+      case "busy": return "route";
+      case "service": return "service";
       default: return "";
     }
   };
 
-  // Aktualizácia vozidla
+  const getStatusDisplay = (availability: string) => {
+    switch(availability) {
+      case "available": return "Dostupné";
+      case "busy": return "Obsadené";
+      case "service": return "Servis";
+      default: return availability;
+    }
+  };
+
   const handleInputChange = (field: keyof Vehicle, value: string | number) => {
     if (selectedVehicle) {
       const updatedVehicle = { ...selectedVehicle, [field]: value };
       setSelectedVehicle(updatedVehicle);
-      
-      // Aktualizácia v zozname vozidiel
-      setVehicles(vehicles.map(v => 
-        v.id === updatedVehicle.id ? updatedVehicle : v
-      ));
+      setVehicles(vehicles.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
     }
   };
 
-  // Pridanie nového vozidla
   const handleAddVehicle = () => {
     const newId = `new-${Date.now()}`;
     const newVehicle: Vehicle = {
       id: newId,
       name: "Nové vozidlo",
-      type: "Dodávka",
-      status: "Pripravená",
+      type: "van",
       image: "/vehicles/placeholder.jpg",
       brand: "",
       plateNumber: "",
       manufactureYear: new Date().getFullYear(),
       capacity: "",
       notes: "",
-      // Pridané chýbajúce povinné vlastnosti
+      dashboardStatus: "static.depot.ontime",
       odometerKm: 0,
       capacityFree: "",
-      availability: "available"
+      availability: "available",
+      speed: 0,
+      currentLocation: "",
+      location: "",
+      start: "",
+      destination: "",
+      nearestParking: "",
+      assignedDriver: "",
+      assignedDispatcher: ""
     };
     
     setVehicles([newVehicle, ...vehicles]);
@@ -130,7 +160,6 @@ const HaulerFleet: React.FC = () => {
     setVehicleServices([]);
   };
 
-  // Odstránenie vozidla
   const handleDeleteVehicle = () => {
     if (!selectedVehicle) return;
     
@@ -148,9 +177,26 @@ const HaulerFleet: React.FC = () => {
     }
   };
 
+  const formatDashboardStatus = (status: string): string => {
+    const parsed = parseStatus(status);
+    if (parsed.category === "dynamic") {
+      const direction = parsed.direction === "outbound" ? "Odchod" : 
+                       parsed.direction === "inbound" ? "Príchod" : "Tranzit";
+      const activity = parsed.activity === "moving" ? "V pohybe" : 
+                      parsed.activity === "waiting" ? "Čaká" : "Prestávka";
+      const delay = parsed.delay === "ontime" ? "Včas" : 
+                   parsed.delay === "delayed" ? "Meškanie" : "Kritické";
+      return `${direction} - ${activity} (${delay})`;
+    } else {
+      const type = parsed.type === "standby" ? "Pohotovosť" : 
+                  parsed.type === "depot" ? "Depo" : "Servis";
+      const delay = parsed.delay === "ontime" ? "Včas" : "Meškanie";
+      return `${type} (${delay})`;
+    }
+  };
+
   return (
     <div className="fleet-container">
-      {/* Horný toolbar */}
       <div className="fleet-toolbar">
         <div className="fleet-toolbar-left">
           <span className="fleet-count">{filteredVehicles.length} vozidiel</span>
@@ -196,9 +242,7 @@ const HaulerFleet: React.FC = () => {
         </div>
       </div>
 
-      {/* Hlavný obsah */}
       <div className="fleet-content">
-        {/* Bočný panel so zoznamom vozidiel */}
         <div className="fleet-sidebar">
           <div className="fleet-search-container">
             <input 
@@ -227,7 +271,9 @@ const HaulerFleet: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               {vehicleStatuses.map(status => (
-                <option key={status} value={status}>{status}</option>
+                <option key={status} value={status}>
+                  {status === "Všetky" ? status : getStatusDisplay(status)}
+                </option>
               ))}
             </select>
           </div>
@@ -262,8 +308,8 @@ const HaulerFleet: React.FC = () => {
                     <div className="vehicle-meta">
                       <span>{vehicle.type}</span>
                       <span>•</span>
-                      <span className={`status-chip ${getStatusClass(vehicle.status)}`}>
-                        {vehicle.status}
+                      <span className={`status-chip ${getStatusClass(vehicle.availability)}`}>
+                        {getStatusDisplay(vehicle.availability)}
                       </span>
                     </div>
                   </div>
@@ -273,10 +319,8 @@ const HaulerFleet: React.FC = () => {
           </div>
         </div>
         
-        {/* Detail vozidla alebo tabuľkový pohľad */}
         {isTableView ? (
           <div className="fleet-table-view">
-            {/* Implementácia tabuľkového pohľadu (budúca funkcionalita) */}
             <div className="empty-message">Tabuľkový pohľad - bude implementovaný</div>
           </div>
         ) : (
@@ -301,7 +345,6 @@ const HaulerFleet: React.FC = () => {
                 
                 <div className="vehicle-details-scroll-container">
                   <div className="vehicle-details-grid">
-                    {/* Základné informácie */}
                     <div className="details-panel card-item">
                       <div className="details-row">
                         <div className="details-label">Typ</div>
@@ -311,10 +354,10 @@ const HaulerFleet: React.FC = () => {
                             value={selectedVehicle.type}
                             onChange={(e) => handleInputChange('type', e.target.value)}
                           >
-                            <option value="Dodávka">Dodávka</option>
-                            <option value="Ťahač">Ťahač</option>
-                            <option value="Sklápač">Sklápač</option>
-                            <option value="Nákladné">Nákladné</option>
+                            <option value="van">Dodávka</option>
+                            <option value="tractor">Ťahač</option>
+                            <option value="trailer">Náves</option>
+                            <option value="truck">Nákladné</option>
                           </select>
                         </div>
                       </div>
@@ -366,6 +409,30 @@ const HaulerFleet: React.FC = () => {
                           />
                         </div>
                       </div>
+
+                      <div className="details-row">
+                        <div className="details-label">Voľná kapacita</div>
+                        <div className="details-value">
+                          <input 
+                            type="text" 
+                            className="details-input"
+                            value={selectedVehicle.capacityFree}
+                            onChange={(e) => handleInputChange('capacityFree', e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="details-row">
+                        <div className="details-label">Tachometer</div>
+                        <div className="details-value">
+                          <input 
+                            type="number" 
+                            className="details-input"
+                            value={selectedVehicle.odometerKm}
+                            onChange={(e) => handleInputChange('odometerKm', parseInt(e.target.value) || 0)}
+                          />
+                        </div>
+                      </div>
                       
                       <div className="details-row">
                         <div className="details-label">Rok výroby</div>
@@ -380,20 +447,70 @@ const HaulerFleet: React.FC = () => {
                       </div>
                       
                       <div className="details-row">
-                        <div className="details-label">Status</div>
+                        <div className="details-label">Dostupnosť</div>
                         <div className="details-value">
                           <select 
                             className="details-select"
-                            value={selectedVehicle.status}
-                            onChange={(e) => handleInputChange('status', e.target.value)}
+                            value={selectedVehicle.availability}
+                            onChange={(e) => handleInputChange('availability', e.target.value)}
                           >
-                            <option value="Pripravená">Pripravená</option>
-                            <option value="Na trase">Na trase</option>
-                            <option value="Servis">Servis</option>
-                            <option value="Parkovisko">Parkovisko</option>
+                            <option value="available">Dostupné</option>
+                            <option value="busy">Obsadené</option>
+                            <option value="service">Servis</option>
                           </select>
                         </div>
                       </div>
+
+                      <div className="details-row">
+                        <div className="details-label">Dashboard Status</div>
+                        <div className="details-value">
+                          <div className="status-display" style={{ color: getDelayColor(selectedVehicle.dashboardStatus) }}>
+                            {formatDashboardStatus(selectedVehicle.dashboardStatus)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {selectedVehicle.assignedDriver && (
+                        <div className="details-row">
+                          <div className="details-label">Priradený vodič</div>
+                          <div className="details-value">
+                            <input 
+                              type="text" 
+                              className="details-input"
+                              value={selectedVehicle.assignedDriver}
+                              onChange={(e) => handleInputChange('assignedDriver', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedVehicle.assignedDispatcher && (
+                        <div className="details-row">
+                          <div className="details-label">Priradený dispečer</div>
+                          <div className="details-value">
+                            <input 
+                              type="text" 
+                              className="details-input"
+                              value={selectedVehicle.assignedDispatcher}
+                              onChange={(e) => handleInputChange('assignedDispatcher', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedVehicle.speed !== undefined && (
+                        <div className="details-row">
+                          <div className="details-label">Rýchlosť</div>
+                          <div className="details-value">
+                            <input 
+                              type="number" 
+                              className="details-input"
+                              value={selectedVehicle.speed}
+                              onChange={(e) => handleInputChange('speed', parseInt(e.target.value) || 0)}
+                            />
+                          </div>
+                        </div>
+                      )}
                       
                       <div className="details-row">
                         <div className="details-label">Poznámky</div>
@@ -407,7 +524,6 @@ const HaulerFleet: React.FC = () => {
                       </div>
                     </div>
                     
-                    {/* Jazdy */}
                     <div className="section-panel card-item">
                       <div className="section-header">
                         <h3 className="section-title">Jazdy</h3>
@@ -443,7 +559,6 @@ const HaulerFleet: React.FC = () => {
                       </div>
                     </div>
                     
-                    {/* Servisy */}
                     <div className="section-panel card-item">
                       <div className="section-header">
                         <h3 className="section-title">Servisy</h3>

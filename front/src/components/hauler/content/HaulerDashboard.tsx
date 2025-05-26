@@ -1,16 +1,24 @@
+
+// File: front/src/components/hauler/content/HaulerDashboard.tsx
+// Last change: Fixed TS2339 by replacing speed with activity in filter logic
+
 import React, { useState, useMemo } from "react";
 import "./dashboard.css";
 import "./dashboard.maps.css";
 import "./dashboard.filters.css";
-import { mockVehicles, VehicleStatus } from "@/data/mockFleet";
+import { mockVehicles } from "@/data/mockFleet";
+import { parseStatus } from "@/data/mockFleet";
 import HaulerDashboardMaps from "./HaulerDashboardMaps";
 import HaulerDashboardFilters from "./HaulerDashboardFilters";
 
+// Filter categories from HaulerDashboardFilters
+type FilterCategory = 'outbound' | 'inbound' | 'transit' | 'moving' | 'waiting' | 'break' | 'standby' | 'depot' | 'service';
+
 const HaulerDashboard: React.FC = () => {
   const [vehicles] = useState(mockVehicles);
-  const [filters, setFilters] = useState<VehicleStatus[]>([]);
+  const [filters, setFilters] = useState<FilterCategory[]>([]);
   const [selectedVehicles, setSelectedVehicles] = useState<Set<string>>(new Set());
-  const [hover, setHover] = useState<VehicleStatus | null>(null);
+  const [hover, setHover] = useState<FilterCategory | null>(null);
   const [isAllSelected, setIsAllSelected] = useState(false);
   const [isChartExpanded, setIsChartExpanded] = useState(false);
   const [isVehiclesExpanded, setIsVehiclesExpanded] = useState(false);
@@ -20,14 +28,26 @@ const HaulerDashboard: React.FC = () => {
   const visible = useMemo(() => {
     return vehicles.filter(
       (v) =>
-        (filters.length === 0 || filters.includes(v.dashboardStatus)) &&
+        (filters.length === 0 || filters.some(filter => {
+          const parsed = parseStatus(v.dashboardStatus);
+          return (
+            (parsed.category === 'dynamic' && (parsed.direction === filter || parsed.activity === filter)) ||
+            (parsed.category === 'static' && parsed.type === filter)
+          );
+        })) &&
         (selectedVehicles.size === 0 || selectedVehicles.has(v.id))
     );
   }, [vehicles, filters, selectedVehicles]);
 
   const filteredVehicles = useMemo(() =>
     vehicles.filter(
-      (v) => filters.length === 0 || filters.includes(v.dashboardStatus)
+      (v) => filters.length === 0 || filters.some(filter => {
+        const parsed = parseStatus(v.dashboardStatus);
+        return (
+          (parsed.category === 'dynamic' && (parsed.direction === filter || parsed.activity === filter)) ||
+          (parsed.category === 'static' && parsed.type === filter)
+        );
+      })
     ), [vehicles, filters]
   );
 
@@ -53,7 +73,7 @@ const HaulerDashboard: React.FC = () => {
     );
   };
 
-  const handleToggleFilter = (status: VehicleStatus) => {
+  const handleToggleFilter = (status: FilterCategory) => {
     setFilters((prev) => {
       if (prev.includes(status)) {
         const next = prev.filter((s) => s !== status);
@@ -65,14 +85,23 @@ const HaulerDashboard: React.FC = () => {
   };
 
   const handleResetFilter = () => {
-    setFilters((prev) =>
-      prev.length === Object.values(VehicleStatus).length
-        ? []
-        : [...Object.values(VehicleStatus)]
-    );
+    setFilters((prev) => {
+      const allStatuses: FilterCategory[] = [
+        "outbound",
+        "inbound",
+        "transit",
+        "moving",
+        "waiting",
+        "break",
+        "standby",
+        "depot",
+        "service",
+      ];
+      return prev.length === allStatuses.length ? [] : [...allStatuses];
+    });
   };
 
-  const handleStatusHover = (status: VehicleStatus | null) => {
+  const handleStatusHover = (status: FilterCategory | null) => {
     setHover(status);
   };
 
@@ -118,16 +147,16 @@ const HaulerDashboard: React.FC = () => {
           onVehiclesExpand={toggleVehiclesExpansion}
         />
         <HaulerDashboardMaps
-  vehicles={vehicles}
-  visibleVehicles={visible}
-  filters={filters}
-  selectedVehicles={selectedVehicles} // Add this
-  hover={hover}
-  showFlags={showFlags}
-  onToggleFlags={toggleFlags}
-  isChartExpanded={isChartExpanded}
-  isVehiclesExpanded={isVehiclesExpanded}
-/>
+          vehicles={vehicles}
+          visibleVehicles={visible}
+          filters={filters}
+          selectedVehicles={selectedVehicles}
+          hover={hover}
+          showFlags={showFlags}
+          onToggleFlags={toggleFlags}
+          isChartExpanded={isChartExpanded}
+          isVehiclesExpanded={isVehiclesExpanded}
+        />
       </div>
     </div>
   );
