@@ -12,7 +12,7 @@ interface StatusChipProps {
  */
 const StatusChip: React.FC<StatusChipProps> = ({ status }) => {
   const getStatusClass = () => {
-    switch(status.toLowerCase()) {
+    switch(status?.toLowerCase() || '') {
       case "dostupné":
       case "available":
       case "aktívny":

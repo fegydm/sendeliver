@@ -1,17 +1,7 @@
-
 // File: front/src/data/mockFleet.ts
-// Last change: Added type annotations for parseStatus and statusColors to fix TS7006 and TS7053, renamed speed to activity for filters
+// Last change: Added updated colors and complete vehicle data structure
 
-
- function getTripsForVehicle(vehicleId: string): any[] {
-   // Placeholder: Return empty array for trips; implement actual logic as needed
-   return [];
- }
-
-  function getServicesForVehicle(vehicleId: string): any[] {
-   // Placeholder: Return empty array for services; implement actual logic as needed
-   return [];
- }
+import { mockPeople, getTripsForPerson } from './mockPeople';
 
 // Define filter categories
 const DYNAMIC_ACTIVITIES = ['moving', 'waiting', 'break'] as const;
@@ -24,6 +14,21 @@ type DynamicActivity = typeof DYNAMIC_ACTIVITIES[number];
 type DynamicDirection = typeof DYNAMIC_DIRECTIONS[number];
 type StaticType = typeof STATIC_TYPES[number];
 type Delay = typeof DELAYS[number];
+
+interface DynamicStatus {
+  category: 'dynamic';
+  direction: DynamicDirection;
+  activity: DynamicActivity;
+  delay: Delay;
+}
+
+interface StaticStatus {
+  category: 'static';
+  type: StaticType;
+  delay: Delay;
+}
+
+type Status = DynamicStatus | StaticStatus;
 
 interface Vehicle {
   id: string;
@@ -48,120 +53,270 @@ interface Vehicle {
   assignedDispatcher?: string;
   notes: string;
 }
-
-interface DynamicStatus {
-  category: 'dynamic';
-  direction: DynamicDirection;
-  activity: DynamicActivity;
-  delay: Delay;
+interface Trip {
+  id: string;
+  date: string;
+  vehicle: string;
+  destination: string;
+  status: string;
+  distance: number;
+  duration: number;
+  personId: string;  
 }
 
-interface StaticStatus {
-  category: 'static';
-  type: StaticType;
-  delay: Delay;
+interface Service {
+  id: string;
+  date: string;
+  type: string;
+  status: string;
 }
 
-type Status = DynamicStatus | StaticStatus;
+// Updated status colors with your preferences
+const statusColors: Record<DynamicDirection | DynamicActivity | StaticType, string> = {
+  // Direction (3)
+  outbound: "#2389ff",    // Blue
+  inbound: "#1fbac7",     // Turquoise  
+  transit: "#7a63ff",     // Purple
+  
+  // Activity/Speed (3)
+  moving: "#d726ff",      // Magenta
+  waiting: "#64748b",     // Gray-blue (UPDATED)
+  break: "#1e3a8a",       // Dark blue - parking sign color (UPDATED)
+  
+  // Static (3)
+  standby: "#b5bd00",     // Yellow-green (kept original)
+  depot: "#8B4513",       // Brown (UPDATED)
+  service: "#e91e40",     // Red-magenta
+};
 
+const delayColors: Record<Delay, string> = {
+  ontime: "#4CAF50",      // Green
+  delayed: "#FF9800",     // Orange  
+  critical: "#F44336",    // Red
+};
+
+// 10 vehicles with full status format covering all 9 filters
 const mockVehicles: Vehicle[] = [
   {
-    id: "uuid-001",
-    name: "Truck A",
-    type: "truck",
-    dashboardStatus: "dynamic.outbound.moving.ontime",
-    speed: 60,
-    currentLocation: "loc1",
-    start: "loc2",
-    destination: "dest1",
-    image: "/vehicles/truck.jpg",
-    brand: "Volvo",
-    plateNumber: "BA123CD",
-    manufactureYear: 2020,
-    capacity: "20t",
-    capacityFree: "5t",
-    odometerKm: 150000,
-    availability: "busy",
-    assignedDriver: "Ján Novák",
-    assignedDispatcher: "Peter Kováč",
-    notes: "Regular maintenance scheduled",
-  },
-  {
-    id: "uuid-002",
-    name: "Van B",
+    id: "1",
+    name: "Sprinter 311", 
     type: "van",
-    dashboardStatus: "dynamic.outbound.break.ontime",
-    speed: 0,
-    currentLocation: "loc3",
-    start: "loc1",
-    destination: "dest2",
-    image: "/vehicles/van.jpg",
+    plateNumber: "BA-123XX",
     brand: "Mercedes",
-    plateNumber: "KE456EF",
     manufactureYear: 2019,
-    capacity: "3t",
-    capacityFree: "1t",
-    odometerKm: 80000,
+    capacity: "1.5t",
+    capacityFree: "0t",
+    odometerKm: 148200,
     availability: "busy",
-    assignedDriver: "Anna Kováčová",
-    notes: "Driver on break",
+    notes: "Export to Poland - on time",
+    assignedDriver: "1",
+    assignedDispatcher: "7",
+    location: "Bratislava",
+    start: "location4",
+    currentLocation: "location32",
+    destination: "location13",
+    nearestParking: "parking3",
+    dashboardStatus: "dynamic.outbound.moving.ontime",
+    speed: 80,
+    image: "/vehicles/van1.jpg",
   },
   {
-    id: "uuid-003",
-    name: "Truck C",
-    type: "truck",
-    dashboardStatus: "dynamic.inbound.moving.ontime",
-    speed: 50,
-    currentLocation: "loc4",
-    start: "dest1",
-    destination: "loc1",
-    image: "/vehicles/truck.jpg",
-    brand: "MAN",
-    plateNumber: "TT789GH",
-    manufactureYear: 2021,
+    id: "2",
+    name: "Scania R500",
+    type: "truck", 
+    plateNumber: "NR-890CC",
+    brand: "Scania",
+    manufactureYear: 2022,
     capacity: "18t",
-    capacityFree: "4t",
-    odometerKm: 120000,
+    capacityFree: "6t",
+    odometerKm: 67500,
     availability: "busy",
-    assignedDriver: "Martin Hruška",
-    notes: "",
+    notes: "Return load DE → SK - delayed",
+    assignedDriver: "6",
+    assignedDispatcher: "8",
+    location: "Berlin",
+    start: "location21",
+    currentLocation: "location5", 
+    destination: "location2",
+    nearestParking: "parking7",
+    dashboardStatus: "dynamic.inbound.moving.delayed",
+    speed: 85,
+    image: "/vehicles/truck2.jpg",
   },
   {
-    id: "uuid-004",
-    name: "Van D",
+    id: "3",
+    name: "DAF XF Euro 6",
+    type: "truck",
+    plateNumber: "TT-333TT",
+    brand: "DAF",
+    manufactureYear: 2020,
+    capacity: "24t",
+    capacityFree: "0t",
+    odometerKm: 388900,
+    availability: "busy",
+    notes: "Transit DE → CZ - on time",
+    assignedDriver: "3",
+    assignedDispatcher: "7",
+    location: "Munich",
+    start: "location14",
+    currentLocation: "location15",
+    destination: "location6", 
+    nearestParking: "parking4",
+    dashboardStatus: "dynamic.transit.moving.ontime",
+    speed: 90,
+    image: "/vehicles/truck3.jpg",
+  },
+  {
+    id: "4",
+    name: "Volvo FH16",
+    type: "truck",
+    plateNumber: "ZA-789ZZ", 
+    brand: "Volvo",
+    manufactureYear: 2021,
+    capacity: "24t",
+    capacityFree: "24t",
+    odometerKm: 210000,
+    availability: "busy",
+    notes: "Second moving vehicle - delayed",
+    assignedDriver: "3",
+    assignedDispatcher: "7",
+    location: "Košice",
+    start: "location16",
+    currentLocation: "location17",
+    destination: "location18",
+    nearestParking: "parking6",
+    dashboardStatus: "dynamic.outbound.moving.delayed",
+    speed: 75,
+    image: "/vehicles/truck1.jpg",
+  },
+  {
+    id: "5",
+    name: "Renault Master",
     type: "van",
+    plateNumber: "KE-987TT",
+    brand: "Renault",
+    manufactureYear: 2020,
+    capacity: "1.3t",
+    capacityFree: "0t",
+    odometerKm: 99100,
+    availability: "busy",
+    notes: "Waiting for documents - delayed",
+    assignedDriver: "2",
+    assignedDispatcher: "8",
+    location: "Montabaur",
+    start: "location4",
+    currentLocation: "location10",
+    destination: "location11",
+    nearestParking: "parking5",
+    dashboardStatus: "dynamic.outbound.waiting.delayed",
+    speed: 0,
+    image: "/vehicles/van3.jpg",
+  },
+  {
+    id: "6",
+    name: "DAF Zaragoza",
+    type: "truck",
+    plateNumber: "ZA-999AA",
+    brand: "DAF",
+    manufactureYear: 2021,
+    capacity: "24t",
+    capacityFree: "3t",
+    odometerKm: 198300,
+    availability: "busy",
+    notes: "Spain → CZ, driver on break - on time",
+    assignedDriver: "2",
+    assignedDispatcher: "8",
+    location: "Rest Area A6",
+    start: "location25",
+    currentLocation: "parking1",
+    destination: "location30",
+    nearestParking: "parking1",
+    dashboardStatus: "dynamic.inbound.break.ontime",
+    speed: 0,
+    image: "/vehicles/truck5.jpg",
+  },
+  {
+    id: "7",
+    name: "Trailer Low-bed",
+    type: "trailer",
+    plateNumber: "TR-456CD",
+    brand: "Schmitz", 
+    manufactureYear: 2019,
+    capacity: "18t",
+    capacityFree: "18t",
+    odometerKm: 0,
+    availability: "available",
+    notes: "Waiting for load in Dortmund - on time",
+    assignedDispatcher: "8",
+    location: "Dortmund",
     dashboardStatus: "static.standby.ontime",
     speed: 0,
-    currentLocation: "loc1",
-    image: "/vehicles/van.jpg",
-    brand: "Ford",
-    plateNumber: "ZA012IJ",
-    manufactureYear: 2018,
-    capacity: "2.5t",
-    capacityFree: "2.5t",
-    odometerKm: 95000,
-    availability: "available",
-    notes: "Ready for assignment",
+    image: "/vehicles/trailer2.jpg",
   },
   {
-    id: "uuid-005",
-    name: "Trailer E",
-    type: "trailer",
+    id: "8",
+    name: "Iveco Daily",
+    type: "van",
+    plateNumber: "PN-456YY",
+    brand: "Iveco",
+    manufactureYear: 2021,
+    capacity: "1.2t",
+    capacityFree: "1.2t",
+    odometerKm: 43300,
+    availability: "available",
+    notes: "Parked in depot - on time",
+    assignedDriver: "4",
+    assignedDispatcher: "7",
+    location: "Žilina Depot",
     dashboardStatus: "static.depot.ontime",
     speed: 0,
-    currentLocation: "loc5",
-    image: "/vehicles/trailer.jpg",
-    brand: "Schmitz",
-    plateNumber: "NR345KL",
-    manufactureYear: 2020,
-    capacity: "25t",
-    capacityFree: "25t",
-    odometerKm: 50000,
-    availability: "available",
-    notes: "In depot",
+    image: "/vehicles/van2.jpg",
+  },
+  {
+    id: "9",
+    name: "MAN TGX Service",
+    type: "truck",
+    plateNumber: "BA-652AA",
+    brand: "MAN",
+    manufactureYear: 2018,
+    capacity: "24t",
+    capacityFree: "24t",
+    odometerKm: 512300,
+    availability: "service",
+    notes: "Brake repair - delayed",
+    assignedDriver: "1",
+    assignedDispatcher: "7",
+    location: "Service Trnava",
+    dashboardStatus: "static.service.delayed",
+    speed: 0,
+    image: "/vehicles/truck4.jpg",
+  },
+  {
+    id: "10",
+    name: "Mercedes Transit",
+    type: "truck",
+    plateNumber: "BB-111BB",
+    brand: "Mercedes",
+    manufactureYear: 2023,
+    capacity: "20t",
+    capacityFree: "5t",
+    odometerKm: 89000,
+    availability: "busy",
+    notes: "Transit vehicle - delayed",
+    assignedDriver: "5",
+    assignedDispatcher: "8",
+    location: "Vienna",
+    start: "location28",
+    currentLocation: "location29", 
+    destination: "location30",
+    nearestParking: "parking8",
+    dashboardStatus: "dynamic.transit.moving.delayed",
+    speed: 70,
+    image: "/vehicles/truck6.jpg",
   },
 ];
 
+// Helper function to parse status for filtering
 function parseStatus(status: string): Status {
   const parts = status.split('.');
   if (parts[0] === 'dynamic') {
@@ -179,24 +334,7 @@ function parseStatus(status: string): Status {
   };
 }
 
-const statusColors: Record<DynamicDirection | DynamicActivity | StaticType, string> = {
-  outbound: '#2389ff',
-  inbound: '#ff8c00',
-  transit: '#00cc00',
-  moving: '#00cc00',
-  waiting: '#ff8c00',
-  break: '#ff0000',
-  standby: '#808080',
-  depot: '#4b0082',
-  service: '#ff4500',
-};
-
-const delayColors: Record<Delay, string> = {
-  ontime: '#00cc00',
-  delayed: '#ff8c00',
-  critical: '#ff0000',
-};
-
+// Color helper functions
 function getDirectionColor(status: string): string {
   const parsed = parseStatus(status);
   if (parsed.category === 'dynamic') {
@@ -210,19 +348,44 @@ function getDelayColor(status: string): string {
   return delayColors[parsed.delay] || '#808080';
 }
 
-export {
-    DYNAMIC_ACTIVITIES,
-    DYNAMIC_DIRECTIONS,
-    STATIC_TYPES,
-    DELAYS,
-    mockVehicles,
-    parseStatus,
-    statusColors,
-    delayColors,
-    getDirectionColor,
-    getDelayColor,
-    getTripsForVehicle,
-    getServicesForVehicle,
-    
+function getTripsForVehicle(vehicleId: string): Trip[] {
+  const assignedPeople = mockPeople.filter(person => person.vehicle === vehicleId);
+  const trips: Trip[] = [];
+  assignedPeople.forEach(person => {
+    const personTrips = getTripsForPerson(person.id);
+    // Map mockPeople.Trip to mockFleet.Trip format
+    const mappedTrips = personTrips.map(trip => ({
+      ...trip,
+      // personId already exists, no need to change
+    }));
+    trips.push(...mappedTrips);
+  });
+  return trips;
 }
-export type { Vehicle }
+
+function getServicesForVehicle(vehicleId: string): Service[] {
+  const services: Service[] = [
+    { id: `${vehicleId}-s1`, date: "2024-01-10", type: "Oil change", status: "Completed" },
+    { id: `${vehicleId}-s2`, date: "2024-01-25", type: "Brake check", status: "Scheduled" },
+    { id: `${vehicleId}-s3`, date: "2024-02-05", type: "Tire rotation", status: "Pending" },
+  ];
+  return services.filter(() => Math.random() > 0.4); // Random selection for demo
+}
+
+// Export everything needed
+export {
+  DYNAMIC_ACTIVITIES,
+  DYNAMIC_DIRECTIONS,
+  STATIC_TYPES,
+  DELAYS,
+  mockVehicles,
+  parseStatus,
+  statusColors,
+  delayColors,
+  getDirectionColor,
+  getDelayColor,
+  getTripsForVehicle,
+  getServicesForVehicle,
+};
+
+export type { Vehicle, Trip, Service };

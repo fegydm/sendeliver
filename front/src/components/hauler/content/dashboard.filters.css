@@ -1,3 +1,7 @@
+/* File: front/src/components/hauler/content/dashboard.filters.css */
+/* Last change: Cleaned up duplicates, added filter sections and AND/OR toggle */
+
+/* Filters Column */
 .dashboard__filters-column {
   grid-area: filters;
   display: flex;
@@ -22,33 +26,85 @@
   background: var(--hauler-primary);
 }
 
+/* Filter Sections */
 .dashboard__status-filters {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  position: relative;
 }
 
-/* Hover outline */
-.dashboard__status-filters::before {
-  content: "";
-  position: absolute;
-  width: 74px;
-  height: 44px;
-  background: transparent;
-  border: 2px solid rgba(255, 255, 255, 0.8);
+.dashboard__filter-section {
+  margin-bottom: 16px;
+}
+
+.dashboard__filter-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dashboard__filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* AND/OR Toggle */
+.dashboard__filter-logic {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.dashboard__logic-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--hauler-medium);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.dashboard__logic-label {
+  color: var(--color-text-secondary);
+  transition: color 0.2s;
+}
+
+.dashboard__logic-label.active {
+  color: white;
+}
+
+.dashboard__logic-switch {
+  width: 32px;
+  height: 16px;
+  background: var(--hauler-dark);
   border-radius: 8px;
-  opacity: 0;
-  transition: transform 0.2s, opacity 0.2s;
-  pointer-events: none;
-  z-index: 2;
-  transform: translateX(-2px) translateY(-2px);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.dashboard__status-filters:hover::before {
-  opacity: 1;
+.dashboard__logic-slider {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 6px;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
 }
 
+.dashboard__logic-slider.or {
+  transform: translateX(16px);
+}
+
+/* Filter Stats */
 .dashboard__stat {
   display: flex;
   flex-direction: column;
@@ -58,14 +114,10 @@
   border-radius: 6px;
   color: white;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, opacity 0.2s;
   position: relative;
   width: 70px;
   height: 40px;
-}
-
-.dashboard__stat:hover ~ .dashboard__status-filters::before {
-  opacity: 0;
 }
 
 .dashboard__stat:hover {
@@ -77,16 +129,26 @@
   box-shadow: 0 0 0 2px white, 0 0 0 4px var(--status-color);
 }
 
-.dashboard__stat--hover ~ .dashboard__status-filters::before,
-.dashboard__stat:hover ~ .dashboard__status-filters::before {
-  opacity: 1;
-  transform: translateY(calc(var(--hover-index, 0) * 48px)) translateX(-2px) translateY(-2px);
+.dashboard__stat--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .dashboard__stat-value {
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.dashboard__stat-value .total-count {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.8;
+  margin-top: 1px;
 }
 
 .dashboard__stat-label {
@@ -98,7 +160,6 @@
   text-align: center;
 }
 
-/* Status indicator arrow */
 .dashboard__stat-indicator {
   position: absolute;
   right: -8px;
@@ -111,15 +172,22 @@
   border-left: 8px solid var(--status-color);
 }
 
-/* Status colors (can be kept in :root if shared, or moved if unique) */
-.dashboard__stat--outbound { background: var(--status-outbound); }
-.dashboard__stat--inbound { background: var(--status-inbound); }
-.dashboard__stat--transit { background: var(--status-transit); }
-.dashboard__stat--standby { background: var(--status-standby); }
-.dashboard__stat--depot { background: var(--status-depot); }
-.dashboard__stat--service { background: var(--status-service); }
+.dashboard__moving-indicator {
+  font-size: 8px;
+  margin-top: 1px;
+}
 
-/* Vehicle list (middle column) */
+.dashboard__active-filters {
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: var(--hauler-medium);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* Vehicles Column */
 .dashboard__vehicles-column {
   grid-area: vehicles;
   display: flex;
@@ -186,12 +254,23 @@
   padding: 6px;
 }
 
+.dashboard__vehicles-list--dimmed {
+  opacity: 0.2;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
 .dashboard__vehicle-item {
   margin-bottom: 6px;
   padding: 6px;
   background: var(--hauler-light);
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.2s;
+}
+
+.dashboard__vehicle-item--disabled {
+  opacity: 0.6;
 }
 
 .dashboard__vehicle-row {
@@ -204,6 +283,14 @@
 .dashboard__vehicle-plate {
   font-weight: 600;
   font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dashboard__vehicle-moving {
+  font-size: 10px;
+  color: var(--hauler-primary);
 }
 
 .dashboard__vehicle-icon {
@@ -218,19 +305,18 @@
 }
 
 .dashboard__vehicle-status {
-  display: inline-block;
   padding: 2px 6px;
-  border-radius: 20px;
-  color: white;
+  border-radius: 3px;
   font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.dashboard__vehicle-status--outbound { background: var(--status-outbound); }
-.dashboard__vehicle-status--inbound { background: var(--status-inbound); }
-.dashboard__vehicle-status--transit { background: var(--status-transit); }
-.dashboard__vehicle-status--standby { background: var(--status-standby); }
-.dashboard__vehicle-status--depot { background: var(--status-depot); }
-.dashboard__vehicle-status--service { background: var(--status-service); }
+.dashboard__vehicle-speed {
+  font-size: 9px;
+  opacity: 0.8;
+}
 
 .dashboard__no-vehicles {
   padding: 20px;
@@ -240,7 +326,7 @@
   font-size: 13px;
 }
 
-/* Charts sidebar */
+/* Charts Sidebar */
 .dashboard__charts-sidebar {
   position: absolute;
   top: 16px;
@@ -288,7 +374,6 @@
   padding: 0;
 }
 
-/* Chart thumbnails */
 .dashboard__chart-thumbnails {
   display: flex;
   flex-direction: column;
@@ -322,7 +407,6 @@
   text-align: center;
 }
 
-/* Expanded chart view */
 .dashboard__chart-expanded {
   padding: 12px;
   height: calc(100% - 40px);
@@ -358,57 +442,4 @@
   border: 1px solid var(--hauler-medium);
   border-radius: 4px;
   background: white;
-}
-
-/* Stat-specific hover position variables */
-.dashboard__stat:nth-child(1):hover ~ .dashboard__status-filters::before {
-  --hover-index: 0;
-}
-.dashboard__stat:nth-child(2):hover ~ .dashboard__status-filters::before {
-  --hover-index: 1;
-}
-.dashboard__stat:nth-child(3):hover ~ .dashboard__status-filters::before {
-  --hover-index: 2;
-}
-.dashboard__stat:nth-child(4):hover ~ .dashboard__status-filters::before {
-  --hover-index: 3;
-}
-.dashboard__stat:nth-child(5):hover ~ .dashboard__status-filters::before {
-  --hover-index: 4;
-}
-.dashboard__stat:nth-child(6):hover ~ .dashboard__status-filters::before {
-  --hover-index: 5;
-}
-
-
-.dashboard__vehicles-list--dimmed {
-  opacity: 0.2;
-  pointer-events: none; /* voliteľné, ak nechceš, aby boli klikateľné */
-  transition: opacity 0.25s;
-}
-/* Dimmed state for left filter column (filters, when no filter is active) */
-.dashboard__filters-column.dimmed,
-.dashboard__status-filters.dimmed {
-  opacity: 0.15;
-  pointer-events: none;
-}
-
-/* Dimmed state for vehicles column */
-.dashboard__vehicles-column.dimmed {
-  opacity: 0.15;
-  pointer-events: none;
-}
-
-/* Dimmed state for vehicles in the list */
-.dashboard__vehicle-item.dimmed {
-  opacity: 0.15;
-  pointer-events: none;
-}
-
-
-
-/* Optional: For charts sidebar, if you want */
-.dashboard__charts-sidebar.dimmed {
-  opacity: 0.15;
-  pointer-events: none;
 }

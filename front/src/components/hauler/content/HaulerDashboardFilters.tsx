@@ -1,6 +1,5 @@
-
 // File: front/src/components/hauler/content/HaulerDashboardFilters.tsx
-// Last change: Fixed TS2322, TS7053, TS2345, added AND/OR toggle, Activity/Direction/Standstill sections
+// Last change: Changed AND/OR to proper toggle switch, moved between Activity and Direction sections, Standstill filters are independent
 
 import React, { useMemo, useState } from "react";
 import "./dashboard.filters.css";
@@ -110,6 +109,7 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
         const matchesActivity = activeActivity.length === 0 || (activity && activeActivity.includes(activity));
         matches = isAndLogic ? (matchesDirection ?? false) && (matchesActivity ?? false) : (matchesDirection ?? false) || (matchesActivity ?? false);
       } else if (type) {
+        // Standstill filters are independent - simple on/off
         matches = activeStandstill.length === 0 || activeStandstill.includes(type);
       }
 
@@ -123,7 +123,6 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
       }
     });
 
-    console.log('[Leaflet Filter UI] Computed stats:', result);
     return result;
   }, [vehicles, filters, isAndLogic]);
 
@@ -175,8 +174,12 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
   };
 
   const isFilterDisabled = (filter: FilterCategory): boolean => {
-    if (isAndLogic && stats[filter].current === 0) return true;
+    // Standstill filters are never disabled - they are independent
     const group = Object.keys(FILTER_GROUPS).find(g => FILTER_GROUPS[g as keyof typeof FILTER_GROUPS].includes(filter));
+    if (group === 'Standstill') return false;
+
+    if (isAndLogic && stats[filter].current === 0) return true;
+    
     if (group === 'Activity') {
       const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f));
       const activeOtherActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f) && f !== filter);
@@ -201,6 +204,7 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
       const matchesActivity = activeActivity.length === 0 || activeActivity.includes(parsed.activity);
       return isAndLogic ? !(matchesDirection && matchesActivity) : !(matchesDirection || matchesActivity);
     } else {
+      // Standstill - simple on/off filtering
       return activeStandstill.length > 0 && !activeStandstill.includes(parsed.type);
     }
   };
@@ -211,63 +215,152 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
         <button className="dashboard__reset-filter" onClick={onResetFilter}>
           {isAllFiltersSelected ? "Reset" : "Select All"}
         </button>
-        <div className="dashboard__filter-logic">
-          <label className="dashboard__logic-toggle">
-            <span>AND</span>
-            <input
-              type="checkbox"
-              checked={!isAndLogic}
-              onChange={() => setIsAndLogic(!isAndLogic)}
-            />
-            <span className="dashboard__logic-switch"></span>
-            <span>OR</span>
-          </label>
-        </div>
+        
         <div className="dashboard__status-filters">
-          {Object.entries(FILTER_GROUPS).map(([group, groupFilters]) => (
-            <div key={group} className="dashboard__filter-section">
-              <h4 className="dashboard__filter-section-title">{group}</h4>
-              <div className="dashboard__filter-group">
-                {groupFilters.map((filter) => {
-                  const filterColor = getFilterColor(filter);
-                  const disabled = isFilterDisabled(filter);
-                  return (
-                    <div
-                      key={filter}
-                      className={`dashboard__stat dashboard__stat--${filter} ${
-                        filters.includes(filter) ? "dashboard__stat--active" : ""
-                      } ${hover === filter && !disabled ? "dashboard__stat--hover" : ""} ${
-                        disabled ? "dashboard__stat--disabled" : ""
-                      }`}
-                      style={{
-                        background: filterColor,
-                        "--status-color": filterColor,
-                        width: "70px",
-                        fontWeight: 400,
-                        opacity: disabled ? 0.6 : 1,
-                        transition: 'opacity 0.2s ease',
-                      } as React.CSSProperties}
-                      title={getTooltip(filter)}
-                      onMouseEnter={() => !disabled && onStatusHover(filter)}
-                      onMouseLeave={() => !disabled && onStatusHover(null)}
-                      onClick={() => !disabled && onToggleFilter(filter)}
-                    >
-                      <div className="dashboard__stat-value">{`${stats[filter].current}(${stats[filter].total})`}</div>
-                      <div className="dashboard__stat-label">
-                        {FILTER_LABELS[filter]}
-                        {filter === 'moving' && (
-                          <div className="dashboard__moving-indicator">▶</div>
-                        )}
-                      </div>
-                      {filters.includes(filter) && (
-                        <div className="dashboard__stat-indicator" />
+          {/* Activity Section */}
+          <div className="dashboard__filter-section">
+            <h4 className="dashboard__filter-section-title">Activity</h4>
+            <div className="dashboard__filter-group">
+              {FILTER_GROUPS.Activity.map((filter) => {
+                const filterColor = getFilterColor(filter);
+                const disabled = isFilterDisabled(filter);
+                return (
+                  <div
+                    key={filter}
+                    className={`dashboard__stat dashboard__stat--${filter} ${
+                      filters.includes(filter) ? "dashboard__stat--active" : ""
+                    } ${hover === filter && !disabled ? "dashboard__stat--hover" : ""} ${
+                      disabled ? "dashboard__stat--disabled" : ""
+                    }`}
+                    style={{
+                      background: filterColor,
+                      "--status-color": filterColor,
+                      width: "70px",
+                      fontWeight: 400,
+                      opacity: disabled ? 0.6 : 1,
+                      transition: 'opacity 0.2s ease',
+                    } as React.CSSProperties}
+                    title={getTooltip(filter)}
+                    onMouseEnter={() => !disabled && onStatusHover(filter)}
+                    onMouseLeave={() => !disabled && onStatusHover(null)}
+                    onClick={() => !disabled && onToggleFilter(filter)}
+                  >
+                    <div className="dashboard__stat-value">
+  {stats[filter].current === stats[filter].total 
+    ? stats[filter].current 
+    : `${stats[filter].current}`
+  }
+  {stats[filter].current !== stats[filter].total && (
+    <span className="total-count">({stats[filter].total})</span>
+  )}
+</div>
+                    <div className="dashboard__stat-label">
+                      {FILTER_LABELS[filter]}
+                      {filter === 'moving' && (
+                        <div className="dashboard__moving-indicator">▶</div>
                       )}
                     </div>
-                  );
-                })}
-              </div>
+                    {filters.includes(filter) && (
+                      <div className="dashboard__stat-indicator" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
+          </div>
+
+          {/* AND/OR Toggle */}
+          <div className="dashboard__filter-logic">
+            <div className="dashboard__logic-toggle">
+              <span className={`dashboard__logic-label ${isAndLogic ? 'active' : ''}`}>AND</span>
+              <div 
+                className="dashboard__logic-switch"
+                onClick={() => setIsAndLogic(!isAndLogic)}
+              >
+                <div className={`dashboard__logic-slider ${isAndLogic ? '' : 'or'}`}></div>
+              </div>
+              <span className={`dashboard__logic-label ${!isAndLogic ? 'active' : ''}`}>OR</span>
+            </div>
+          </div>
+
+          {/* Direction Section */}
+          <div className="dashboard__filter-section">
+            <h4 className="dashboard__filter-section-title">Direction</h4>
+            <div className="dashboard__filter-group">
+              {FILTER_GROUPS.Direction.map((filter) => {
+                const filterColor = getFilterColor(filter);
+                const disabled = isFilterDisabled(filter);
+                return (
+                  <div
+                    key={filter}
+                    className={`dashboard__stat dashboard__stat--${filter} ${
+                      filters.includes(filter) ? "dashboard__stat--active" : ""
+                    } ${hover === filter && !disabled ? "dashboard__stat--hover" : ""} ${
+                      disabled ? "dashboard__stat--disabled" : ""
+                    }`}
+                    style={{
+                      background: filterColor,
+                      "--status-color": filterColor,
+                      width: "70px",
+                      fontWeight: 400,
+                      opacity: disabled ? 0.6 : 1,
+                      transition: 'opacity 0.2s ease',
+                    } as React.CSSProperties}
+                    title={getTooltip(filter)}
+                    onMouseEnter={() => !disabled && onStatusHover(filter)}
+                    onMouseLeave={() => !disabled && onStatusHover(null)}
+                    onClick={() => !disabled && onToggleFilter(filter)}
+                  >
+                    <div className="dashboard__stat-value">{`${stats[filter].current}(${stats[filter].total})`}</div>
+                    <div className="dashboard__stat-label">
+                      {FILTER_LABELS[filter]}
+                    </div>
+                    {filters.includes(filter) && (
+                      <div className="dashboard__stat-indicator" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Standstill Section */}
+          <div className="dashboard__filter-section">
+            <h4 className="dashboard__filter-section-title">Standstill</h4>
+            <div className="dashboard__filter-group">
+              {FILTER_GROUPS.Standstill.map((filter) => {
+                const filterColor = getFilterColor(filter);
+                return (
+                  <div
+                    key={filter}
+                    className={`dashboard__stat dashboard__stat--${filter} ${
+                      filters.includes(filter) ? "dashboard__stat--active" : ""
+                    } ${hover === filter ? "dashboard__stat--hover" : ""}`}
+                    style={{
+                      background: filterColor,
+                      "--status-color": filterColor,
+                      width: "70px",
+                      fontWeight: 400,
+                      transition: 'opacity 0.2s ease',
+                    } as React.CSSProperties}
+                    title={getTooltip(filter)}
+                    onMouseEnter={() => onStatusHover(filter)}
+                    onMouseLeave={() => onStatusHover(null)}
+                    onClick={() => onToggleFilter(filter)}
+                  >
+                    <div className="dashboard__stat-value">{`${stats[filter].current}(${stats[filter].total})`}</div>
+                    <div className="dashboard__stat-label">
+                      {FILTER_LABELS[filter]}
+                    </div>
+                    {filters.includes(filter) && (
+                      <div className="dashboard__stat-indicator" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="dashboard__active-filters">
             {activeFilterDescription}
           </div>
@@ -365,7 +458,7 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
             })
           ) : (
             <div className="dashboard__no-vehicles">
-              Vyber nejakú položku na zobrazenie
+              Choose any item
             </div>
           )}
         </div>
