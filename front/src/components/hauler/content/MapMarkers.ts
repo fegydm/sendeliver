@@ -1,17 +1,65 @@
-
 // File: front/src/components/hauler/content/MapMarkers.ts
-// Last change: Fixed TS2339 by ensuring location property in Vehicle interface, updated for activity filter renaming
+// Last change: Fixed activity property access - changed parsed.activity to parsed.speed
 
 import L from "leaflet";
-import { Vehicle, parseStatus, getDirectionColor } from "@/data/mockFleet";
+import { Vehicle, parseStatus, getDirectionColor, DYNAMIC_ACTIVITIES, DYNAMIC_DIRECTIONS, STATIC_TYPES, DELAYS } from "@/data/mockFleet";
 import StartFlag from "@/assets/flags/StartFlag.svg";
 import FinishFlag from "@/assets/flags/FinishFlag.svg";
 import "./MapMarkers.css";
+
+// Define types locally to match mockFleet
+type DynamicActivity = typeof DYNAMIC_ACTIVITIES[number];
+type DynamicDirection = typeof DYNAMIC_DIRECTIONS[number];
+type StaticType = typeof STATIC_TYPES[number];
+type Delay = typeof DELAYS[number];
+
+interface DynamicStatus {
+  category: 'dynamic';
+  direction: DynamicDirection;
+  activity: DynamicActivity;
+  delay: Delay;
+}
+
+interface StaticStatus {
+  category: 'static';
+  type: StaticType;
+  delay: Delay;
+}
+
+type Status = DynamicStatus | StaticStatus;
 
 // Check if vehicle is dynamic (has route)
 const isDynamicVehicle = (status: string): boolean => {
   const parsed = parseStatus(status);
   return parsed.category === "dynamic";
+};
+
+// Generate navigation marker HTML based on vehicle type
+const generateNavigationMarkerHTML = (vehicle: Vehicle): string => {
+  const isDynamic = isDynamicVehicle(vehicle.dashboardStatus);
+  const parsed = parseStatus(vehicle.dashboardStatus);
+  const directionColor = getDirectionColor(vehicle.dashboardStatus);
+  const speed = vehicle.speed || 0;
+  
+  if (isDynamic) {
+    // Spinning wheel for dynamic vehicles
+    const isMoving = parsed.category === 'dynamic' && parsed.activity === 'moving';
+    const animationClass = isMoving ? 'spinning' : (speed > 0 ? 'slow-spin' : 'stopped');
+    
+    return `
+      <div class="vehicle-marker-wheel ${animationClass}" style="border-color: ${directionColor};">
+        <div class="vehicle-speed">${speed}</div>
+        <div class="wheel-indicator"></div>
+      </div>
+    `;
+  } else {
+    // Square marker for static vehicles
+    return `
+      <div class="vehicle-marker-square" style="background-color: ${directionColor};">
+        <div class="vehicle-type-icon">■</div>
+      </div>
+    `;
+  }
 };
 
 export function addVehicleMarkers(
@@ -31,18 +79,38 @@ export function addVehicleMarkers(
     
     const isDynamic = isDynamicVehicle(v.dashboardStatus);
     const parsed = parseStatus(v.dashboardStatus);
+    const markerHTML = generateNavigationMarkerHTML(v);
     
     const marker = L.marker([loc.latitude, loc.longitude], {
       icon: L.divIcon({
         className: [
           "vehicle-marker",
+          "navigation-marker",
           isDynamic ? "dynamic" : "static",
           `status-${parsed.category}`,
           dimAll ? "dimmed" : "",
         ].join(" "),
-        html: "",
+        html: markerHTML,
+        iconSize: isDynamic ? [32, 32] : [24, 24],
+        iconAnchor: isDynamic ? [16, 16] : [12, 12],
       }),
     }).addTo(map);
+    
+    // Enhanced tooltip with vehicle info
+    const tooltipContent = `
+      <div class="vehicle-tooltip">
+        <strong>${v.plateNumber || v.name}</strong><br/>
+        <span class="tooltip-status">Status: ${parsed.category}</span><br/>
+        ${isDynamic ? `<span class="tooltip-speed">Speed: ${v.speed || 0} km/h</span><br/>` : ''}
+        <span class="tooltip-location">Location: ${loc.name || idLoc}</span>
+      </div>
+    `;
+    
+    marker.bindTooltip(tooltipContent, { 
+      direction: 'top', 
+      offset: [0, isDynamic ? -20 : -16],
+      className: 'custom-vehicle-tooltip'
+    });
     
     markers[v.id] = marker;
   });

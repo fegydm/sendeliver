@@ -1,5 +1,5 @@
 // File: front/src/data/mockFleet.ts
-// Last change: Added updated colors and complete vehicle data structure
+// Last change: Moved one dynamic vehicle to standby to ensure only 6 dynamic vehicles
 
 import { mockPeople, getTripsForPerson } from './mockPeople';
 
@@ -84,8 +84,8 @@ const statusColors: Record<DynamicDirection | DynamicActivity | StaticType, stri
   break: "#1e3a8a",       // Dark blue - parking sign color (UPDATED)
   
   // Static (3)
-  standby: "#b5bd00",     // Yellow-green (kept original)
-  depot: "#8B4513",       // Brown (UPDATED)
+  standby: "#b5bd00",     // Yellow-green
+  depot: "#8B4513",       // Brown
   service: "#e91e40",     // Red-magenta
 };
 
@@ -97,6 +97,7 @@ const delayColors: Record<Delay, string> = {
 
 // 10 vehicles with full status format covering all 9 filters
 const mockVehicles: Vehicle[] = [
+  // 6 dynamic vehicles
   {
     id: "1",
     name: "Sprinter 311", 
@@ -185,7 +186,7 @@ const mockVehicles: Vehicle[] = [
     currentLocation: "location17",
     destination: "location18",
     nearestParking: "parking6",
-    dashboardStatus: "dynamic.outbound.moving.delayed",
+    dashboardStatus: "dynamic.transit.moving.delayed",
     speed: 75,
     image: "/vehicles/truck1.jpg",
   },
@@ -235,12 +236,13 @@ const mockVehicles: Vehicle[] = [
     speed: 0,
     image: "/vehicles/truck5.jpg",
   },
+  // 3 static vehicles
   {
     id: "7",
     name: "Trailer Low-bed",
     type: "trailer",
     plateNumber: "TR-456CD",
-    brand: "Schmitz", 
+    brand: "Schmitz",
     manufactureYear: 2019,
     capacity: "18t",
     capacityFree: "18t",
@@ -301,17 +303,12 @@ const mockVehicles: Vehicle[] = [
     capacity: "20t",
     capacityFree: "5t",
     odometerKm: 89000,
-    availability: "busy",
-    notes: "Transit vehicle - delayed",
-    assignedDriver: "5",
+    availability: "available",
+    notes: "Moved to standby",
     assignedDispatcher: "8",
     location: "Vienna",
-    start: "location28",
-    currentLocation: "location29", 
-    destination: "location30",
-    nearestParking: "parking8",
-    dashboardStatus: "dynamic.transit.moving.delayed",
-    speed: 70,
+    dashboardStatus: "static.standby.ontime",
+    speed: 0,
     image: "/vehicles/truck6.jpg",
   },
 ];

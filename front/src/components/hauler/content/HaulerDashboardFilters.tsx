@@ -1,7 +1,7 @@
 // File: front/src/components/hauler/content/HaulerDashboardFilters.tsx
-// Last change: Changed AND/OR to proper toggle switch, moved between Activity and Direction sections, Standstill filters are independent
+// Last change: Complete refactor - fixed logic, improved performance, moved active filters after vehicle list
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import "./dashboard.filters.css";
 import {
   Vehicle,
@@ -9,11 +9,10 @@ import {
   getDirectionColor,
   getDelayColor,
   statusColors,
-  delayColors,
   DYNAMIC_ACTIVITIES,
   DYNAMIC_DIRECTIONS,
   STATIC_TYPES,
-} from "../../../data/mockFleet";
+} from "@/data/mockFleet";
 
 interface HaulerDashboardFiltersProps {
   vehicles: Vehicle[];
@@ -37,15 +36,15 @@ interface HaulerDashboardFiltersProps {
 
 type FilterCategory = 'outbound' | 'inbound' | 'transit' | 'moving' | 'waiting' | 'break' | 'standby' | 'depot' | 'service';
 
-const FILTER_GROUPS: Record<'Activity' | 'Direction' | 'Standstill', FilterCategory[]> = {
-  Activity: ['moving', 'waiting', 'break'],
-  Direction: ['outbound', 'inbound', 'transit'],
-  Standstill: ['standby', 'depot', 'service'],
-};
+const FILTER_GROUPS = {
+  Activity: ['moving', 'waiting', 'break'] as const,
+  Direction: ['outbound', 'inbound', 'transit'] as const,
+  Standstill: ['standby', 'depot', 'service'] as const,
+} as const;
 
 const FILTER_LABELS: Record<FilterCategory, string> = {
   outbound: "Outbound",
-  inbound: "Inbound",
+  inbound: "Inbound", 
   transit: "Transit",
   moving: "Moving",
   waiting: "Waiting",
@@ -76,10 +75,11 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
 }) => {
   const [isAndLogic, setIsAndLogic] = useState(true);
 
+  // Optimized stats calculation with better logic
   const stats = useMemo(() => {
-    const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f));
-    const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f));
-    const activeStandstill = filters.filter(f => FILTER_GROUPS.Standstill.includes(f));
+    const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f as any));
+    const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f as any));
+    const activeStandstill = filters.filter(f => FILTER_GROUPS.Standstill.includes(f as any));
 
     const result: Record<FilterCategory, { current: number; total: number }> = {
       outbound: { current: 0, total: 0 }, inbound: { current: 0, total: 0 }, transit: { current: 0, total: 0 },
@@ -87,38 +87,33 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
       standby: { current: 0, total: 0 }, depot: { current: 0, total: 0 }, service: { current: 0, total: 0 },
     };
 
-    vehicles.forEach((v) => {
-      const parsed = parseStatus(v.dashboardStatus);
-      const isDynamic = parsed.category === 'dynamic';
-      const direction = isDynamic ? parsed.direction : null;
-      const activity = isDynamic ? parsed.activity : null;
-      const type = parsed.category === 'static' ? parsed.type : null;
+    vehicles.forEach((vehicle) => {
+      const parsed = parseStatus(vehicle.dashboardStatus);
+      
+      if (parsed.category === 'dynamic') {
+        // Count totals for dynamic vehicles
+        if (parsed.direction) result[parsed.direction].total++;
+        if (parsed.activity) result[parsed.activity].total++;
 
-      // Total counts
-      if (isDynamic) {
-        if (direction) result[direction].total++;
-        if (activity) result[activity].total++;
-      } else if (type) {
-        result[type].total++;
-      }
+        // Current counts based on filter logic
+        const matchesDirection = activeDirection.length === 0 || activeDirection.includes(parsed.direction);
+        const matchesActivity = activeActivity.length === 0 || activeActivity.includes(parsed.activity);
+        
+        const vehicleMatches = isAndLogic 
+          ? matchesDirection && matchesActivity 
+          : matchesDirection || matchesActivity;
 
-      // Current counts based on active filters
-      let matches = false;
-      if (isDynamic) {
-        const matchesDirection = activeDirection.length === 0 || (direction && activeDirection.includes(direction));
-        const matchesActivity = activeActivity.length === 0 || (activity && activeActivity.includes(activity));
-        matches = isAndLogic ? (matchesDirection ?? false) && (matchesActivity ?? false) : (matchesDirection ?? false) || (matchesActivity ?? false);
-      } else if (type) {
-        // Standstill filters are independent - simple on/off
-        matches = activeStandstill.length === 0 || activeStandstill.includes(type);
-      }
-
-      if (matches) {
-        if (isDynamic) {
-          if (direction) result[direction].current++;
-          if (activity) result[activity].current++;
-        } else if (type) {
-          result[type].current++;
+        if (vehicleMatches) {
+          if (parsed.direction) result[parsed.direction].current++;
+          if (parsed.activity) result[parsed.activity].current++;
+        }
+      } else if (parsed.category === 'static') {
+        // Static vehicles - simple independent filtering
+        result[parsed.type].total++;
+        
+        const vehicleMatches = activeStandstill.length === 0 || activeStandstill.includes(parsed.type);
+        if (vehicleMatches) {
+          result[parsed.type].current++;
         }
       }
     });
@@ -126,30 +121,44 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
     return result;
   }, [vehicles, filters, isAndLogic]);
 
+  // Cleaner active filter description
   const activeFilterDescription = useMemo(() => {
-    const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f)).map(f => FILTER_LABELS[f]);
-    const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f)).map(f => FILTER_LABELS[f]);
-    const activeStandstill = filters.filter(f => FILTER_GROUPS.Standstill.includes(f)).map(f => FILTER_LABELS[f]);
+    const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f as any));
+    const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f as any));
+    const activeStandstill = filters.filter(f => FILTER_GROUPS.Standstill.includes(f as any));
 
     const parts: string[] = [];
-    if (activeDirection.length > 0) parts.push(activeDirection.join(', '));
-    if (activeActivity.length > 0) parts.push(activeActivity.join(', '));
-    if (activeStandstill.length > 0) parts.push(activeStandstill.join(', '));
+    
+    // Dynamic filters with AND/OR logic
+    if (activeDirection.length > 0 || activeActivity.length > 0) {
+      const dynamicParts = [
+        ...activeDirection.map(f => FILTER_LABELS[f]),
+        ...activeActivity.map(f => FILTER_LABELS[f])
+      ];
+      parts.push(dynamicParts.join(isAndLogic ? ' AND ' : ' OR '));
+    }
+    
+    // Static filters - independent
+    if (activeStandstill.length > 0) {
+      parts.push(activeStandstill.map(f => FILTER_LABELS[f]).join(', '));
+    }
 
-    if (parts.length === 0) return "No filters active";
-    return `Active: ${parts.join(isAndLogic ? ' AND ' : ' OR ')}`;
+    return parts.length === 0 ? "No filters active" : `Active: ${parts.join(' | ')}`;
   }, [filters, isAndLogic]);
 
-  const vehicleTypeImages: Record<string, string> = {
-    tractor: "/vehicles/truck-icon.svg",
-    van: "/vehicles/van-icon.svg",
-    trailer: "/vehicles/trailer-icon.svg",
-    truck: "/vehicles/lorry-icon.svg",
-  };
+  // Memoized vehicle type images
+  const vehicleTypeImages = useMemo((): Record<string, string> => ({
+  tractor: "/vehicles/truck-icon.svg",
+  van: "/vehicles/van-icon.svg", 
+  trailer: "/vehicles/trailer-icon.svg",
+  truck: "/vehicles/lorry-icon.svg",
+}), []);
+
   const defaultVehicleImage = "/vehicles/default-icon.svg";
 
+  // Optimized sorted vehicles
   const sortedFilteredVehicles = useMemo(() => {
-    return filteredVehicles.slice().sort((a, b) => {
+    return [...filteredVehicles].sort((a, b) => {
       const aCategory = parseStatus(a.dashboardStatus).category;
       const bCategory = parseStatus(b.dashboardStatus).category;
       
@@ -161,53 +170,122 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
     });
   }, [filteredVehicles]);
 
+  // Check if all filters are selected
   const allPossibleFilters = [...DYNAMIC_DIRECTIONS, ...DYNAMIC_ACTIVITIES, ...STATIC_TYPES];
-  const isAllFiltersSelected = filters.length === allPossibleFilters.length && allPossibleFilters.every((filter) => filters.includes(filter));
+  const isAllFiltersSelected = filters.length === allPossibleFilters.length && 
+    allPossibleFilters.every(filter => filters.includes(filter));
 
-  const getFilterColor = (filter: FilterCategory): string => {
+  // Utility functions
+  const getFilterColor = useCallback((filter: FilterCategory): string => {
     return statusColors[filter] || "#808080";
-  };
+  }, []);
 
-  const getTooltip = (filter: FilterCategory): string => {
-    const group = Object.keys(FILTER_GROUPS).find(g => FILTER_GROUPS[g as keyof typeof FILTER_GROUPS].includes(filter)) || '';
-    return `Filter vehicles by ${FILTER_LABELS[filter]} (${group})`;
-  };
+  const getTooltip = useCallback((filter: FilterCategory): string => {
+  let group = '';
+  if (FILTER_GROUPS.Activity.includes(filter as any)) group = 'Activity';
+  else if (FILTER_GROUPS.Direction.includes(filter as any)) group = 'Direction';
+  else if (FILTER_GROUPS.Standstill.includes(filter as any)) group = 'Standstill';
+  
+  return `Filter vehicles by ${FILTER_LABELS[filter]} (${group})`;
+}, []);
 
-  const isFilterDisabled = (filter: FilterCategory): boolean => {
-    // Standstill filters are never disabled - they are independent
-    const group = Object.keys(FILTER_GROUPS).find(g => FILTER_GROUPS[g as keyof typeof FILTER_GROUPS].includes(filter));
-    if (group === 'Standstill') return false;
+  // Improved filter disabled logic
+  const isFilterDisabled = useCallback((filter: FilterCategory): boolean => {
+    // Standstill filters are never disabled
+    if (FILTER_GROUPS.Standstill.includes(filter as any)) return false;
 
+    // For AND logic, disable if current count is 0
     if (isAndLogic && stats[filter].current === 0) return true;
     
-    if (group === 'Activity') {
-      const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f));
-      const activeOtherActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f) && f !== filter);
-      return activeDirection.length > 0 && activeOtherActivity.length > 0 && stats[filter].current === 0;
+    // For complex interactions in AND mode
+    if (FILTER_GROUPS.Activity.includes(filter as any)) {
+      const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f as any));
+      const activeOtherActivity = filters.filter(f => 
+        FILTER_GROUPS.Activity.includes(f as any) && f !== filter
+      );
+      return isAndLogic && activeDirection.length > 0 && activeOtherActivity.length > 0 && stats[filter].current === 0;
     }
-    if (group === 'Direction') {
-      const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f));
-      const activeOtherDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f) && f !== filter);
-      return activeActivity.length > 0 && activeOtherDirection.length > 0 && stats[filter].current === 0;
+    
+    if (FILTER_GROUPS.Direction.includes(filter as any)) {
+      const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f as any));
+      const activeOtherDirection = filters.filter(f => 
+        FILTER_GROUPS.Direction.includes(f as any) && f !== filter
+      );
+      return isAndLogic && activeActivity.length > 0 && activeOtherDirection.length > 0 && stats[filter].current === 0;
     }
+    
     return false;
-  };
+  }, [stats, filters, isAndLogic]);
 
-  const isVehicleDisabled = (vehicle: Vehicle): boolean => {
+  // Vehicle disabled logic
+  const isVehicleDisabled = useCallback((vehicle: Vehicle): boolean => {
     const parsed = parseStatus(vehicle.dashboardStatus);
-    const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f));
-    const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f));
-    const activeStandstill = filters.filter(f => FILTER_GROUPS.Standstill.includes(f));
+    const activeDirection = filters.filter(f => FILTER_GROUPS.Direction.includes(f as any));
+    const activeActivity = filters.filter(f => FILTER_GROUPS.Activity.includes(f as any));
+    const activeStandstill = filters.filter(f => FILTER_GROUPS.Standstill.includes(f as any));
 
     if (parsed.category === 'dynamic') {
       const matchesDirection = activeDirection.length === 0 || activeDirection.includes(parsed.direction);
       const matchesActivity = activeActivity.length === 0 || activeActivity.includes(parsed.activity);
       return isAndLogic ? !(matchesDirection && matchesActivity) : !(matchesDirection || matchesActivity);
     } else {
-      // Standstill - simple on/off filtering
       return activeStandstill.length > 0 && !activeStandstill.includes(parsed.type);
     }
-  };
+  }, [filters, isAndLogic]);
+
+  // Render filter stat component
+  const renderFilterStat = useCallback((filter: FilterCategory, group: keyof typeof FILTER_GROUPS) => {
+    const filterColor = getFilterColor(filter);
+    const disabled = isFilterDisabled(filter);
+    const isStandstill = group === 'Standstill';
+    
+    return (
+      <div
+        key={filter}
+        className={`dashboard__stat dashboard__stat--${filter} ${
+          filters.includes(filter) ? "dashboard__stat--active" : ""
+        } ${hover === filter && !disabled ? "dashboard__stat--hover" : ""} ${
+          disabled ? "dashboard__stat--disabled" : ""
+        }`}
+        style={{
+          background: filterColor,
+          "--status-color": filterColor,
+          width: "70px",
+          fontWeight: 400,
+          opacity: disabled ? 0.6 : 1,
+          transition: 'opacity 0.2s ease',
+        } as React.CSSProperties}
+        title={getTooltip(filter)}
+        onMouseEnter={() => !disabled && onStatusHover(filter)}
+        onMouseLeave={() => !disabled && onStatusHover(null)}
+        onClick={() => !disabled && onToggleFilter(filter)}
+      >
+        <div className="dashboard__stat-value">
+          {isStandstill ? (
+            stats[filter].total
+          ) : (
+            stats[filter].current === stats[filter].total 
+              ? stats[filter].current 
+              : (
+                <>
+                  {stats[filter].current}
+                  <span className="total-count">({stats[filter].total})</span>
+                </>
+              )
+          )}
+        </div>
+        <div className="dashboard__stat-label">
+          {FILTER_LABELS[filter]}
+          {filter === 'moving' && (
+            <div className="dashboard__moving-indicator">▶</div>
+          )}
+        </div>
+        {filters.includes(filter) && (
+          <div className="dashboard__stat-indicator" />
+        )}
+      </div>
+    );
+  }, [filters, hover, stats, getFilterColor, isFilterDisabled, getTooltip, onStatusHover, onToggleFilter]);
 
   return (
     <>
@@ -221,106 +299,33 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
           <div className="dashboard__filter-section">
             <h4 className="dashboard__filter-section-title">Activity</h4>
             <div className="dashboard__filter-group">
-              {FILTER_GROUPS.Activity.map((filter) => {
-                const filterColor = getFilterColor(filter);
-                const disabled = isFilterDisabled(filter);
-                return (
-                  <div
-                    key={filter}
-                    className={`dashboard__stat dashboard__stat--${filter} ${
-                      filters.includes(filter) ? "dashboard__stat--active" : ""
-                    } ${hover === filter && !disabled ? "dashboard__stat--hover" : ""} ${
-                      disabled ? "dashboard__stat--disabled" : ""
-                    }`}
-                    style={{
-                      background: filterColor,
-                      "--status-color": filterColor,
-                      width: "70px",
-                      fontWeight: 400,
-                      opacity: disabled ? 0.6 : 1,
-                      transition: 'opacity 0.2s ease',
-                    } as React.CSSProperties}
-                    title={getTooltip(filter)}
-                    onMouseEnter={() => !disabled && onStatusHover(filter)}
-                    onMouseLeave={() => !disabled && onStatusHover(null)}
-                    onClick={() => !disabled && onToggleFilter(filter)}
-                  >
-                    <div className="dashboard__stat-value">
-  {stats[filter].current === stats[filter].total 
-    ? stats[filter].current 
-    : `${stats[filter].current}`
-  }
-  {stats[filter].current !== stats[filter].total && (
-    <span className="total-count">({stats[filter].total})</span>
-  )}
-</div>
-                    <div className="dashboard__stat-label">
-                      {FILTER_LABELS[filter]}
-                      {filter === 'moving' && (
-                        <div className="dashboard__moving-indicator">▶</div>
-                      )}
-                    </div>
-                    {filters.includes(filter) && (
-                      <div className="dashboard__stat-indicator" />
-                    )}
-                  </div>
-                );
-              })}
+              {FILTER_GROUPS.Activity.map(filter => renderFilterStat(filter, 'Activity'))}
             </div>
           </div>
 
-          {/* AND/OR Toggle */}
+          {/* AND/OR Toggle - only affects dynamic sections */}
           <div className="dashboard__filter-logic">
-            <div className="dashboard__logic-toggle">
-              <span className={`dashboard__logic-label ${isAndLogic ? 'active' : ''}`}>AND</span>
-              <div 
-                className="dashboard__logic-switch"
-                onClick={() => setIsAndLogic(!isAndLogic)}
-              >
-                <div className={`dashboard__logic-slider ${isAndLogic ? '' : 'or'}`}></div>
-              </div>
-              <span className={`dashboard__logic-label ${!isAndLogic ? 'active' : ''}`}>OR</span>
-            </div>
+            <button 
+              className={`dashboard__logic-button ${isAndLogic ? 'active' : ''}`}
+              onClick={() => setIsAndLogic(true)}
+              aria-label="Use AND logic for dynamic filters"
+            >
+              AND
+            </button>
+            <button 
+              className={`dashboard__logic-button ${!isAndLogic ? 'active' : ''}`}
+              onClick={() => setIsAndLogic(false)}
+              aria-label="Use OR logic for dynamic filters"
+            >
+              OR
+            </button>
           </div>
 
           {/* Direction Section */}
           <div className="dashboard__filter-section">
             <h4 className="dashboard__filter-section-title">Direction</h4>
             <div className="dashboard__filter-group">
-              {FILTER_GROUPS.Direction.map((filter) => {
-                const filterColor = getFilterColor(filter);
-                const disabled = isFilterDisabled(filter);
-                return (
-                  <div
-                    key={filter}
-                    className={`dashboard__stat dashboard__stat--${filter} ${
-                      filters.includes(filter) ? "dashboard__stat--active" : ""
-                    } ${hover === filter && !disabled ? "dashboard__stat--hover" : ""} ${
-                      disabled ? "dashboard__stat--disabled" : ""
-                    }`}
-                    style={{
-                      background: filterColor,
-                      "--status-color": filterColor,
-                      width: "70px",
-                      fontWeight: 400,
-                      opacity: disabled ? 0.6 : 1,
-                      transition: 'opacity 0.2s ease',
-                    } as React.CSSProperties}
-                    title={getTooltip(filter)}
-                    onMouseEnter={() => !disabled && onStatusHover(filter)}
-                    onMouseLeave={() => !disabled && onStatusHover(null)}
-                    onClick={() => !disabled && onToggleFilter(filter)}
-                  >
-                    <div className="dashboard__stat-value">{`${stats[filter].current}(${stats[filter].total})`}</div>
-                    <div className="dashboard__stat-label">
-                      {FILTER_LABELS[filter]}
-                    </div>
-                    {filters.includes(filter) && (
-                      <div className="dashboard__stat-indicator" />
-                    )}
-                  </div>
-                );
-              })}
+              {FILTER_GROUPS.Direction.map(filter => renderFilterStat(filter, 'Direction'))}
             </div>
           </div>
 
@@ -328,50 +333,13 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
           <div className="dashboard__filter-section">
             <h4 className="dashboard__filter-section-title">Standstill</h4>
             <div className="dashboard__filter-group">
-              {FILTER_GROUPS.Standstill.map((filter) => {
-                const filterColor = getFilterColor(filter);
-                return (
-                  <div
-                    key={filter}
-                    className={`dashboard__stat dashboard__stat--${filter} ${
-                      filters.includes(filter) ? "dashboard__stat--active" : ""
-                    } ${hover === filter ? "dashboard__stat--hover" : ""}`}
-                    style={{
-                      background: filterColor,
-                      "--status-color": filterColor,
-                      width: "70px",
-                      fontWeight: 400,
-                      transition: 'opacity 0.2s ease',
-                    } as React.CSSProperties}
-                    title={getTooltip(filter)}
-                    onMouseEnter={() => onStatusHover(filter)}
-                    onMouseLeave={() => onStatusHover(null)}
-                    onClick={() => onToggleFilter(filter)}
-                  >
-                    <div className="dashboard__stat-value">{`${stats[filter].current}(${stats[filter].total})`}</div>
-                    <div className="dashboard__stat-label">
-                      {FILTER_LABELS[filter]}
-                    </div>
-                    {filters.includes(filter) && (
-                      <div className="dashboard__stat-indicator" />
-                    )}
-                  </div>
-                );
-              })}
+              {FILTER_GROUPS.Standstill.map(filter => renderFilterStat(filter, 'Standstill'))}
             </div>
-          </div>
-
-          <div className="dashboard__active-filters">
-            {activeFilterDescription}
           </div>
         </div>
       </div>
 
-      <div
-        className={`dashboard__vehicles-column ${
-          isVehiclesExpanded ? "expanded" : ""
-        }`}
-      >
+      <div className={`dashboard__vehicles-column ${isVehiclesExpanded ? "expanded" : ""}`}>
         <div className="dashboard__vehicles-header">
           <h3>Vehicles</h3>
           <div className="dashboard__vehicles-actions">
@@ -388,24 +356,17 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
             <button
               className="dashboard__vehicles-toggle"
               onClick={onVehiclesExpand}
+              aria-label={isVehiclesExpanded ? "Collapse vehicles" : "Expand vehicles"}
             >
               {isVehiclesExpanded ? "«" : "»"}
             </button>
           </div>
         </div>
-        <div
-          className={`dashboard__vehicles-list${
-            filters.length === 0 ? " dashboard__vehicles-list--dimmed" : ""
-          }`}
-        >
+        
+        <div className={`dashboard__vehicles-list${filters.length === 0 ? " dashboard__vehicles-list--dimmed" : ""}`}>
           {sortedFilteredVehicles.length > 0 ? (
             sortedFilteredVehicles.map((vehicle) => {
-              const locationName = vehicle.currentLocation
-                ? vehicle.currentLocation
-                : vehicle.location
-                ? vehicle.location
-                : "No location";
-              
+              const locationName = vehicle.currentLocation || vehicle.location || "No location";
               const parsed = parseStatus(vehicle.dashboardStatus);
               const isMoving = parsed.category === "dynamic" && parsed.activity === "moving";
               const disabled = isVehicleDisabled(vehicle);
@@ -422,17 +383,16 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
                       checked={selectedVehicles.has(vehicle.id)}
                       onChange={() => onSelectVehicle(vehicle.id)}
                       disabled={disabled}
+                      aria-label={`Select vehicle ${vehicle.plateNumber}`}
                     />
                     <div className="dashboard__vehicle-plate">
                       {vehicle.plateNumber}
                       {isMoving && (
-                        <span className="dashboard__vehicle-moving" title="Moving">
-                          ▶
-                        </span>
+                        <span className="dashboard__vehicle-moving" title="Moving">▶</span>
                       )}
                     </div>
                     <img
-                      src={vehicleTypeImages[vehicle.type] || defaultVehicleImage}
+                      src={vehicleTypeImages[vehicle.type as keyof typeof vehicleTypeImages] || defaultVehicleImage}
                       alt={vehicle.type}
                       className="dashboard__vehicle-icon"
                     />
@@ -458,23 +418,29 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
             })
           ) : (
             <div className="dashboard__no-vehicles">
-              Choose any item
+              No vehicles match current filters
             </div>
           )}
         </div>
+
+        {/* Active Filters - moved after vehicle list */}
+        <div className="dashboard__active-filters">
+          {activeFilterDescription}
+        </div>
       </div>
 
-      <div
-        className={`dashboard__charts-sidebar ${
-          isChartExpanded ? "expanded" : ""
-        }`}
-      >
+      <div className={`dashboard__charts-sidebar ${isChartExpanded ? "expanded" : ""}`}>
         <div className="dashboard__charts-header">
           <h3>Charts</h3>
-          <button className="dashboard__charts-toggle" onClick={onChartExpand}>
+          <button 
+            className="dashboard__charts-toggle" 
+            onClick={onChartExpand}
+            aria-label={isChartExpanded ? "Collapse charts" : "Expand charts"}
+          >
             {isChartExpanded ? "«" : "»"}
           </button>
         </div>
+        
         {isChartExpanded ? (
           <div className="dashboard__chart-expanded">
             <div className="dashboard__chart-type-toggle">
@@ -492,105 +458,28 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
               </button>
             </div>
             <div className="dashboard__chart">
-              <div
-                style={{
-                  padding: "1em",
-                  color: "#888",
-                  fontSize: "12px",
-                }}
-              >
-                Bar/Pie chart placeholder
+              <div style={{ padding: "1em", color: "#888", fontSize: "12px" }}>
+                {chartType === "bar" ? "Bar" : "Pie"} chart placeholder
               </div>
             </div>
           </div>
         ) : (
           <div className="dashboard__chart-thumbnails">
-            <div
-              className="dashboard__thumbnail"
-              onClick={() => {
-                onChartType("bar");
-                onChartExpand();
-              }}
-            >
+            <div className="dashboard__thumbnail" onClick={() => { onChartType("bar"); onChartExpand(); }}>
               <svg className="dashboard__thumbnail-svg dashboard__thumbnail-svg--bar">
-                <rect
-                  x="5"
-                  y="10"
-                  width="8"
-                  height="30"
-                  fill={statusColors.outbound}
-                />
-                <rect
-                  x="18"
-                  y="15"
-                  width="8"
-                  height="25"
-                  fill={statusColors.inbound}
-                />
-                <rect
-                  x="31"
-                  y="5"
-                  width="8"
-                  height="35"
-                  fill={statusColors.transit}
-                />
-                <rect
-                  x="44"
-                  y="25"
-                  width="8"
-                  height="15"
-                  fill={statusColors.standby}
-                />
+                <rect x="5" y="10" width="8" height="30" fill={statusColors.outbound} />
+                <rect x="18" y="15" width="8" height="25" fill={statusColors.inbound} />
+                <rect x="31" y="5" width="8" height="35" fill={statusColors.transit} />
+                <rect x="44" y="25" width="8" height="15" fill={statusColors.standby} />
               </svg>
               <span>Bar Chart</span>
             </div>
-            <div
-              className="dashboard__thumbnail"
-              onClick={() => {
-                onChartType("pie");
-                onChartExpand();
-              }}
-            >
+            <div className="dashboard__thumbnail" onClick={() => { onChartType("pie"); onChartExpand(); }}>
               <svg className="dashboard__thumbnail-svg dashboard__thumbnail-svg--pie">
-                <circle
-                  cx="30"
-                  cy="25"
-                  r="20"
-                  fill="transparent"
-                  stroke="#ccc"
-                  strokeWidth="20"
-                  strokeDasharray="40 85"
-                />
-                <circle
-                  cx="30"
-                  cy="25"
-                  r="20"
-                  fill="transparent"
-                  stroke={statusColors.outbound}
-                  strokeWidth="20"
-                  strokeDasharray="25 100"
-                  strokeDashoffset="-40"
-                />
-                <circle
-                  cx="30"
-                  cy="25"
-                  r="20"
-                  fill="transparent"
-                  stroke={statusColors.inbound}
-                  strokeWidth="20"
-                  strokeDasharray="15 110"
-                  strokeDashoffset="-65"
-                />
-                <circle
-                  cx="30"
-                  cy="25"
-                  r="20"
-                  fill="transparent"
-                  stroke={statusColors.transit}
-                  strokeWidth="20"
-                  strokeDasharray="20 105"
-                  strokeDashoffset="-80"
-                />
+                <circle cx="30" cy="25" r="20" fill="transparent" stroke="#ccc" strokeWidth="20" strokeDasharray="40 85" />
+                <circle cx="30" cy="25" r="20" fill="transparent" stroke={statusColors.outbound} strokeWidth="20" strokeDasharray="25 100" strokeDashoffset="-40" />
+                <circle cx="30" cy="25" r="20" fill="transparent" stroke={statusColors.inbound} strokeWidth="20" strokeDasharray="15 110" strokeDashoffset="-65" />
+                <circle cx="30" cy="25" r="20" fill="transparent" stroke={statusColors.transit} strokeWidth="20" strokeDasharray="20 105" strokeDashoffset="-80" />
               </svg>
               <span>Pie Chart</span>
             </div>

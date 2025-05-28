@@ -1,5 +1,5 @@
 // File: front/src/components/hauler/content/HaulerDashboardMaps.tsx
-// Last change: Fixed TS2459 by exporting Vehicle type, fixed TS2552 by adding setGreyscaleValue, renamed speed to activity for filters
+// Last change: Added navigation marker control with opacity slider for new spinning wheels and squares
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
@@ -64,6 +64,17 @@ const RoutePathIcon: React.FC<{ enabled: boolean }> = ({ enabled }) => (
   </div>
 );
 
+const NavigationIcon: React.FC<{ enabled: boolean }> = ({ enabled }) => (
+  <div className="oc-icon-container">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="6" stroke={enabled ? "#d726ff" : "#ccc"} strokeWidth="2" fill="none" />
+      <circle cx="10" cy="10" r="3" fill={enabled ? "#d726ff" : "#ccc"} />
+      <rect x="8" y="15" width="4" height="3" fill={enabled ? "#d726ff" : "#ccc"} rx="1" />
+    </svg>
+    {!enabled && <div className="oc-disabled-overlay" />}
+  </div>
+);
+
 const GreyscaleIcon: React.FC<{ enabled: boolean }> = ({ enabled }) => (
   <div className="oc-icon-container oc-greyscale-icon">
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -106,6 +117,10 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
   const [showRouting, setShowRouting] = useState(true);
   const [routePathOpacity, setRoutePathOpacity] = useState(1);
   
+  // Navigation markers state
+  const [showNavigation, setShowNavigation] = useState(true);
+  const [navigationOpacity, setNavigationOpacity] = useState(1);
+  
   // Other controls
   const [flagOpacity, setFlagOpacity] = useState(1);
   const [greyscaleValue, setGreyscaleValue] = useState(1);
@@ -137,6 +152,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
   const prevPolylineOpacity = useRef<number>(1);
   const prevRoutePathOpacity = useRef<number>(1);
   const prevFlagOpacity = useRef<number>(1);
+  const prevNavigationOpacity = useRef<number>(1);
 
   const dimAll = filters.length === 0;
 
@@ -171,6 +187,16 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     }
   };
 
+  // Apply opacity specifically to navigation markers
+  const applyNavigationOpacity = (markers: Record<string, L.Marker>, opacity: number) => {
+    Object.values(markers).forEach((marker) => {
+      const element = (marker as any).getElement?.();
+      if (element && element.classList.contains('navigation-marker')) {
+        element.style.opacity = String(opacity);
+      }
+    });
+  };
+
   // Toggle visibility functions
   const toggleLayerVisibility = useCallback((layers: Record<string, L.Layer>, visible: boolean) => {
     Object.values(layers).forEach((layer) => {
@@ -185,6 +211,16 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
         if (element) {
           (element as HTMLElement).style.display = visible ? '' : 'none';
         }
+      }
+    });
+  }, []);
+
+  // Toggle navigation markers visibility specifically
+  const toggleNavigationVisibility = useCallback((markers: Record<string, L.Marker>, visible: boolean) => {
+    Object.values(markers).forEach((marker) => {
+      const element = (marker as any).getElement?.();
+      if (element && element.classList.contains('navigation-marker')) {
+        (element as HTMLElement).style.display = visible ? '' : 'none';
       }
     });
   }, []);
@@ -407,9 +443,8 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     addPolylineClickHandlers(rp, vehiclesToRender, handleVehicleClick);
 
     // Apply opacity only if necessary
-    console.log('[Leaflet Opacity] Checking opacity changes:', { dimAll, parkingOpacity, polylineOpacity, routePathOpacity, flagOpacity });
+    console.log('[Leaflet Opacity] Checking opacity changes:', { dimAll, parkingOpacity, polylineOpacity, routePathOpacity, flagOpacity, navigationOpacity });
     if (dimAll !== prevDimAll.current || parkingOpacity !== prevParkingOpacity.current) {
-      Object.values(vm).forEach((m) => m && applyOpacity(m, dimAll ? 0.3 : 1));
       Object.values(pm).forEach((m) => m && applyOpacity(m, dimAll ? 0.3 : parkingOpacity));
     }
     if (dimAll !== prevDimAll.current || polylineOpacity !== prevPolylineOpacity.current) {
@@ -423,6 +458,9 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
       Object.values(flags.start).forEach((m) => m && applyOpacity(m, flagOpacity));
       Object.values(flags.destination).forEach((m) => m && applyOpacity(m, flagOpacity));
     }
+    if (dimAll !== prevDimAll.current || navigationOpacity !== prevNavigationOpacity.current) {
+      applyNavigationOpacity(vm, dimAll ? 0.3 : navigationOpacity);
+    }
 
     // Update previous values
     prevDimAll.current = dimAll;
@@ -430,6 +468,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     prevPolylineOpacity.current = polylineOpacity;
     prevRoutePathOpacity.current = routePathOpacity;
     prevFlagOpacity.current = flagOpacity;
+    prevNavigationOpacity.current = navigationOpacity;
 
     // Toggle visibility with null checks
     console.log('[Leaflet Update] Toggling layer visibility');
@@ -439,9 +478,10 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     toggleLayerVisibility(rp, showRouting);
     toggleLayerVisibility(rm, showRouting);
     toggleLayerVisibility(pm, showParking);
+    toggleNavigationVisibility(vm, showNavigation);
 
     map.invalidateSize();
-  }, [vehicles, visibleVehicles, filters, dimAll, showPolylines, polylineOpacity, showRouting, routePathOpacity, showParking, parkingOpacity, showFlags, flagOpacity, toggleLayerVisibility]);
+  }, [vehicles, visibleVehicles, filters, dimAll, showPolylines, polylineOpacity, showRouting, routePathOpacity, showParking, parkingOpacity, showFlags, flagOpacity, showNavigation, navigationOpacity, toggleLayerVisibility, toggleNavigationVisibility]);
 
   // Individual control effects
   useEffect(() => {
@@ -464,12 +504,12 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
 
   useEffect(() => {
     toggleLayerVisibility(routePaths.current, showRouting);
-    toggleLayerVisibility(routeMarkers.current, showRouting); // Route markers follow route paths
+    toggleLayerVisibility(routeMarkers.current, showRouting);
   }, [showRouting, toggleLayerVisibility]);
 
   useEffect(() => {
     Object.values(routePaths.current).forEach((pl) => applyOpacity(pl, routePathOpacity));
-    Object.values(routeMarkers.current).forEach((m) => applyOpacity(m, routePathOpacity)); // Route markers use same opacity
+    Object.values(routeMarkers.current).forEach((m) => applyOpacity(m, routePathOpacity));
   }, [routePathOpacity]);
 
   useEffect(() => {
@@ -479,6 +519,14 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
   useEffect(() => {
     Object.values(parkingMarkers.current).forEach((m) => applyOpacity(m, parkingOpacity));
   }, [parkingOpacity]);
+
+  useEffect(() => {
+    toggleNavigationVisibility(vehicleMarkers.current, showNavigation);
+  }, [showNavigation, toggleNavigationVisibility]);
+
+  useEffect(() => {
+    applyNavigationOpacity(vehicleMarkers.current, navigationOpacity);
+  }, [navigationOpacity]);
 
   // Greyscale effect
   useEffect(() => {
@@ -564,6 +612,20 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
           setOpenSlider={setOpenSlider}
           title="Control map greyscale"
         />
+        
+        <OpacityControl
+          id="navigation-opacity"
+          onToggle={() => setShowNavigation(!showNavigation)}
+          onChange={setNavigationOpacity}
+          initialToggleState={showNavigation ? 1 : 0}
+          initialValue={navigationOpacity}
+          color="#d726ff"
+          toggleIcon={<NavigationIcon enabled={showNavigation} />}
+          openSlider={openSlider}
+          setOpenSlider={setOpenSlider}
+          title="Control navigation markers (spinning wheels and squares)"
+        />
+        
         <OpacityControl
           id="flag-opacity"
           onToggle={onToggleFlags}
@@ -576,6 +638,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
           setOpenSlider={setOpenSlider}
           title="Control flags"
         />
+        
         <OpacityControl
           id="parking-opacity"
           onToggle={() => setShowParking(!showParking)}
@@ -588,6 +651,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
           setOpenSlider={setOpenSlider}
           title="Control parking markers"
         />
+        
         <OpacityControl
           id="polyline-opacity"
           onToggle={() => setShowPolylines(!showPolylines)}
@@ -600,6 +664,7 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
           setOpenSlider={setOpenSlider}
           title="Control triangular polylines"
         />
+        
         <OpacityControl
           id="route-paths-opacity"
           onToggle={() => setShowRouting(!showRouting)}

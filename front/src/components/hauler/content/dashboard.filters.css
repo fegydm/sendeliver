@@ -33,9 +33,6 @@
   gap: 8px;
 }
 
-.dashboard__filter-section {
-  margin-bottom: 16px;
-}
 
 .dashboard__filter-section-title {
   font-size: 11px;
@@ -44,6 +41,7 @@
   margin: 0 0 8px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  text-align: center;
 }
 
 .dashboard__filter-group {
@@ -55,53 +53,41 @@
 /* AND/OR Toggle */
 .dashboard__filter-logic {
   display: flex;
-  justify-content: center;
-  margin: 12px 0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.dashboard__logic-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.dashboard__logic-button {
+  flex: 1;
   padding: 4px 8px;
   background: var(--hauler-medium);
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.dashboard__logic-label {
   color: var(--color-text-secondary);
-  transition: color 0.2s;
-}
-
-.dashboard__logic-label.active {
-  color: white;
-}
-
-.dashboard__logic-switch {
-  width: 32px;
-  height: 16px;
-  background: var(--hauler-dark);
-  border-radius: 8px;
-  position: relative;
+  border: none;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.1);
 }
 
-.dashboard__logic-slider {
-  width: 12px;
-  height: 12px;
-  background: white;
-  border-radius: 6px;
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.2s;
+.dashboard__logic-button.active {
+  background: var(--hauler-dark);
+  color: white;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
 }
 
-.dashboard__logic-slider.or {
-  transform: translateX(16px);
+.dashboard__logic-button:hover:not(.active) {
+  background: var(--hauler-primary);
+  color: white;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.dashboard__logic-button:first-child {
+  border-right: 1px solid var(--hauler-dark);
 }
 
 /* Filter Stats */
@@ -442,4 +428,13 @@
   border: 1px solid var(--hauler-medium);
   border-radius: 4px;
   background: white;
+}
+
+/* separator */
+.dashboard__section-separator {
+  width: 100%;
+  height: 1px;
+  background: var(--color-text-secondary);
+  opacity: 0.3;
+  margin: 8px 0;
 }
