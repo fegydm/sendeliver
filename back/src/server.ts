@@ -1,5 +1,5 @@
 // File: ./back/src/server.ts
-// Last change: Kompatibilita s TS strict/noImplicitAny – explicitné 'any' v CORS a error middleware
+// Last change: Added POST /api/gps endpoint for public GPS data testing
 
 import express, { Request, Response, NextFunction } from "express";
 import http from "http";
@@ -23,13 +23,14 @@ import deliveryRouter from "./routes/delivery.routes.js";
 import externalDeliveriesRouter from "./routes/external.deliveries.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import verifyPinRouter from "./routes/verify-pin.routes.js";
+import gpsRouter from "./routes/gps.routes.js";
 import { authenticateJWT, checkRole } from "./middlewares/auth.middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config({
-  path: path.resolve(__dirname, "../..", ".env"),
+  path: "../../.env",
 });
 
 const app = express();
@@ -39,8 +40,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(ua.express());
 
-morgan.token("isBot", (req: any) => req.useragent.isBot ? "BOT" : "HUMAN");
-app.use(morgan(":remote-addr :method :url :status :response-time ms :isBot"));
+morgan.token("isBoten", (req: any) => req.useragent?.isBoten ? "BOT" : "HUMAN");
+app.use(morgan(":remote-addr :method :url :status :response-time ms :isBoten"));
 
 // --- CORS middleware s explicitným any pre TS strict ---
 app.use(function (req: any, res: any, next: any) {
@@ -69,7 +70,7 @@ app.use('/api/contact/submit', contactMessagesRoutes);
 app.use('/api/verify-pin', verifyPinRouter);
 
 // 🔒 Admin-only route
-app.use('/api/contact/admin', [
+app.use("/api/contact/admin", [
   authenticateJWT,
   checkRole('admin', 'superadmin'),
   contactMessagesRoutes
@@ -86,6 +87,7 @@ app.use("/api/geo/languages", geoLanguagesRouter);
 app.use("/api/geo/translations", geoTranslationsRouter);
 app.use("/api/maps", mapsRouter);
 app.use("/api/vehicles", vehiclesRouter);
+app.use("/api/gps", gpsRouter);
 
 // 🔐 Chránené API
 app.use("/api", [

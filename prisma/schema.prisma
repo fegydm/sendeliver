@@ -1,5 +1,5 @@
 // File: ./prisma/schema.prisma
-// Updated schema for Sendeliver auth with Google OAuth and sessions
+// Last change: Added GpsData model for vehicle tracking
 
 datasource db {
   provider = "postgresql"
@@ -93,4 +93,17 @@ model AdminProfile {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// GPS data for vehicle tracking
+model GpsData {
+  id         Int      @id @default(autoincrement())
+  vehicleId  String   @map("vehicle_id")
+  latitude   Float
+  longitude  Float
+  accuracy   Float?
+  altitude   Float?
+  timestamp  DateTime
+  createdAt  DateTime @default(now()) @map("created_at")
+  @@map("gps_data")
 }
