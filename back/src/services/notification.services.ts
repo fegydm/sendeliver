@@ -2,7 +2,7 @@
 // Last change: Implementation of notification service for contact messages
 
 import { logger } from '@sendeliver/logger';
-import { WebSocketServer } from '../configs/websocket.config.js';
+import { WebSocketManager } from '../configs/websocket.config.js';
 import { sendEmail } from '../utils/email.js';
 import { ContactMessage } from '../services/contact.messages.services.js';
 
@@ -48,7 +48,7 @@ export class NotificationService {
   ): Promise<void> {
     try {
       // Send to all connected admin clients
-      WebSocketServer.broadcastToAdmins({
+      WebSocketManager.broadcastToAdmins({
         type: 'notification',
         payload: {
           type,

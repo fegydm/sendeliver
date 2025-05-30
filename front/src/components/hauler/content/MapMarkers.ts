@@ -1,5 +1,5 @@
 // File: front/src/components/hauler/content/MapMarkers.ts
-// Last change: Fixed activity property access - changed parsed.activity to parsed.speed
+// Last change: Added real GPS coordinates for vehicle with static.service status
 
 import L from "leaflet";
 import { Vehicle, parseStatus, getDirectionColor, DYNAMIC_ACTIVITIES, DYNAMIC_DIRECTIONS, STATIC_TYPES, DELAYS } from "@/data/mockFleet";
@@ -74,45 +74,71 @@ export function addVehicleMarkers(
     const idLoc = v.currentLocation || v.location;
     if (!idLoc) return;
     
-    const loc = mockLocations.find((l) => l.id === idLoc);
-    if (!loc) return;
-    
-    const isDynamic = isDynamicVehicle(v.dashboardStatus);
+    let latitude: number, longitude: number;
     const parsed = parseStatus(v.dashboardStatus);
-    const markerHTML = generateNavigationMarkerHTML(v);
     
-    const marker = L.marker([loc.latitude, loc.longitude], {
-      icon: L.divIcon({
-        className: [
-          "vehicle-marker",
-          "navigation-marker",
-          isDynamic ? "dynamic" : "static",
-          `status-${parsed.category}`,
-          dimAll ? "dimmed" : "",
-        ].join(" "),
-        html: markerHTML,
-        iconSize: isDynamic ? [32, 32] : [24, 24],
-        iconAnchor: isDynamic ? [16, 16] : [12, 12],
-      }),
-    }).addTo(map);
+    if (parsed.category === 'static' && parsed.type === 'service' && navigator.geolocation) {
+      // Use real GPS for service status vehicle
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          latitude = position.coords.latitude;
+          longitude = position.coords.longitude;
+          createMarker(latitude, longitude);
+        },
+        (error) => {
+          console.error('GPS error, using fallback location for service vehicle:', error);
+          latitude = 48.3774; // Fallback to Trnava
+          longitude = 17.5872;
+          createMarker(latitude, longitude);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      // Use mock location for other vehicles
+      const loc = mockLocations.find((l) => l.id === idLoc);
+      if (!loc) return;
+      latitude = loc.latitude;
+      longitude = loc.longitude;
+      createMarker(latitude, longitude);
+    }
     
-    // Enhanced tooltip with vehicle info
-    const tooltipContent = `
-      <div class="vehicle-tooltip">
-        <strong>${v.plateNumber || v.name}</strong><br/>
-        <span class="tooltip-status">Status: ${parsed.category}</span><br/>
-        ${isDynamic ? `<span class="tooltip-speed">Speed: ${v.speed || 0} km/h</span><br/>` : ''}
-        <span class="tooltip-location">Location: ${loc.name || idLoc}</span>
-      </div>
-    `;
-    
-    marker.bindTooltip(tooltipContent, { 
-      direction: 'top', 
-      offset: [0, isDynamic ? -20 : -16],
-      className: 'custom-vehicle-tooltip'
-    });
-    
-    markers[v.id] = marker;
+    function createMarker(lat: number, lng: number) {
+      const isDynamic = isDynamicVehicle(v.dashboardStatus);
+      const markerHTML = generateNavigationMarkerHTML(v);
+      
+      const marker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: [
+            "vehicle-marker",
+            "navigation-marker",
+            isDynamic ? "dynamic" : "static",
+            `status-${parsed.category}`,
+            dimAll ? "dimmed" : "",
+          ].join(" "),
+          html: markerHTML,
+          iconSize: isDynamic ? [32, 32] : [24, 24],
+          iconAnchor: isDynamic ? [16, 16] : [12, 12],
+        }),
+      }).addTo(map);
+      
+      // Enhanced tooltip with vehicle info
+      const tooltipContent = `
+        <div class="vehicle-tooltip">
+          <strong>${v.plateNumber || v.name}</strong><br/>
+          <span class="tooltip-status">Status: ${parsed.category}</span><br/>
+          ${isDynamic ? `<span class="tooltip-speed">Speed: ${v.speed || 0} km/h</span><br/>` : ''}
+          <span class="tooltip-location">Location: ${idLoc}</span>
+        </div>
+      `;
+      
+      marker.bindTooltip(tooltipContent, { 
+        direction: 'top', 
+        offset: [0, isDynamic ? -20 : -16],
+        className: 'custom-vehicle-tooltip'
+      });
+      
+      markers[v.id] = marker;
+    }
   });
   
   return markers;

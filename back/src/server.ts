@@ -1,5 +1,5 @@
 // File: ./back/src/server.ts
-// Last change: Added POST /api/gps endpoint for public GPS data testing
+// Last change: Fixed duplicate server declaration and added WebSocket initialization
 
 import express, { Request, Response, NextFunction } from "express";
 import http from "http";
@@ -10,6 +10,7 @@ import * as ua from "express-useragent";
 import * as dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
+import { WebSocketManager } from './configs/websocket.config.js';
 
 // Routers
 import aiRouter from "./routes/ai.routes.js";
@@ -35,6 +36,9 @@ dotenv.config({
 
 const app = express();
 const server = http.createServer(app as any);
+
+// Initialize WebSocket server
+WebSocketManager.initialize(server);
 
 app.use(express.json());
 app.use(cookieParser());

@@ -320,30 +320,34 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
 
   // Calculate default bounds
   useEffect(() => {
-    if (!mapRef.current) return;
+  if (!mapRef.current) return;
 
-    const pts: [number, number][] = [];
-    vehicles.forEach((v) => {
+  const pts: [number, number][] = [];
+  vehicles.forEach((v) => {
+    if (v.gpsLocation) {
+      pts.push([v.gpsLocation.latitude, v.gpsLocation.longitude]);
+    } else {
       const primary = mockLocations.find((l) => l.id === (v.currentLocation || v.location));
       if (primary) pts.push([primary.latitude, primary.longitude]);
-      if (v.start) {
-        const s = mockLocations.find((l) => l.id === v.start);
-        if (s) pts.push([s.latitude, s.longitude]);
-      }
-      if (v.destination) {
-        const d = mockLocations.find((l) => l.id === v.destination);
-        if (d) pts.push([d.latitude, d.longitude]);
-      }
-    });
-
-    if (pts.length) {
-      defaultFitBounds.current = L.latLngBounds(pts);
-      defaultZoom.current = mapRef.current.getBoundsZoom(defaultFitBounds.current);
-    } else {
-      defaultFitBounds.current = null;
-      defaultZoom.current = null;
     }
-  }, [vehicles]);
+    if (v.start) {
+      const s = mockLocations.find((l) => l.id === v.start);
+      if (s) pts.push([s.latitude, s.longitude]);
+    }
+    if (v.destination) {
+      const d = mockLocations.find((l) => l.id === v.destination);
+      if (d) pts.push([d.latitude, d.longitude]);
+    }
+  });
+
+  if (pts.length) {
+    defaultFitBounds.current = L.latLngBounds(pts);
+    defaultZoom.current = mapRef.current.getBoundsZoom(defaultFitBounds.current);
+  } else {
+    defaultFitBounds.current = null;
+    defaultZoom.current = null;
+  }
+}, [vehicles]);
 
   // Main map update effect
   useEffect(() => {

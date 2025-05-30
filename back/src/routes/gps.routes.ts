@@ -27,4 +27,18 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const { vehicleId, limit = '10' } = req.query;
+    const gpsData = await gpsService.getGpsData({
+      vehicleId: vehicleId ? String(vehicleId) : undefined,
+      limit: parseInt(String(limit), 10),
+    });
+    res.status(200).json(gpsData);
+  } catch (error) {
+    console.error('[GPS] GET Route error:', error);
+    res.status(500).json({ error: 'Failed to fetch GPS data' });
+  }
+});
+
 export default router;

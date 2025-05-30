@@ -1,17 +1,86 @@
-// File: ./prisma/schema.prisma
-// Last change: Added GpsData model for vehicle tracking
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL") // e.g. postgres://user:password@localhost:5432/dbsd
-}
-
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/.prisma/client"
 }
 
-// Roles for access control
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int              @id @default(autoincrement())
+  name          String?
+  email         String           @unique
+  passwordHash  String?
+  role          Role             @default(client)
+  permissions   String[]         @default([])
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  googleId      String?          @unique
+  adminProfile  AdminProfile?    @relation("UserAdminProfile")
+  messages      ContactMessage[] @relation("UserMessages")
+  notifications Notification[]   @relation("UserNotifications")
+  sessions      Session[]        @relation("UserSessions")
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation("UserSessions", fields: [userId], references: [id])
+}
+
+model ContactMessage {
+  id        Int           @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String
+  body      String
+  status    MessageStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  userId    Int?
+  user      User?         @relation("UserMessages", fields: [userId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String
+  data      Json
+  timestamp DateTime @default(now())
+  read      Boolean  @default(false)
+  userId    Int
+  user      User     @relation("UserNotifications", fields: [userId], references: [id])
+}
+
+model AdminProfile {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  phone      String?
+  department String?
+  avatarUrl  String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation("UserAdminProfile", fields: [userId], references: [id])
+}
+
+model GpsData {
+  id        Int       @id @default(autoincrement())
+  vehicleId String    @map("vehicle_id") @db.VarChar(50)
+  latitude  Float
+  longitude Float
+  accuracy  Float?
+  altitude  Float?
+  timestamp DateTime  @db.Timestamptz(6)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("gps_data")
+}
+
 enum Role {
   superadmin
   admin
@@ -20,90 +89,8 @@ enum Role {
   carrier
 }
 
-// Message status
 enum MessageStatus {
   PENDING
   REPLIED
   CLOSED
-}
-
-// Users of the system
-model User {
-  id           Int      @id @default(autoincrement())
-  name         String? // optional, may be set by OAuth or registration
-  email        String   @unique
-  passwordHash String? // nullable for OAuth-only accounts
-  googleId     String?  @unique
-  role         Role     @default(client)
-  permissions  String[] @default([])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  messages      ContactMessage[] @relation("UserMessages")
-  notifications Notification[]   @relation("UserNotifications")
-  sessions      Session[]        @relation("UserSessions")
-  adminProfile  AdminProfile?    @relation("UserAdminProfile")
-}
-
-// Sessions for refresh tokens or persistent login
-model Session {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation("UserSessions", fields: [userId], references: [id])
-  userId    Int
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-// Contact form messages
-model ContactMessage {
-  id        Int           @id @default(autoincrement())
-  name      String
-  email     String
-  subject   String
-  body      String
-  status    MessageStatus @default(PENDING)
-  user      User?         @relation("UserMessages", fields: [userId], references: [id])
-  userId    Int?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-}
-
-// Real-time notifications
-model Notification {
-  id        Int      @id @default(autoincrement())
-  type      String
-  data      Json
-  read      Boolean  @default(false)
-  timestamp DateTime @default(now())
-  user      User     @relation("UserNotifications", fields: [userId], references: [id])
-  userId    Int
-}
-
-// Additional profile data for admin users
-model AdminProfile {
-  id     Int  @id @default(autoincrement())
-  user   User @relation("UserAdminProfile", fields: [userId], references: [id])
-  userId Int  @unique
-
-  phone      String? // optional internal contact number
-  department String? // e.g. support, operations
-  avatarUrl  String? // link to profile picture
-  notes      String? // internal admin notes
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// GPS data for vehicle tracking
-model GpsData {
-  id         Int      @id @default(autoincrement())
-  vehicleId  String   @map("vehicle_id")
-  latitude   Float
-  longitude  Float
-  accuracy   Float?
-  altitude   Float?
-  timestamp  DateTime
-  createdAt  DateTime @default(now()) @map("created_at")
-  @@map("gps_data")
 }
