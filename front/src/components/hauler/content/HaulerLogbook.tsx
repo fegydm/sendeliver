@@ -2,8 +2,10 @@
 // Last change: Updated to work with new mock data structure and added missing functions
 
 import React, { useState, useEffect } from "react";
-import { Vehicle, VehicleStatus, mockVehicles, parseStatus, getDelayColor } from "../../../data/mockFleet";
+import { Vehicle, mockVehicles } from "../../../data/mockFleet";
 import { Person, Trip, mockPeople, mockTrips, getTripsForPerson } from "../../../data/mockPeople";
+import { parseStatus, getDelayColor } from "./map-utils";
+import { ALL_STATUSES } from "./map-constants";
 import "./hauler.cards.css";
 import "./logbook.css";
 

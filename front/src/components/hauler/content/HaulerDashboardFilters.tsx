@@ -1,18 +1,18 @@
 // File: front/src/components/hauler/content/HaulerDashboardFilters.tsx
-// Last change: Complete refactor - fixed logic, improved performance, moved active filters after vehicle list
+// Last change: Fixed imports to use new modular structure
 
 import React, { useMemo, useState, useCallback } from "react";
 import "./dashboard.filters.css";
-import {
-  Vehicle,
-  parseStatus,
-  getDirectionColor,
-  getDelayColor,
-  statusColors,
-  DYNAMIC_ACTIVITIES,
-  DYNAMIC_DIRECTIONS,
+import { Vehicle } from "@/data/mockFleet";
+import { parseStatus, getDirectionColor, getDelayColor } from "./map-utils";
+import { 
+  statusColors, 
+  DYNAMIC_ACTIVITIES, 
+  DYNAMIC_DIRECTIONS, 
   STATIC_TYPES,
-} from "@/data/mockFleet";
+  FilterCategory,
+  FILTER_LABELS 
+} from "./map-constants";
 
 interface HaulerDashboardFiltersProps {
   vehicles: Vehicle[];
@@ -34,25 +34,11 @@ interface HaulerDashboardFiltersProps {
   onVehiclesExpand: () => void;
 }
 
-type FilterCategory = 'outbound' | 'inbound' | 'transit' | 'moving' | 'waiting' | 'break' | 'standby' | 'depot' | 'service';
-
 const FILTER_GROUPS = {
   Activity: ['moving', 'waiting', 'break'] as const,
   Direction: ['outbound', 'inbound', 'transit'] as const,
   Standstill: ['standby', 'depot', 'service'] as const,
 } as const;
-
-const FILTER_LABELS: Record<FilterCategory, string> = {
-  outbound: "Outbound",
-  inbound: "Inbound", 
-  transit: "Transit",
-  moving: "Moving",
-  waiting: "Waiting",
-  break: "Break",
-  standby: "Standby",
-  depot: "Depot",
-  service: "Service",
-};
 
 const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
   vehicles,
@@ -148,11 +134,11 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
 
   // Memoized vehicle type images
   const vehicleTypeImages = useMemo((): Record<string, string> => ({
-  tractor: "/vehicles/truck-icon.svg",
-  van: "/vehicles/van-icon.svg", 
-  trailer: "/vehicles/trailer-icon.svg",
-  truck: "/vehicles/lorry-icon.svg",
-}), []);
+    tractor: "/vehicles/truck-icon.svg",
+    van: "/vehicles/van-icon.svg", 
+    trailer: "/vehicles/trailer-icon.svg",
+    truck: "/vehicles/lorry-icon.svg",
+  }), []);
 
   const defaultVehicleImage = "/vehicles/default-icon.svg";
 
@@ -181,13 +167,13 @@ const HaulerDashboardFilters: React.FC<HaulerDashboardFiltersProps> = ({
   }, []);
 
   const getTooltip = useCallback((filter: FilterCategory): string => {
-  let group = '';
-  if (FILTER_GROUPS.Activity.includes(filter as any)) group = 'Activity';
-  else if (FILTER_GROUPS.Direction.includes(filter as any)) group = 'Direction';
-  else if (FILTER_GROUPS.Standstill.includes(filter as any)) group = 'Standstill';
-  
-  return `Filter vehicles by ${FILTER_LABELS[filter]} (${group})`;
-}, []);
+    let group = '';
+    if (FILTER_GROUPS.Activity.includes(filter as any)) group = 'Activity';
+    else if (FILTER_GROUPS.Direction.includes(filter as any)) group = 'Direction';
+    else if (FILTER_GROUPS.Standstill.includes(filter as any)) group = 'Standstill';
+    
+    return `Filter vehicles by ${FILTER_LABELS[filter]} (${group})`;
+  }, []);
 
   // Improved filter disabled logic
   const isFilterDisabled = useCallback((filter: FilterCategory): boolean => {

@@ -62,6 +62,9 @@ const generateNavigationMarkerHTML = (vehicle: Vehicle): string => {
   }
 };
 
+// Úryvok z: front/src/components/hauler/content/MapMarkers.ts
+// Po úprave: správna logika markerov a zobrazenie service
+
 export function addVehicleMarkers(
   map: L.Map,
   vehicles: Vehicle[],
@@ -72,33 +75,46 @@ export function addVehicleMarkers(
   
   vehicles.forEach((v) => {
     const idLoc = v.currentLocation || v.location;
-    if (!idLoc) return;
+    if (!idLoc) {
+      console.warn(`[MapMarkers] Skipping vehicle ${v.id}: No location provided`, { vehicle: v });
+      return;
+    }
     
     let latitude: number, longitude: number;
     const parsed = parseStatus(v.dashboardStatus);
     
-    if (parsed.category === 'static' && parsed.type === 'service' && navigator.geolocation) {
-      // Use real GPS for service status vehicle
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          latitude = position.coords.latitude;
-          longitude = position.coords.longitude;
-          createMarker(latitude, longitude);
-        },
-        (error) => {
-          console.error('GPS error, using fallback location for service vehicle:', error);
-          latitude = 48.3774; // Fallback to Trnava
-          longitude = 17.5872;
-          createMarker(latitude, longitude);
-        },
-        { enableHighAccuracy: true }
-      );
+    if (parsed.category === 'static' && parsed.type === 'service') {
+      // Use real GPS for service status vehicle or fallback immediately
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            latitude = position.coords.latitude;
+            longitude = position.coords.longitude;
+            console.log(`[MapMarkers] GPS success for vehicle ${v.id}:`, { latitude, longitude });
+            updateMarker(v.id, latitude, longitude);
+          },
+          (error) => {
+            console.error(`[MapMarkers] GPS error for vehicle ${v.id}, using fallback (Bratislava):`, error);
+          },
+          { enableHighAccuracy: true }
+        );
+      }
+      // Add marker immediately with fallback
+      latitude = 48.1486; // Fallback to Bratislava
+      longitude = 17.1077;
+      createMarker(latitude, longitude);
     } else {
-      // Use mock location for other vehicles
+      // Use mock location for other vehicles with fallback
       const loc = mockLocations.find((l) => l.id === idLoc);
-      if (!loc) return;
-      latitude = loc.latitude;
-      longitude = loc.longitude;
+      if (!loc) {
+        console.warn(`[MapMarkers] No mock location found for vehicle ${v.id}, idLoc: ${idLoc}, using fallback (Bratislava)`);
+        latitude = 48.1486; // Fallback to Bratislava
+        longitude = 17.1077;
+      } else {
+        latitude = loc.latitude;
+        longitude = loc.longitude;
+        console.log(`[MapMarkers] Using mock location for vehicle ${v.id}:`, { idLoc, latitude, longitude });
+      }
       createMarker(latitude, longitude);
     }
     
@@ -106,13 +122,20 @@ export function addVehicleMarkers(
       const isDynamic = isDynamicVehicle(v.dashboardStatus);
       const markerHTML = generateNavigationMarkerHTML(v);
       
+      let statusClass: string;
+      if (parsed.category === 'static') {
+        statusClass = `status-${parsed.type}`;
+      } else {
+        statusClass = `status-${parsed.direction}`;
+      }
+      
       const marker = L.marker([lat, lng], {
         icon: L.divIcon({
           className: [
             "vehicle-marker",
             "navigation-marker",
             isDynamic ? "dynamic" : "static",
-            `status-${parsed.category}`,
+            statusClass,
             dimAll ? "dimmed" : "",
           ].join(" "),
           html: markerHTML,
@@ -122,10 +145,16 @@ export function addVehicleMarkers(
       }).addTo(map);
       
       // Enhanced tooltip with vehicle info
+      let statusText: string;
+      if (parsed.category === 'static') {
+        statusText = `static.${parsed.type}`;
+      } else {
+        statusText = `dynamic.${parsed.direction}`;
+      }
       const tooltipContent = `
         <div class="vehicle-tooltip">
           <strong>${v.plateNumber || v.name}</strong><br/>
-          <span class="tooltip-status">Status: ${parsed.category}</span><br/>
+          <span class="tooltip-status">Status: ${statusText}</span><br/>
           ${isDynamic ? `<span class="tooltip-speed">Speed: ${v.speed || 0} km/h</span><br/>` : ''}
           <span class="tooltip-location">Location: ${idLoc}</span>
         </div>
@@ -138,6 +167,19 @@ export function addVehicleMarkers(
       });
       
       markers[v.id] = marker;
+      console.log(`[MapMarkers] Marker added for vehicle ${v.id}:`, { 
+        isDynamic, 
+        category: parsed.category, 
+        ...(parsed.category === 'static' ? { type: parsed.type } : { direction: parsed.direction }) 
+      });
+    }
+    
+    function updateMarker(vehicleId: string, lat: number, lng: number) {
+      const marker = markers[vehicleId];
+      if (marker) {
+        marker.setLatLng([lat, lng]);
+        console.log(`[MapMarkers] Marker updated for vehicle ${vehicleId}:`, { lat, lng });
+      }
     }
   });
   

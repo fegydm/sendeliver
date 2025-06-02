@@ -1,63 +1,55 @@
-
 // File: front/src/components/hauler/content/HaulerDashboard.tsx
-// Last change: Fixed TS2339 by replacing speed with activity in filter logic
+// Last change: Refactored to remove duplicities and use unified filter logic
 
 import React, { useState, useMemo } from "react";
 import "./dashboard.css";
 import "./dashboard.maps.css";
 import "./dashboard.filters.css";
 import { mockVehicles } from "@/data/mockFleet";
-import { parseStatus } from "@/data/mockFleet";
+import { filterVehicles } from "./map-utils";
+import { FilterCategory, ALL_STATUSES } from "./map-constants";
 import HaulerDashboardMaps from "./HaulerDashboardMaps";
 import HaulerDashboardFilters from "./HaulerDashboardFilters";
 
-// Filter categories from HaulerDashboardFilters
-type FilterCategory = 'outbound' | 'inbound' | 'transit' | 'moving' | 'waiting' | 'break' | 'standby' | 'depot' | 'service';
-
 const HaulerDashboard: React.FC = () => {
+  // Core state
   const [vehicles] = useState(mockVehicles);
   const [filters, setFilters] = useState<FilterCategory[]>([]);
   const [selectedVehicles, setSelectedVehicles] = useState<Set<string>>(new Set());
+  
+  // UI state
   const [hover, setHover] = useState<FilterCategory | null>(null);
-  const [isAllSelected, setIsAllSelected] = useState(false);
   const [isChartExpanded, setIsChartExpanded] = useState(false);
   const [isVehiclesExpanded, setIsVehiclesExpanded] = useState(false);
   const [showFlags, setShowFlags] = useState(true);
   const [chartType, setChartType] = useState<"bar" | "pie">("bar");
 
-  const visible = useMemo(() => {
-    return vehicles.filter(
-      (v) =>
-        (filters.length === 0 || filters.some(filter => {
-          const parsed = parseStatus(v.dashboardStatus);
-          return (
-            (parsed.category === 'dynamic' && (parsed.direction === filter || parsed.activity === filter)) ||
-            (parsed.category === 'static' && parsed.type === filter)
-          );
-        })) &&
-        (selectedVehicles.size === 0 || selectedVehicles.has(v.id))
-    );
-  }, [vehicles, filters, selectedVehicles]);
-
-  const filteredVehicles = useMemo(() =>
-    vehicles.filter(
-      (v) => filters.length === 0 || filters.some(filter => {
-        const parsed = parseStatus(v.dashboardStatus);
-        return (
-          (parsed.category === 'dynamic' && (parsed.direction === filter || parsed.activity === filter)) ||
-          (parsed.category === 'static' && parsed.type === filter)
-        );
-      })
-    ), [vehicles, filters]
+  // Unified filter logic using map-utils
+  const filteredVehicles = useMemo(() => 
+    filterVehicles(vehicles, filters, new Set()), // No vehicle selection filter at this level
+    [vehicles, filters]
   );
 
+  // Vehicles visible on map (filtered + selected)
+  const visibleVehicles = useMemo(() => 
+    filterVehicles(vehicles, filters, selectedVehicles),
+    [vehicles, filters, selectedVehicles]
+  );
+
+  // Check if all filtered vehicles are selected
+  const isAllSelected = useMemo(() => 
+    filteredVehicles.length > 0 && 
+    filteredVehicles.every(vehicle => selectedVehicles.has(vehicle.id)),
+    [filteredVehicles, selectedVehicles]
+  );
+
+  // Event handlers
   const handleSelectAll = () => {
     if (isAllSelected) {
       setSelectedVehicles(new Set());
     } else {
-      setSelectedVehicles(new Set(filteredVehicles.map((v) => v.id)));
+      setSelectedVehicles(new Set(filteredVehicles.map(v => v.id)));
     }
-    setIsAllSelected(!isAllSelected);
   };
 
   const handleSelectVehicle = (id: string) => {
@@ -68,36 +60,24 @@ const HaulerDashboard: React.FC = () => {
       newSelection.add(id);
     }
     setSelectedVehicles(newSelection);
-    setIsAllSelected(
-      newSelection.size === filteredVehicles.length && newSelection.size > 0
-    );
   };
 
-  const handleToggleFilter = (status: FilterCategory) => {
-    setFilters((prev) => {
-      if (prev.includes(status)) {
-        const next = prev.filter((s) => s !== status);
-        return next;
+  const handleToggleFilter = (filter: FilterCategory) => {
+    setFilters(prev => {
+      if (prev.includes(filter)) {
+        return prev.filter(f => f !== filter);
       } else {
-        return [...prev, status];
+        return [...prev, filter];
       }
     });
   };
 
   const handleResetFilter = () => {
-    setFilters((prev) => {
-      const allStatuses: FilterCategory[] = [
-        "outbound",
-        "inbound",
-        "transit",
-        "moving",
-        "waiting",
-        "break",
-        "standby",
-        "depot",
-        "service",
-      ];
-      return prev.length === allStatuses.length ? [] : [...allStatuses];
+    const allFilters: FilterCategory[] = ['outbound', 'inbound', 'transit', 'moving', 'waiting', 'break', 'standby', 'depot', 'service'];
+    
+    setFilters(prev => {
+      // Toggle between all filters and no filters
+      return prev.length === allFilters.length ? [] : [...allFilters];
     });
   };
 
@@ -105,23 +85,26 @@ const HaulerDashboard: React.FC = () => {
     setHover(status);
   };
 
-  const toggleChartExpansion = () => setIsChartExpanded((prev) => !prev);
-  const toggleVehiclesExpansion = () => setIsVehiclesExpanded((prev) => !prev);
-
+  const toggleChartExpansion = () => setIsChartExpanded(prev => !prev);
+  const toggleVehiclesExpansion = () => setIsVehiclesExpanded(prev => !prev);
   const handleChartType = (type: "bar" | "pie") => setChartType(type);
-
-  const toggleFlags = () => setShowFlags((prev) => !prev);
+  const toggleFlags = () => setShowFlags(prev => !prev);
 
   return (
     <div className="dashboard">
       <div className="dashboard__toolbar">
         <h1 className="dashboard__title">Vehicle Overview</h1>
         <div className="dashboard__toolbar-actions">
+          <span className="dashboard__stats">
+            {filteredVehicles.length} of {vehicles.length} vehicles
+            {selectedVehicles.size > 0 && ` (${selectedVehicles.size} selected)`}
+          </span>
           <button className="dashboard__toolbar-button">Export</button>
           <button className="dashboard__toolbar-button">Print</button>
           <button className="dashboard__toolbar-button">Refresh</button>
         </div>
       </div>
+      
       <div
         className={`dashboard__content ${
           isChartExpanded ? "dashboard__content--charts-expanded" : ""
@@ -146,9 +129,10 @@ const HaulerDashboard: React.FC = () => {
           onChartExpand={toggleChartExpansion}
           onVehiclesExpand={toggleVehiclesExpansion}
         />
+        
         <HaulerDashboardMaps
           vehicles={vehicles}
-          visibleVehicles={visible}
+          visibleVehicles={visibleVehicles}
           filters={filters}
           selectedVehicles={selectedVehicles}
           hover={hover}

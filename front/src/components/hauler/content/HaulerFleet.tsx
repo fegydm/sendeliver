@@ -2,7 +2,8 @@
 // Last change: Fixed TS2322 by removing status property, fixed TS2339 by replacing speed with activity
 
 import React, { useState, useEffect } from "react";
-import { Vehicle, mockVehicles, parseStatus, getDirectionColor, getDelayColor } from "../../../data/mockFleet";
+import { Vehicle, mockVehicles } from "../../../data/mockFleet";
+import { parseStatus, getDirectionColor, getDelayColor } from "./map-utils";
 import "./hauler.cards.css";
 import "./fleet.cards.css";
 

@@ -1,9 +1,10 @@
 // File: front/src/components/hauler/content/VehicleDetailModal.tsx
-// Last change: Fixed TS2339 by replacing speed with activity in status formatting
+// Last change: Fixed layout with small header, basic info, elevation, SCD, then 3 columns NCS
 
-import React from 'react';
-import { Vehicle, parseStatus, getDirectionColor, getDelayColor, statusColors, delayColors } from '@/data/mockFleet';
+import React, { useState } from 'react';
+import { Vehicle } from '@/data/mockFleet';
 import { mockPeople } from '@/data/mockPeople';
+import { parseStatus, getDirectionColor, getDelayColor } from './map-utils';
 import './vehicle-detail-modal.css';
 
 interface Location {
@@ -24,16 +25,23 @@ interface VehicleDetailModalProps {
   locations: Location[];
 }
 
-// Calculate distance between two points
-const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+// Mock elevation data for route profile
+const mockElevationData = [
+  { distance: 0, elevation: 200, time: "08:00", event: "start" },
+  { distance: 50, elevation: 150, time: "09:15", event: null },
+  { distance: 120, elevation: 300, time: "10:45", event: "break" },
+  { distance: 180, elevation: 250, time: "12:30", event: "fuel" },
+  { distance: 220, elevation: 180, time: "13:45", event: "current" },
+  { distance: 280, elevation: 120, time: "15:00", event: null },
+  { distance: 350, elevation: 80, time: "16:30", event: "destination" },
+];
+
+// Mock cargo data
+const mockCargoData = {
+  weight: "12.5t",
+  type: "Electronics",
+  temperature: null,
+  hazardous: false,
 };
 
 const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
@@ -42,14 +50,40 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
   onClose,
   locations
 }) => {
+  const [activeCommTab, setActiveCommTab] = useState<'chat' | 'yesno' | 'voice' | 'video'>('chat');
+  const [chatMessage, setChatMessage] = useState('');
+  const [streamEnabled, setStreamEnabled] = useState(true);
+
   if (!isOpen || !vehicle) return null;
   
-  // Parse status for color and display
+  // Parse status for colors and display
   const parsed = parseStatus(vehicle.dashboardStatus);
   const directionColor = getDirectionColor(vehicle.dashboardStatus);
   const delayColor = getDelayColor(vehicle.dashboardStatus);
   
-  // Format dashboard status for display
+  // Get locations
+  const currentLocation = vehicle.currentLocation 
+    ? locations.find(loc => loc.id === vehicle.currentLocation) 
+    : null;
+  const startLocation = vehicle.start 
+    ? locations.find(loc => loc.id === vehicle.start) 
+    : null;
+  const destinationLocation = vehicle.destination 
+    ? locations.find(loc => loc.id === vehicle.destination) 
+    : null;
+  
+  // Get driver info
+  const driver = vehicle.assignedDriver 
+    ? mockPeople.find(p => p.id === vehicle.assignedDriver)
+    : null;
+  
+  // Mock times and delays
+  const departureTime = "08:00";
+  const currentTime = "13:45";
+  const plannedArrival = "16:00";
+  const estimatedArrival = "16:15";
+  const delay = 15; // minutes
+
   const formatDashboardStatus = (status: string): string => {
     if (parsed.category === "dynamic") {
       const direction = parsed.direction === "outbound" ? "Odchod" : 
@@ -66,148 +100,414 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
       return `${type} (${delay})`;
     }
   };
-  
-  // Get location data
-  const currentLocation = vehicle.currentLocation 
-    ? locations.find(loc => loc.id === vehicle.currentLocation) 
-    : null;
+
+  const getCountryFlag = (location: Location | null) => {
+    if (!location) return '';
+    const countryCode = location.country?.toLowerCase() || 'sk';
+    return `/flags/4x3/optimized/${countryCode}.svg`;
+  };
+
+  const renderElevationProfile = () => {
+    const maxElevation = Math.max(...mockElevationData.map(d => d.elevation));
+    const minElevation = Math.min(...mockElevationData.map(d => d.elevation));
+    const elevationRange = maxElevation - minElevation;
+    const totalDistance = Math.max(...mockElevationData.map(d => d.distance));
+    const currentDistance = mockElevationData.find(d => d.event === 'current')?.distance || 220;
+    const progressPercent = (currentDistance / totalDistance) * 100;
     
-  const startLocation = vehicle.start 
-    ? locations.find(loc => loc.id === vehicle.start) 
-    : null;
+    // Hybrid approach: Use relative if range is small, absolute if large
+    const useRelative = elevationRange < 100;
+    const baseElevation = useRelative ? minElevation : 0;
+    const maxDisplayElevation = useRelative ? maxElevation : maxElevation;
     
-  const destinationLocation = vehicle.destination 
-    ? locations.find(loc => loc.id === vehicle.destination) 
-    : null;
-  
-  // Calculate ETA if we have necessary data
-  let eta: string = 'N/A';
-  let remainingDistance: string = 'N/A';
-  if (currentLocation && destinationLocation && vehicle.speed && vehicle.speed > 0) {
-    const distance = calculateDistance(
-      currentLocation.latitude, 
-      currentLocation.longitude, 
-      destinationLocation.latitude, 
-      destinationLocation.longitude
+    // Generate 50 equal-width columns with smaller margins
+    const columnCount = 50;
+    const chartWidth = 480; // Increased from 390 for wider chart
+    const startX = 2; // Reduced from 5 for maximum width
+    const columnWidth = chartWidth / columnCount; // Available width divided by columns
+    
+    return (
+      <div className="elevation-profile">
+        <div className="elevation-header">
+          <h3>Profil trasy</h3>
+          <div className="elevation-stats">
+            <span>{minElevation}-{maxElevation}m n.m.</span>
+            <span>Vzdialenosť: {totalDistance}km</span>
+            <span>Progress: {Math.round(progressPercent)}%</span>
+          </div>
+        </div>
+        <div className="elevation-chart">
+          <svg width="100%" height="100" viewBox="0 0 485 100">
+            {/* Grid lines */}
+            <defs>
+              <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#e0e0e0" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="80%" fill="url(#grid)" />
+            
+            {/* 50 equal-width elevation columns */}
+            {Array.from({ length: columnCount }, (_, i) => {
+              const x = startX + i * columnWidth;
+              const distanceAtColumn = (i / (columnCount - 1)) * totalDistance;
+              
+              // Find closest elevation data point or interpolate
+              let elevation = minElevation; // default
+              for (let j = 0; j < mockElevationData.length - 1; j++) {
+                const curr = mockElevationData[j];
+                const next = mockElevationData[j + 1];
+                if (distanceAtColumn >= curr.distance && distanceAtColumn <= next.distance) {
+                  const ratio = (distanceAtColumn - curr.distance) / (next.distance - curr.distance);
+                  elevation = curr.elevation + (next.elevation - curr.elevation) * ratio;
+                  break;
+                }
+              }
+              
+              // Bar height based on elevation (hybrid approach)
+              const normalizedElevation = elevation - baseElevation;
+              const displayRange = maxDisplayElevation - baseElevation;
+              const barHeight = Math.max(2, (normalizedElevation / displayRange) * 60);
+              
+              // Check if this column has special events
+              let columnColor = '#D4B863'; // Yellow-gray default color
+              
+              // Check for events at this distance
+              const eventAtDistance = mockElevationData.find(d => 
+                d.event && Math.abs(d.distance - distanceAtColumn) < totalDistance / columnCount
+              );
+              
+              if (eventAtDistance) {
+                switch (eventAtDistance.event) {
+                  case 'fuel':
+                    columnColor = '#FF9800'; // Orange for fuel
+                    break;
+                  case 'break':
+                    columnColor = '#795548'; // Brown for break
+                    break;
+                  case 'current':
+                    columnColor = '#4CAF50'; // Green for current position
+                    break;
+                  default:
+                    columnColor = '#D4B863';
+                }
+              }
+              
+              return (
+                <rect
+                  key={i}
+                  x={x}
+                  y={75 - barHeight}
+                  width={columnWidth - 0.5}
+                  height={barHeight}
+                  fill={columnColor}
+                  opacity={0.9}
+                />
+              );
+            })}
+            
+            {/* Progress bar at bottom */}
+            <rect
+              x={startX}
+              y="85"
+              width={chartWidth}
+              height="8"
+              fill="#E0E0E0"
+              rx="4"
+            />
+            <rect
+              x={startX}
+              y="85"
+              width={(progressPercent / 100) * chartWidth}
+              height="8"
+              fill="#4CAF50"
+              rx="4"
+            />
+            
+            {/* Event markers above columns */}
+            {mockElevationData.map((d, i) => {
+              if (!d.event) return null;
+              const x = startX + (d.distance / totalDistance) * chartWidth;
+              
+              let icon = '';
+              switch (d.event) {
+                case 'start':
+                  icon = '🏁';
+                  break;
+                case 'fuel':
+                  icon = '⛽';
+                  break;
+                case 'break':
+                  icon = '☕';
+                  break;
+                case 'current':
+                  icon = '📍';
+                  break;
+                case 'destination':
+                  icon = '🏁';
+                  break;
+              }
+              
+              return (
+                <g key={i}>
+                  <text x={x} y="12" textAnchor="middle" fontSize="14">{icon}</text>
+                  <text x={x} y="25" textAnchor="middle" fontSize="9" fill="#666">{d.time}</text>
+                </g>
+              );
+            })}
+            
+            {/* Progress percentage text */}
+            <text x="242" y="98" textAnchor="middle" fontSize="10" fill="#333">
+              {Math.round(progressPercent)}% Complete
+            </text>
+            
+            {/* Elevation range indicator */}
+            <text x="2" y="98" textAnchor="start" fontSize="9" fill="#666">
+              {useRelative ? 'Relatívny' : 'Absolútny'} profil
+            </text>
+          </svg>
+        </div>
+      </div>
     );
-    
-    const timeInHours = distance / vehicle.speed;
-    const now = new Date();
-    const etaTime = new Date(now.getTime() + timeInHours * 60 * 60 * 1000);
-    
-    eta = etaTime.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' });
-    remainingDistance = `${distance.toFixed(1)} km`;
-  }
-  
-  // Get driver name
-  const driverName = vehicle.assignedDriver 
-    ? mockPeople.find(p => p.id === vehicle.assignedDriver)?.firstName + ' ' + 
-      mockPeople.find(p => p.id === vehicle.assignedDriver)?.lastName
-    : 'Nepriradený';
-  
+  };
+
+  const renderCommunicationTab = () => {
+    switch (activeCommTab) {
+      case 'chat':
+        return (
+          <div className="comm-chat">
+            <div className="chat-messages">
+              <div className="chat-message received">
+                <span className="message-time">13:30</span>
+                <span className="message-text">Práve som naložil tovar v Brne</span>
+              </div>
+              <div className="chat-message sent">
+                <span className="message-time">13:32</span>
+                <span className="message-text">Výborne, pokračuj podľa plánu</span>
+              </div>
+            </div>
+            <div className="chat-input">
+              <input 
+                type="text" 
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
+                placeholder="Napíš správu..."
+              />
+              <button>Odoslať</button>
+            </div>
+          </div>
+        );
+      
+      case 'yesno':
+        return (
+          <div className="comm-yesno">
+            <div className="yesno-question">
+              <h4>Rýchla otázka</h4>
+              <input type="text" placeholder="Napíš áno/nie otázku..." />
+              <button>Odoslať otázku</button>
+            </div>
+            <div className="yesno-history">
+              <div className="yesno-item">
+                <span className="question">Môžeš pokračovať v jazde?</span>
+                <span className="answer yes">ÁNO</span>
+                <span className="time">13:25</span>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'voice':
+        return (
+          <div className="comm-voice">
+            <div className="voice-controls">
+              <button className="voice-call-btn">📞 Zavolať vodičovi</button>
+              <div className="voice-status">Pripojenie: Dostupné</div>
+            </div>
+          </div>
+        );
+      
+      case 'video':
+        return (
+          <div className="comm-video">
+            <div className="video-controls">
+              <button className="video-call-btn">📹 Video hovor</button>
+              <div className="stream-controls">
+                <label>
+                  <input 
+                    type="checkbox" 
+                    checked={streamEnabled}
+                    onChange={(e) => setStreamEnabled(e.target.checked)}
+                  />
+                  Stream z kabíny
+                </label>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="vehicle-modal-overlay" onClick={onClose}>
       <div className="vehicle-modal-content" onClick={e => e.stopPropagation()}>
-        <div className="vehicle-modal-header" style={{ backgroundColor: delayColor }}>
-          <h2>{vehicle.name}</h2>
-          <span className="vehicle-status">{formatDashboardStatus(vehicle.dashboardStatus)}</span>
+        {/* Small Header */}
+        <div className="vehicle-modal-header" style={{ borderTopColor: delayColor }}>
+          <div className="header-left">
+            <h2>{vehicle.name}</h2>
+            <span className="vehicle-status">{formatDashboardStatus(vehicle.dashboardStatus)}</span>
+          </div>
           <button className="vehicle-modal-close" onClick={onClose}>×</button>
         </div>
         
         <div className="vehicle-modal-body">
-          <div className="vehicle-info-section">
-            <div className="vehicle-info-row">
-              <span className="info-label">ŠPZ:</span>
-              <span className="info-value">{vehicle.plateNumber}</span>
-              
-              <span className="info-label">Vodič:</span>
-              <span className="info-value">{driverName}</span>
+          {/* Basic Info Section - 3 columns: Vehicle | Cargo | Driver */}
+          <div className="basic-info-section">
+            <div className="vehicle-info">
+              <h4>Vozidlo</h4>
+              <div className="info-item">
+                <span className="info-label">ŠPZ:</span>
+                <span className="info-value">{vehicle.plateNumber}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Typ:</span>
+                <span className="info-value">{vehicle.type}</span>
+              </div>
             </div>
             
-            <div className="vehicle-info-row">
-              <span className="info-label">Typ:</span>
-              <span className="info-value">{vehicle.type}</span>
-              
-              <span className="info-label">Rýchlosť:</span>
-              <span className="info-value">{vehicle.speed ? `${vehicle.speed} km/h` : 'Stojí'}</span>
+            <div className="cargo-info">
+              <h4>Náklad</h4>
+              <div className="info-item">
+                <span className="info-label">Hmotnosť:</span>
+                <span className="info-value">{mockCargoData.weight}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Typ:</span>
+                <span className="info-value">{mockCargoData.type}</span>
+              </div>
             </div>
 
-            <div className="vehicle-info-row">
-              <span className="info-label">Kapacita:</span>
-              <span className="info-value">{vehicle.capacity}</span>
-              
-              <span className="info-label">Voľná kapacita:</span>
-              <span className="info-value">{vehicle.capacityFree}</span>
-            </div>
-
-            <div className="vehicle-info-row">
-              <span className="info-label">Tachometer:</span>
-              <span className="info-value">{vehicle.odometerKm.toLocaleString()} km</span>
-              
-              <span className="info-label">Dostupnosť:</span>
-              <span className="info-value" style={{ color: vehicle.availability === 'available' ? '#4CAF50' : '#FF9800' }}>
-                {vehicle.availability === 'available' ? 'Dostupné' : 
-                 vehicle.availability === 'busy' ? 'Obsadené' : 'Servis'}
-              </span>
+            <div className="driver-info">
+              <h4>Vodič</h4>
+              <div className="info-item">
+                <span className="info-label">Meno:</span>
+                <span className="info-value">
+                  {driver ? `${driver.firstName} ${driver.lastName}` : 'Nepriradený'}
+                </span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Status:</span>
+                <span className="info-value">Aktívny</span>
+              </div>
             </div>
           </div>
-          
-          <div className="vehicle-route-section">
+
+          {/* Elevation Profile */}
+          {renderElevationProfile()}
+
+          {/* Route Status Section - SCD */}
+          <div className="route-status-section">
             {startLocation && (
-              <div className="route-point">
-                <div className="route-marker start" style={{ backgroundColor: directionColor }}></div>
-                <div className="route-details">
-                  <div className="route-label">Štart</div>
+              <div className="route-point start">
+                <div className="route-marker" style={{ backgroundColor: directionColor }}>🏁</div>
+                <div className="route-info">
                   <div className="route-location">{startLocation.name}</div>
+                  <div className="route-details">
+                    <img src={getCountryFlag(startLocation)} alt="" className="country-flag" />
+                    <span className="departure-time">Odchod: {departureTime}</span>
+                  </div>
                 </div>
               </div>
             )}
             
             {currentLocation && (
               <div className="route-point current">
-                <div className="route-marker current" style={{ backgroundColor: directionColor }}></div>
-                <div className="route-details">
-                  <div className="route-label">Aktuálna poloha</div>
+                <div className="route-marker current" style={{ backgroundColor: '#4CAF50' }}>📍</div>
+                <div className="route-info">
                   <div className="route-location">{currentLocation.name}</div>
+                  <div className="route-details">
+                    <img src={getCountryFlag(currentLocation)} alt="" className="country-flag" />
+                    <span className="current-time">Aktuálne: {currentTime}</span>
+                    <span className="current-speed">{vehicle.speed || 0} km/h</span>
+                  </div>
                 </div>
               </div>
             )}
             
             {destinationLocation && (
-              <div className="route-point">
-                <div className="route-marker destination" style={{ backgroundColor: directionColor }}></div>
-                <div className="route-details">
-                  <div className="route-label">Cieľ</div>
+              <div className="route-point destination">
+                <div className="route-marker" style={{ backgroundColor: directionColor }}>🏁</div>
+                <div className="route-info">
                   <div className="route-location">{destinationLocation.name}</div>
-                </div>
-              </div>
-            )}
-            
-            {currentLocation && destinationLocation && (
-              <div className="route-summary">
-                <div className="summary-item">
-                  <span className="summary-label">ETA:</span>
-                  <span className="summary-value">{eta}</span>
-                </div>
-                <div className="summary-item">
-                  <span className="summary-label">Zostáva:</span>
-                  <span className="summary-value">{remainingDistance}</span>
+                  <div className="route-details">
+                    <img src={getCountryFlag(destinationLocation)} alt="" className="country-flag" />
+                    <span className="planned-arrival">Plán: {plannedArrival}</span>
+                    <span className="estimated-arrival">ETA: {estimatedArrival}</span>
+                    {delay > 0 && (
+                      <span className="delay-info" style={{ color: delayColor }}>
+                        Delay: {delay} min
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          {vehicle.notes && (
-            <div className="vehicle-notes-section">
-              <div className="section-title">Poznámky:</div>
-              <div className="notes-content">{vehicle.notes}</div>
+          {/* Three-column NCS Section: Navigation | Communication | Stream */}
+          <div className="ncs-section">
+            {/* Navigation Map */}
+            <div className="navigation-section">
+              <h3>Navigácia</h3>
+              <div className="map-placeholder">
+                <div className="map-mock">🗺️ Mapa s aktuálnou pozíciou</div>
+              </div>
             </div>
-          )}
-        </div>
-        
-        <div className="vehicle-modal-footer">
-          <button className="modal-button secondary" onClick={onClose}>Zavrieť</button>
-          <button className="modal-button primary">Detaily</button>
+
+            {/* Communication Section */}
+            <div className="communication-section">
+              <div className="comm-tabs">
+                <button 
+                  className={`comm-tab ${activeCommTab === 'chat' ? 'active' : ''}`}
+                  onClick={() => setActiveCommTab('chat')}
+                >
+                  💬
+                </button>
+                <button 
+                  className={`comm-tab ${activeCommTab === 'yesno' ? 'active' : ''}`}
+                  onClick={() => setActiveCommTab('yesno')}
+                >
+                  ✅
+                </button>
+                <button 
+                  className={`comm-tab ${activeCommTab === 'voice' ? 'active' : ''}`}
+                  onClick={() => setActiveCommTab('voice')}
+                >
+                  📞
+                </button>
+                <button 
+                  className={`comm-tab ${activeCommTab === 'video' ? 'active' : ''}`}
+                  onClick={() => setActiveCommTab('video')}
+                >
+                  📹
+                </button>
+              </div>
+              
+              <div className="comm-content">
+                {renderCommunicationTab()}
+              </div>
+            </div>
+
+            {/* Cabin Stream */}
+            <div className="stream-section">
+              <h3>Stream z kabíny</h3>
+              <div className="stream-placeholder">
+                {streamEnabled ? (
+                  <div className="stream-mock">📹 Live stream</div>
+                ) : (
+                  <div className="stream-disabled">Stream vypnutý</div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

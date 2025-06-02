@@ -1,35 +1,9 @@
 // File: front/src/data/mockFleet.ts
-// Last change: Added gpsLocation for vehicle with static.service status
+// Last change: Complete mockFleet with corrected routes and locations
 
 import { mockPeople, getTripsForPerson } from './mockPeople';
 
-// Define filter categories
-const DYNAMIC_ACTIVITIES = ['moving', 'waiting', 'break'] as const;
-const DYNAMIC_DIRECTIONS = ['outbound', 'inbound', 'transit'] as const;
-const STATIC_TYPES = ['standby', 'depot', 'service'] as const;
-const DELAYS = ['ontime', 'delayed', 'critical'] as const;
-
-// Define types
-type DynamicActivity = typeof DYNAMIC_ACTIVITIES[number];
-type DynamicDirection = typeof DYNAMIC_DIRECTIONS[number];
-type StaticType = typeof STATIC_TYPES[number];
-type Delay = typeof DELAYS[number];
-
-interface DynamicStatus {
-  category: 'dynamic';
-  direction: DynamicDirection;
-  activity: DynamicActivity;
-  delay: Delay;
-}
-
-interface StaticStatus {
-  category: 'static';
-  type: StaticType;
-  delay: Delay;
-}
-
-type Status = DynamicStatus | StaticStatus;
-
+// Basic types only
 interface Vehicle {
   id: string;
   name: string;
@@ -54,6 +28,7 @@ interface Vehicle {
   assignedDispatcher?: string;
   notes: string;
 }
+
 interface Trip {
   id: string;
   date: string;
@@ -72,33 +47,11 @@ interface Service {
   status: string;
 }
 
-// Updated status colors with your preferences
-const statusColors: Record<DynamicDirection | DynamicActivity | StaticType, string> = {
-  // Direction (3)
-  outbound: "#2389ff",    // Blue
-  inbound: "#1fbac7",     // Turquoise  
-  transit: "#7a63ff",     // Purple
-  
-  // Activity/Speed (3)
-  moving: "#d726ff",      // Magenta
-  waiting: "#64748b",     // Gray-blue (UPDATED)
-  break: "#1e3a8a",       // Dark blue - parking sign color (UPDATED)
-  
-  // Static (3)
-  standby: "#b5bd00",     // Yellow-green
-  depot: "#8B4513",       // Brown
-  service: "#e91e40",     // Red-magenta
-};
-
-const delayColors: Record<Delay, string> = {
-  ontime: "#4CAF50",      // Green
-  delayed: "#FF9800",     // Orange  
-  critical: "#F44336",    // Red
-};
-
-// 10 vehicles with full status format covering all 9 filters
+// Complete vehicle data - 10 vehicles (6 dynamic + 4 static)
 const mockVehicles: Vehicle[] = [
-  // 6 dynamic vehicles
+  // ===== DYNAMIC VEHICLES (6) =====
+  
+  // OUTBOUND 1: Žilina → Wroclaw → Poznań (moving, ontime)
   {
     id: "1",
     name: "Sprinter 311", 
@@ -113,15 +66,17 @@ const mockVehicles: Vehicle[] = [
     notes: "Export to Poland - on time",
     assignedDriver: "1",
     assignedDispatcher: "7",
-    location: "Bratislava",
-    start: "location4",
-    currentLocation: "location32",
-    destination: "location13",
+    location: "Žilina",
+    start: "location4", // Žilina
+    currentLocation: "location12", // Wroclaw  
+    destination: "location13", // Poznań
     nearestParking: "parking3",
     dashboardStatus: "dynamic.outbound.moving.ontime",
     speed: 80,
     image: "/vehicles/van1.jpg",
   },
+
+  // INBOUND 1: Berlin → Brno → Trnava (moving, delayed)
   {
     id: "2",
     name: "Scania R500",
@@ -137,14 +92,157 @@ const mockVehicles: Vehicle[] = [
     assignedDriver: "6",
     assignedDispatcher: "8",
     location: "Berlin",
-    start: "location21",
-    currentLocation: "location5", 
-    destination: "location2",
+    start: "location21", // Berlin
+    currentLocation: "location5", // Brno
+    destination: "location2", // Trnava
     nearestParking: "parking7",
     dashboardStatus: "dynamic.inbound.moving.delayed",
     speed: 85,
     image: "/vehicles/truck2.jpg",
   },
+
+  // TRANSIT 1: Stockholm → Bremen → Amsterdam (waiting, ontime)
+  {
+    id: "3",
+    name: "Iveco Daily",
+    type: "van",
+    plateNumber: "ZA-456BB",
+    brand: "Iveco",
+    manufactureYear: 2020,
+    capacity: "2.5t",
+    capacityFree: "1t",
+    odometerKm: 98700,
+    availability: "busy",
+    notes: "Transit route - waiting at border",
+    assignedDriver: "2",
+    assignedDispatcher: "7",
+    location: "Stockholm",
+    start: "location16", // Stockholm
+    currentLocation: "location17", // Bremen
+    destination: "location18", // Amsterdam
+    nearestParking: "parking6",
+    dashboardStatus: "dynamic.transit.waiting.ontime",
+    speed: 0,
+    image: "/vehicles/van2.jpg",
+  },
+
+  // OUTBOUND 2: Žilina → Montabaur → Köln (break, ontime)  
+  {
+    id: "4",
+    name: "Volvo FH16",
+    type: "truck",
+    plateNumber: "TT-789DD",
+    brand: "Volvo",
+    manufactureYear: 2021,
+    capacity: "25t",
+    capacityFree: "10t",
+    odometerKm: 125400,
+    availability: "busy",
+    notes: "Outbound - driver break",
+    assignedDriver: "3",
+    assignedDispatcher: "8",
+    location: "Žilina",
+    start: "location4", // Žilina
+    currentLocation: "location10", // Montabaur
+    destination: "location11", // Köln
+    nearestParking: "parking5",
+    dashboardStatus: "dynamic.outbound.break.ontime",
+    speed: 0,
+    image: "/vehicles/truck3.jpg",
+  },
+
+  // INBOUND 2: Zaragoza → Heilbronn Parking → Ostrava (waiting, delayed)
+  {
+    id: "5",
+    name: "Mercedes Actros",
+    type: "truck",
+    plateNumber: "KE-321EE",
+    brand: "Mercedes",
+    manufactureYear: 2023,
+    capacity: "22t",
+    capacityFree: "0t",
+    odometerKm: 45600,
+    availability: "busy",
+    notes: "Inbound - waiting for loading",
+    assignedDriver: "4",
+    assignedDispatcher: "7",
+    location: "Zaragoza",
+    start: "location25", // Zaragoza
+    currentLocation: "parking1", // Heilbronn Parking
+    destination: "location30", // Ostrava
+    nearestParking: "parking1",
+    dashboardStatus: "dynamic.inbound.waiting.delayed",
+    speed: 0,
+    image: "/vehicles/truck4.jpg",
+  },
+
+  // TRANSIT 2: Wels → Plzeň → Praha (moving, delayed)
+  {
+    id: "6",
+    name: "DAF XF",
+    type: "truck",
+    plateNumber: "PO-654FF",
+    brand: "DAF",
+    manufactureYear: 2020,
+    capacity: "20t",
+    capacityFree: "8t",
+    odometerKm: 178900,
+    availability: "busy",
+    notes: "Transit - moving through Austria",
+    assignedDriver: "5",
+    assignedDispatcher: "8",
+    location: "Wels",
+    start: "location20", // Wels (namiesto Innsbruck)
+    currentLocation: "location15", // Plzeň
+    destination: "location6", // Praha
+    nearestParking: "parking4",
+    dashboardStatus: "dynamic.transit.moving.delayed",
+    speed: 75,
+    image: "/vehicles/truck5.jpg",
+  },
+
+  // ===== STATIC VEHICLES (4) =====
+
+  // STANDBY 1: Dortmund (ontime)
+  {
+    id: "7",
+    name: "Ford Transit",
+    type: "van",
+    plateNumber: "LC-987GG",
+    brand: "Ford",
+    manufactureYear: 2019,
+    capacity: "1.2t",
+    capacityFree: "1.2t",
+    odometerKm: 156700,
+    availability: "available",
+    notes: "Ready for dispatch",
+    assignedDispatcher: "7",
+    location: "location9", // Standby Dortmund
+    dashboardStatus: "static.standby.ontime",
+    speed: 0,
+    image: "/vehicles/van3.jpg",
+  },
+
+  // DEPOT: Žilina (delayed)
+  {
+    id: "8",
+    name: "Renault Master",
+    type: "van",
+    plateNumber: "TN-147HH",
+    brand: "Renault",
+    manufactureYear: 2022,
+    capacity: "1.8t",
+    capacityFree: "1.8t",
+    odometerKm: 23400,
+    availability: "available",
+    notes: "Parked at depot - delayed maintenance",
+    location: "location4", // Výrobný závod Žilina
+    dashboardStatus: "static.depot.delayed",
+    speed: 0,
+    image: "/vehicles/van4.jpg",
+  },
+
+  // SERVICE: Košice (delayed) - pripravené na GPS
   {
     id: "9",
     name: "MAN TGX Service",
@@ -159,10 +257,13 @@ const mockVehicles: Vehicle[] = [
     notes: "Brake repair - delayed",
     assignedDriver: "1",
     assignedDispatcher: "7",
+    location: "location3", // Obchodné centrum Košice
     dashboardStatus: "static.service.delayed",
     speed: 0,
     image: "/vehicles/truck4.jpg",
   },
+
+  // STANDBY 2: Bratislava (delayed)
   {
     id: "10",
     name: "Mercedes Transit",
@@ -174,56 +275,23 @@ const mockVehicles: Vehicle[] = [
     capacityFree: "5t",
     odometerKm: 89000,
     availability: "available",
-    notes: "Moved to standby",
+    notes: "Moved to standby - delayed dispatch",
     assignedDispatcher: "8",
-    location: "Vienna",
-    dashboardStatus: "static.standby.ontime",
+    location: "location1", // Hlavný sklad Bratislava
+    dashboardStatus: "static.standby.delayed",
     speed: 0,
     image: "/vehicles/truck6.jpg",
   },
 ];
 
-// Helper function to parse status for filtering
-function parseStatus(status: string): Status {
-  const parts = status.split('.');
-  if (parts[0] === 'dynamic') {
-    return {
-      category: 'dynamic',
-      direction: parts[1] as DynamicDirection,
-      activity: parts[2] as DynamicActivity,
-      delay: parts[3] as Delay,
-    };
-  }
-  return {
-    category: 'static',
-    type: parts[1] as StaticType,
-    delay: parts[2] as Delay,
-  };
-}
-
-// Color helper functions
-function getDirectionColor(status: string): string {
-  const parsed = parseStatus(status);
-  if (parsed.category === 'dynamic') {
-    return statusColors[parsed.direction] || '#808080';
-  }
-  return statusColors[parsed.type] || '#808080';
-}
-
-function getDelayColor(status: string): string {
-  const parsed = parseStatus(status);
-  return delayColors[parsed.delay] || '#808080';
-}
-
+// Helper functions for getting related data
 function getTripsForVehicle(vehicleId: string): Trip[] {
   const assignedPeople = mockPeople.filter(person => person.vehicle === vehicleId);
   const trips: Trip[] = [];
   assignedPeople.forEach(person => {
     const personTrips = getTripsForPerson(person.id);
-    // Map mockPeople.Trip to mockFleet.Trip format
     const mappedTrips = personTrips.map(trip => ({
       ...trip,
-      // personId already exists, no need to change
     }));
     trips.push(...mappedTrips);
   });
@@ -236,21 +304,11 @@ function getServicesForVehicle(vehicleId: string): Service[] {
     { id: `${vehicleId}-s2`, date: "2024-01-25", type: "Brake check", status: "Scheduled" },
     { id: `${vehicleId}-s3`, date: "2024-02-05", type: "Tire rotation", status: "Pending" },
   ];
-  return services.filter(() => Math.random() > 0.4); // Random selection for demo
+  return services.filter(() => Math.random() > 0.4);
 }
 
-// Export everything needed
 export {
-  DYNAMIC_ACTIVITIES,
-  DYNAMIC_DIRECTIONS,
-  STATIC_TYPES,
-  DELAYS,
   mockVehicles,
-  parseStatus,
-  statusColors,
-  delayColors,
-  getDirectionColor,
-  getDelayColor,
   getTripsForVehicle,
   getServicesForVehicle,
 };

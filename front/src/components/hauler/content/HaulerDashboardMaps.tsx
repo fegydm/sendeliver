@@ -1,12 +1,13 @@
 // File: front/src/components/hauler/content/HaulerDashboardMaps.tsx
-// Last change: Added navigation marker control with opacity slider for new spinning wheels and squares
+// Last change: Refactored to use new modular structure with separate utils, constants, markers and management
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./dashboard.maps.css";
-import { Vehicle, parseStatus, getDirectionColor, statusColors, delayColors } from "@/data/mockFleet";
-import mockLocations from "@/data/mockLocations";
+import { Vehicle } from '@/data/mockFleet';
+import mockLocations from '@/data/mockLocations';
+import { ALL_STATUSES } from './map-constants';
+import { MapManager } from './map-management';
 import {
   addVehicleMarkers,
   addCurrentCircles,
@@ -15,15 +16,15 @@ import {
   addRoutePaths,
   addFlagMarkers,
   addRouteMarkers,
-} from "./MapMarkers";
+} from './map-markers';
 import { 
   addMarkerClickHandlers, 
   addCircleClickHandlers,
   addPolylineClickHandlers
-} from "./MapMarkerHandler";
-import VehicleDetailModal from "./VehicleDetailModal";
-import OpacityControl from "@/components/shared/elements/OpacityControl";
-import FinishFlag from "@/assets/flags/FinishFlag.svg";
+} from './MapMarkerHandler';
+import VehicleDetailModal from './VehicleDetailModal';
+import OpacityControl from '@/components/shared/elements/OpacityControl';
+import FinishFlag from '@/assets/flags/FinishFlag.svg';
 
 interface HaulerDashboardMapsProps {
   vehicles: Vehicle[];
@@ -109,19 +110,13 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
   isVehiclesExpanded,
   hover,
 }) => {
-  // Separate state for polylines (triangular areas)
+  // State for layer visibility and opacity
   const [showPolylines, setShowPolylines] = useState(true);
   const [polylineOpacity, setPolylineOpacity] = useState(1);
-  
-  // Separate state for route paths (actual routes) - route markers follow these
   const [showRouting, setShowRouting] = useState(true);
   const [routePathOpacity, setRoutePathOpacity] = useState(1);
-  
-  // Navigation markers state
   const [showNavigation, setShowNavigation] = useState(true);
   const [navigationOpacity, setNavigationOpacity] = useState(1);
-  
-  // Other controls
   const [flagOpacity, setFlagOpacity] = useState(1);
   const [greyscaleValue, setGreyscaleValue] = useState(1);
   const [showParking, setShowParking] = useState(true);
@@ -132,9 +127,9 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Map refs
+  // Refs for map and layers
   const mapDiv = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const mapManagerRef = useRef<MapManager | null>(null);
   const vehicleMarkers = useRef<Record<string, L.Marker>>({});
   const currentCircles = useRef<Record<string, L.CircleMarker>>({});
   const parkingMarkers = useRef<Record<string, L.Marker>>({});
@@ -143,284 +138,63 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
   const startFlagMarkers = useRef<Record<string, L.Marker>>({});
   const destFlagMarkers = useRef<Record<string, L.Marker>>({});
   const routeMarkers = useRef<Record<string, L.CircleMarker>>({});
-  const defaultFitBounds = useRef<L.LatLngBounds | null>(null);
-  const defaultZoom = useRef<number | null>(null);
-
-  // Previous opacity values for optimization
-  const prevDimAll = useRef<boolean>(false);
-  const prevParkingOpacity = useRef<number>(1);
-  const prevPolylineOpacity = useRef<number>(1);
-  const prevRoutePathOpacity = useRef<number>(1);
-  const prevFlagOpacity = useRef<number>(1);
-  const prevNavigationOpacity = useRef<number>(1);
 
   const dimAll = filters.length === 0;
 
-  // Updated statuses using string format
-  const allStatuses: string[] = [
-    "dynamic.outbound.moving.ontime",
-    "dynamic.outbound.break.ontime",
-    "dynamic.inbound.moving.ontime",
-    "dynamic.inbound.waiting.ontime",
-    "dynamic.transit.moving.ontime",
-    "dynamic.transit.waiting.ontime",
-    "static.standby.ontime",
-    "static.standby.delayed",
-    "static.depot.ontime",
-    "static.service.delayed",
-  ];
-
   // Vehicle click handler
-  const handleVehicleClick = (vehicle: Vehicle) => {
+  const handleVehicleClick = useCallback((vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
     setIsModalOpen(true);
-  };
-
-  const applyOpacity = (layer: L.Layer, opacity: number) => {
-    if (layer instanceof L.Marker) {
-      const element = (layer as any).getElement?.();
-      if (element) {
-        element.style.opacity = String(opacity);
-      }
-    } else if (layer instanceof L.Polyline || layer instanceof L.CircleMarker || layer instanceof L.Polygon) {
-      layer.setStyle({ opacity, fillOpacity: opacity });
-    }
-  };
-
-  // Apply opacity specifically to navigation markers
-  const applyNavigationOpacity = (markers: Record<string, L.Marker>, opacity: number) => {
-    Object.values(markers).forEach((marker) => {
-      const element = (marker as any).getElement?.();
-      if (element && element.classList.contains('navigation-marker')) {
-        element.style.opacity = String(opacity);
-      }
-    });
-  };
-
-  // Toggle visibility functions
-  const toggleLayerVisibility = useCallback((layers: Record<string, L.Layer>, visible: boolean) => {
-    Object.values(layers).forEach((layer) => {
-      if (layer instanceof L.Marker) {
-        const element = (layer as any).getElement?.();
-        if (element) {
-          (element as HTMLElement).style.display = visible ? '' : 'none';
-        }
-      } else if (layer instanceof L.Path) {
-        // L.Polyline, L.Polygon, L.CircleMarker extend L.Path
-        const element = (layer as any)._path;
-        if (element) {
-          (element as HTMLElement).style.display = visible ? '' : 'none';
-        }
-      }
-    });
-  }, []);
-
-  // Toggle navigation markers visibility specifically
-  const toggleNavigationVisibility = useCallback((markers: Record<string, L.Marker>, visible: boolean) => {
-    Object.values(markers).forEach((marker) => {
-      const element = (marker as any).getElement?.();
-      if (element && element.classList.contains('navigation-marker')) {
-        (element as HTMLElement).style.display = visible ? '' : 'none';
-      }
-    });
   }, []);
 
   // Initialize map
   useEffect(() => {
-    if (mapRef.current || !mapDiv.current) return;
+    if (!mapDiv.current || mapManagerRef.current) return;
 
-    console.log('[Leaflet Init] Setting up default icon options');
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-      iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-      shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-    });
-
-    const map = L.map(mapDiv.current, {
-      zoomAnimation: false,
-      zoomSnap: 0, // Allow fractional zoom levels
-      zoomDelta: 0.05, // Smaller zoom steps
-      minZoom: 3, // Match OpenTopoMap min zoom
-      maxZoom: 17, // Match OpenTopoMap max zoom
-    }).setView([49, 15], 6);
-
-    mapRef.current = map;
-
-    const tileLayer = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-      attribution: "Map data © OpenStreetMap contributors, SRTM | Map style © OpenTopoMap (CC-BY-SA)",
-      subdomains: ["a", "b", "c"],
-      maxZoom: 17,
-      tileSize: 256,
-      updateWhenIdle: true,
-      keepBuffer: 6,
-      crossOrigin: true,
-      className: "greyscale-tile",
-    }).addTo(map);
-
-    tileLayer.on('tileload', () => {
-      console.log('[Leaflet Tiles] Tile loaded:', new Date().toISOString());
-    });
-    tileLayer.on('tileerror', (e) => {
-      console.error('[Leaflet Tiles] Tile error:', e);
-    });
-
-    const invalidate = () => {
-      map.invalidateSize();
-    };
-    
-    map.on("zoomend moveend", invalidate);
-
-    // Reduce zoom sensitivity for touch mice with debouncing
-    let lastZoomTime = 0;
-    const debounceDelay = 50; // 50ms debounce
-    const handleWheelZoom = (e: WheelEvent) => {
-      const now = Date.now();
-      if (now - lastZoomTime < debounceDelay) {
-        console.log('[Leaflet Zoom Debounce] Skipping wheel event due to debounce:', {
-          deltaY: e.deltaY,
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-      lastZoomTime = now;
-
-      console.log('[Leaflet Zoom] Wheel event:', {
-        deltaY: e.deltaY,
-        deltaX: e.deltaX,
-        timestamp: new Date().toISOString(),
-      });
-
-      if (Math.abs(e.deltaY) >= 0.5) { // Ignore tiny movements
-        // Reduce zoom intensity by scaling delta
-        const sensitivity = 0.1; // Lower sensitivity for smoother zoom
-        const delta = e.deltaY * sensitivity;
-        const zoomDelta = delta > 0 ? -0.05 : 0.05; // Even smaller zoom steps
-        const currentZoom = map.getZoom();
-        console.log('[Leaflet Zoom] Applying zoom:', {
-          sensitivity,
-          delta,
-          zoomDelta,
-          currentZoom,
-          newZoom: currentZoom + zoomDelta,
-        });
-        map.setZoom(currentZoom + zoomDelta, { animate: true });
-        e.preventDefault(); // Prevent default browser scroll
-      }
-    };
-
-    mapDiv.current?.addEventListener('wheel', handleWheelZoom);
+    console.log('[Maps] Initializing map manager');
+    mapManagerRef.current = new MapManager();
+    mapManagerRef.current.initialize(mapDiv.current);
 
     return () => {
-      map.off("zoomend moveend", invalidate);
-      mapDiv.current?.removeEventListener('wheel', handleWheelZoom);
-      map.remove();
-      mapRef.current = null;
+      console.log('[Maps] Cleaning up map manager');
+      mapManagerRef.current?.cleanup();
+      mapManagerRef.current = null;
     };
   }, []);
 
-  // Calculate default bounds
+  // Calculate and fit bounds on vehicle changes
   useEffect(() => {
-  if (!mapRef.current) return;
+    if (!mapManagerRef.current) return;
 
-  const pts: [number, number][] = [];
-  vehicles.forEach((v) => {
-    if (v.gpsLocation) {
-      pts.push([v.gpsLocation.latitude, v.gpsLocation.longitude]);
-    } else {
-      const primary = mockLocations.find((l) => l.id === (v.currentLocation || v.location));
-      if (primary) pts.push([primary.latitude, primary.longitude]);
-    }
-    if (v.start) {
-      const s = mockLocations.find((l) => l.id === v.start);
-      if (s) pts.push([s.latitude, s.longitude]);
-    }
-    if (v.destination) {
-      const d = mockLocations.find((l) => l.id === v.destination);
-      if (d) pts.push([d.latitude, d.longitude]);
-    }
-  });
-
-  if (pts.length) {
-    defaultFitBounds.current = L.latLngBounds(pts);
-    defaultZoom.current = mapRef.current.getBoundsZoom(defaultFitBounds.current);
-  } else {
-    defaultFitBounds.current = null;
-    defaultZoom.current = null;
-  }
-}, [vehicles]);
+    const controller = mapManagerRef.current.getController();
+    controller.fitToBounds(vehicles, mockLocations);
+  }, [vehicles]);
 
   // Main map update effect
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapManagerRef.current) return;
 
-    const map = mapRef.current;
-    console.log('[Leaflet Update] Clearing non-tile layers');
-    map.eachLayer((layer) => {
-      if (!(layer instanceof L.TileLayer)) {
-        try {
-          map.removeLayer(layer);
-        } catch (e) {
-          console.error('[Leaflet Update] Error removing layer:', e);
-        }
-      }
-    });
+    const mapManager = mapManagerRef.current;
+    const layerManager = mapManager.getLayerManager();
+    const filterManager = mapManager.getFilterManager();
+    const opacityOptimizer = mapManager.getOpacityOptimizer();
+    
+    if (!layerManager) return;
 
-    const allMode = filters.length === 0;
-    const allSelected = filters.length === allStatuses.length && allStatuses.every((s) => filters.includes(s));
-    let vehiclesToRender = allMode || allSelected ? vehicles : visibleVehicles;
+    console.log('[Maps] Updating map layers');
+    layerManager.clearLayers();
 
-    // Apply AND logic for direction and activity filters
-    if (!allMode && !allSelected) {
-      const directionFilters = filters.filter(f => ['outbound', 'inbound', 'transit'].includes(f));
-      const activityFilters = filters.filter(f => ['moving', 'waiting', 'break'].includes(f));
-      const standstillFilters = filters.filter(f => ['standby', 'depot', 'service'].includes(f));
+    // Get vehicles to render
+    const vehiclesToRender = filterManager.getVehiclesToRender(
+      vehicles, 
+      visibleVehicles, 
+      filters, 
+      ALL_STATUSES
+    );
 
-      vehiclesToRender = vehicles.filter(v => {
-        const parsed = parseStatus(v.dashboardStatus);
-        let matches = false;
-
-        // Handle dynamic filters (direction and activity)
-        if (parsed.category === 'dynamic') {
-          if (!parsed.direction || !parsed.activity) {
-            console.error('[Leaflet Filter Error] Invalid dynamic status:', {
-              vehicleId: v.id,
-              status: v.dashboardStatus,
-              parsed,
-            });
-            return false;
-          }
-          const matchesDirection = directionFilters.length === 0 || directionFilters.includes(parsed.direction);
-          const matchesActivity = activityFilters.length === 0 || activityFilters.includes(parsed.activity);
-          matches = matchesDirection && matchesActivity;
-        }
-        // Handle standstill filters
-        if (parsed.category === 'static') {
-          if (!parsed.type) {
-            console.error('[Leaflet Filter Error] Invalid static status:', {
-              vehicleId: v.id,
-              status: v.dashboardStatus,
-              parsed,
-            });
-            return false;
-          }
-          matches = standstillFilters.length > 0 && standstillFilters.includes(parsed.type);
-        }
-
-        // Log filter application
-        console.log('[Leaflet Filter] Vehicle filter check:', {
-          vehicleId: v.id,
-          status: v.dashboardStatus,
-          directionFilters,
-          activityFilters,
-          standstillFilters,
-          matches,
-        });
-
-        return matches && (selectedVehicles.size === 0 || selectedVehicles.has(v.id));
-      });
-    }
-
-    console.log('[Leaflet Update] Rendering vehicles:', vehiclesToRender.length);
+    // Get map instance
+    const map = mapManager.getController().getMap();
+    if (!map) return;
 
     // Add all layers
     const vm = addVehicleMarkers(map, vehiclesToRender, dimAll, mockLocations);
@@ -446,168 +220,85 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
     addCircleClickHandlers(cc, vehiclesToRender, handleVehicleClick);
     addPolylineClickHandlers(rp, vehiclesToRender, handleVehicleClick);
 
-    // Apply opacity only if necessary
-    console.log('[Leaflet Opacity] Checking opacity changes:', { dimAll, parkingOpacity, polylineOpacity, routePathOpacity, flagOpacity, navigationOpacity });
-    if (dimAll !== prevDimAll.current || parkingOpacity !== prevParkingOpacity.current) {
-      Object.values(pm).forEach((m) => m && applyOpacity(m, dimAll ? 0.3 : parkingOpacity));
-    }
-    if (dimAll !== prevDimAll.current || polylineOpacity !== prevPolylineOpacity.current) {
-      Object.values(tp).forEach((pl) => pl && applyOpacity(pl, dimAll ? 0.3 : polylineOpacity));
-    }
-    if (dimAll !== prevDimAll.current || routePathOpacity !== prevRoutePathOpacity.current) {
-      Object.values(rp).forEach((pl) => pl && applyOpacity(pl, dimAll ? 0.3 : routePathOpacity));
-      Object.values(rm).forEach((m) => m && applyOpacity(m, dimAll ? 0.3 : routePathOpacity));
-    }
-    if (flagOpacity !== prevFlagOpacity.current) {
-      Object.values(flags.start).forEach((m) => m && applyOpacity(m, flagOpacity));
-      Object.values(flags.destination).forEach((m) => m && applyOpacity(m, flagOpacity));
-    }
-    if (dimAll !== prevDimAll.current || navigationOpacity !== prevNavigationOpacity.current) {
-      applyNavigationOpacity(vm, dimAll ? 0.3 : navigationOpacity);
-    }
+    // Apply optimized opacity
+    opacityOptimizer.applyOptimizedOpacity(
+      layerManager,
+      {
+        parking: pm,
+        triangular: tp,
+        routePaths: rp,
+        routeMarkers: rm,
+        startFlags: flags.start,
+        destFlags: flags.destination,
+        vehicles: vm,
+      },
+      {
+        dimAll,
+        parkingOpacity,
+        polylineOpacity,
+        routePathOpacity,
+        flagOpacity,
+        navigationOpacity,
+      }
+    );
 
-    // Update previous values
-    prevDimAll.current = dimAll;
-    prevParkingOpacity.current = parkingOpacity;
-    prevPolylineOpacity.current = polylineOpacity;
-    prevRoutePathOpacity.current = routePathOpacity;
-    prevFlagOpacity.current = flagOpacity;
-    prevNavigationOpacity.current = navigationOpacity;
-
-    // Toggle visibility with null checks
-    console.log('[Leaflet Update] Toggling layer visibility');
-    toggleLayerVisibility(flags.start, showFlags);
-    toggleLayerVisibility(flags.destination, showFlags);
-    toggleLayerVisibility(tp, showPolylines);
-    toggleLayerVisibility(rp, showRouting);
-    toggleLayerVisibility(rm, showRouting);
-    toggleLayerVisibility(pm, showParking);
-    toggleNavigationVisibility(vm, showNavigation);
+    // Toggle visibility
+    layerManager.toggleVisibility(flags.start, showFlags);
+    layerManager.toggleVisibility(flags.destination, showFlags);
+    layerManager.toggleVisibility(tp, showPolylines);
+    layerManager.toggleVisibility(rp, showRouting);
+    layerManager.toggleVisibility(rm, showRouting);
+    layerManager.toggleVisibility(pm, showParking);
+    layerManager.toggleNavigationVisibility(vm, showNavigation);
 
     map.invalidateSize();
-  }, [vehicles, visibleVehicles, filters, dimAll, showPolylines, polylineOpacity, showRouting, routePathOpacity, showParking, parkingOpacity, showFlags, flagOpacity, showNavigation, navigationOpacity, toggleLayerVisibility, toggleNavigationVisibility]);
+  }, [
+    vehicles, 
+    visibleVehicles, 
+    filters, 
+    dimAll, 
+    showPolylines, 
+    polylineOpacity, 
+    showRouting, 
+    routePathOpacity, 
+    showParking, 
+    parkingOpacity, 
+    showFlags, 
+    flagOpacity, 
+    showNavigation, 
+    navigationOpacity,
+    handleVehicleClick
+  ]);
 
-  // Individual control effects
+  // Handle greyscale changes
   useEffect(() => {
-    toggleLayerVisibility(startFlagMarkers.current, showFlags);
-    toggleLayerVisibility(destFlagMarkers.current, showFlags);
-  }, [showFlags, toggleLayerVisibility]);
-
-  useEffect(() => {
-    Object.values(startFlagMarkers.current).forEach((m) => applyOpacity(m, flagOpacity));
-    Object.values(destFlagMarkers.current).forEach((m) => applyOpacity(m, flagOpacity));
-  }, [flagOpacity]);
-
-  useEffect(() => {
-    toggleLayerVisibility(triangularPolylines.current, showPolylines);
-  }, [showPolylines, toggleLayerVisibility]);
-
-  useEffect(() => {
-    Object.values(triangularPolylines.current).forEach((pl) => applyOpacity(pl, polylineOpacity));
-  }, [polylineOpacity]);
-
-  useEffect(() => {
-    toggleLayerVisibility(routePaths.current, showRouting);
-    toggleLayerVisibility(routeMarkers.current, showRouting);
-  }, [showRouting, toggleLayerVisibility]);
-
-  useEffect(() => {
-    Object.values(routePaths.current).forEach((pl) => applyOpacity(pl, routePathOpacity));
-    Object.values(routeMarkers.current).forEach((m) => applyOpacity(m, routePathOpacity));
-  }, [routePathOpacity]);
-
-  useEffect(() => {
-    toggleLayerVisibility(parkingMarkers.current, showParking);
-  }, [showParking, toggleLayerVisibility]);
-
-  useEffect(() => {
-    Object.values(parkingMarkers.current).forEach((m) => applyOpacity(m, parkingOpacity));
-  }, [parkingOpacity]);
-
-  useEffect(() => {
-    toggleNavigationVisibility(vehicleMarkers.current, showNavigation);
-  }, [showNavigation, toggleNavigationVisibility]);
-
-  useEffect(() => {
-    applyNavigationOpacity(vehicleMarkers.current, navigationOpacity);
-  }, [navigationOpacity]);
-
-  // Greyscale effect
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    const map = mapRef.current;
-    const tilePane = document.querySelector('.leaflet-tile-pane');
-    const markerPane = document.querySelector('.leaflet-marker-pane');
-    const overlayPane = document.querySelector('.leaflet-overlay-pane');
-
-    const applyGreyscale = (value: number) => {
-      const grayscalePercent = (1 - value) * 100;
-      console.log('[Leaflet Greyscale] Applying greyscale:', { grayscalePercent });
-      if (tilePane) {
-        const filterValue = grayscalePercent > 0 ? `grayscale(${grayscalePercent}%)` : '';
-        (tilePane as HTMLElement).style.filter = filterValue;
-        (tilePane as HTMLElement).style.transition = 'filter 0.5s ease';
-      }
-      if (markerPane) {
-        (markerPane as HTMLElement).style.filter = 'grayscale(0%)';
-      }
-      if (overlayPane) {
-        (overlayPane as HTMLElement).style.filter = 'grayscale(0%)';
-      }
-    };
-
-    // Disable greyscale during zoom to prevent flickering
-    const onZoomStart = () => {
-      console.log('[Leaflet Greyscale] Disabling greyscale during zoom');
-      if (tilePane) {
-        (tilePane as HTMLElement).style.filter = 'grayscale(0%)';
-      }
-    };
-    const onZoomEnd = () => {
-      console.log('[Leaflet Greyscale] Restoring greyscale after zoom');
-      applyGreyscale(greyscaleValue);
-    };
-
-    map.on('zoomstart', onZoomStart);
-    map.on('zoomend', onZoomEnd);
-
-    // Apply initial greyscale
-    applyGreyscale(greyscaleValue);
-
-    return () => {
-      map.off('zoomstart', onZoomStart);
-      map.off('zoomend', onZoomEnd);
-    };
+    if (!mapManagerRef.current) return;
+    
+    const layerManager = mapManagerRef.current.getLayerManager();
+    if (layerManager) {
+      layerManager.applyGreyscale(greyscaleValue);
+    }
   }, [greyscaleValue]);
 
-  // Fit bounds for non-map filters
+  // Handle layout changes
   useEffect(() => {
-    if (mapRef.current && defaultFitBounds.current?.isValid()) {
-      mapRef.current.fitBounds(defaultFitBounds.current, { padding: [10, 10], maxZoom: defaultZoom.current || 8 });
-      if (defaultZoom.current) mapRef.current.setZoom(defaultZoom.current);
-    }
-  }, [filters, visibleVehicles]);
+    if (!mapManagerRef.current) return;
 
-  useEffect(() => {
-    if (mapRef.current) {
-      setTimeout(() => mapRef.current?.invalidateSize(), 100);
+    const map = mapManagerRef.current.getController().getMap();
+    if (map) {
+      setTimeout(() => map.invalidateSize(), 100);
     }
   }, [isChartExpanded, isVehiclesExpanded]);
 
   return (
     <div className="dashboard__map-container">
       <div ref={mapDiv} className="dashboard__map-element" />
+      
       <div className="map-controls-container">
         <OpacityControl
           id="greyscale-control"
-          onToggle={() => {
-            const newValue = greyscaleValue === 0 ? 1 : 0;
-            setGreyscaleValue(newValue);
-          }}
-          onChange={(value) => {
-            setGreyscaleValue(value);
-          }}
+          onToggle={() => setGreyscaleValue(greyscaleValue === 0 ? 1 : 0)}
+          onChange={setGreyscaleValue}
           initialToggleState={greyscaleValue > 0 ? 1 : 0}
           initialValue={greyscaleValue}
           color="#2389ff"
@@ -683,7 +374,6 @@ const HaulerDashboardMaps: React.FC<HaulerDashboardMapsProps> = ({
         />
       </div>
 
-      {/* Vehicle detail modal */}
       <VehicleDetailModal
         vehicle={selectedVehicle}
         isOpen={isModalOpen}
