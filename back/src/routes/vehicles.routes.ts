@@ -1,7 +1,7 @@
+
 // File: ./back/src/routes/vehicles.routes.ts
 // Router for vehicle search API endpoint, updated with centralized constants
-import { Request as ExpressRequest, Response } from 'express';
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from 'express';
 import { VehicleService } from "../services/vehicles.services.js";
 import * as fs from "fs/promises";
 import { fileURLToPath } from "url";
@@ -52,7 +52,7 @@ interface SearchRequestBody {
 }
 
 // Create a typed request interface
-interface TypedRequest<T> extends ExpressRequest {
+interface TypedRequest<T> extends Request {
   body: T;
 }
 

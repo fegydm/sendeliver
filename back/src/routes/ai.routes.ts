@@ -1,7 +1,11 @@
 // File: ./back/src/routes/ai.routes.ts
 // Last change: Fixed generic Request type
 
-import { Router, Request, Response } from "express";
+
+
+import { Router, Request, Response, NextFunction } from 'express';
+import { OpenAI } from 'openai';
+
 import { AIService } from "../services/ai.services.js";
 import { GeocodingService } from "../services/geocoding.services.js";
 import { handleAIError } from "../utils/error-handler.js";
@@ -58,7 +62,7 @@ const createPromptByType = {
 };
 
 // AI Extraction Endpoint
-router.post("/extract", async (req: Request, res: Response): Promise<void> => {
+router.post("/extract", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { message } = req.body as { message: string };
 
   logRawData("Extract Request", req.body);
@@ -85,7 +89,7 @@ router.post("/extract", async (req: Request, res: Response): Promise<void> => {
 });
 
 // AI Chat Endpoint
-router.post("/chat", async (req: Request, res: Response): Promise<void> => {
+router.post("/chat", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { message } = req.body as { message: string };
 
   logRawData("Chat Request", req.body);

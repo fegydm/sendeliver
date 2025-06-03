@@ -1,10 +1,10 @@
+
 // File: ./back/src/routes/delivery.routes.ts
 // Last change: Replaced generic Request with simple type assertion
-
+import { Router, Request, Response, NextFunction } from 'express';
 import pkg from 'pg';
 const { Pool } = pkg;
 
-import { Router, Request, Response, NextFunction } from "express";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

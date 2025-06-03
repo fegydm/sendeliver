@@ -1,6 +1,7 @@
 // File: ./back/src/routes/external.deliveries.routes.ts
+// Last change: Fixed Request types
 
-import { Router, Request as ExpressRequest, Response, NextFunction } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import pkg from 'pg';
 
 console.log("[external.deliveries] Route loaded");
@@ -31,12 +32,12 @@ interface DeliveryData {
 }
 
 // Create a properly typed Request interface
-interface TypedRequest<T> extends ExpressRequest {
+interface TypedRequest<T> extends Request {
   body: T;
 }
 
 // Middleware to verify API key from request header
-const authMiddleware = (req: ExpressRequest, res: Response, next: NextFunction): void => {
+const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   const apiKey = req.headers['x-api-key'];
   console.log("[external.deliveries] Incoming request");
   console.log("[external.deliveries] Provided API key:", apiKey);

@@ -5,10 +5,9 @@
 .ncs-section {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
   flex: 1;
-  min-height: 0; /* Fix for grid scrolling */
-  overflow: hidden; /* Prevent double scrollbars */
+  min-height: 240px;
 }
 
 /* Navigation Section */

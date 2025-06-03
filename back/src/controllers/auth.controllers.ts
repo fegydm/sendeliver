@@ -1,17 +1,12 @@
-// File: ./back/src/controllers/auth.controllers.ts
-// Last change: Added Request body type definition
+// File: back/src/controllers/auth.controllers.ts
+// Last change: Fixed TypeScript types and error handling
 
-import express from 'express';
 import { PrismaClient, Role } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
 import { promisify } from 'util';
 import { OAuth2Client } from 'google-auth-library';
-
-// Define request type directly as "any" to avoid namespace issues
-type Request = any;
-type Response = any;
-type NextFunction = (err?: any) => void;
+import { Request, Response, NextFunction, RequestHandler, Router } from 'express';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
@@ -20,11 +15,13 @@ const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const scrypt = promisify(_scrypt);
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-type Handler = (
-  req: Request, 
-  res: Response, 
-  next: NextFunction
-) => Promise<void> | void;
+// Helper function for error handling
+const handleError = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+};
 
 async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString('hex');
@@ -51,18 +48,21 @@ function setAuthCookie(res: Response, userId: number, role: Role) {
   return token;
 }
 
-export const registerUser: Handler = async (req, res, next) => {
+export const registerUser: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, password } = req.body;
+    
     if (!name || !email || !password) {
       res.status(400).json({ error: 'Name, email and password are required' });
       return;
     }
+    
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       res.status(409).json({ error: 'Email already registered' });
       return;
     }
+    
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
       data: { name, email, passwordHash, role: Role.client }
@@ -71,30 +71,49 @@ export const registerUser: Handler = async (req, res, next) => {
     const token = setAuthCookie(res, user.id, user.role);
     
     res.status(201).json({
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, permissions: user.permissions },
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role, 
+        permissions: user.permissions 
+      },
       token
     });
-  } catch (err) {
-    next(err);
+    
+  } catch (error) {
+    console.error('[Auth] Registration error:', error);
+    if (next) {
+      next(error);
+    } else {
+      res.status(500).json({ 
+        error: 'Registration failed',
+        message: handleError(error)
+      });
+    }
   }
 };
 
-export const loginUser: Handler = async (req, res, next) => {
+export const loginUser: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
+    
     if (!email || !password) {
       res.status(400).json({ error: 'Email and password are required' });
       return;
     }
+    
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
+    
     if (!user.passwordHash) {
       res.status(400).json({ error: 'Account only supports Google login' });
       return;
     }
+    
     const valid = await verifyPassword(user.passwordHash, password);
     if (!valid) {
       res.status(401).json({ error: 'Invalid credentials' });
@@ -104,34 +123,54 @@ export const loginUser: Handler = async (req, res, next) => {
     const token = setAuthCookie(res, user.id, user.role);
     
     res.json({ 
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, permissions: user.permissions },
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role, 
+        permissions: user.permissions 
+      },
       token
     });
-  } catch (err) {
-    next(err);
+    
+  } catch (error) {
+    console.error('[Auth] Login error:', error);
+    if (next) {
+      next(error);
+    } else {
+      res.status(500).json({ 
+        error: 'Login failed',
+        message: handleError(error)
+      });
+    }
   }
 };
 
-export const googleAuth: Handler = async (req, res, next) => {
+export const googleAuth: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { idToken } = req.body;
+    
     if (!idToken) {
       res.status(400).json({ error: 'idToken is required' });
       return;
     }
+    
     const ticket = await googleClient.verifyIdToken({ idToken, audience: GOOGLE_CLIENT_ID });
     const payload = ticket.getPayload();
+    
     if (!payload || !payload.sub || !payload.email) {
       res.status(400).json({ error: 'Invalid Google token' });
       return;
     }
+    
     let user = await prisma.user.findUnique({ where: { googleId: payload.sub } });
     if (!user) {
       user = await prisma.user.create({
         data: {
           googleId: payload.sub,
           email: payload.email,
-          name: payload.name,
+          name: payload.name || 'Google User',
+          role: Role.client
         }
       });
     }
@@ -139,15 +178,30 @@ export const googleAuth: Handler = async (req, res, next) => {
     const token = setAuthCookie(res, user.id, user.role);
     
     res.json({ 
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, permissions: user.permissions },
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role, 
+        permissions: user.permissions 
+      },
       token
     });
-  } catch (err) {
-    next(err);
+    
+  } catch (error) {
+    console.error('[Auth] Google auth error:', error);
+    if (next) {
+      next(error);
+    } else {
+      res.status(500).json({ 
+        error: 'Google authentication failed',
+        message: handleError(error)
+      });
+    }
   }
 };
 
-export const logoutUser: Handler = (req, res) => {
+export const logoutUser: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
   res.clearCookie('auth', { 
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -158,19 +212,36 @@ export const logoutUser: Handler = (req, res) => {
   res.status(204).end();
 };
 
-export const getProfile: Handler = async (req, res, next) => {
+export const getProfile: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
       res.status(401).json({ error: 'Not authenticated' });
       return;
     }
+    
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
     }
-    res.json({ id: user.id, name: user.name, email: user.email, role: user.role, permissions: user.permissions });
-  } catch (err) {
-    next(err);
+    
+    res.json({ 
+      id: user.id, 
+      name: user.name, 
+      email: user.email, 
+      role: user.role, 
+      permissions: user.permissions 
+    });
+    
+  } catch (error) {
+    console.error('[Auth] Profile error:', error);
+    if (next) {
+      next(error);
+    } else {
+      res.status(500).json({ 
+        error: 'Failed to get profile',
+        message: handleError(error)
+      });
+    }
   }
 };

@@ -1,10 +1,10 @@
+
 // File: ./back/src/routes/geo.languages.routes.ts  
 // Last change: Type-safe query + param parsing for languages endpoints
-
-import express, { Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import languagesService from '../services/geo.languages.services.js';
 
-const router = express.Router();
+const router = Router();
 
 // GET /api/geo/languages
 router.get('/', async (_req: Request, res: Response): Promise<void> => {
@@ -21,7 +21,7 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
 });
 
 // GET /api/geo/languages/country?cc=SK
-router.get('/country', async (req: Request, res: Response): Promise<void> => {
+router.get('/country', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const cc = req.query.cc as string | undefined;
 
@@ -38,7 +38,7 @@ router.get('/country', async (req: Request, res: Response): Promise<void> => {
 });
 
 // GET /api/geo/languages/:cc
-router.get('/:cc', async (req: Request, res: Response): Promise<void> => {
+router.get('/:cc', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { cc } = req.params;
 

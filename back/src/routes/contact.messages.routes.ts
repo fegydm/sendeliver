@@ -2,7 +2,7 @@
 File: ./back/src/routes/contact.messages.routes.ts
 Last change: Fixed imports and typing
 */
-import express from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import {
   submitContactMessage,
   getAllContactMessages,
@@ -10,7 +10,7 @@ import {
   updateContactMessageStatus,
 } from '../controllers/contact.messages.controllers.js';
 
-const router = express.Router();
+const router = Router();
 
 // Public route to submit a contact form message
 router.post('/submit', submitContactMessage);

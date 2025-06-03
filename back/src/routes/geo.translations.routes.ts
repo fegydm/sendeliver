@@ -1,13 +1,13 @@
+
 // File: ./back/src/routes/geo.translations.routes.ts
 // Last change: Added /available endpoint for quick availability check
-
-import express, { Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import translationsService from '../services/geo.translations.services.js';
 
-const router = express.Router();
+const router = Router();
 
 // Get translations for a language code
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { lc } = req.query;
 
@@ -24,7 +24,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 // Check if translations are available for a language code (much faster)
-router.get('/available', async (req: Request, res: Response): Promise<void> => {
+router.get('/available', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { lc } = req.query;
     

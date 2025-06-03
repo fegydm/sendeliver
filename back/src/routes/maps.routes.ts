@@ -1,14 +1,14 @@
+
 // File: back/src/routes/maps.routes.ts
 // Last change: 2025-04-22
 // Description: Updated routes to support MVT generation and Slovak tiles under the correct path
-
-import express, { Request as ExpressRequest, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import mapsService from '../services/maps.services.js';
 
-const router = express.Router();
+const router = Router();
 
 // Create a typed request interface
-interface TypedRequest<P = {}, Q = {}, B = {}> extends ExpressRequest {
+interface TypedRequest<P = {}, Q = {}, B = {}> extends Request {
   params: P;
   query: Q;
   body: B;

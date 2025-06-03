@@ -1,3 +1,4 @@
+import { Request, Response, NextFunction } from "express";
 // File: ./back/src/controllers/contact.messages.controllers.ts
 // Last change: Added explicit any types to handler parameters
 

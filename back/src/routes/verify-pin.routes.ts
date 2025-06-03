@@ -1,7 +1,6 @@
 // File: ./back/src/routes/verify-pin.routes.ts
 // Last change: Fixed handler return type and removed duplicate code
-
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from 'express';
 import { logger } from "@sendeliver/logger";
 
 const router = Router();
@@ -15,7 +14,7 @@ const domainPins: Record<string, string | undefined> = {
 };
 
 // POST /api/verify-pin
-router.post("/", (req: Request, res: Response): void => {
+router.post("/", (req: Request, res: Response, next: NextFunction): void => {
   const { domain, pin } = req.body as { domain?: string; pin?: string };
 
   // Validate input

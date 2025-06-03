@@ -1,13 +1,13 @@
+
 // File: ./back/src/routes/geo.countries.routes.ts
 // Last change: Added language ID mapping for lc
-
-import express, { Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import countriesService from '../services/geo.countries.services.js';
 
-const router = express.Router();
+const router = Router();
 
 // GET /api/geo/countries
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const q = req.query.q as string | undefined;
     const countries = await countriesService.getCountries();
@@ -29,7 +29,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 // GET /api/geo/countries/location
-router.get('/location', async (req: Request, res: Response): Promise<void> => {
+router.get('/location', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const psc = req.query.psc as string | undefined;
     const city = req.query.city as string | undefined;
@@ -65,7 +65,7 @@ router.get('/location', async (req: Request, res: Response): Promise<void> => {
 });
 
 // GET /api/geo/countries/country_formats
-router.get('/country_formats', async (req: Request, res: Response): Promise<void> => {
+router.get('/country_formats', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const cc = req.query.cc as string | undefined;
 
