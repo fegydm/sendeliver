@@ -1,14 +1,14 @@
 // File: front/src/services/webrtc/WebRTCManager.ts
 // Last change: Initial implementation with video call and screen share functionality
 
-import { WebSocketService } from '../websocket/WebSocketService';
+import  WebSocketService  from './websocket.services';
 import { 
   WebRTCSignalingMessage, 
   WebRTCConnectionState, 
   WebRTCStreamType,
   VideoCallState,
   ScreenShareState 
-} from '../../types/webrtc.types';
+} from '../types/webrtc.types';
 
 export interface WebRTCConfig {
   iceServers: RTCIceServer[];
@@ -55,17 +55,17 @@ export class WebRTCManager {
     wsService: WebSocketService
   ) {
     this.config = {
+      ...config,
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
-        ...config.iceServers
+        ...(config.iceServers || [])
       ],
       maxRetries: 3,
       connectionTimeout: 30000,
       enableVideo: true,
       enableAudio: true,
-      enableScreenShare: true,
-      ...config
+      enableScreenShare: true
     };
     
     this.callbacks = callbacks;
@@ -130,7 +130,8 @@ export class WebRTCManager {
       
     } catch (error) {
       console.error('[WebRTC] Failed to initiate video call:', error);
-      this.callbacks.onError(new Error(`Failed to initiate call: ${error.message}`));
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.callbacks.onError(new Error(`Failed to initiate call: ${errorMessage}`));
       this.cleanup();
     }
   }
@@ -173,7 +174,8 @@ export class WebRTCManager {
       
     } catch (error) {
       console.error('[WebRTC] Failed to accept call:', error);
-      this.callbacks.onError(new Error(`Failed to accept call: ${error.message}`));
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.callbacks.onError(new Error(`Failed to accept call: ${errorMessage}`));
       this.rejectCall(callId);
     }
   }
@@ -253,7 +255,8 @@ export class WebRTCManager {
       
     } catch (error) {
       console.error('[WebRTC] Failed to start screen share:', error);
-      this.callbacks.onError(new Error(`Screen share failed: ${error.message}`));
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.callbacks.onError(new Error(`Screen share failed: ${errorMessage}`));
     }
   }
 
@@ -292,7 +295,8 @@ export class WebRTCManager {
       
     } catch (error) {
       console.error('[WebRTC] Failed to stop screen share:', error);
-      this.callbacks.onError(new Error(`Failed to stop screen share: ${error.message}`));
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.callbacks.onError(new Error(`Failed to stop screen share: ${errorMessage}`));
     }
   }
 
@@ -377,7 +381,8 @@ export class WebRTCManager {
       
     } catch (error) {
       console.error('[WebRTC] Failed to get user media:', error);
-      throw new Error(`Failed to access camera/microphone: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      throw new Error(`Failed to access camera/microphone: ${errorMessage}`);
     }
   }
 
@@ -509,7 +514,8 @@ export class WebRTCManager {
       }
     } catch (error) {
       console.error('[WebRTC] Error handling signaling message:', error);
-      this.callbacks.onError(new Error(`Signaling error: ${error.message}`));
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      this.callbacks.onError(new Error(`Signaling error: ${errorMessage}`));
     }
   }
 

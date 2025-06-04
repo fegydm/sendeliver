@@ -1,5 +1,95 @@
 // File: front/src/types/webrtc.types.ts
-// Last change: Created comprehensive WebRTC type definitions
+// Last change: Added complete WebRTC type definitions for integration including compatibility types
+
+// ===== COMPATIBILITY TYPES FOR EXISTING COMPONENTS =====
+
+export interface WebRTCConfig {
+  // ICE server configuration
+  iceServers: RTCIceServer[];
+  
+  // Media constraints
+  video: boolean | MediaTrackConstraints;
+  audio: boolean | MediaTrackConstraints;
+  
+  // Connection settings
+  offerOptions?: RTCOfferOptions;
+  answerOptions?: RTCAnswerOptions;
+  
+  // Timeout settings
+  connectionTimeout?: number;
+  reconnectAttempts?: number;
+  
+  // Debug settings
+  debug?: boolean;
+}
+
+export interface WebRTCCallbacks {
+  // Connection lifecycle callbacks
+  onConnectionStateChange?: (state: RTCPeerConnectionState) => void;
+  onIceConnectionStateChange?: (state: RTCIceConnectionState) => void;
+  onSignalingStateChange?: (state: RTCSignalingState) => void;
+  
+  // Stream callbacks
+  onLocalStream?: (stream: MediaStream) => void;
+  onRemoteStream?: (stream: MediaStream) => void;
+  onStreamEnd?: () => void;
+  
+  // Data channel callbacks
+  onDataChannelOpen?: () => void;
+  onDataChannelMessage?: (message: string) => void;
+  onDataChannelClose?: () => void;
+  
+  // Error callbacks
+  onError?: (error: Error) => void;
+  onWarning?: (warning: string) => void;
+  
+  // ICE candidate callbacks
+  onIceCandidate?: (candidate: RTCIceCandidate) => void;
+  onIceCandidateError?: (error: RTCPeerConnectionIceErrorEvent) => void;
+  
+  // Call status callbacks
+  onCallStart?: () => void;
+  onCallEnd?: () => void;
+  onCallRinging?: () => void;
+  onCallAccepted?: () => void;
+  onCallRejected?: () => void;
+}
+
+export interface WebRTCState {
+  // Connection status
+  isConnected: boolean;
+  isConnecting: boolean;
+  connectionState: RTCPeerConnectionState;
+  iceConnectionState: RTCIceConnectionState;
+  signalingState: RTCSignalingState;
+  
+  // Media status
+  hasLocalVideo: boolean;
+  hasLocalAudio: boolean;
+  hasRemoteVideo: boolean;
+  hasRemoteAudio: boolean;
+  
+  // Stream references
+  localStream: MediaStream | null;
+  remoteStream: MediaStream | null;
+  
+  // Call status
+  isInCall: boolean;
+  isVideoCall: boolean;
+  isAudioMuted: boolean;
+  isVideoMuted: boolean;
+  
+  // Error state
+  lastError: string | null;
+  
+  // Statistics
+  bytesReceived: number;
+  bytesSent: number;
+  packetsLost: number;
+  roundTripTime: number;
+}
+
+// ===== COMPREHENSIVE WEBRTC TYPES =====
 
 // Connection states
 export type WebRTCConnectionState = 
@@ -146,6 +236,24 @@ export interface WebRTCError {
 }
 
 // Device Information
+export interface CameraDevice {
+  deviceId: string;
+  kind: 'videoinput';
+  label: string;
+  groupId: string;
+  capabilities?: MediaTrackCapabilities;
+  settings?: MediaTrackSettings;
+}
+
+export interface MicrophoneDevice {
+  deviceId: string;
+  kind: 'audioinput';
+  label: string;
+  groupId: string;
+  capabilities?: MediaTrackCapabilities;
+  settings?: MediaTrackSettings;
+}
+
 export interface MediaDeviceInfo {
   cameras: MediaDeviceInfo[];
   microphones: MediaDeviceInfo[];
@@ -305,6 +413,49 @@ export const QUALITY_LEVELS = {
 } as const;
 
 // Default Configurations
+export const DEFAULT_WEBRTC_CONFIG: WebRTCConfig = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+  ],
+  video: {
+    width: { ideal: 1280 },
+    height: { ideal: 720 },
+    frameRate: { ideal: 30, max: 60 }
+  },
+  audio: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true
+  },
+  connectionTimeout: 30000,
+  reconnectAttempts: 3,
+  debug: false
+};
+
+export const DEFAULT_WEBRTC_STATE: WebRTCState = {
+  isConnected: false,
+  isConnecting: false,
+  connectionState: 'new',
+  iceConnectionState: 'new',
+  signalingState: 'stable',
+  hasLocalVideo: false,
+  hasLocalAudio: false,
+  hasRemoteVideo: false,
+  hasRemoteAudio: false,
+  localStream: null,
+  remoteStream: null,
+  isInCall: false,
+  isVideoCall: false,
+  isAudioMuted: false,
+  isVideoMuted: false,
+  lastError: null,
+  bytesReceived: 0,
+  bytesSent: 0,
+  packetsLost: 0,
+  roundTripTime: 0
+};
+
 export const DEFAULT_MEDIA_CONFIG: MediaStreamConfig = {
   video: {
     enabled: true,

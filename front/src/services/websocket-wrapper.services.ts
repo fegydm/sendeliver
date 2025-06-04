@@ -1,7 +1,7 @@
-// File: front/src/services/websocket-wrapper.service.ts
+// File: front/src/services/websocket-wrapper.services.ts
 // Last change: Created WebSocket wrapper with GPS, chat, and communication features
 import React from 'react';
-import WebSocketService from './websocket.service';
+import WebSocketService from './websocket.services';
 import { 
   WebSocketMessage, 
   GPSUpdateMessage, 

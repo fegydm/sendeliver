@@ -1,5 +1,5 @@
-// File: front/src/services/websocket.service.ts
-// Last change: Optimized WebSocketService with better TypeScript support and performance
+// File: front/src/services/websocket.services.ts
+// Last change: Added onMessage method and simplified message type handling
 
 interface WebSocketEventMap {
   connection: null;
@@ -18,6 +18,7 @@ class WebSocketService {
   private readonly baseReconnectTimeout = 1000; // Start with 1 second
   private reconnectTimer: NodeJS.Timeout | null = null;
   private subscribers = new Map<string, Set<Function>>();
+  private messageTypeHandlers = new Map<string, Set<Function>>(); // For onMessage method
   private isManualDisconnect = false;
 
   constructor(private readonly url: string) {}
@@ -86,7 +87,22 @@ class WebSocketService {
   private handleMessage = (event: MessageEvent): void => {
     try {
       const message = JSON.parse(event.data);
+      
+      // Notify general message subscribers
       this.notify('message', message);
+      
+      // Handle typed message handlers (for onMessage method)
+      if (message.type && this.messageTypeHandlers.has(message.type)) {
+        const handlers = this.messageTypeHandlers.get(message.type)!;
+        handlers.forEach((callback) => {
+          try {
+            callback(message.payload || message);
+          } catch (error) {
+            console.error(`[WebSocket] Error in ${message.type} handler:`, error);
+          }
+        });
+      }
+      
     } catch (error) {
       console.error('[WebSocket] Error parsing message:', error);
       console.log('[WebSocket] Raw message:', event.data);
@@ -165,6 +181,36 @@ class WebSocketService {
       this.notify('error', error instanceof Error ? error : new Error('Send failed'));
       return false;
     }
+  }
+
+  // NEW: onMessage method for typed message handling
+  public onMessage(type: string, callback: (message: any) => void): void {
+    if (!this.messageTypeHandlers.has(type)) {
+      this.messageTypeHandlers.set(type, new Set());
+    }
+    this.messageTypeHandlers.get(type)!.add(callback);
+    console.log(`[WebSocket] Registered handler for message type: ${type}`);
+  }
+
+  // Remove message type handler
+  public offMessage(type: string, callback: (message: any) => void): void {
+    const handlers = this.messageTypeHandlers.get(type);
+    if (handlers) {
+      handlers.delete(callback);
+      if (handlers.size === 0) {
+        this.messageTypeHandlers.delete(type);
+      }
+    }
+  }
+
+  // Send typed message
+  public sendMessage(type: string, payload: any): boolean {
+    const message = {
+      type,
+      payload,
+      timestamp: new Date().toISOString()
+    };
+    return this.send(message);
   }
 
   // Type-safe event subscription
@@ -255,11 +301,20 @@ class WebSocketService {
     return total;
   }
 
+  getMessageHandlerCount(): number {
+    let total = 0;
+    this.messageTypeHandlers.forEach(handlers => {
+      total += handlers.size;
+    });
+    return total;
+  }
+
   // Graceful shutdown
   destroy(): void {
     console.log('[WebSocket] Destroying service');
     this.disconnect();
     this.subscribers.clear();
+    this.messageTypeHandlers.clear();
   }
 }
 

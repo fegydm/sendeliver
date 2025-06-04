@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Vehicle } from '@/data/mockFleet';
 import { mockPeople } from '@/data/mockPeople';
 import { parseStatus, getDirectionColor, getDelayColor } from './map-utils';
+import WebRTCTestIntegration from './WebRTCTestIntegration';
 import './vehicle-detail-modal.css';
 
 interface Location {
@@ -53,6 +54,7 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
   const [activeCommTab, setActiveCommTab] = useState<'chat' | 'yesno' | 'voice' | 'video'>('chat');
   const [chatMessage, setChatMessage] = useState('');
   const [streamEnabled, setStreamEnabled] = useState(true);
+  const [isWebRTCTestOpen, setIsWebRTCTestOpen] = useState(false);
 
   if (!isOpen || !vehicle) return null;
   
@@ -347,170 +349,190 @@ const VehicleDetailModal: React.FC<VehicleDetailModalProps> = ({
   };
 
   return (
-    <div className="vehicle-modal-overlay" onClick={onClose}>
-      <div className="vehicle-modal-content" onClick={e => e.stopPropagation()}>
-        {/* Small Header */}
-        <div className="vehicle-modal-header" style={{ borderTopColor: delayColor }}>
-          <div className="header-left">
-            <h2>{vehicle.name}</h2>
-            <span className="vehicle-status">{formatDashboardStatus(vehicle.dashboardStatus)}</span>
-          </div>
-          <button className="vehicle-modal-close" onClick={onClose}>×</button>
-        </div>
-        
-        <div className="vehicle-modal-body">
-          {/* Basic Info Section - 3 columns: Vehicle | Cargo | Driver */}
-          <div className="basic-info-section">
-            <div className="vehicle-info">
-              <h4>Vozidlo</h4>
-              <div className="info-item">
-                <span className="info-label">ŠPZ:</span>
-                <span className="info-value">{vehicle.plateNumber}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Typ:</span>
-                <span className="info-value">{vehicle.type}</span>
-              </div>
+    <>
+      <div className="vehicle-modal-overlay" onClick={onClose}>
+        <div className="vehicle-modal-content" onClick={e => e.stopPropagation()}>
+          {/* Small Header */}
+          <div className="vehicle-modal-header" style={{ borderTopColor: delayColor }}>
+            <div className="header-left">
+              <h2>{vehicle.name}</h2>
+              <span className="vehicle-status">{formatDashboardStatus(vehicle.dashboardStatus)}</span>
             </div>
-            
-            <div className="cargo-info">
-              <h4>Náklad</h4>
-              <div className="info-item">
-                <span className="info-label">Hmotnosť:</span>
-                <span className="info-value">{mockCargoData.weight}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Typ:</span>
-                <span className="info-value">{mockCargoData.type}</span>
-              </div>
-            </div>
-
-            <div className="driver-info">
-              <h4>Vodič</h4>
-              <div className="info-item">
-                <span className="info-label">Meno:</span>
-                <span className="info-value">
-                  {driver ? `${driver.firstName} ${driver.lastName}` : 'Nepriradený'}
-                </span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Status:</span>
-                <span className="info-value">Aktívny</span>
-              </div>
+            <div className="header-right">
+              <button 
+                className="webrtc-test-button"
+                onClick={() => setIsWebRTCTestOpen(true)}
+                title="Test WebRTC Communication"
+              >
+                🧪 Test WebRTC
+              </button>
+              <button className="vehicle-modal-close" onClick={onClose}>×</button>
             </div>
           </div>
-
-          {/* Elevation Profile */}
-          {renderElevationProfile()}
-
-          {/* Route Status Section - SCD */}
-          <div className="route-status-section">
-            {startLocation && (
-              <div className="route-point start">
-                <div className="route-marker" style={{ backgroundColor: directionColor }}>🏁</div>
-                <div className="route-info">
-                  <div className="route-location">{startLocation.name}</div>
-                  <div className="route-details">
-                    <img src={getCountryFlag(startLocation)} alt="" className="country-flag" />
-                    <span className="departure-time">Odchod: {departureTime}</span>
-                  </div>
+          
+          <div className="vehicle-modal-body">
+            {/* Basic Info Section - 3 columns: Vehicle | Cargo | Driver */}
+            <div className="basic-info-section">
+              <div className="vehicle-info">
+                <h4>Vozidlo</h4>
+                <div className="info-item">
+                  <span className="info-label">ŠPZ:</span>
+                  <span className="info-value">{vehicle.plateNumber}</span>
                 </div>
-              </div>
-            )}
-            
-            {currentLocation && (
-              <div className="route-point current">
-                <div className="route-marker current" style={{ backgroundColor: '#4CAF50' }}>📍</div>
-                <div className="route-info">
-                  <div className="route-location">{currentLocation.name}</div>
-                  <div className="route-details">
-                    <img src={getCountryFlag(currentLocation)} alt="" className="country-flag" />
-                    <span className="current-time">Aktuálne: {currentTime}</span>
-                    <span className="current-speed">{vehicle.speed || 0} km/h</span>
-                  </div>
+                <div className="info-item">
+                  <span className="info-label">Typ:</span>
+                  <span className="info-value">{vehicle.type}</span>
                 </div>
-              </div>
-            )}
-            
-            {destinationLocation && (
-              <div className="route-point destination">
-                <div className="route-marker" style={{ backgroundColor: directionColor }}>🏁</div>
-                <div className="route-info">
-                  <div className="route-location">{destinationLocation.name}</div>
-                  <div className="route-details">
-                    <img src={getCountryFlag(destinationLocation)} alt="" className="country-flag" />
-                    <span className="planned-arrival">Plán: {plannedArrival}</span>
-                    <span className="estimated-arrival">ETA: {estimatedArrival}</span>
-                    {delay > 0 && (
-                      <span className="delay-info" style={{ color: delayColor }}>
-                        Delay: {delay} min
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Three-column NCS Section: Navigation | Communication | Stream */}
-          <div className="ncs-section">
-            {/* Navigation Map */}
-            <div className="navigation-section">
-              <h3>Navigácia</h3>
-              <div className="map-placeholder">
-                <div className="map-mock">🗺️ Mapa s aktuálnou pozíciou</div>
-              </div>
-            </div>
-
-            {/* Communication Section */}
-            <div className="communication-section">
-              <div className="comm-tabs">
-                <button 
-                  className={`comm-tab ${activeCommTab === 'chat' ? 'active' : ''}`}
-                  onClick={() => setActiveCommTab('chat')}
-                >
-                  💬
-                </button>
-                <button 
-                  className={`comm-tab ${activeCommTab === 'yesno' ? 'active' : ''}`}
-                  onClick={() => setActiveCommTab('yesno')}
-                >
-                  ✅
-                </button>
-                <button 
-                  className={`comm-tab ${activeCommTab === 'voice' ? 'active' : ''}`}
-                  onClick={() => setActiveCommTab('voice')}
-                >
-                  📞
-                </button>
-                <button 
-                  className={`comm-tab ${activeCommTab === 'video' ? 'active' : ''}`}
-                  onClick={() => setActiveCommTab('video')}
-                >
-                  📹
-                </button>
               </div>
               
-              <div className="comm-content">
-                {renderCommunicationTab()}
+              <div className="cargo-info">
+                <h4>Náklad</h4>
+                <div className="info-item">
+                  <span className="info-label">Hmotnosť:</span>
+                  <span className="info-value">{mockCargoData.weight}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Typ:</span>
+                  <span className="info-value">{mockCargoData.type}</span>
+                </div>
+              </div>
+
+              <div className="driver-info">
+                <h4>Vodič</h4>
+                <div className="info-item">
+                  <span className="info-label">Meno:</span>
+                  <span className="info-value">
+                    {driver ? `${driver.firstName} ${driver.lastName}` : 'Nepriradený'}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Status:</span>
+                  <span className="info-value">Aktívny</span>
+                </div>
               </div>
             </div>
 
-            {/* Cabin Stream */}
-            <div className="stream-section">
-              <h3>Stream z kabíny</h3>
-              <div className="stream-placeholder">
-                {streamEnabled ? (
-                  <div className="stream-mock">📹 Live stream</div>
-                ) : (
-                  <div className="stream-disabled">Stream vypnutý</div>
-                )}
+            {/* Elevation Profile */}
+            {renderElevationProfile()}
+
+            {/* Route Status Section - SCD */}
+            <div className="route-status-section">
+              {startLocation && (
+                <div className="route-point start">
+                  <div className="route-marker" style={{ backgroundColor: directionColor }}>🏁</div>
+                  <div className="route-info">
+                    <div className="route-location">{startLocation.name}</div>
+                    <div className="route-details">
+                      <img src={getCountryFlag(startLocation)} alt="" className="country-flag" />
+                      <span className="departure-time">Odchod: {departureTime}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {currentLocation && (
+                <div className="route-point current">
+                  <div className="route-marker current" style={{ backgroundColor: '#4CAF50' }}>📍</div>
+                  <div className="route-info">
+                    <div className="route-location">{currentLocation.name}</div>
+                    <div className="route-details">
+                      <img src={getCountryFlag(currentLocation)} alt="" className="country-flag" />
+                      <span className="current-time">Aktuálne: {currentTime}</span>
+                      <span className="current-speed">{vehicle.speed || 0} km/h</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {destinationLocation && (
+                <div className="route-point destination">
+                  <div className="route-marker" style={{ backgroundColor: directionColor }}>🏁</div>
+                  <div className="route-info">
+                    <div className="route-location">{destinationLocation.name}</div>
+                    <div className="route-details">
+                      <img src={getCountryFlag(destinationLocation)} alt="" className="country-flag" />
+                      <span className="planned-arrival">Plán: {plannedArrival}</span>
+                      <span className="estimated-arrival">ETA: {estimatedArrival}</span>
+                      {delay > 0 && (
+                        <span className="delay-info" style={{ color: delayColor }}>
+                          Delay: {delay} min
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Three-column NCS Section: Navigation | Communication | Stream */}
+            <div className="ncs-section">
+              {/* Navigation Map */}
+              <div className="navigation-section">
+                <h3>Navigácia</h3>
+                <div className="map-placeholder">
+                  <div className="map-mock">🗺️ Mapa s aktuálnou pozíciou</div>
+                </div>
+              </div>
+
+              {/* Communication Section */}
+              <div className="communication-section">
+                <div className="comm-tabs">
+                  <button 
+                    className={`comm-tab ${activeCommTab === 'chat' ? 'active' : ''}`}
+                    onClick={() => setActiveCommTab('chat')}
+                  >
+                    💬
+                  </button>
+                  <button 
+                    className={`comm-tab ${activeCommTab === 'yesno' ? 'active' : ''}`}
+                    onClick={() => setActiveCommTab('yesno')}
+                  >
+                    ✅
+                  </button>
+                  <button 
+                    className={`comm-tab ${activeCommTab === 'voice' ? 'active' : ''}`}
+                    onClick={() => setActiveCommTab('voice')}
+                  >
+                    📞
+                  </button>
+                  <button 
+                    className={`comm-tab ${activeCommTab === 'video' ? 'active' : ''}`}
+                    onClick={() => setActiveCommTab('video')}
+                  >
+                    📹
+                  </button>
+                </div>
+                
+                <div className="comm-content">
+                  {renderCommunicationTab()}
+                </div>
+              </div>
+
+              {/* Cabin Stream */}
+              <div className="stream-section">
+                <h3>Stream z kabíny</h3>
+                <div className="stream-placeholder">
+                  {streamEnabled ? (
+                    <div className="stream-mock">📹 Live stream</div>
+                  ) : (
+                    <div className="stream-disabled">Stream vypnutý</div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* WebRTC Test Modal - separate modal */}
+      {isWebRTCTestOpen && (
+        <WebRTCTestIntegration
+          vehicleId={vehicle.id}
+          isOpen={isWebRTCTestOpen}
+          onClose={() => setIsWebRTCTestOpen(false)}
+        />
+      )}
+    </>
   );
 };
 

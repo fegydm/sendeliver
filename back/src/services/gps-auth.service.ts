@@ -35,14 +35,16 @@ class SimpleGPSAuthService {
   }
 
   private registerServiceVehicle() {
-    const device: GPSDevice = {
-      id: 'service-device-1',
-      vehicleId: 'service',
-      apiKey: this.generateApiKey('service'),
-      deviceType: 'mobile_app',
-      isActive: true,
-      createdAt: new Date()
-    };
+  const serviceApiKey = process.env.GPS_API_KEY || 'gps_service_mbgbf2hr_3471b7b1b0491534';
+  
+  const device: GPSDevice = {
+    id: 'service-device-1',
+    vehicleId: 'service',
+    apiKey: serviceApiKey,
+    deviceType: 'mobile_app',
+    isActive: true,
+    createdAt: new Date()
+  };
 
     this.devices.set(device.id, device);
     this.apiKeyToDevice.set(device.apiKey, device.id);
