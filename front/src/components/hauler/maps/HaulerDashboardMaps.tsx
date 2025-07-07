@@ -6,8 +6,8 @@ import "leaflet/dist/leaflet.css";
 import "./dashboard.maps.css";
 import { Vehicle } from '@/data/mockFleet';
 import mockLocations from '@/data/mockLocations';
-import { ALL_STATUSES } from './map-constants';
-import { MapManager } from './map-management';
+import { ALL_STATUSES } from './utils/map-constants';
+import { MapManager } from './utils/map-management';
 import {
   addVehicleMarkers,
   addCurrentCircles,
@@ -16,13 +16,13 @@ import {
   addRoutePaths,
   addFlagMarkers,
   addRouteMarkers,
-} from './map-markers';
+} from './utils/map-markers';
 import { 
   addMarkerClickHandlers, 
   addCircleClickHandlers,
   addPolylineClickHandlers
-} from './MapMarkerHandler';
-import VehicleDetailModal from './VehicleDetailModal';
+} from './utils/MapMarkerHandler';
+import VehicleDetailModal from '../../shared/modals/VehicleDetailModal';
 import OpacityControl from '@/components/shared/elements/OpacityControl';
 import FinishFlag from '@/assets/flags/FinishFlag.svg';
 

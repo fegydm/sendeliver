@@ -7,15 +7,15 @@ import { Tabs } from "@/components/shared/ui/tabs.ui";
 import Button from "@/components/shared/ui/button.ui";
 
 // Import tab screens – keep these as-is; they decide internally what to show
-import HaulerDashboard from "./HaulerDashboard";
-import HaulerFleetComponent from "./HaulerFleetComponent";
-import HaulerPeople from "./HaulerPeople";
-import HaulerLogbook from "./HaulerLogbook";
-import HaulerExchange from "./HaulerExchange";
-import HaulerAnalytics from "./HaulerAnalytics";
-import HaulerWebCards from "./HaulerWebCards";
-import HaulerBilling from "./HaulerBilling";
-import HaulerLocations from "./HaulerLocations";
+import HaulerDashboard from "./content/HaulerDashboard";
+import HaulerFleetComponent from "./content/HaulerFleetComponent";
+import HaulerPeople from "./content/HaulerPeople";
+import HaulerLogbook from "./content/HaulerLogbook";
+import HaulerExchange from "./content/HaulerExchange";
+import HaulerAnalytics from "./content/HaulerAnalytics";
+import HaulerWebCards from "./content/HaulerWebCards";
+import HaulerBilling from "./content/HaulerBilling";
+import HaulerLocations from "./content/HaulerLocations";
 
 import "./hauler.tabs.component.css"; // BEM-named stylesheet
 

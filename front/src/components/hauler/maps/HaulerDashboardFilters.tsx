@@ -4,7 +4,7 @@
 import React, { useMemo, useState, useCallback } from "react";
 import "./dashboard.filters.css";
 import { Vehicle } from "@/data/mockFleet";
-import { parseStatus, getDirectionColor, getDelayColor } from "./map-utils";
+import { parseStatus, getDirectionColor, getDelayColor } from "./utils/map-utils";
 import { 
   statusColors, 
   DYNAMIC_ACTIVITIES, 
@@ -12,7 +12,7 @@ import {
   STATIC_TYPES,
   FilterCategory,
   FILTER_LABELS 
-} from "./map-constants";
+} from "./utils/map-constants";
 
 interface HaulerDashboardFiltersProps {
   vehicles: Vehicle[];

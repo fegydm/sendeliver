@@ -1,6 +1,6 @@
 // File: src/pages/hauler.page.tsx
 import React, { useState, useEffect } from "react";
-import HaulerContent from "@/components/hauler/content/hauler.tabs.component";
+import HaulerContent from "@/components/hauler/hauler.tabs.component";
 import PinForm from "@/components/shared/elements/pin-form.element";
 import "@/styles/sections/hauler.page.css";
 

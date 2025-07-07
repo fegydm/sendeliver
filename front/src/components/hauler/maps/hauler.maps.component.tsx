@@ -1,49 +1,51 @@
-// File: front/src/components/hauler/content/HaulerDashboard.tsx
-// Last change: Refactored to remove duplicities and use unified filter logic
+// File: front/src/components/hauler/maps/hauler.maps.component.tsx
+// Účel: Hlavný komponent pre kartu "Mapa", založený na pôvodnom HaulerDashboard.
 
 import React, { useState, useMemo } from "react";
-import "./dashboard.css";
-import "./dashboard.maps.css";
-import "./dashboard.filters.css";
-import { mockVehicles } from "@/data/mockFleet";
-import { filterVehicles } from "./map-utils";
-import { FilterCategory, ALL_STATUSES } from "./map-constants";
-import HaulerDashboardMaps from "./HaulerDashboardMaps";
-import HaulerDashboardFilters from "./HaulerDashboardFilters";
+import { mockVehicles, Vehicle } from "@/data/mockFleet";
+import { filterVehicles } from "@/components/hauler/maps/utils/map-utils";
+import { FilterCategory } from "@/components/hauler/maps/utils/map-constants";
 
-const HaulerDashboard: React.FC = () => {
-  // Core state
+// Predpokladáme, že tieto komponenty budú tiež presunuté alebo ich cesty upravené
+import HaulerDashboardMaps from "@/components/hauler/maps/HaulerDashboardMaps";
+import HaulerDashboardFilters from "@/components/hauler/maps/HaulerDashboardFilters";
+
+// CSS štýly z pôvodného dashboardu
+import "@/components/hauler/content/dashboard.css";
+import "@/components/hauler/content/dashboard.maps.css";
+import "@/components/hauler/content/dashboard.filters.css";
+
+
+const HaulerMapsComponent: React.FC = () => {
+  // Všetka pôvodná logika pre stav a filtre zostáva, je relevantná
   const [vehicles] = useState(mockVehicles);
   const [filters, setFilters] = useState<FilterCategory[]>([]);
   const [selectedVehicles, setSelectedVehicles] = useState<Set<string>>(new Set());
   
-  // UI state
   const [hover, setHover] = useState<FilterCategory | null>(null);
   const [isChartExpanded, setIsChartExpanded] = useState(false);
   const [isVehiclesExpanded, setIsVehiclesExpanded] = useState(false);
   const [showFlags, setShowFlags] = useState(true);
   const [chartType, setChartType] = useState<"bar" | "pie">("bar");
 
-  // Unified filter logic using map-utils
+  // Logika pre filtrovanie a zobrazenie zostáva nezmenená
   const filteredVehicles = useMemo(() => 
-    filterVehicles(vehicles, filters, new Set()), // No vehicle selection filter at this level
+    filterVehicles(vehicles, filters, new Set()),
     [vehicles, filters]
   );
 
-  // Vehicles visible on map (filtered + selected)
   const visibleVehicles = useMemo(() => 
     filterVehicles(vehicles, filters, selectedVehicles),
     [vehicles, filters, selectedVehicles]
   );
 
-  // Check if all filtered vehicles are selected
   const isAllSelected = useMemo(() => 
     filteredVehicles.length > 0 && 
     filteredVehicles.every(vehicle => selectedVehicles.has(vehicle.id)),
     [filteredVehicles, selectedVehicles]
   );
 
-  // Event handlers
+  // Všetky handlery zostávajú rovnaké
   const handleSelectAll = () => {
     if (isAllSelected) {
       setSelectedVehicles(new Set());
@@ -71,33 +73,28 @@ const HaulerDashboard: React.FC = () => {
       }
     });
   };
-
+  
   const handleResetFilter = () => {
     const allFilters: FilterCategory[] = ['outbound', 'inbound', 'transit', 'moving', 'waiting', 'break', 'standby', 'depot', 'service'];
-    
-    setFilters(prev => {
-      // Toggle between all filters and no filters
-      return prev.length === allFilters.length ? [] : [...allFilters];
-    });
+    setFilters(prev => prev.length === allFilters.length ? [] : [...allFilters]);
   };
 
-  const handleStatusHover = (status: FilterCategory | null) => {
-    setHover(status);
-  };
-
+  // Ostatné handlery...
+  const handleStatusHover = (status: FilterCategory | null) => setHover(status);
   const toggleChartExpansion = () => setIsChartExpanded(prev => !prev);
   const toggleVehiclesExpansion = () => setIsVehiclesExpanded(prev => !prev);
   const handleChartType = (type: "bar" | "pie") => setChartType(type);
   const toggleFlags = () => setShowFlags(prev => !prev);
 
   return (
-    <div className="dashboard">
+    // Použijeme rovnaké CSS triedy, ale hlavný kontajner môžeme premenovať pre jasnosť
+    <div className="dashboard"> 
       <div className="dashboard__toolbar">
-        <h1 className="dashboard__title">Vehicle Overview</h1>
+        <h1 className="dashboard__title">Prehľad Flotily na Mape</h1>
         <div className="dashboard__toolbar-actions">
           <span className="dashboard__stats">
-            {filteredVehicles.length} of {vehicles.length} vehicles
-            {selectedVehicles.size > 0 && ` (${selectedVehicles.size} selected)`}
+            {filteredVehicles.length} z {vehicles.length} vozidiel
+            {selectedVehicles.size > 0 && ` (${selectedVehicles.size} vybraných)`}
           </span>
           <button className="dashboard__toolbar-button">Export</button>
           <button className="dashboard__toolbar-button">Print</button>
@@ -131,8 +128,8 @@ const HaulerDashboard: React.FC = () => {
         />
         
         <HaulerDashboardMaps
-          vehicles={vehicles}
-          visibleVehicles={visibleVehicles}
+          vehicles={visibleVehicles} 
+          visibleVehicles={visibleVehicles} 
           filters={filters}
           selectedVehicles={selectedVehicles}
           hover={hover}
@@ -146,4 +143,4 @@ const HaulerDashboard: React.FC = () => {
   );
 };
 
-export default HaulerDashboard;
+export default HaulerMapsComponent;

@@ -8,14 +8,6 @@ interface Vehicle {
   id: string;
   name: string;
   type: string;
-  dashboardStatus: string;
-  speed: number;
-  currentLocation?: string;
-  location?: string;
-  gpsLocation?: { latitude: number; longitude: number };
-  start?: string;
-  destination?: string;
-  nearestParking?: string;
   image: string;
   brand: string;
   plateNumber: string;
@@ -23,10 +15,30 @@ interface Vehicle {
   capacity: string;
   capacityFree: string;
   odometerKm: number;
-  availability: string;
+  notes: string;
+
+  // Vlastnosť z vašej pochybnosti, pridávame ju pre flexibilitu
+  status?: string; 
+
+  // Vlastnosť, ktorú hlásil TypeScript ako chýbajúcu
+  driver?: string;
+
+  // Prevádzkové stavy (vylepšené typy)
+  availability: 'available' | 'busy' | 'service';
+  dashboardStatus: string; 
+  speed: number;
+
+  // GPS a lokalizačné dáta
+  location?: string;
+  currentLocation?: string;
+  gpsLocation?: { latitude: number; longitude: number };
+  start?: string;
+  destination?: string;
+  nearestParking?: string;
+  
+  // Priradenia
   assignedDriver?: string;
   assignedDispatcher?: string;
-  notes: string;
 }
 
 interface Trip {

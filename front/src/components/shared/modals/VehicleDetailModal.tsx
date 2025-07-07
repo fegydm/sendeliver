@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Vehicle } from '@/data/mockFleet';
 import { mockPeople } from '@/data/mockPeople';
 import { parseStatus, getDirectionColor, getDelayColor } from './map-utils';
-import WebRTCTestIntegration from './WebRTCTestIntegration';
+import WebRTCTestIntegration from '../../hauler/content/WebRTCTestIntegration';
 import './vehicle-detail-modal.css';
 
 interface Location {
