@@ -172,7 +172,7 @@ app.use(function (err: any, req: Request, res: Response, next: NextFunction) {
 });
 
 // 🚀 Štart servera
-const PORT = parseInt(process.env.PORT || "5000", 10);
+const PORT = parseInt(process.env.PORT || "10000", 10);
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server listening on port ${PORT}`);
 });
