@@ -1,14 +1,14 @@
-// File: front/src/components/hauler/dashboard/hauler.dashboard.component.tsx
+// File: front/src/components/hauler/dashboard/dashboard.component.tsx
 // Účel: Nový "Morning Coffee" dashboard s akčnými widgetmi.
 
 import React from "react";
-import "./hauler.dashboard.component.css"; // Upravená cesta k CSS
+import "./dashboard.component.css"; // Upravená cesta k CSS
 
-interface HaulerDashboardComponentProps {
+interface DashboardComponentProps {
   setActiveTab: (tabId: string) => void;
 }
 
-const HaulerDashboardComponent: React.FC<HaulerDashboardComponentProps> = ({ setActiveTab }) => {
+const DashboardComponent: React.FC<DashboardComponentProps> = ({ setActiveTab }) => {
   // TODO: Načítať reálne dáta pre widgety z backendu/WebSocketu
   const priorityAlerts = [
     { id: 1, type: "sos", vehicle: "TT-789EF", driver: "Eva Malá", text: 'Hlásenie "SOS"' },
@@ -83,4 +83,4 @@ const HaulerDashboardComponent: React.FC<HaulerDashboardComponentProps> = ({ set
   );
 };
 
-export default HaulerDashboardComponent;
+export default DashboardComponent;

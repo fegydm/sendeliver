@@ -1,27 +1,20 @@
-// File: ./front/src/components/hauler/hauler.tabs.component.tsx
-// Purpose: Role-aware tab container for the Hauler area, following BEM naming (block: hauler-tabs)
-// Comments are in English as requested.
+// File: front/src/components/hauler/hauler.tabs.component.tsx
+// Purpose: Finálna verzia kontajnera s kartami, ktorá implementuje novú architektúru.
 
 import React, { useState } from "react";
 import { Tabs } from "@/components/shared/ui/tabs.ui";
 import Button from "@/components/shared/ui/button.ui";
 
-// Import tab screens – keep these as-is; they decide internally what to show
-import HaulerDashboard from "./content/HaulerDashboard";
-import HaulerFleetComponent from "./content/HaulerFleetComponent";
-import HaulerPeople from "./content/HaulerPeople";
-import HaulerLogbook from "./content/HaulerLogbook";
-import HaulerExchange from "./content/HaulerExchange";
-import HaulerAnalytics from "./content/HaulerAnalytics";
-import HaulerWebCards from "./content/HaulerWebCards";
-import HaulerBilling from "./content/HaulerBilling";
-import HaulerLocations from "./content/HaulerLocations";
+// Importy z novej, modulárnej štruktúry
+import DashboardComponent from "./dashboard/dashboard.component";
+import ExchangeComponent from "./exchange/exchange.component";
+import MapsComponent from "./maps/maps.component";
+import PlannerComponent from "./planner/planner.component";
+import OperationsComponent from "./operations/operations.component";
+import AdminComponent from "./admin/admin.component";
+import AnalyticsComponent from "./analytics/analytics.component";
 
-import "./hauler.tabs.component.css"; // BEM-named stylesheet
-
-// -------------------------
-// Types & Constants
-// -------------------------
+import "./hauler.tabs.component.css";
 
 type Role = "hauler" | "broker" | "sender";
 
@@ -31,54 +24,44 @@ interface MenuItem {
   icon: string;
 }
 
-// Map roles → their visible menu items (shared items reuse the same id)
 const menuItemsByRole: Record<Role, MenuItem[]> = {
   hauler: [
-    { id: "dashboard", title: "Dashboard", icon: "📊" },
-    { id: "fleet", title: "Fleet", icon: "🚛" },
-    { id: "people", title: "People", icon: "👥" },
-    { id: "logbook", title: "Logbook", icon: "📓" },
-    { id: "exchange", title: "Exchange", icon: "💱" },
-    { id: "analytics", title: "Analytics", icon: "📈" },
-    { id: "webcards", title: "WebCard", icon: "🌐" },
-    { id: "billing", title: "Billing", icon: "💳" },
-    { id: "locations", title: "Locations", icon: "📍" },
+    { id: "panel", title: "Panel", icon: "📊" },
+    { id: "burza", title: "Burza", icon: "💱" },
+    { id: "mapa", title: "Mapa", icon: "🗺️" },
+    { id: "planovac", title: "Plánovač", icon: "🗓️" },
+    { id: "zdroje", title: "Zdroje", icon: "📦" },
+    { id: "administrativa", title: "Administratíva", icon: "⚙️" },
+    { id: "analytika", title: "Analytika", icon: "📈" },
   ],
   broker: [
-    // Broker shares most cards; adapt if needed
-    { id: "dashboard", title: "Dashboard", icon: "📊" },
-    { id: "exchange", title: "Exchange", icon: "💱" },
-    { id: "analytics", title: "Analytics", icon: "📈" },
-    { id: "locations", title: "Locations", icon: "📍" },
+    { id: "panel", title: "Panel", icon: "📊" },
+    { id: "burza", title: "Burza", icon: "💱" },
+    { id: "analytika", title: "Analytika", icon: "📈" },
   ],
-  sender: [], // Sender has its own page – expose empty list here for clarity
+  sender: [],
 };
 
 interface HaulerTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  role?: Role; // default = "hauler"
+  role?: Role;
 }
 
-const HaulerTabs: React.FC<HaulerTabsProps> = ({ activeTab, setActiveTab, role = "hauler" }) => {
-  // Visible menu items come from role mapping
-  const menuItems = menuItemsByRole[role];
+const HaulerTabsComponent: React.FC<HaulerTabsProps> = ({ activeTab, setActiveTab, role = "hauler" }) => {
+  const menuItems = menuItemsByRole[role] || [];
 
-  // Initialise visibility map (every item visible by default)
   const [visibleCards, setVisibleCards] = useState<{ [key: string]: boolean }>(
     () => menuItems.reduce((acc, item) => ({ ...acc, [item.id]: true }), {})
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Helpers -----------------------------------------------------
   const visibleCount = Object.values(visibleCards).filter(Boolean).length;
   const allSelected = menuItems.every(item => visibleCards[item.id]);
 
   const handleToggleCard = (id: string) => {
     setVisibleCards(prev => {
       const nextVisible = { ...prev, [id]: !prev[id] };
-
-      // If we just hid the active tab, select the next/prev visible one
       if (id === activeTab && !nextVisible[id]) {
         const ids = menuItems.map(m => m.id);
         const currentIdx = ids.indexOf(id);
@@ -86,62 +69,51 @@ const HaulerTabs: React.FC<HaulerTabsProps> = ({ activeTab, setActiveTab, role =
         const previous = ids.slice(0, currentIdx).reverse().find(i => nextVisible[i]);
         setActiveTab(next || previous || "");
       }
-
       return nextVisible;
     });
   };
 
   const handleToggleAll = () => {
-    const newVis: { [key: string]: boolean } = {};
+    const newVis: { [key:string]: boolean } = {};
     menuItems.forEach(item => {
       newVis[item.id] = allSelected ? item.id === activeTab : true;
     });
     setVisibleCards(newVis);
   };
 
-  // Nothing to render (e.g. role = sender) ----------------------
   if (menuItems.length === 0) {
     return (
       <div className="hauler-tabs hauler-tabs--empty">
-        {/* Empty state for roles without tabs */}
-        <p>No tabs defined for role "{role}".</p>
+        <p>Pre rolu "{role}" nie sú definované žiadne karty.</p>
       </div>
     );
   }
 
-  // -------------------------
-  // Render
-  // -------------------------
-
   return (
     <Tabs value={activeTab} onChange={setActiveTab}>
       <div className="hauler-tabs">
-        {/* Header */}
         <div className="hauler-tabs__header">
           <div className="hauler-tabs__title">carriers.sendeliver.com</div>
           <Button
             className="hauler-tabs__settings-btn"
-            variant="ghost"
-            size="icon"
-            // ButtonProps.role accepts only "hauler" | "sender" | undefined; map broker → hauler for styling.
+            variant="ghost" size="icon"
             role={role === "sender" ? "sender" : "hauler"}
-            aria-label="Settings"
+            aria-label="Nastavenia"
             onClick={() => setIsModalOpen(true)}
           >
             ⚙️
           </Button>
         </div>
 
-        {/* Settings modal */}
         {isModalOpen && (
           <div className="hauler-tabs__modal" role="dialog" aria-modal="true">
             <div className="hauler-tabs__modal-body">
-              <h3>Settings</h3>
+              <h3>Nastavenie Zobrazenia</h3>
               {menuItems.map(item => (
                 <label key={item.id} className="hauler-tabs__settings-item">
                   <input
                     type="checkbox"
-                    checked={visibleCards[item.id]}
+                    checked={!!visibleCards[item.id]}
                     disabled={visibleCount === 1 && visibleCards[item.id]}
                     onChange={() => handleToggleCard(item.id)}
                   />
@@ -151,7 +123,7 @@ const HaulerTabs: React.FC<HaulerTabsProps> = ({ activeTab, setActiveTab, role =
               <hr className="hauler-tabs__settings-divider" />
               <label className="hauler-tabs__settings-item">
                 <input type="checkbox" checked={allSelected} onChange={handleToggleAll} />
-                All
+                Všetky
               </label>
               <Button variant="close" size="icon" onClick={() => setIsModalOpen(false)}>
                 ✖️
@@ -160,7 +132,6 @@ const HaulerTabs: React.FC<HaulerTabsProps> = ({ activeTab, setActiveTab, role =
           </div>
         )}
 
-        {/* Menu */}
         <div className="hauler-tabs__menu">
           {menuItems
             .filter(item => visibleCards[item.id])
@@ -168,35 +139,26 @@ const HaulerTabs: React.FC<HaulerTabsProps> = ({ activeTab, setActiveTab, role =
               <div
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={
-                  "hauler-tabs__menu-item" + (activeTab === item.id ? " hauler-tabs__menu-item--active" : "")
-                }
+                className={`hauler-tabs__menu-item ${activeTab === item.id ? "hauler-tabs__menu-item--active" : ""}`}
               >
                 <div className="hauler-tabs__menu-icon">{item.icon}</div>
                 <div className="hauler-tabs__menu-title">{item.title}</div>
-                <div
-                  className={
-                    "hauler-tabs__menu-underline" + (activeTab === item.id ? " hauler-tabs__menu-underline--active" : "")
-                  }
-                />
+                <div className={`hauler-tabs__menu-underline ${activeTab === item.id ? "hauler-tabs__menu-underline--active" : ""}`} />
               </div>
             ))}
         </div>
       </div>
 
-      {/* Tabs content – rendered only if the card is visible */}
       {menuItems.map(item =>
         visibleCards[item.id] ? (
           <Tabs.Content key={item.id} value={item.id}>
-            {item.id === "dashboard" && <HaulerDashboard />}
-            {item.id === "fleet" && <HaulerFleetComponent />}
-            {item.id === "people" && <HaulerPeople />}
-            {item.id === "logbook" && <HaulerLogbook />}
-            {item.id === "exchange" && <HaulerExchange />}
-            {item.id === "analytics" && <HaulerAnalytics />}
-            {item.id === "webcards" && <HaulerWebCards />}
-            {item.id === "billing" && <HaulerBilling />}
-            {item.id === "locations" && <HaulerLocations />}
+            {item.id === "panel" && <DashboardComponent setActiveTab={setActiveTab} />}
+            {item.id === "burza" && <ExchangeComponent />}
+            {item.id === "mapa" && <MapsComponent />}
+            {item.id === "planovac" && <PlannerComponent />}
+            {item.id === "zdroje" && <OperationsComponent />}
+            {item.id === "administrativa" && <AdminComponent />}
+            {item.id === "analytika" && <AnalyticsComponent />}
           </Tabs.Content>
         ) : null
       )}
@@ -204,4 +166,4 @@ const HaulerTabs: React.FC<HaulerTabsProps> = ({ activeTab, setActiveTab, role =
   );
 };
 
-export default HaulerTabs;
+export default HaulerTabsComponent;

@@ -1,0 +1,59 @@
+.control-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 250px;
+  background-color: #fff;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+  border-top: 1px solid #ddd;
+  transform: translateY(100%);
+  animation: slide-up 0.3s forwards;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.control-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #eee;
+  background-color: #f8f9fa;
+}
+
+.control-panel__title {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.control-panel__close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.control-panel__content {
+  padding: 1rem;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.control-panel__item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.control-panel__label {
+  font-weight: bold;
+  color: #555;
+}
