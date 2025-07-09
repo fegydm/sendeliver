@@ -25,7 +25,8 @@
     ],
     "types": [
       "node",
-      "express"
+      "express",
+      "ws"
     ]
   },
   "include": [

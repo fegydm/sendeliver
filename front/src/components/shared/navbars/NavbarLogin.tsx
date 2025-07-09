@@ -1,4 +1,4 @@
-// ./front/src/components/navbars/NavbarLogin.tsx
+// ./front/src/components/shared/navbars/NavbarLogin.tsx
 import { FC } from "react";
 
 interface NavbarLoginProps {

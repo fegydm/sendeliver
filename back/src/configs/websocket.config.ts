@@ -1,5 +1,5 @@
-// File: ./back/src/configs/websocket.config.ts
-// Last change: Fixed message handling to properly convert Buffer to string
+// File: back/src/configs/websocket.config.ts
+// Last action: Implemented new message handling into the original, working code structure.
 
 import { Server as HttpServer } from 'http';
 import { logger } from '@sendeliver/logger';
@@ -34,12 +34,8 @@ export class WebSocketManager {
       const url = new URL(request.url || '', `http://${request.headers.host}`);
       const token = url.searchParams.get('token');
       
-      if (!token) {
-        logger.warn('WebSocket connection without token - using test user');
-      }
-      
       try {
-        let decoded = token 
+        const decoded: any = token 
           ? jwt.verify(token, process.env.JWT_SECRET || 'default_secret')
           : { id: 'test-user', role: 'admin' };
         
@@ -51,38 +47,26 @@ export class WebSocketManager {
         
         logger.info(`WebSocket client connected: userId=${decoded.id}, isAdmin=${decoded.role === 'admin'}`);
         
-        socket.send(JSON.stringify({
-          type: 'connection',
-          payload: { status: 'connected', timestamp: new Date().toISOString() }
-        }));
-        
         socket.on('message', (message: any) => {
           let messageStr: string;
-          
-          // Handle different message types
           if (Buffer.isBuffer(message)) {
             messageStr = message.toString('utf8');
           } else if (typeof message === 'string') {
             messageStr = message;
-          } else if (typeof message === 'object') {
-            // If message is already parsed object, stringify it first
-            messageStr = JSON.stringify(message);
           } else {
-            logger.warn('Unknown message type received:', typeof message, message);
-            return;
+            messageStr = JSON.stringify(message);
           }
-          
           this.handleMessage(socket, messageStr);
         });
         
         socket.on('close', () => {
+          logger.info(`WebSocket client disconnected: userId=${this.clients.get(socket)?.userId}`);
           this.clients.delete(socket);
-          logger.info(`WebSocket client disconnected: userId=${decoded.id}`);
         });
         
       } catch (error) {
         logger.error('WebSocket authentication error:', error);
-        socket.close(1008, 'Authentication failed');
+        socket.close();
       }
     });
     
@@ -92,53 +76,64 @@ export class WebSocketManager {
   
   private static handleMessage(socket: any, message: string): void {
     try {
-      if (!message || typeof message !== 'string') {
-        logger.warn('Invalid message received:', typeof message, message);
-        return;
-      }
-      
       const data = JSON.parse(message);
       logger.debug('Received WebSocket message:', data);
 
-      if (data.type === 'chatMessage' && data.payload && data.payload.messageId && data.payload.message) {
-        // Echo back to sender
-        socket.send(JSON.stringify(data));
-        logger.info(`Echoed chatMessage to client: ${data.payload.messageId}`);
+      // ZMENA: Rozšírená logika pre rôzne typy správ
+      switch (data.type) {
+        case 'gps_update':
+          // Preposielame ako 'vehicle_moved' všetkým adminom
+          this.broadcastToAdmins({ type: 'vehicle_moved', payload: data.payload });
+          logger.info(`Broadcasted gps_update for vehicle ${data.payload?.vehicleId}`);
+          break;
+
+        case 'send_chat_message':
+          // Príprava na chat: pošleme správu konkrétnemu príjemcovi
+          const recipientId = data.payload?.recipientId;
+          const messagePayload = { type: 'new_chat_message', payload: data.payload };
+          this.sendToUser(recipientId, messagePayload);
+          logger.info(`Sent chat message to user ${recipientId}`);
+          break;
         
-        // Broadcast to all admins
-        this.broadcastToAdmins(data);
-        logger.info(`Broadcasted chatMessage to admins: ${data.payload.messageId}`);
-      } else {
-        logger.warn('Invalid message format:', data);
+        default:
+          // Pôvodná logika pre neznáme typy alebo staré formáty
+          if (data.type === 'chatMessage' && data.payload) {
+             this.broadcastToAdmins(data);
+             logger.info(`Broadcasted legacy chatMessage to admins`);
+          } else {
+             logger.warn('Invalid or unknown message format:', data);
+          }
+          break;
       }
+
     } catch (error: unknown) {
       logger.error('Error handling WebSocket message:', error instanceof Error ? error.message : String(error));
     }
   }
   
   public static broadcastToAdmins(message: any): void {
-    let sentCount = 0;
+    const messageString = JSON.stringify(message);
     for (const [socket, client] of this.clients.entries()) {
-      if (client.isAdmin && socket.readyState === 1) {
-        socket.send(JSON.stringify(message));
-        sentCount++;
+      if (client.isAdmin && socket.readyState === this.WebSocket.OPEN) {
+        socket.send(messageString);
       }
     }
-    logger.info(`Broadcasted message to ${sentCount} admin clients`);
   }
   
   public static sendToUser(userId: string, message: any): void {
+    const messageString = JSON.stringify(message);
     for (const [socket, client] of this.clients.entries()) {
-      if (client.userId === userId && socket.readyState === 1) {
-        socket.send(JSON.stringify(message));
+      if (client.userId === userId && socket.readyState === this.WebSocket.OPEN) {
+        socket.send(messageString);
+        return; // Nájdené, poslané
       }
     }
   }
-  
+
+  // Ostatné pomocné funkcie zostávajú rovnaké...
   public static getConnectedClients(): number {
     return this.clients.size;
   }
-  
   public static getAdminClients(): number {
     let adminCount = 0;
     for (const [, client] of this.clients.entries()) {

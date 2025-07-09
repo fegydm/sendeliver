@@ -45,7 +45,7 @@ const DashboardComponent: React.FC<DashboardComponentProps> = ({ setActiveTab })
                   <strong>{alert.vehicle}</strong> - {alert.text}
                 </div>
                 <div className="alert-item__actions">
-                  <button onClick={() => handleOpenControlPanel(alert.vehicle)}>Panel</button>
+                  <button onClick={() => handleOpenControlPanel(alert.vehicle)}>Detail</button>
                   <button onClick={() => handleShowOnMap(alert.vehicle)}>Mapa</button>
                   {alert.type === 'service' && <button onClick={() => handleManageVehicle(alert.vehicle)}>Spravovať</button>}
                 </div>

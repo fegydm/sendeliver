@@ -1,4 +1,8 @@
-/* File: .front/src/components/modals/general.modal.css */
+/*
+ * File: front/src/components/shared/modals/general.modal.css
+ * Last action: Refactored to remove login-specific styles.
+*/
+
 :root {
   --modal-top-offset: 10vh;
   --modal-max-width: 32rem;
@@ -9,12 +13,8 @@
   --modal-backdrop: rgba(0,0,0,0.5);
   --modal-light-bg: #eeeff5;
   --modal-light-text: #000000;
-  --modal-light-hover: #f1f5f9;
   --modal-dark-bg: #22232c;
   --modal-dark-text: #ffffff;
-  --modal-dark-hover: #334155;
-  --muted-foreground: #94a3b8;
-  --foreground: #ffffff;
 }
 
 .modal__backdrop {
@@ -78,39 +78,6 @@
   margin-top: var(--modal-gap);
 }
 
-.login-modal__field {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.login-modal__label {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.login-modal__password-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.login-modal__forgot-link {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
-  text-decoration: underline;
-}
-
-.login-modal__signup {
-  font-size: 0.875rem;
-  text-align: center;
-  color: var(--muted-foreground);
-}
-
-.login-modal__signup-link {
-  color: var(--foreground);
-  text-decoration: underline;
-}
-
 /* Dark mode */
 .dark .modal__content {
   background-color: var(--modal-dark-bg);
@@ -123,28 +90,4 @@
 
 .dark .modal__description {
   color: var(--muted-foreground);
-}
-
-.dark .login-modal__label {
-  color: var(--modal-dark-text);
-}
-
-.dark .login-modal__forgot-link {
-  color: var(--muted-foreground);
-}
-
-.dark .login-modal__signup {
-  color: var(--muted-foreground);
-}
-
-.dark .login-modal__signup-link {
-  color: var(--foreground);
-}
-
-.dark .text-muted-foreground {
-  color: var(--muted-foreground);
-}
-
-.dark .text-foreground {
-  color: var(--foreground);
 }

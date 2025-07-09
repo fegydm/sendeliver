@@ -1,18 +1,18 @@
-// File: ./front/src/components/shared/ui/button.ui.tsx
-// Last change: Added position prop and fixed variant handling
+// File: front/src/components/shared/ui/button.ui.tsx
+// Last action: Added 'danger' variant and refactored class name composition.
 
 import React from "react";
+import './button.ui.css';
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "cancel" | "close" | "ghost" | "floating";
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "danger" | "cancel" | "close" | "ghost" | "floating";
   size?: "default" | "small" | "large" | "icon";
   fullWidth?: boolean;
-  role?: "sender" | "hauler"; 
+  role?: "sender" | "hauler";
   position?: "left" | "right" | "center";
   active?: boolean;
   className?: string;
-  type?: "button" | "submit" | "reset"; 
+  type?: "button" | "submit" | "reset";
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -22,50 +22,23 @@ export const Button: React.FC<ButtonProps> = ({
   role,
   position,
   active = true,
-  className = "",
-  type = "button", 
+  className,
+  type = "button",
   children,
   ...props
 }) => {
-  // Build an array of CSS classes based on the provided props
-  const classes = ["button"];
-
-  // Handle variant
-  if (variant) {
-    classes.push(`button--${variant}`);
-  }
-
-  // Handle size
-  if (size !== "default") {
-    classes.push(`button--${size}`);
-  }
-
-  // Handle fullWidth
-  if (fullWidth) {
-    classes.push("button--full-width");
-  }
-
-  // Handle role (sender/hauler)
-  if (role) {
-    classes.push(`button--${role}`);
-  }
-
-  // Handle position
-  if (position) {
-    classes.push(`button--${position}`);
-  }
-
-  // Handle active state
-  if (!active) {
-    classes.push("button--inactive");
-  }
-
-  // Add custom className
-  if (className) {
-    classes.push(className);
-  }
-
-  const buttonClasses = classes.filter(Boolean).join(" ");
+  const buttonClasses = [
+    "button",
+    variant && `button--${variant}`,
+    size !== "default" && `button--${size}`,
+    fullWidth && "button--full-width",
+    role && `button--${role}`,
+    position && `button--${position}`,
+    !active && "button--inactive",
+    className,
+  ]
+  .filter(Boolean)
+  .join(" ");
 
   return (
     <button type={type} className={buttonClasses} {...props}>

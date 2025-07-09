@@ -1,6 +1,9 @@
-// ./front/src/components/navbars/NavbarBreadcrumb.tsx
+// File: front/src/components/shared/navbars/NavbarBreadcrumb.tsx
+// Last action: Refactored to BEM methodology.
+
 import { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
+import "./NavbarBreadcrumb.css";
 
 interface NavbarBreadcrumbProps {
   onBreadcrumbsToggle: () => void;
@@ -12,16 +15,13 @@ interface BreadcrumbSegment {
   path: string;
 }
 
-const NavbarBreadcrumb: FC<NavbarBreadcrumbProps> = ({
-  onBreadcrumbsToggle,
-  showBreadcrumbs,
-}) => {
+const NavbarBreadcrumb: FC<NavbarBreadcrumbProps> = ({ onBreadcrumbsToggle, showBreadcrumbs }) => {
   const location = useLocation();
 
   const getPathSegments = (): BreadcrumbSegment[] => {
     const segments = location.pathname.split("/").filter(Boolean);
     return segments.map((segment, index) => ({
-      path: "/" + segments.slice(0, index + 1).join("/"),
+      path: `/${segments.slice(0, index + 1).join("/")}`,
       label: segment.charAt(0).toUpperCase() + segment.slice(1),
     }));
   };
@@ -29,43 +29,39 @@ const NavbarBreadcrumb: FC<NavbarBreadcrumbProps> = ({
   const segments = getPathSegments();
 
   return (
-    <div className="navbar-breadcrumb">
-      {/* Toggle Button */}
+    <div className="breadcrumb">
       <button
-        className={`navbar-breadcrumb-toggle ${showBreadcrumbs ? "active" : ""}`}
+        className={`breadcrumb__toggle ${showBreadcrumbs ? "breadcrumb__toggle--active" : ""}`}
         onClick={onBreadcrumbsToggle}
         aria-label="Toggle breadcrumbs"
       >
-        {showBreadcrumbs ? "▲" : "▼"}
+        ▼
       </button>
 
-      {/* Breadcrumb Navigation */}
       {showBreadcrumbs && (
-        <nav className="navbar-breadcrumb-navigation">
-          <div className="navbar-breadcrumb-items">
-            {/* Home Link */}
-            <div className="navbar-breadcrumb-item">
-              <Link to="/" className="navbar-breadcrumb-link">
+        <nav className="breadcrumb__nav" aria-label="Breadcrumb">
+          <ol className="breadcrumb__list">
+            <li className="breadcrumb__item">
+              <Link to="/" className="breadcrumb__link">
                 Home
               </Link>
-            </div>
+            </li>
 
-            {/* Path Segments */}
             {segments.map((segment, index) => (
-              <div key={segment.path} className="navbar-breadcrumb-item">
-                <span className="navbar-breadcrumb-separator">/</span>
+              <li key={segment.path} className="breadcrumb__item">
+                <span className="breadcrumb__separator">/</span>
                 {index === segments.length - 1 ? (
-                  <span className="navbar-breadcrumb-current">
+                  <span className="breadcrumb__current-page" aria-current="page">
                     {segment.label}
                   </span>
                 ) : (
-                  <Link to={segment.path} className="navbar-breadcrumb-link">
+                  <Link to={segment.path} className="breadcrumb__link">
                     {segment.label}
                   </Link>
                 )}
-              </div>
+              </li>
             ))}
-          </div>
+          </ol>
         </nav>
       )}
     </div>

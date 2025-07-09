@@ -1,149 +1,133 @@
-// File: src/components/hauler/maps/maps.component.tsx
-// Účel: Finálna, opravená a prečistená verzia "múdreho" kontajnera pre mapu.
+// File: front/src/components/hauler/maps/maps.component.tsx
+// Posledná akcia: Zmena zobrazenia pre neprihlásených používateľov na informačnú lištu namiesto error stránky.
 
 import React, { useState, useMemo, useEffect } from "react";
-import { io } from "socket.io-client";
-import { Vehicle } from "@/data/mockFleet";
+import { io, Socket } from "socket.io-client";
+import { Vehicle, mockVehicles } from "@/data/mockFleet";
 import { filterVehicles } from "./utils/map-utils";
 import { FilterCategory } from "./utils/map-constants";
 import MapView from "./MapView";
 import FilterPanel from "./FilterPanel";
 import ControlPanel from "./ControlPanel";
+import { useAuth } from '@/contexts/AuthContext';
 
 import "@/components/hauler/content/dashboard.css";
-import "@/components/hauler/content/dashboard.maps.css";
-import "@/components/hauler/content/dashboard.filters.css";
+import "./maps.component.css";
 
 const MapsComponent: React.FC = () => {
+  const { isAuthenticated, token } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [selectedVehicleForPanel, setSelectedVehicleForPanel] = useState<Vehicle | null>(null);
   const [filters, setFilters] = useState<FilterCategory[]>([]);
   const [selectedMapVehicles, setSelectedMapVehicles] = useState<Set<string>>(new Set());
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [notification, setNotification] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/vehicles")
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return res.json();
-      })
-      .then((data: Vehicle[]) => setVehicles(data))
-      .catch(err => console.error("Chyba pri načítaní vozidiel:", err));
-  }, []);
+    const loadData = async () => {
+      setIsLoading(true);
+      setNotification(null);
 
-  useEffect(() => {
-    const socket = io("http://localhost:4000");
-    socket.on("connect", () => console.log("Pripojený k WebSocket serveru:", socket.id));
+      if (!isAuthenticated) {
+        setVehicles(mockVehicles);
+        setNotification("Zobrazujú sa demo dáta. Pre prístup k vašim reálnym dátam sa prihláste alebo zaregistrujte.");
+        setIsLoading(false);
+        return;
+      }
 
-    socket.on("vehicle_moved", (data: { vehicleId: string; lat: number; lon: number; speed: number }) => {
-      setVehicles(currentVehicles =>
-        currentVehicles.map(v =>
-          v.id === data.vehicleId
-            ? { ...v, gpsLocation: { latitude: data.lat, longitude: data.lon }, speed: data.speed }
-            : v
-        )
-      );
-    });
-
-    return () => {
-      socket.disconnect();
+      try {
+        const response = await fetch("http://localhost:10000/api/vehicles", {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error("Nepodarilo sa načítať reálne dáta.");
+        const data: Vehicle[] = await response.json();
+        setVehicles(data);
+      } catch (err: any) {
+        setNotification(err.message + " Zobrazujú sa demo dáta.");
+        setVehicles(mockVehicles);
+      } finally {
+        setIsLoading(false);
+      }
     };
-  }, []);
 
-  const filteredVehicles = useMemo<Vehicle[]>(() =>
-    filterVehicles(vehicles, filters, new Set()),
-    [vehicles, filters]
-  );
+    loadData();
+  }, [isAuthenticated, token]);
 
-  const visibleVehicles = useMemo<Vehicle[]>(() =>
-    filterVehicles(vehicles, filters, selectedMapVehicles),
-    [vehicles, filters, selectedMapVehicles]
-  );
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const socket: Socket = io("http://localhost:10000", { query: { token } });
+    socket.on("connect", () => console.log("FE-SD: Pripojený k WebSocket serveru"));
+    socket.on("vehicle_moved", (data) => {
+      setVehicles(current => current.map(v => 
+        v.id === data.vehicleId ? { ...v, gpsLocation: { latitude: data.lat, longitude: data.lon }, speed: data.speed } : v
+      ));
+    });
+    return () => { socket.disconnect(); };
+  }, [isAuthenticated, token]);
+
+  const filteredVehicles = useMemo<Vehicle[]>(() => 
+    filterVehicles(vehicles, filters, new Set()), [vehicles, filters]);
+  
+  const visibleVehiclesOnMap = useMemo<Vehicle[]>(() => 
+    filterVehicles(vehicles, filters, selectedMapVehicles), [vehicles, filters, selectedMapVehicles]);
 
   const isAllSelected = useMemo<boolean>(() =>
     filteredVehicles.length > 0 &&
     filteredVehicles.every(vehicle => selectedMapVehicles.has(vehicle.id)),
-    [filteredVehicles, selectedMapVehicles]
-  );
+    [filteredVehicles, selectedMapVehicles]);
 
-  const handleSelectAll = () => {
-    if (isAllSelected) {
-      setSelectedMapVehicles(new Set());
-    } else {
-      setSelectedMapVehicles(new Set(filteredVehicles.map(v => v.id)));
-    }
-  };
-
-  const handleSelectVehicleOnMap = (id: string) => {
-    const newSelection = new Set(selectedMapVehicles);
-    if (newSelection.has(id)) {
-      newSelection.delete(id);
-    } else {
-      newSelection.add(id);
-    }
-    setSelectedMapVehicles(newSelection);
-  };
-  
-  const handleToggleFilter = (filter: FilterCategory) => {
-    setFilters(prev => {
-      if (prev.includes(filter)) {
-        return prev.filter(f => f !== filter);
-      } else {
-        return [...prev, filter];
-      }
-    });
-  };
-
-  const handleOpenControlPanel = (vehicle: Vehicle) => {
-    setSelectedVehicle(vehicle);
-  };
-
-  const handleCloseControlPanel = () => {
-    setSelectedVehicle(null);
-  };
+  const handleOpenControlPanel = (vehicle: Vehicle) => setSelectedVehicleForPanel(vehicle);
+  const handleCloseControlPanel = () => setSelectedVehicleForPanel(null);
 
   return (
     <div className="dashboard">
+      {notification && (
+        <div className="notification-bar">
+          <p className="notification-bar__text">
+            {notification}
+            {/* TODO: Pridať reálne linky na prihlásenie a registráciu */}
+            <a href="#" className="notification-bar__link">Prihlásiť sa</a>
+          </p>
+          <button className="notification-bar__close" onClick={() => setNotification(null)}>✖</button>
+        </div>
+      )}
       <div className="dashboard__toolbar">
         <h1 className="dashboard__title">Prehľad Flotily na Mape</h1>
-        <div className="dashboard__toolbar-actions">
-          <span className="dashboard__stats">
-            {filteredVehicles.length} z {vehicles.length} vozidiel
-            {selectedMapVehicles.size > 0 && ` (${selectedMapVehicles.size} vybraných)`}
-          </span>
-          <button className="dashboard__toolbar-button">Export</button>
-          <button className="dashboard__toolbar-button">Print</button>
-          <button className="dashboard__toolbar-button">Refresh</button>
-        </div>
       </div>
       
-      <div className="dashboard__content">
-        <FilterPanel
-          vehicles={vehicles}
-          filteredVehicles={filteredVehicles}
-          selectedVehicles={selectedMapVehicles}
-          filters={filters}
-          isAllSelected={isAllSelected}
-          onSelectAll={handleSelectAll}
-          onSelectVehicle={handleSelectVehicleOnMap}
-          onToggleFilter={handleToggleFilter}
-        />
-        
-        <MapView
-  visibleVehicles={visibleVehicles}
-  onVehicleSelect={handleOpenControlPanel}
-/>
-      </div>
+      {isLoading ? (
+        <div className="page-loader">Načítavam...</div>
+      ) : (
+        <div className="dashboard__content">
+          <FilterPanel
+            vehicles={vehicles}
+            filteredVehicles={filteredVehicles}
+            selectedVehicles={selectedMapVehicles}
+            filters={filters}
+            isAllSelected={isAllSelected}
+            onSelectAll={() => setSelectedMapVehicles(isAllSelected ? new Set() : new Set(filteredVehicles.map(v => v.id)))}
+            onSelectVehicle={(id) => setSelectedMapVehicles(prev => {
+              const next = new Set(prev);
+              next.has(id) ? next.delete(id) : next.add(id);
+              return next;
+            })}
+            onToggleFilter={(filter) => setFilters(prev => prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter])}
+          />
+          <MapView
+            visibleVehicles={visibleVehiclesOnMap}
+            onVehicleSelect={handleOpenControlPanel}
+          />
+        </div>
+      )}
 
-      {selectedVehicle && (
+      {selectedVehicleForPanel && (
         <ControlPanel 
-          vehicle={selectedVehicle} 
+          vehicle={selectedVehicleForPanel} 
           onClose={handleCloseControlPanel} 
         />
       )}
     </div>
   );
 };
-
 export default MapsComponent;

@@ -1,4 +1,4 @@
-// ./front/src/components/admin/config-editor.tsx
+// ./front/src/components/shared/admin/config-editor.tsx
 import React from "react";
 
 interface ConfigEditorProps {

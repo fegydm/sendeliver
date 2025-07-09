@@ -1,6 +1,9 @@
-// ./front/src/components/navbars/NavbarHamburger.tsx
+// File: front/src/components/shared/navbars/NavbarHamburger.tsx
+// Last action: Refactored component to use BEM class names.
+
 import { type FC, useState, useCallback } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
+import "./NavbarHamburger.css";
 
 interface NavbarHamburgerProps {
  onLoginClick: () => void;
@@ -14,7 +17,7 @@ interface NavbarHamburgerItemProps {
 }
 
 const NavbarHamburgerItem: FC<NavbarHamburgerItemProps> = ({ onClick, children }) => (
- <button onClick={onClick} className="navbar-hamburger-item">
+ <button onClick={onClick} className="navbar-hamburger__item">
    {children}
  </button>
 );
@@ -39,17 +42,16 @@ const NavbarHamburger: FC<NavbarHamburgerProps> = ({
    <div className="navbar-hamburger">
      <button
        onClick={toggleMenu}
-       className="navbar-hamburger-toggle"
+       className="navbar-hamburger__toggle"
        aria-label="Toggle menu"
        aria-expanded={isOpen}
-       title={isOpen ? "Close menu" : "Open menu"}
      >
-       {isOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+       {isOpen ? <FaTimes size={22} /> : <FaBars size={22} />}
      </button>
 
      {isOpen && (
-       <div className="navbar-hamburger-menu" role="menu">
-         <div className="navbar-hamburger-content">
+       <div className="navbar-hamburger__menu" role="menu">
+         <div className="navbar-hamburger__content">
            <NavbarHamburgerItem onClick={() => handleItemClick(onShowAbout)}>
              About
            </NavbarHamburgerItem>
