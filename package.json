@@ -5,15 +5,13 @@
   "prisma": {
     "schema": "prisma/schema.prisma"
   },
-  "workspaces": [
+  "workshops": [
     "packages/*",
     "back",
     "front"
   ],
   "scripts": {
     "start": "npm --workspace=back run start",
-    "clean": "node back/src/scripts/clean.js",
-    "dev": "concurrently \"npm --workspace=front run dev\" \"npm --workspace=back run dev\"",
     "build": "npm run build:logger && npm run prisma:generate && npm run build:back && npm run build:front",
     "build:logger": "npm --workspace=@sendeliver/logger run build",
     "build:back": "npm --workspace=back run build",
@@ -21,12 +19,5 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "postinstall": "npm run prisma:generate && npm run build:logger"
-  },
-  "devDependencies": {
-    "@types/ws": "^8.18.1",
-    "concurrently": "^8.0.0"
-  },
-  "dependencies": {
-    "socket.io-client": "^4.8.1"
   }
 }

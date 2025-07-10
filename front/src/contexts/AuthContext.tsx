@@ -1,21 +1,19 @@
-/*
- * File: ./front/src/contexts/AuthContext.tsx
- * Last change: Improved error handling, typing, and loading state management
- */
-import React, { createContext, useState, useEffect, useContext } from 'react';
+// File: front/src/contexts/AuthContext.tsx
+// Last action: Added optional 'image' property to the User interface.
+
+import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import axios, { AxiosError } from 'axios';
 
-// User interface definition
-interface User {
+export interface User {
   id: number;
   name: string;
   email: string;
   role: 'superadmin' | 'admin' | 'client' | 'carrier' | 'forwarder';
   permissions: string[];
+  image?: string; // Pridaná voliteľná vlastnosť pre URL profilového obrázku
 }
 
-// Auth context interface
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
@@ -28,30 +26,28 @@ interface AuthContextType {
   checkAuth: () => Promise<boolean>;
 }
 
-// Create context with undefined as initial value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Auth provider component
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load token from localStorage on initialization
   useEffect(() => {
     const storedToken = localStorage.getItem('auth_token');
     if (storedToken) {
       setToken(storedToken);
-      checkAuth();
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      checkAuth(storedToken);
     } else {
       setLoading(false);
     }
   }, []);
 
-  // Check if token is valid and fetch user data
-  const checkAuth = async (): Promise<boolean> => {
-    if (!token) {
+  const checkAuth = async (currentToken?: string): Promise<boolean> => {
+    const tokenToCheck = currentToken || token;
+    if (!tokenToCheck) {
       setLoading(false);
       return false;
     }
@@ -59,21 +55,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setError(null);
       const response = await axios.get<{ data: User }>('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${tokenToCheck}` },
       });
       setUser(response.data.data);
       return true;
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>;
       setError(error.response?.data?.message || 'Failed to verify authentication');
-      logout();
+      await logout(); // Changed to await logout
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // Register new user
   const register = async (name: string, email: string, password: string): Promise<void> => {
     try {
       setLoading(true);
@@ -85,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const { token: newToken, user: newUser } = response.data;
       localStorage.setItem('auth_token', newToken);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       setToken(newToken);
       setUser(newUser);
     } catch (err) {
@@ -95,7 +91,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Login existing user
   const login = async (email: string, password: string): Promise<void> => {
     try {
       setLoading(true);
@@ -106,6 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const { token: newToken, user: newUser } = response.data;
       localStorage.setItem('auth_token', newToken);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       setToken(newToken);
       setUser(newUser);
     } catch (err) {
@@ -116,14 +112,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Logout user
   const logout = async (): Promise<void> => {
     try {
-      setLoading(true);
-      setError(null);
-      await axios.post('/api/auth/logout', {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      if (token) {
+        await axios.post('/api/auth/logout', {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
     } catch (err) {
       console.error('Logout failed:', err);
     } finally {
@@ -131,14 +126,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(null);
       setLoading(false);
       localStorage.removeItem('auth_token');
+      delete axios.defaults.headers.common['Authorization'];
     }
   };
-
-  // Derived state
+  
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
-  // Expose context values
   const value: AuthContextType = {
     user,
     token,
@@ -149,13 +143,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
     login,
     logout,
-    checkAuth,
+    checkAuth: () => checkAuth(),
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+ return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook for accessing auth context
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {

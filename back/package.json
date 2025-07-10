@@ -5,7 +5,6 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "nodemon --exec tsx src/server.ts",
-    "clean": "npx rimraf dist node_modules",
     "build": "tsc -b tsconfig.json",
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",
     "test": "jest",
@@ -23,12 +22,9 @@
     "handlebars": "^4.7.8",
     "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
-    "maplibre-gl": "^5.4.0",
     "morgan": "^1.10.0",
     "openai": "^4.68.1",
-    "pg": "^8.13.1",
     "qs": "^6.13.0",
-    "redis": "^4.7.0",
     "ws": "^8.18.3",
     "zod": "^3.23.8"
   },
@@ -39,7 +35,6 @@
     "@types/express-useragent": "^1.0.5",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/maplibre-gl": "^1.13.2",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.15.0",
     "@types/pg": "^8.11.10",

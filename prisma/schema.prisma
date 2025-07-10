@@ -1,6 +1,8 @@
+// File: /prisma/schema.prisma
+
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
@@ -8,89 +10,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Organization {
+  id         Int                @id @default(autoincrement())
+  name       String
+  vatNumber  String?            @unique @map("vat_number")
+  type       OrgType
+  status     VerificationStatus @default(PENDING_VERIFICATION)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  users      User[]
+
+  @@map(name: "organizations", schema: "public")
+}
+
 model User {
-  id            Int              @id @default(autoincrement())
-  name          String?
-  email         String           @unique
-  passwordHash  String?
-  role          Role             @default(client)
-  permissions   String[]         @default([])
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  googleId      String?          @unique
-  adminProfile  AdminProfile?    @relation("UserAdminProfile")
-  messages      ContactMessage[] @relation("UserMessages")
-  notifications Notification[]   @relation("UserNotifications")
-  sessions      Session[]        @relation("UserSessions")
+  id                 Int                   @id @default(autoincrement())
+  email              String                @unique
+  passwordHash       String?
+  googleId           String?               @unique
+  displayName        String?
+  role               UserRole              @default(individual_user)
+  organization       Organization?         @relation(fields: [organizationId], references: [id])
+  organizationId     Int?                  @map("organization_id")
+  organizationStatus OrgMembershipStatus   @default(NOT_APPLICABLE) @map("organization_status")
+  manager            User?                 @relation("Hierarchy", fields: [managerId], references: [id])
+  managerId          Int?                  @map("manager_id")
+  subordinates       User[]                @relation("Hierarchy")
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  @@map(name: "users", schema: "auth")
 }
 
-model Session {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation("UserSessions", fields: [userId], references: [id])
-}
-
-model ContactMessage {
-  id        Int           @id @default(autoincrement())
-  name      String
-  email     String
-  subject   String
-  body      String
-  status    MessageStatus @default(PENDING)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  userId    Int?
-  user      User?         @relation("UserMessages", fields: [userId], references: [id])
-}
-
-model Notification {
-  id        Int      @id @default(autoincrement())
-  type      String
-  data      Json
-  timestamp DateTime @default(now())
-  read      Boolean  @default(false)
-  userId    Int
-  user      User     @relation("UserNotifications", fields: [userId], references: [id])
-}
-
-model AdminProfile {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @unique
-  phone      String?
-  department String?
-  avatarUrl  String?
-  notes      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  user       User     @relation("UserAdminProfile", fields: [userId], references: [id])
-}
-
-model GpsData {
-  id        Int       @id @default(autoincrement())
-  vehicleId String    @map("vehicle_id") @db.VarChar(50)
-  latitude  Float
-  longitude Float
-  accuracy  Float?
-  altitude  Float?
-  timestamp DateTime  @db.Timestamptz(6)
-  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  @@map("gps_data")
-}
-
-enum Role {
+enum UserRole {
   superadmin
-  admin
-  client
-  forwarder
-  carrier
+  developer
+  org_admin
+  dispatcher
+  driver
+  individual_user
 }
 
-enum MessageStatus {
-  PENDING
-  REPLIED
-  CLOSED
+enum OrgMembershipStatus {
+  NOT_APPLICABLE
+  PENDING_APPROVAL
+  ACTIVE
+  REJECTED
+  SUSPENDED
+}
+
+enum OrgType {
+  CARRIER
+  FORWARDER
+  CLIENT
+}
+
+enum VerificationStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
 }

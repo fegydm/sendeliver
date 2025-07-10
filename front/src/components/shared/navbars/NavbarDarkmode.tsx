@@ -1,6 +1,9 @@
-// ./front/src/components/navbars/NavbarDarkmode.tsx
+// File: front/src/components/shared/navbars/NavbarDarkmode.tsx
+// Last action: Refactored component to use BEM class names.
+
 import { FC } from "react";
 import { FiSun, FiMoon } from "react-icons/fi";
+import "./NavbarDarkmode.css";
 
 interface NavbarDarkmodeProps {
   isDarkMode: boolean;
@@ -13,15 +16,14 @@ const NavbarDarkmode: FC<NavbarDarkmodeProps> = ({
 }) => {
   return (
     <button
-      onClick={onToggleDarkMode} // Toggle dark mode on button click
+      onClick={onToggleDarkMode}
       className="navbar-darkmode"
-      aria-label="Toggle dark mode" // Accessibility label for screen readers
+      aria-label="Toggle dark mode"
     >
-      {/* Render appropriate icon based on dark mode state */}
       {isDarkMode ? (
-        <FiMoon className="navbar-darkmode-icon" />
+        <FiMoon className="navbar-darkmode__icon" />
       ) : (
-        <FiSun className="navbar-darkmode-icon" />
+        <FiSun className="navbar-darkmode__icon" />
       )}
     </button>
   );

@@ -1,4 +1,5 @@
 // ./front/src/types/dots.ts
+
 import colors from "@/constants/colors";
 
 // basic

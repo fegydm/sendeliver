@@ -1,73 +1,103 @@
 // File: front/src/components/shared/navbars/navbar.component.tsx
-// Last action: Refactored to use AuthContext and new BEM styles.
+// Last action: Corrected the component grouping in JSX to fix the layout.
 
 import { useState, FC } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
-import NavbarHamburger from "./NavbarHamburger";
+import { components } from "@/constants/colors/components";
+import type { DotsArray, TopRowType, BottomRowType } from "@/types/dots";
 import NavbarLogo from "./NavbarLogo";
 import NavbarName from "./NavbarName";
+import NavbarLanguage from "./NavbarLanguage";
+import NavbarDarkmode from "./NavbarDarkmode";
 import NavbarDots from "./NavbarDots";
 import NavbarAvatar from "./NavbarAvatar";
 import NavbarLogin from "./NavbarLogin";
 import NavbarRegister from "./NavbarRegister";
-import NavbarLanguage from "./NavbarLanguage";
-import NavbarDarkmode from "./NavbarDarkmode";
+import NavbarBreadcrumb from "./NavbarBreadcrumb";
 import LoginModal from "@/components/shared/modals/LoginModal";
 import RegisterModal from "@/components/shared/modals/RegisterModal";
 import AvatarModal from "@/components/shared/modals/AvatarModal";
-
+import DotsModal from "@/components/shared/modals/DotsModal";
+import AboutModal from "@/components/shared/modals/AboutModal";
 import "./navbar.component.css";
 
-type ModalType = "login" | "register" | "avatar" | null;
+type ModalType = "login" | "register" | "avatar" | "dots" | "about" | null;
 
 const Navbar: FC = () => {
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { logout } = useAuth();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [showBreadcrumbs, setShowBreadcrumbs] = useState(false);
+  
+  const initialDotsState: DotsArray = [components.dots.inactive, components.dots.inactive, components.dots.inactive];
+  const [topDots, setTopDots] = useState<DotsArray>(initialDotsState);
+  const [bottomDots, setBottomDots] = useState<DotsArray>(initialDotsState);
 
   const handleModalClose = () => setActiveModal(null);
   const handleModalOpen = (modalType: ModalType) => setActiveModal(modalType);
+  const handleBreadcrumbsToggle = () => setShowBreadcrumbs(prev => !prev);
 
+  const handleDotsSelectionChange = (top: TopRowType, bottom: BottomRowType) => {
+    const newTopDots: DotsArray = Array(3).fill(components.dots.inactive);
+    const newBottomDots: DotsArray = Array(3).fill(components.dots.inactive);
+    const topKeys: TopRowType[] = ["client", "forwarder", "carrier"];
+    const bottomKeys: BottomRowType[] = ["anonymous", "cookies", "registered"];
+    if (top) {
+      const topIndex = topKeys.indexOf(top);
+      if (topIndex !== -1) newTopDots[topIndex] = components.dots[top];
+    }
+    if (bottom) {
+      const bottomIndex = bottomKeys.indexOf(bottom);
+      if (bottomIndex !== -1) newBottomDots[bottomIndex] = components.dots[bottom];
+    }
+    setTopDots(newTopDots);
+    setBottomDots(newBottomDots);
+  };
+
+  const handleNavigateToRegister = () => {
+    handleModalClose();
+    setTimeout(() => handleModalOpen('register'), 150);
+  };
+  
   return (
-    <header className="navbar">
-      <nav className="navbar__container">
+    <header className="navbar-wrapper">
+      <div className="navbar">
         <div className="navbar__group navbar__group--left">
-          <div className="navbar__hamburger">
-            <NavbarHamburger onLoginClick={() => handleModalOpen("login")} onRegisterClick={() => handleModalOpen("register")} />
-          </div>
-          <div className="navbar__logo">
-            <NavbarLogo />
-          </div>
-          <div className="navbar__name">
-            <NavbarName />
-          </div>
+          <NavbarLogo onBreadcrumbToggle={handleBreadcrumbsToggle} showBreadcrumbs={showBreadcrumbs} />
+          <NavbarName onShowAbout={() => handleModalOpen("about")} />
+        </div>
+
+        <div className="navbar__group navbar__group--center">
+          <NavbarDots topDots={topDots} bottomDots={bottomDots} onClick={() => handleModalOpen("dots")} />
+          <NavbarAvatar onGuestClick={() => handleModalOpen("login")} onUserClick={() => handleModalOpen("avatar")} />
+          <NavbarLogin onLoginClick={() => handleModalOpen("login")} />
+          <NavbarRegister onRegisterClick={() => handleModalOpen("register")} />
         </div>
 
         <div className="navbar__group navbar__group--right">
-          <div className="navbar__language">
-            <NavbarLanguage />
-          </div>
-          <div className="navbar__darkmode">
-            <NavbarDarkmode isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
-          </div>
-          <div className="navbar__session">
-            {isAuthenticated ? (
-              <NavbarAvatar user={user} onClick={() => handleModalOpen("avatar")} />
-            ) : (
-              <div className="navbar__auth-actions">
-                <NavbarLogin onLoginClick={() => handleModalOpen("login")} />
-                <NavbarRegister onRegisterClick={() => handleModalOpen("register")} />
-              </div>
-            )}
-          </div>
+          <NavbarLanguage />
+          <NavbarDarkmode isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
         </div>
-      </nav>
+      </div>
+      
+      {showBreadcrumbs && (
+        <div className="navbar__breadcrumb-container">
+          <NavbarBreadcrumb />
+        </div>
+      )}
 
-      {/* Modals are managed here */}
-      <LoginModal isOpen={activeModal === "login"} onClose={handleModalClose} isDarkMode={isDarkMode} />
+      <AboutModal isOpen={activeModal === "about"} onClose={handleModalClose} onNavigateToRegister={handleNavigateToRegister} />
+      <LoginModal isOpen={activeModal === "login"} onClose={handleModalClose} />
       <RegisterModal isOpen={activeModal === "register"} onClose={handleModalClose} />
       <AvatarModal isOpen={activeModal === "avatar"} onClose={handleModalClose} onLogout={logout} />
+      <DotsModal 
+        isOpen={activeModal === "dots"} 
+        onClose={handleModalClose} 
+        initialTopDots={topDots} 
+        initialBottomDots={bottomDots} 
+        onSelectionChange={handleDotsSelectionChange}
+      />
     </header>
   );
 };
