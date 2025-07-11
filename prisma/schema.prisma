@@ -8,39 +8,59 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["public", "auth"]
 }
 
 model Organization {
-  id         Int                @id @default(autoincrement())
-  name       String
-  vatNumber  String?            @unique @map("vat_number")
-  type       OrgType
-  status     VerificationStatus @default(PENDING_VERIFICATION)
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
-  users      User[]
+  id          Int                  @id @default(autoincrement())
+  name        String
+  vatNumber   String?              @unique @map("vat_number")
+  type        OrgType
+  status      VerificationStatus   @default(PENDING_VERIFICATION)
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+  users       User[]
 
-  @@map(name: "organizations", schema: "public")
+  @@map("organizations")
+  @@schema("public")
 }
 
 model User {
-  id                 Int                   @id @default(autoincrement())
-  email              String                @unique
-  passwordHash       String?
-  googleId           String?               @unique
-  displayName        String?
-  role               UserRole              @default(individual_user)
-  organization       Organization?         @relation(fields: [organizationId], references: [id])
-  organizationId     Int?                  @map("organization_id")
-  organizationStatus OrgMembershipStatus   @default(NOT_APPLICABLE) @map("organization_status")
-  manager            User?                 @relation("Hierarchy", fields: [managerId], references: [id])
-  managerId          Int?                  @map("manager_id")
-  subordinates       User[]                @relation("Hierarchy")
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
+  id                 Int                  @id @default(autoincrement())
+  email              String               @unique
+  passwordHash       String?              @map("password_hash")
+  googleId           String?              @unique @map("google_id")
+  displayName        String?              @map("display_name")
+  role               UserRole             @default(individual_user)
+  organization       Organization?        @relation(fields: [organizationId], references: [id])
+  organizationId     Int?                 @map("organization_id")
+  organizationStatus OrgMembershipStatus  @default(NOT_APPLICABLE) @map("organization_status")
+  manager            User?                @relation("Hierarchy", fields: [managerId], references: [id])
+  managerId          Int?                 @map("manager_id")
+  subordinates       User[]               @relation("Hierarchy")
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
 
-  @@map(name: "users", schema: "auth")
+  @@map("users")
+  @@schema("auth")
 }
+
+// NEW: Model for GPS Data
+model GpsData {
+  id        Int      @id @default(autoincrement())
+  vehicleId String   // Assuming vehicleId is a string identifier for simplicity, adjust if it's an Int and links to a Vehicle model
+  latitude  Float
+  longitude Float
+  speed     Float?   // Speed can be optional
+  timestamp DateTime @default(now())
+  accuracy  Float?   // Optional: GPS accuracy
+  heading   Float?   // Optional: Direction
+  altitude  Float?   // Optional: Altitude
+
+  @@map("gps_data")
+  @@schema("public") // Assuming GPS data belongs to the public schema
+}
+
 
 enum UserRole {
   superadmin
@@ -49,6 +69,8 @@ enum UserRole {
   dispatcher
   driver
   individual_user
+
+  @@schema("auth")
 }
 
 enum OrgMembershipStatus {
@@ -57,16 +79,22 @@ enum OrgMembershipStatus {
   ACTIVE
   REJECTED
   SUSPENDED
+
+  @@schema("auth")
 }
 
 enum OrgType {
   CARRIER
   FORWARDER
   CLIENT
+
+  @@schema("public")
 }
 
 enum VerificationStatus {
   PENDING_VERIFICATION
   VERIFIED
   REJECTED
+
+  @@schema("public")
 }

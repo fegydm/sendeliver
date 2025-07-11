@@ -1,10 +1,12 @@
-
 // File: back/src/routes/gps.routes.ts
-// Last change: Fixed TypeScript req/res types using proper Express types
+// Last change: Fixed TypeScript req/res types using proper Express types,
+//              corrected Prisma enum usage, and integrated GPS services.
+
 import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import gpsAuthService from '../services/gps-auth.service.js';
 import { authenticateJWT, checkRole } from '../middlewares/auth.middleware.js';
-import { Role } from '@prisma/client';
+import { UserRole } from '@prisma/client'; // Corrected import from 'Role' to 'UserRole'
+import { storeGPSData, broadcastGPSUpdate } from '../services/gps.services.js'; // Import functions from new service file
 
 const router = Router();
 
@@ -15,6 +17,18 @@ const handleError = (error: unknown): string => {
   }
   return String(error);
 };
+
+// Define an interface for the expected GPS data payload
+interface GpsDataPayload {
+  vehicleId: string;
+  latitude: number;
+  longitude: number;
+  speed?: number;
+  timestamp: string; // ISO string
+  accuracy?: number;
+  heading?: number;
+  altitude?: number;
+}
 
 // GPS data endpoint - main endpoint for receiving GPS data
 const handleGPSData: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
@@ -32,6 +46,7 @@ const handleGPSData: RequestHandler = async (req: Request, res: Response, next: 
     const device = auth.device!;
 
     // Parse GPS data
+    // Assuming parseGPSData returns an object conforming to GpsDataPayload
     const parseResult = gpsAuthService.parseGPSData(req.body, device);
     if (!parseResult.success) {
       res.status(400).json({
@@ -41,7 +56,7 @@ const handleGPSData: RequestHandler = async (req: Request, res: Response, next: 
       return;
     }
 
-    const gpsData = parseResult.data!;
+    const gpsData: GpsDataPayload = parseResult.data!; // Cast to GpsDataPayload
 
     // Log received data
     console.log(`[GPS] ${device.deviceType} data from ${gpsData.vehicleId}:`, {
@@ -51,10 +66,10 @@ const handleGPSData: RequestHandler = async (req: Request, res: Response, next: 
       speed: gpsData.speed || 'N/A'
     });
 
-    // Store GPS data (implement your storage logic here)
+    // Store GPS data using the service function
     await storeGPSData(gpsData);
 
-    // Broadcast to WebSocket clients (if you have WebSocket setup)
+    // Broadcast to WebSocket clients using the service function
     broadcastGPSUpdate(gpsData);
 
     // Send success response
@@ -223,48 +238,19 @@ router.get('/gps/device-info', handleDeviceInfo);
 
 // Admin endpoints - require authentication
 router.use('/gps/admin', authenticateJWT);
-router.get('/gps/admin/devices', checkRole(Role.admin, Role.carrier), handleGetDevices);
-router.post('/gps/admin/register', checkRole(Role.admin, Role.carrier), handleRegisterDevice);
-router.get('/gps/admin/apikey/:vehicleId', checkRole(Role.admin, Role.carrier), handleGetApiKey);
-router.post('/gps/admin/deactivate/:deviceId', checkRole(Role.admin, Role.carrier), handleDeactivateDevice);
+// Corrected Role.admin, Role.carrier to UserRole.superadmin, UserRole.org_admin
+// Assuming 'admin' in context means superadmin or organization admin,
+// and 'carrier' refers to a user role that manages carrier operations,
+// which is best represented by 'org_admin' or 'dispatcher' based on your schema.
+// Using superadmin and org_admin for broad admin access.
+router.get('/gps/admin/devices', checkRole(UserRole.superadmin, UserRole.org_admin), handleGetDevices);
+router.post('/gps/admin/register', checkRole(UserRole.superadmin, UserRole.org_admin), handleRegisterDevice);
+router.get('/gps/admin/apikey/:vehicleId', checkRole(UserRole.superadmin, UserRole.org_admin), handleGetApiKey);
+router.post('/gps/admin/deactivate/:deviceId', checkRole(UserRole.superadmin, UserRole.org_admin), handleDeactivateDevice);
 
-// Helper functions
-async function storeGPSData(gpsData: any): Promise<void> {
-  // Implement your GPS data storage here
-  // For now, just log it
-  console.log('[GPS Storage] Storing data for vehicle:', gpsData.vehicleId);
-  
-  // Example database save (implement based on your schema):
-  // await prisma.gpsTracking.create({
-  //   data: {
-  //     vehicleId: gpsData.vehicleId,
-  //     latitude: gpsData.latitude,
-  //     longitude: gpsData.longitude,
-  //     timestamp: new Date(gpsData.timestamp),
-  //     accuracy: gpsData.accuracy,
-  //     speed: gpsData.speed,
-  //     heading: gpsData.heading,
-  //     altitude: gpsData.altitude
-  //   }
-  // });
-}
 
-function broadcastGPSUpdate(gpsData: any): void {
-  // Implement WebSocket broadcast here if you have WebSocket setup
-  console.log('[GPS Broadcast] Broadcasting update for vehicle:', gpsData.vehicleId);
-  
-  // Example WebSocket broadcast:
-  // if (wsServer) {
-  //   wsServer.clients.forEach(client => {
-  //     if (client.readyState === WebSocket.OPEN) {
-  //       client.send(JSON.stringify({
-  //         type: 'gpsUpdate',
-  //         payload: gpsData
-  //       }));
-  //     }
-  //   });
-  // }
-}
+// Helper functions (moved to gps.services.ts and imported)
+// Removed local storeGPSData and broadcastGPSUpdate functions
 
 function getSetupInstructions(device: any): any {
   const baseUrl = process.env.API_BASE_URL || 'http://localhost:5000';

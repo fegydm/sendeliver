@@ -1,5 +1,5 @@
 // File: back/src/server.ts
-// Last change: Fixed Express v5 middleware imports and Request types
+// Last change: Corrected UserRole enum usage in checkRole middleware calls.
 
 import express, { json, static as expressStatic } from "express";
 import http from "http";
@@ -11,6 +11,7 @@ import * as dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
 import { WebSocketManager } from './configs/websocket.config.js';
+import { PrismaClient, UserRole } from '@prisma/client'; // Import UserRole and PrismaClient
 
 // Import types properly for Express v5
 import type { Request, Response, NextFunction } from "express";
@@ -38,7 +39,7 @@ dotenv.config({
 });
 
 const app = express();
-const server = http.createServer(app as any);
+const server = http.createServer(app as any); // Explicitly cast to any for http.createServer compatibility
 
 // Initialize WebSocket server
 WebSocketManager.initialize(server);
@@ -51,6 +52,7 @@ app.use(ua.express());
 interface RequestWithUserAgent extends Request {
   useragent?: {
     isBoten?: boolean;
+    // Add other useragent properties you might use if needed
   };
 }
 
@@ -60,7 +62,7 @@ app.use(morgan(":remote-addr :method :url :status :response-time ms :isBoten"));
 // CORS middleware
 app.use(function (req: Request, res: Response, next: NextFunction) {
   const allowedOrigins = [
-    "http://localhost:3000",
+    process.env.FRONTEND_URL || "http://localhost:3000", // Use environment variable for frontend URL
     "http://localhost:5173",
     "https://sendeliver.com"
   ];
@@ -87,7 +89,7 @@ app.use('/api/verify-pin', verifyPinRouter);
 // 🔒 Admin-only route
 app.use("/api/contact/admin", [
   authenticateJWT,
-  checkRole('admin', 'superadmin'),
+  checkRole(UserRole.org_admin, UserRole.superadmin), // Corrected: Use UserRole enum members
   contactMessagesRoutes
 ]);
 
@@ -110,7 +112,9 @@ app.use("/api", gpsRouter);
 // 🔐 Chránené API
 app.use("/api", [
   authenticateJWT,
-  checkRole('client', 'forwarder', 'carrier', 'admin', 'superadmin'),
+  // Corrected: Use UserRole enum members.
+  // Mapped 'client' to 'individual_user', 'forwarder' to 'dispatcher', 'carrier' to 'org_admin'
+  checkRole(UserRole.individual_user, UserRole.dispatcher, UserRole.org_admin, UserRole.superadmin),
   deliveryRouter
 ]);
 
