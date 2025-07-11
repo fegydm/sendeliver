@@ -14,9 +14,11 @@
   "dependencies": {
     "@prisma/client": "^6.7.0",
     "@sendeliver/logger": "file:../packages/logger",
+    "@types/express-session": "^1.18.2",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.5",
     "express": "^5.1.0",
+    "express-session": "^1.18.1",
     "express-useragent": "^1.0.15",
     "google-auth-library": "^9.14.1",
     "handlebars": "^4.7.8",
