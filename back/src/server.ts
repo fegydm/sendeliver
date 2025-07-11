@@ -1,5 +1,7 @@
 // File: back/src/server.ts
-// Last change: Corrected UserRole enum usage in checkRole middleware calls.
+// Last change: Removed CORS package and restored manual CORS with working config
+
+console.log('[SERVER START] Starting server initialization...');
 
 import express, { json, static as expressStatic } from "express";
 import http from "http";
@@ -9,14 +11,15 @@ import morgan from "morgan";
 import * as ua from "express-useragent";
 import * as dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import session from 'express-session';
+import passport from 'passport';
 import { fileURLToPath } from "url";
 import { WebSocketManager } from './configs/websocket.config.js';
-import { PrismaClient, UserRole } from '@prisma/client'; // Import UserRole and PrismaClient
+import { PrismaClient, UserRole } from '@prisma/client';
+import { configurePassport } from './configs/passport.config.js';
 
-// Import types properly for Express v5
 import type { Request, Response, NextFunction } from "express";
 
-// Routers
 import aiRouter from "./routes/ai.routes.js";
 import geoCountriesRouter from "./routes/geo.countries.routes.js";
 import geoLanguagesRouter from "./routes/geo.languages.routes.js";
@@ -38,31 +41,54 @@ dotenv.config({
   path: "../../.env",
 });
 
-const app = express();
-const server = http.createServer(app as any); // Explicitly cast to any for http.createServer compatibility
+console.log('[SERVER ENV CHECK] GOOGLE_CLIENT_ID loaded:', process.env.GOOGLE_CLIENT_ID ? 'YES' : 'NO');
+console.log('[SERVER ENV CHECK] GOOGLE_CLIENT_SECRET loaded:', process.env.GOOGLE_CLIENT_SECRET ? 'YES' : 'NO');
+console.log('[SERVER ENV CHECK] GOOGLE_CALLBACK_URL loaded:', process.env.GOOGLE_CALLBACK_URL ? 'YES' : 'NO');
+console.log('[SERVER ENV CHECK] SESSION_SECRET loaded:', process.env.SESSION_SECRET ? 'YES' : 'NO');
+console.log('[SERVER ENV CHECK] NODE_ENV:', process.env.NODE_ENV);
 
-// Initialize WebSocket server
+const app = express();
+const server = http.createServer(app as any);
+
 WebSocketManager.initialize(server);
 
+// Basic middleware
 app.use(json());
 app.use(cookieParser());
 app.use(ua.express());
 
-// Extend Request type for morgan
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your_session_secret_key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  }
+}));
+
+// Passport initialization
+app.use(passport.initialize());
+app.use(passport.session());
+
+configurePassport();
+
 interface RequestWithUserAgent extends Request {
   useragent?: {
     isBoten?: boolean;
-    // Add other useragent properties you might use if needed
   };
 }
 
 morgan.token("isBoten", (req: RequestWithUserAgent) => req.useragent?.isBoten ? "BOT" : "HUMAN");
 app.use(morgan(":remote-addr :method :url :status :response-time ms :isBoten"));
 
-// CORS middleware
+// Manual CORS middleware - working configuration
 app.use(function (req: Request, res: Response, next: NextFunction) {
   const allowedOrigins = [
-    process.env.FRONTEND_URL || "http://localhost:3000", // Use environment variable for frontend URL
+    process.env.FRONTEND_URL || "http://localhost:3000",
     "http://localhost:5173",
     "https://sendeliver.com"
   ];
@@ -71,9 +97,12 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
   if (typeof origin === "string" && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
+  
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key");
   res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
+  
   if ((req as any).method === "OPTIONS") {
     res.sendStatus(200);
     return;
@@ -81,23 +110,24 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
   next();
 });
 
-// 🟢 Verejné API bez autentifikácie
+// Auth routes - FIRST so they get proper CORS treatment
 app.use('/api/auth', authRoutes);
+
+// Other public routes
 app.use('/api/contact/submit', contactMessagesRoutes);
 app.use('/api/verify-pin', verifyPinRouter);
 
-// 🔒 Admin-only route
+// Protected admin routes
 app.use("/api/contact/admin", [
   authenticateJWT,
-  checkRole(UserRole.org_admin, UserRole.superadmin), // Corrected: Use UserRole enum members
+  checkRole(UserRole.org_admin, UserRole.superadmin),
   contactMessagesRoutes
 ]);
 
-// 🔁 Mount external deliveries before protected /api/*
 console.log("[server.ts] 🔁 externalDeliveriesRouter mounted");
 app.use("/api/external/deliveries", externalDeliveriesRouter);
 
-// 🌍 Otvorené API moduly
+// Public API routes
 app.use("/api/ai", aiRouter);
 app.use("/api/geo/countries", geoCountriesRouter);
 app.use("/api/geo/languages", geoLanguagesRouter);
@@ -105,32 +135,29 @@ app.use("/api/geo/translations", geoTranslationsRouter);
 app.use("/api/maps", mapsRouter);
 app.use("/api/vehicles", vehiclesRouter);
 
-// 🚛 GPS API - must be BEFORE the protected /api/* section
 console.log("[server.ts] 🛰️ GPS router mounted");
 app.use("/api", gpsRouter);
 
-// 🔐 Chránené API
+// Protected delivery routes
 app.use("/api", [
   authenticateJWT,
-  // Corrected: Use UserRole enum members.
-  // Mapped 'client' to 'individual_user', 'forwarder' to 'dispatcher', 'carrier' to 'org_admin'
   checkRole(UserRole.individual_user, UserRole.dispatcher, UserRole.org_admin, UserRole.superadmin),
   deliveryRouter
 ]);
 
+// Health check
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
-// 🖼️ Frontend assets
+// Static file serving
 const projectRoot = path.resolve(__dirname, "../..");
 const frontendPath = path.join(projectRoot, process.env.FRONTEND_PATH || "");
 const publicPath = path.join(projectRoot, process.env.PUBLIC_PATH || "");
 
-// Static file serving
 const staticPaths = [
   ["/pics", "pics"],
-  ["/flags", "flags"], 
+  ["/flags", "flags"],
   ["/animations", "animations"]
 ];
 
@@ -140,11 +167,12 @@ staticPaths.forEach(([url, dir]) => {
 
 app.use("/assets", expressStatic(path.join(frontendPath, "assets")));
 
+// Frontend routing
 app.get("/", (_req: Request, res: Response) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-// 🎯 Fallback pre SPA
+// Catch-all handler
 app.use((req: Request, res: Response) => {
   if (req.path.startsWith("/api")) {
     res.status(404).json({ error: "API endpoint not found" });
@@ -159,7 +187,7 @@ app.use((req: Request, res: Response) => {
   }
 });
 
-// Global error handler
+// Error handler
 app.use(function (err: any, req: Request, res: Response, next: NextFunction) {
   if ((res as any).headersSent) {
     return next(err);
@@ -175,7 +203,6 @@ app.use(function (err: any, req: Request, res: Response, next: NextFunction) {
   }
 });
 
-// 🚀 Štart servera
 const PORT = parseInt(process.env.PORT || "10000", 10);
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server listening on port ${PORT}`);

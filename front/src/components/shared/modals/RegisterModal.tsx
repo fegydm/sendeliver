@@ -1,5 +1,6 @@
 // File: front/src/components/shared/modals/RegisterModal.tsx
 // Last action: Refactored to use GeneralModal, AuthContext, and BEM.
+//              Fixed 'name' field to correctly map to 'displayName' for backend.
 
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +17,7 @@ interface RegisterModalProps {
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
   const { register } = useAuth();
   const [formData, setFormData] = useState({
-    name: '',
+    displayName: '', // Zmenené z 'name' na 'displayName'
     email: '',
     password: '',
     confirmPassword: ''
@@ -39,7 +40,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
     setError(null);
 
     try {
-      await register(formData.name, formData.email, formData.password);
+      // Odosielame displayName namiesto name
+      await register(formData.displayName, formData.email, formData.password);
       onClose(); // Po úspešnej registrácii zatvoríme okno
     } catch (err: any) {
       setError(err.message || "Registrácia zlyhala.");
@@ -59,8 +61,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
         {error && <p className="register-form__error">{error}</p>}
         
         <div className="register-form__field">
-          <label htmlFor="name">Meno / Názov firmy</label>
-          <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required />
+          <label htmlFor="displayName">Meno / Názov firmy</label> {/* Zmenené z 'name' na 'displayName' */}
+          <Input id="displayName" name="displayName" type="text" value={formData.displayName} onChange={handleChange} required /> {/* Zmenené z 'name' na 'displayName' */}
         </div>
 
         <div className="register-form__field">

@@ -1,7 +1,7 @@
 // File: front/src/components/shared/modals/LoginModal.tsx
-// Posledná akcia: Pridané tlačidlo a logika pre "Login with Google".
+// Last action: Added auto-close functionality when user becomes authenticated
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/shared/ui/button.ui";
 import { Input } from "@/components/shared/ui/input.ui";
@@ -15,9 +15,16 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, isDarkMode = false }) => {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-close modal when user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated && isOpen) {
+      onClose();
+    }
+  }, [isAuthenticated, isOpen, onClose]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,7 +32,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, isDarkM
     setError(null);
     try {
       await login(e.currentTarget.email.value, e.currentTarget.password.value);
-      onClose();
+      // onClose() will be called automatically via useEffect when isAuthenticated becomes true
     } catch (err: any) {
       setError(err.message || "Prihlásenie zlyhalo.");
     } finally {
@@ -34,12 +41,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, isDarkM
   };
 
   const handleGoogleLogin = () => {
-    // Toto presmeruje používateľa na tvoj backend, ktorý začne OAuth flow
-    window.location.href = 'http://localhost:10000/api/auth/google';
+    // Redirect to backend OAuth flow
+    const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10000';
+    window.location.href = `${API_BASE_URL}/api/auth/google`;
+  };
+
+  // Reset form when modal closes
+  const handleClose = () => {
+    setError(null);
+    setIsLoading(false);
+    onClose();
   };
 
   return (
-    <GeneralModal isOpen={isOpen} onClose={onClose} title="Login" className={isDarkMode ? "dark" : "light"}>
+    <GeneralModal isOpen={isOpen} onClose={handleClose} title="Login" className={isDarkMode ? "dark" : "light"}>
       <form id="login-form" onSubmit={handleSubmit}>
         {error && <p className="login-modal__error">{error}</p>}
         <div className="login-modal__field">
@@ -60,7 +75,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, isDarkM
       </div>
 
       <Button variant="secondary" fullWidth onClick={handleGoogleLogin}>
-        {/* Tu môže byť SVG ikona Googlu */}
         <span style={{marginRight: '10px'}}>G</span> Prihlásiť sa cez Google
       </Button>
       

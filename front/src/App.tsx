@@ -1,8 +1,9 @@
 // File: front/src/App.tsx
-// Posledná akcia: Finálna verzia integrujúca AuthProvider a umožňujúca "demo mód" na chránených stránkach.
+// Last change: Removed duplicate Router component.
 
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom"; // Removed BrowserRouter, kept Routes, Route, Navigate
+import { useAuth } from "@/contexts/AuthContext";
 
 // Providers
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -19,10 +20,27 @@ import HomePage from "@/pages/home.page";
 import NotFoundPage from "@/pages/notfound.page";
 import FooterPage from "@/components/shared/footers/footer-page.component";
 import FloatingButton from "@/components/shared/elements/floating-button.element";
+import GoogleAuthCallback from "@/pages/GoogleAuthCallback";
+import LoginModal from "@/components/shared/modals/LoginModal";
+
+// ProtectedRoute component to guard routes
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading authentication...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
 
 const AppContent: React.FC = () => {
-  // Stav pre testovací footer môže žiť tu, alebo byť presunutý do vlastného kontextu
-  const [isTestFooterVisible, setIsTestFooterVisible] = React.useState(false);
+  // Stav isLoginModalOpen je teraz nepoužívaný, pretože LoginModal je riadený routou.
+  // Môže byť odstránený, ak sa nepoužíva inde.
+  // const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
 
   return (
     <div>
@@ -31,7 +49,6 @@ const AppContent: React.FC = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           
-          {/* Routy sú teraz priame. O zobrazení dát rozhoduje komponent vo vnútri. */}
           <Route path="/hauler" element={<HaulerPage />} />
           <Route path="/carrier" element={<HaulerPage />} />
           <Route path="/carriers" element={<HaulerPage />} />
@@ -39,19 +56,27 @@ const AppContent: React.FC = () => {
           <Route path="/sender" element={<SenderPage />} />
           <Route path="/client" element={<SenderPage />} />
           <Route path="/clients" element={<SenderPage />} />
-          
-          {/* TODO: Pridať ostatné routy ako /video, /dokumentacia atď. */}
 
+          <Route path="/auth/callback" element={<GoogleAuthCallback />} />
+
+          {/* Login Route - LoginModal is displayed when /login is active */}
+          <Route path="/login" element={<LoginModal isOpen={true} onClose={() => { /* No action needed here, route handles closing */ }} />} />
+
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <div>Dashboard (Protected Content)</div>
+            </ProtectedRoute>
+          } />
+          
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       <footer>
         <FooterPage 
-          onAdminToggle={setIsTestFooterVisible} 
-          isTestFooterVisible={isTestFooterVisible} 
+          onAdminToggle={() => {}}
+          isTestFooterVisible={false}
         />
         <div className="footer__floating"><FloatingButton /></div>
-        {/* FooterTest tu už nemusí byť, ak ho riadi FooterPage */}
       </footer>
     </div>
   );
@@ -59,7 +84,7 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    // Vrátili sme všetky tvoje dôležité providery. AuthProvider je medzi nimi.
+    // Router je teraz iba v main.tsx, tu ho už neobalujeme
     <TranslationProvider>
       <LanguagesProvider>
         <CountriesProvider>

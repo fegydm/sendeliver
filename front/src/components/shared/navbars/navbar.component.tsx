@@ -1,5 +1,5 @@
 // File: front/src/components/shared/navbars/navbar.component.tsx
-// Last action: Corrected the component grouping in JSX to fix the layout.
+// Last action: Integrated authentication state to hide/show login elements properly
 
 import { useState, FC } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -26,7 +26,7 @@ type ModalType = "login" | "register" | "avatar" | "dots" | "about" | null;
 
 const Navbar: FC = () => {
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { logout } = useAuth();
+  const { logout, isAuthenticated } = useAuth(); // Removed loading as it's not needed here
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [showBreadcrumbs, setShowBreadcrumbs] = useState(false);
   
@@ -59,6 +59,11 @@ const Navbar: FC = () => {
     handleModalClose();
     setTimeout(() => handleModalOpen('register'), 150);
   };
+
+  // Close login modal after successful authentication
+  if (isAuthenticated && activeModal === 'login') {
+    handleModalClose();
+  }
   
   return (
     <header className="navbar-wrapper">
@@ -71,6 +76,8 @@ const Navbar: FC = () => {
         <div className="navbar__group navbar__group--center">
           <NavbarDots topDots={topDots} bottomDots={bottomDots} onClick={() => handleModalOpen("dots")} />
           <NavbarAvatar onGuestClick={() => handleModalOpen("login")} onUserClick={() => handleModalOpen("avatar")} />
+          
+          {/* Login/Register components handle their own authentication checks */}
           <NavbarLogin onLoginClick={() => handleModalOpen("login")} />
           <NavbarRegister onRegisterClick={() => handleModalOpen("register")} />
         </div>
