@@ -1,25 +1,15 @@
 // File: front/src/components/shared/navbars/NavbarLogin.tsx
-// Last action: Removed internal comments and added CSS import.
+// Last action: Converted to a declarative Link component for robust navigation.
 
 import { FC } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 import "./NavbarLogin.css";
 
-interface NavbarLoginProps {
-  onLoginClick: () => void;
-}
-
-const NavbarLogin: FC<NavbarLoginProps> = ({ onLoginClick }) => {
-  const { isAuthenticated } = useAuth();
-
-  if (isAuthenticated) {
-    return null;
-  }
-
+const NavbarLogin: FC = () => {
   return (
-    <button onClick={onLoginClick} className="navbar-login">
+    <Link to="/login" className="navbar-login">
       <span>Log In</span>
-    </button>
+    </Link>
   );
 };
 

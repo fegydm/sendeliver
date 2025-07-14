@@ -1,5 +1,5 @@
 // File: front/src/components/shared/modals/AvatarModal.tsx
-// Last action: Refactored to use GeneralModal, AuthContext, and BEM styles.
+// Last action: Refactored to handle both guest and authenticated user logic.
 
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,8 @@ interface AvatarModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLogout: () => void;
+  isGuestMode?: boolean;
+  cookiesAllowed?: boolean;
 }
 
 type AvatarGroup = 'photos' | 'zodiac' | 'fantasy';
@@ -21,9 +23,19 @@ const AVATAR_DATA = {
   fantasy: ["Warrior", "Mage", "Archer", "Rogue", "Knight", "Wizard", "Paladin", "Monk"].map(c => ({ id: c.toLowerCase(), label: c })),
 };
 
-const AvatarModal: React.FC<AvatarModalProps> = ({ isOpen, onClose, onLogout }) => {
+const setCookie = (name: string, value: string, days: number) => {
+  let expires = "";
+  if (days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    expires = "; expires=" + date.toUTCString();
+  }
+  document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+
+const AvatarModal: React.FC<AvatarModalProps> = ({ isOpen, onClose, onLogout, isGuestMode = false, cookiesAllowed = false }) => {
   const { user } = useAuth();
-  const [activeGroup, setActiveGroup] = useState<AvatarGroup>('photos');
+  const [activeGroup, setActiveGroup] = useState<AvatarGroup>('zodiac');
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
 
   const handleSave = () => {
@@ -31,22 +43,34 @@ const AvatarModal: React.FC<AvatarModalProps> = ({ isOpen, onClose, onLogout }) 
       alert("Najprv si vyberte avatara.");
       return;
     }
-    // TODO: Implement API call to update user's avatar
-    console.log(`Ukladám avatara: ${selectedAvatar} pre používateľa: ${user?.name}`);
+
+    if (isGuestMode) {
+      if (cookiesAllowed) {
+        setCookie('guestAvatar', selectedAvatar, 30);
+        console.log(`Ukladám avatara pre hosťa do cookie: ${selectedAvatar}`);
+      } else {
+        console.log("Cookies nie sú povolené, voľba sa neuloží.");
+      }
+    } else {
+      // TODO: Implement API call to update user's avatar
+      console.log(`Ukladám avatara: ${selectedAvatar} pre používateľa: ${user?.name}`);
+    }
     onClose();
   };
 
   const handleLogoutClick = () => {
     onLogout();
-    onClose();
   };
+
+  const modalTitle = isGuestMode ? "Vyberte si Avatara" : `Profil: ${user?.name || 'Používateľ'}`;
+  const modalDescription = isGuestMode ? "Vaša voľba sa uloží, ak ste povolili cookies." : "Vyberte si svojho nového avatara alebo sa odhláste.";
 
   return (
     <GeneralModal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Profil: ${user?.name || 'Používateľ'}`}
-      description="Vyberte si svojho nového avatara alebo sa odhláste."
+      title={modalTitle}
+      description={modalDescription}
     >
       <div className="avatar-modal">
         <div className="avatar-modal__tabs">
@@ -74,7 +98,11 @@ const AvatarModal: React.FC<AvatarModalProps> = ({ isOpen, onClose, onLogout }) 
         </div>
 
         <div className="avatar-modal__actions">
-          <Button variant="danger" onClick={handleLogoutClick}>Odhlásiť sa</Button>
+          {isGuestMode ? (
+             <div></div> 
+          ) : (
+            <Button variant="danger" onClick={handleLogoutClick}>Odhlásiť sa</Button>
+          )}
           <div className="avatar-modal__actions-group--right">
             <Button variant="cancel" onClick={onClose}>Zrušiť</Button>
             <Button variant="primary" onClick={handleSave}>Uložiť zmeny</Button>

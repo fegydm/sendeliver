@@ -1,5 +1,4 @@
 // File: front/src/components/shared/modals/general.modal.tsx
-// Last action: Verified BEM class names to match the final CSS.
 
 import React, { useEffect } from "react";
 import { Button } from "@/components/shared/ui/button.ui";
@@ -11,7 +10,7 @@ interface GeneralModalProps {
   title?: string;
   description?: string | React.ReactNode;
   children?: React.ReactNode;
-  actions?: React.ReactNode;
+  actions?: React.ReactNode; // Napr. tlačidlá
   className?: string;
 }
 
@@ -41,7 +40,10 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
 
   return (
     <>
+      {/* Pozadie modálu, ktoré po kliknutí zavrie okno */}
       <div className="modal__backdrop" onClick={onClose} />
+      
+      {/* Kontajner, ktorý centruje obsah */}
       <div className="modal__container">
         <div className={`modal__content ${className || ""}`}>
           <div className="modal__header">
@@ -56,8 +58,19 @@ const GeneralModal: React.FC<GeneralModalProps> = ({
               ×
             </Button>
           </div>
+          
           {description && <p className="modal__description">{description}</p>}
+          
           <div className="modal__body">{children}</div>
+
+          {/* === OPRAVA: Pridaná časť na zobrazenie akcií === */}
+          {actions && (
+            <div className="modal__footer">
+              {actions}
+            </div>
+          )}
+          {/* ============================================== */}
+
         </div>
       </div>
     </>

@@ -1,25 +1,15 @@
 // File: front/src/components/shared/navbars/NavbarRegister.tsx
-// Last action: Implemented logic to auto-hide when authenticated.
+// Last action: Converted to a declarative Link component for robust navigation.
 
 import { FC } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 import "./NavbarRegister.css";
 
-interface NavbarRegisterProps {
-  onRegisterClick: () => void;
-}
-
-const NavbarRegister: FC<NavbarRegisterProps> = ({ onRegisterClick }) => {
-  const { isAuthenticated } = useAuth();
-
-  if (isAuthenticated) {
-    return null;
-  }
-  
+const NavbarRegister: FC = () => {
   return (
-    <button onClick={onRegisterClick} className="navbar-register">
+    <Link to="/register" className="navbar-register">
       Create account
-    </button>
+    </Link>
   );
 };
 

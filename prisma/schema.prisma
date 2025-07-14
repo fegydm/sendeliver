@@ -1,4 +1,5 @@
 // File: /prisma/schema.prisma
+// Last change: Added 'selectedRole' field and 'SelectedRoleType' enum to the User model.
 
 generator client {
   provider        = "prisma-client-js"
@@ -12,55 +13,62 @@ datasource db {
 }
 
 model Organization {
-  id          Int                  @id @default(autoincrement())
-  name        String
-  vatNumber   String?              @unique @map("vat_number")
-  type        OrgType
-  status      VerificationStatus   @default(PENDING_VERIFICATION)
-  createdAt   DateTime             @default(now()) @map("created_at")
-  updatedAt   DateTime             @updatedAt @map("updated_at")
-  users       User[]
+  id        Int       @id @default(autoincrement())
+  name      String
+  vatNumber String?   @unique @map("vat_number")
+  type      OrgType
+  status    VerificationStatus @default(PENDING_VERIFICATION)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  users     User[]
 
   @@map("organizations")
   @@schema("public")
 }
 
 model User {
-  id                 Int                  @id @default(autoincrement())
-  email              String               @unique
-  passwordHash       String?              @map("password_hash")
-  googleId           String?              @unique @map("google_id")
-  displayName        String?              @map("display_name")
-  role               UserRole             @default(individual_user)
-  organization       Organization?        @relation(fields: [organizationId], references: [id])
-  organizationId     Int?                 @map("organization_id")
-  organizationStatus OrgMembershipStatus  @default(NOT_APPLICABLE) @map("organization_status")
-  manager            User?                @relation("Hierarchy", fields: [managerId], references: [id])
-  managerId          Int?                 @map("manager_id")
-  subordinates       User[]               @relation("Hierarchy")
-  createdAt          DateTime             @default(now()) @map("created_at")
-  updatedAt          DateTime             @updatedAt @map("updated_at")
+  id                 Int                   @id @default(autoincrement())
+  email              String                @unique
+  passwordHash       String?               @map("password_hash")
+  googleId           String?               @unique @map("google_id")
+  displayName        String?               @map("display_name")
+  role               UserRole              @default(individual_user)
+  selectedRole       SelectedRoleType?     @map("selected_role")
+  organization       Organization?         @relation(fields: [organizationId], references: [id])
+  organizationId     Int?                  @map("organization_id")
+  organizationStatus OrgMembershipStatus   @default(NOT_APPLICABLE) @map("organization_status")
+  manager            User?                 @relation("Hierarchy", fields: [managerId], references: [id])
+  managerId          Int?                  @map("manager_id")
+  subordinates       User[]                @relation("Hierarchy")
+  createdAt          DateTime              @default(now()) @map("created_at")
+  updatedAt          DateTime              @updatedAt @map("updated_at")
 
   @@map("users")
   @@schema("auth")
 }
 
-// NEW: Model for GPS Data
 model GpsData {
   id        Int      @id @default(autoincrement())
-  vehicleId String   // Assuming vehicleId is a string identifier for simplicity, adjust if it's an Int and links to a Vehicle model
+  vehicleId String   
   latitude  Float
   longitude Float
-  speed     Float?   // Speed can be optional
+  speed     Float?   
   timestamp DateTime @default(now())
-  accuracy  Float?   // Optional: GPS accuracy
-  heading   Float?   // Optional: Direction
-  altitude  Float?   // Optional: Altitude
+  accuracy  Float?   
+  heading   Float?   
+  altitude  Float?   
 
   @@map("gps_data")
-  @@schema("public") // Assuming GPS data belongs to the public schema
+  @@schema("public")
 }
 
+enum SelectedRoleType {
+  client
+  forwarder
+  carrier
+
+  @@schema("auth")
+}
 
 enum UserRole {
   superadmin

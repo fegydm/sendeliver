@@ -1,18 +1,14 @@
 // File: front/src/App.tsx
-// Last change: Removed duplicate Router component.
+// Last change: Removed unused 'useAuth' import.
 
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom"; // Removed BrowserRouter, kept Routes, Route, Navigate
-import { useAuth } from "@/contexts/AuthContext";
-
-// Providers
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TranslationProvider } from "@/contexts/TranslationContext";
 import { LanguagesProvider } from "@/contexts/LanguagesContext";
 import { CountriesProvider } from "@/contexts/CountriesContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
-// Components & Pages
 import Navigation from "@/components/shared/navbars/navbar.component";
 import HaulerPage from "@/pages/hauler.page";
 import SenderPage from "@/pages/sender.page";
@@ -22,25 +18,10 @@ import FooterPage from "@/components/shared/footers/footer-page.component";
 import FloatingButton from "@/components/shared/elements/floating-button.element";
 import GoogleAuthCallback from "@/pages/GoogleAuthCallback";
 import LoginModal from "@/components/shared/modals/LoginModal";
-
-// ProtectedRoute component to guard routes
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-  
-  if (loading) {
-    return <div>Loading authentication...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  return <>{children}</>;
-};
+import ProtectedRoute from "@/components/shared/auth/ProtectedRoute";
 
 const AppContent: React.FC = () => {
-  // Stav isLoginModalOpen je teraz nepoužívaný, pretože LoginModal je riadený routou.
-  // Môže byť odstránený, ak sa nepoužíva inde.
-  // const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
+  const navigate = useNavigate();
 
   return (
     <div>
@@ -58,15 +39,11 @@ const AppContent: React.FC = () => {
           <Route path="/clients" element={<SenderPage />} />
 
           <Route path="/auth/callback" element={<GoogleAuthCallback />} />
-
-          {/* Login Route - LoginModal is displayed when /login is active */}
-          <Route path="/login" element={<LoginModal isOpen={true} onClose={() => { /* No action needed here, route handles closing */ }} />} />
-
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <div>Dashboard (Protected Content)</div>
-            </ProtectedRoute>
-          } />
+          <Route path="/login" element={<LoginModal isOpen={true} onClose={() => navigate("/")} />} />
+          
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<div>Dashboard (Protected Content)</div>} />
+          </Route>
           
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
@@ -84,7 +61,6 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    // Router je teraz iba v main.tsx, tu ho už neobalujeme
     <TranslationProvider>
       <LanguagesProvider>
         <CountriesProvider>
