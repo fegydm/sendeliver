@@ -1,8 +1,8 @@
 // File: front/src/contexts/AuthContext.tsx
-// Last action: Corrected the API endpoint path for updateUserRole.
+// Last action: Corrected incomplete code and verified for new auth system.
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import type { TopRowType } from '@/types/dots';
 
 type UserRole = 'superadmin' | 'developer' | 'org_admin' | 'dispatcher' | 'driver' | 'individual_user';
@@ -12,7 +12,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  image?: string;
+  imageUrl?: string;
   selectedRole?: TopRowType;
 }
 
@@ -27,6 +27,7 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
   updateUserRole: (role: TopRowType) => Promise<void>;
+  updateUserAvatar: (imageUrl: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,19 +58,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.post<{ user: User }>(`${API_BASE_URL}/api/auth/register`, {
-        name,
-        email,
-        password,
-      }, { withCredentials: true });
-
+      const response = await axios.post<{ user: User }>(`${API_BASE_URL}/api/auth/register`, { name, email, password }, { withCredentials: true });
       if (response.data.user) {
         setUser(response.data.user);
       }
     } catch (err) {
-      const errorMessage = (err as AxiosError<{ error?: string }>).response?.data?.error || 'Registrácia zlyhala.';
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -84,9 +78,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(response.data.user);
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Prihlásenie zlyhalo.';
-      setError(errorMessage);
-      throw new Error(errorMessage);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -104,14 +96,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateUserRole = useCallback(async (role: TopRowType) => {
     if (!user) return;
-
     const previousUser = user;
     setUser(currentUser => currentUser ? { ...currentUser, selectedRole: role } : null);
-
     try {
       await axios.patch(`${API_BASE_URL}/api/auth/me/role`, { selectedRole: role }, { withCredentials: true });
     } catch (err) {
       console.error("Failed to update user role:", err);
+      setUser(previousUser);
+      throw err;
+    }
+  }, [user]);
+
+  const updateUserAvatar = useCallback(async (imageUrl: string) => {
+    if (!user) return;
+    const previousUser = user;
+    setUser(currentUser => currentUser ? { ...currentUser, imageUrl: imageUrl } : null);
+    try {
+      await axios.patch(`${API_BASE_URL}/api/auth/me/avatar`, { imageUrl: imageUrl }, { withCredentials: true });
+    } catch (err) {
+      console.error("Failed to update user avatar:", err);
       setUser(previousUser);
       throw err;
     }
@@ -135,6 +138,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     logout,
     checkAuthStatus: fetchUserProfile,
     updateUserRole,
+    updateUserAvatar,
   };
 
  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

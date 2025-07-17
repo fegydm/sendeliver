@@ -1,86 +1,75 @@
 // File: front/src/components/shared/modals/LoginModal.tsx
-// Last action: Added auto-close functionality when user becomes authenticated
+// Last action: Cleaned up component and verified for new auth system.
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/shared/ui/button.ui";
-import { Input } from "@/components/shared/ui/input.ui";
 import GeneralModal from "@/components/shared/modals/general.modal";
-import './LoginModal.css'; 
+import { Input } from "@/components/shared/ui/input.ui";
+import { Button } from "@/components/shared/ui/button.ui";
+import "./RegisterModal.css"; 
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  isDarkMode?: boolean;
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, isDarkMode = false }) => {
-  const { login, isAuthenticated } = useAuth();
+const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Auto-close modal when user becomes authenticated
-  useEffect(() => {
-    if (isAuthenticated && isOpen) {
-      onClose();
-    }
-  }, [isAuthenticated, isOpen, onClose]);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
     try {
-      await login(e.currentTarget.email.value, e.currentTarget.password.value);
-      // onClose() will be called automatically via useEffect when isAuthenticated becomes true
+      await login(formData.email, formData.password);
+      onClose();
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
-      setError(err.message || "Prihlásenie zlyhalo.");
+      setError(err.message || "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    // Redirect to backend OAuth flow
-    const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10000';
-    window.location.href = `${API_BASE_URL}/api/auth/google`;
-  };
-
-  // Reset form when modal closes
-  const handleClose = () => {
-    setError(null);
-    setIsLoading(false);
-    onClose();
-  };
-
   return (
-    <GeneralModal isOpen={isOpen} onClose={handleClose} title="Login" className={isDarkMode ? "dark" : "light"}>
-      <form id="login-form" onSubmit={handleSubmit}>
-        {error && <p className="login-modal__error">{error}</p>}
-        <div className="login-modal__field">
-          <label htmlFor="email">Email</label>
-          <Input id="email" type="email" name="email" placeholder="m@example.com" required />
+    <GeneralModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Log In"
+      description="Welcome back! Please enter your details to continue."
+    >
+      <form id="login-form" className="register-form" onSubmit={handleSubmit}>
+        {error && <p className="register-form__error">{error}</p>}
+        
+        <div className="register-form__field">
+          <label htmlFor="login-email">Email</label>
+          <Input id="login-email" name="email" type="email" value={formData.email} onChange={handleChange} required />
         </div>
-        <div className="login-modal__field">
-          <label htmlFor="password">Heslo</label>
-          <Input id="password" type="password" name="password" required />
+        
+        <div className="register-form__field">
+          <label htmlFor="login-password">Password</label>
+          <Input id="login-password" name="password" type="password" value={formData.password} onChange={handleChange} required />
         </div>
-        <Button variant="primary" type="submit" form="login-form" disabled={isLoading} fullWidth>
-          {isLoading ? "Prihlasujem..." : "Prihlásiť sa"}
-        </Button>
+        
+        <div className="register-form__actions">
+          <Button variant="cancel" type="button" onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button variant="primary" type="submit" form="login-form" disabled={isLoading}>
+            {isLoading ? "Logging In..." : "Log In"}
+          </Button>
+        </div>
       </form>
-
-      <div className="login-modal__separator">
-        <span>alebo</span>
-      </div>
-
-      <Button variant="secondary" fullWidth onClick={handleGoogleLogin}>
-        <span style={{marginRight: '10px'}}>G</span> Prihlásiť sa cez Google
-      </Button>
-      
-      <p className="login-modal__signup">
-        Nemáte účet? <a href="#">Zaregistrujte sa</a>
-      </p>
     </GeneralModal>
   );
 };

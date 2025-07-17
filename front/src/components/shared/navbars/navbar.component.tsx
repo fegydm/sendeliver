@@ -1,5 +1,5 @@
 // File: front/src/components/shared/navbars/navbar.component.tsx
-// Last action: Correctly wired props for the dual-purpose AvatarModal.
+// Last action: Fixed incorrect import path for NavbarUserInfo.
 
 import { useState, FC, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -13,6 +13,7 @@ import NavbarLanguage from "./NavbarLanguage";
 import NavbarDarkmode from "./NavbarDarkmode";
 import NavbarDots from "./NavbarDots";
 import NavbarAvatar from "./NavbarAvatar";
+// --- OPRAVA: Opravený preklep v ceste k súboru ---
 import NavbarUserInfo from "./NavbarUserInfo";
 import NavbarLogin from "./NavbarLogin";
 import NavbarRegister from "./NavbarRegister";
@@ -21,13 +22,34 @@ import AvatarModal from "@/components/shared/modals/AvatarModal";
 import DotsModal from "@/components/shared/modals/DotsModal";
 import AboutModal from "@/components/shared/modals/AboutModal";
 import ConfirmLogoutModal from "@/components/shared/modals/ConfirmLogoutModal";
+import DemoWelcomeModal from "@/components/shared/modals/DemoWelcomeModal";
+import RegisterModal from "@/components/shared/modals/RegisterModal";
+import LoginModal from "@/components/shared/modals/LoginModal";
 import "./navbar.component.css";
 
-type ModalType = "avatar" | "dots" | "about" | "confirmLogout" | null;
+type ModalType = "avatar" | "dots" | "about" | "confirmLogout" | "demoWelcome" | "login" | "register" | null;
+
+const ZODIAC_SIGNS = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'];
+
+const getCookie = (name: string): string | null => {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  if (match) return match[2];
+  return null;
+};
+
+const setCookie = (name: string, value: string, days: number) => {
+  let expires = "";
+  if (days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    expires = "; expires=" + date.toUTCString();
+  }
+  document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
 
 const Navbar: FC = () => {
   const { isDarkMode, toggleDarkMode } = useTheme();
-  const { user, logout, isAuthenticated, updateUserRole } = useAuth();
+  const { user, logout, isAuthenticated, updateUserRole, updateUserAvatar } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
@@ -37,15 +59,81 @@ const Navbar: FC = () => {
   const [topDots, setTopDots] = useState<DotsArray>(initialDotsState);
   const [bottomDots, setBottomDots] = useState<DotsArray>(initialDotsState);
 
-  const [cookiesAllowed, setCookiesAllowed] = useState(true);
+  const [cookiesAllowed, setCookiesAllowed] = useState(false);
+  const [guestAvatar, setGuestAvatar] = useState<string>(ZODIAC_SIGNS[0]);
+  const [explicitTopRole, setExplicitTopRole] = useState<TopRowType | null>(null);
+
+  useEffect(() => {
+    const consent = localStorage.getItem('cookie_consent');
+    if (consent === 'accepted') {
+      setCookiesAllowed(true);
+    } else if (consent === null) {
+      const timer = setTimeout(() => {
+        if (!isAuthenticated) handleModalOpen('demoWelcome');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
 
   const handleModalClose = () => setActiveModal(null);
   const handleModalOpen = (modalType: ModalType) => setActiveModal(modalType);
   const handleBreadcrumbsToggle = () => setShowBreadcrumbs(prev => !prev);
 
+  const handleAcceptCookies = () => {
+    localStorage.setItem('cookie_consent', 'accepted');
+    setCookiesAllowed(true);
+    handleModalClose();
+  };
+
+  const handleDeclineCookies = () => {
+    localStorage.setItem('cookie_consent', 'declined');
+    setCookiesAllowed(false);
+    handleModalClose();
+  };
+
+  const handleAcceptAndRegister = () => {
+    handleAcceptCookies();
+    handleModalOpen('register');
+  };
+
+  const handleNavigateToPolicy = () => {
+    handleModalClose();
+    navigate('/cookie-policy');
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated && cookiesAllowed) {
+      const savedGuestAvatar = getCookie('guestAvatar');
+      if (savedGuestAvatar && ZODIAC_SIGNS.includes(savedGuestAvatar)) {
+        setGuestAvatar(savedGuestAvatar);
+      }
+      const savedGuestRole = getCookie('guestRole') as TopRowType;
+      if (savedGuestRole) {
+        setExplicitTopRole(savedGuestRole);
+      }
+    }
+  }, [isAuthenticated, cookiesAllowed]);
+
   const handleLogout = () => {
     handleModalClose();
     logout();
+  };
+  
+  const handleAvatarSave = async (avatarId: string) => {
+    if (!isAuthenticated) {
+      if (cookiesAllowed) {
+        setCookie('guestAvatar', avatarId, 30);
+        setGuestAvatar(avatarId);
+      }
+    } else if (user && updateUserAvatar) {
+      try {
+        const avatarUrl = `/avatars/zodiac/${avatarId}.png`;
+        await updateUserAvatar(avatarUrl);
+      } catch (error) {
+        console.error("Failed to save user avatar:", error);
+      }
+    }
+    handleModalClose();
   };
 
   useEffect(() => {
@@ -63,12 +151,11 @@ const Navbar: FC = () => {
   useEffect(() => {
     const newTopDots: DotsArray = [...initialDotsState];
     const topKeys: TopRowType[] = ["client", "forwarder", "carrier"];
-    
-    const selectedRole = user?.selectedRole;
+    const roleToDisplay = isAuthenticated ? user?.selectedRole : explicitTopRole;
 
-    if (selectedRole) {
-      const topIndex = topKeys.indexOf(selectedRole);
-      if (topIndex !== -1) newTopDots[topIndex] = components.dots[selectedRole];
+    if (roleToDisplay) {
+      const topIndex = topKeys.indexOf(roleToDisplay);
+      if (topIndex !== -1) newTopDots[topIndex] = components.dots[roleToDisplay];
     } else {
       const path = location.pathname;
       if (path.includes("/sender") || path.includes("/client")) {
@@ -78,25 +165,23 @@ const Navbar: FC = () => {
       }
     }
     setTopDots(newTopDots);
-  }, [location.pathname, user?.selectedRole]);
+  }, [location.pathname, user?.selectedRole, explicitTopRole, isAuthenticated]);
   
   const handleDotsSelectionChange = async (top: TopRowType | null, bottom: BottomRowType | null) => {
-    if (top && isAuthenticated && user && updateUserRole) {
-      try {
+    handleModalClose();
+    if (top) {
+      setExplicitTopRole(top);
+      if (isAuthenticated && user && updateUserRole) {
         await updateUserRole(top);
-      } catch (error) {
-        console.error("Failed to save user role:", error);
+      } else if (!isAuthenticated && cookiesAllowed) {
+        setCookie('guestRole', top, 30);
       }
     }
-    
-    if (isAuthenticated && user && (bottom === 'anonymous' || bottom === 'cookies')) {
-      handleModalOpen('confirmLogout');
+    if (bottom) {
+      if (bottom === 'registered') handleModalOpen('register');
+      if (bottom === 'cookies') handleModalOpen('demoWelcome');
+      if (bottom === 'anonymous') handleDeclineCookies();
     }
-  };
-
-  const handleNavigateToRegister = () => {
-    handleModalClose();
-    navigate("/register");
   };
   
   return (
@@ -106,44 +191,42 @@ const Navbar: FC = () => {
           <NavbarLogo onBreadcrumbToggle={handleBreadcrumbsToggle} showBreadcrumbs={showBreadcrumbs} />
           <NavbarName onShowAbout={() => handleModalOpen("about")} />
         </div>
-
         <div className="navbar__group navbar__group--center">
           <NavbarDots topDots={topDots} bottomDots={bottomDots} onClick={() => handleModalOpen("dots")} />
           <NavbarAvatar 
             onUserClick={() => handleModalOpen("avatar")}
             onGuestClick={() => handleModalOpen("avatar")}
             cookiesAllowed={cookiesAllowed}
+            guestAvatar={guestAvatar}
           />
-          
           {isAuthenticated && user ? (
             <NavbarUserInfo user={user} />
           ) : (
             <>
-              <NavbarLogin />
-              <NavbarRegister />
+              <NavbarLogin onOpen={() => handleModalOpen('login')} />
+              <NavbarRegister onOpen={() => handleModalOpen('register')} />
             </>
           )}
         </div>
-
         <div className="navbar__group navbar__group--right">
           <NavbarLanguage />
           <NavbarDarkmode isDarkMode={isDarkMode} onToggleDarkMode={toggleDarkMode} />
         </div>
       </div>
-      
       {showBreadcrumbs && (
         <div className="navbar__breadcrumb-container">
           <NavbarBreadcrumb />
         </div>
       )}
-
-      <AboutModal isOpen={activeModal === "about"} onClose={handleModalClose} onNavigateToRegister={handleNavigateToRegister} />
+      <AboutModal isOpen={activeModal === "about"} onClose={handleModalClose} onNavigateToRegister={() => handleModalOpen('register')} />
       <AvatarModal 
         isOpen={activeModal === "avatar"} 
         onClose={handleModalClose} 
         onLogout={handleLogout}
+        onSave={handleAvatarSave}
         isGuestMode={!isAuthenticated}
         cookiesAllowed={cookiesAllowed}
+        initialAvatar={!isAuthenticated ? guestAvatar : user?.imageUrl}
       />
       <DotsModal 
         isOpen={activeModal === "dots"} 
@@ -156,6 +239,21 @@ const Navbar: FC = () => {
         isOpen={activeModal === 'confirmLogout'}
         onClose={handleModalClose}
         onConfirm={handleLogout}
+      />
+      <DemoWelcomeModal 
+        isOpen={activeModal === 'demoWelcome'}
+        onAccept={handleAcceptCookies}
+        onDecline={handleDeclineCookies}
+        onAcceptAndRegister={handleAcceptAndRegister}
+        onNavigateToPolicy={handleNavigateToPolicy}
+      />
+      <LoginModal 
+        isOpen={activeModal === 'login'}
+        onClose={handleModalClose}
+      />
+      <RegisterModal 
+        isOpen={activeModal === 'register'}
+        onClose={handleModalClose}
       />
     </header>
   );

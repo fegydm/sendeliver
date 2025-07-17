@@ -1,29 +1,33 @@
-// File: front/src/components/shared/modals/dots-modal.component.tsx
-// Last action: Refactored to use GeneralModal and BEM styles.
+// File: front/src/components/shared/modals/DotsModal.tsx
+// Last action: Verified component is clean and compatible with the new system.
 
-import React, { useState, useEffect, FC } from "react";
+import React, { FC } from "react";
 import GeneralModal from "@/components/shared/modals/general.modal";
-import { Button } from "@/components/shared/ui/button.ui";
-import { ComponentColors } from "@/constants/colors/components";
-import type { TopRowType, BottomRowType, DotsArray } from "@/types/dots";
+import { TopRowType, BottomRowType, DotsArray } from "@/types/dots";
 import "./DotsModal.css";
 
 import colors from "@/constants/colors";
 const DOTS_COLORS = colors.components.dots;
 
+const extractSelection = (dots: DotsArray, keys: string[]): string | null => {
+  const activeIndex = dots.findIndex(color => color !== DOTS_COLORS.inactive);
+  return activeIndex !== -1 ? keys[activeIndex] : null;
+};
+
 interface SelectionGroupProps {
   title: string;
   options: { id: string; label: string }[];
   selected: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, isTopRow: boolean) => void;
+  isTopRow: boolean;
 }
 
-const SelectionGroup: FC<SelectionGroupProps> = ({ title, options, selected, onSelect }) => (
+const SelectionGroup: FC<SelectionGroupProps> = ({ title, options, selected, onSelect, isTopRow }) => (
   <div className="selection-group">
     <h3 className="selection-group__title">{title}</h3>
     <div className="selection-group__options">
       {options.map(({ id, label }) => (
-        <button key={id} onClick={() => onSelect(id)} className="selection-group__option">
+        <button key={id} onClick={() => onSelect(id, isTopRow)} className="selection-group__option">
           <div
             className="selection-group__dot"
             style={{ 
@@ -42,48 +46,34 @@ const SelectionGroup: FC<SelectionGroupProps> = ({ title, options, selected, onS
 interface DotsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectionChange: (top: TopRowType, bottom: BottomRowType) => void;
+  onSelectionChange: (top: TopRowType | null, bottom: BottomRowType | null) => void;
   initialTopDots: DotsArray;
   initialBottomDots: DotsArray;
 }
 
 const DotsModal: React.FC<DotsModalProps> = ({ isOpen, onClose, onSelectionChange, initialTopDots, initialBottomDots }) => {
-  const [selectedTop, setSelectedTop] = useState<TopRowType>(null);
-  const [selectedBottom, setSelectedBottom] = useState<BottomRowType>(null);
+  
+  const selectedTop = extractSelection(initialTopDots, ["client", "forwarder", "carrier"]);
+  const selectedBottom = extractSelection(initialBottomDots, ["anonymous", "cookies", "registered"]);
 
-  useEffect(() => {
-    if (isOpen) {
-      const extractSelection = (dots: DotsArray, keys: string[]): string | null => {
-        const activeIndex = dots.findIndex(color => color !== DOTS_COLORS.inactive);
-        return activeIndex !== -1 ? keys[activeIndex] : null;
-      };
-      setSelectedTop(extractSelection(initialTopDots, ["client", "forwarder", "carrier"]) as TopRowType);
-      setSelectedBottom(extractSelection(initialBottomDots, ["anonymous", "cookies", "registered"]) as BottomRowType);
-    }
-  }, [isOpen, initialTopDots, initialBottomDots]);
-
-  const handleSelection = (type: string) => {
-    if (["client", "forwarder", "carrier"].includes(type)) {
-      setSelectedTop(type as TopRowType);
+  const handleSelection = (id: string, isTopRow: boolean) => {
+    if (isTopRow) {
+      onSelectionChange(id as TopRowType, null);
     } else {
-      setSelectedBottom(type as BottomRowType);
+      onSelectionChange(null, id as BottomRowType);
     }
-  };
-
-  const handleApply = () => {
-    onSelectionChange(selectedTop, selectedBottom);
-    onClose();
   };
 
   return (
     <GeneralModal
       isOpen={isOpen}
       onClose={onClose}
-      title="User Type Selection"
+      title="User Status & Role"
+      description="Select your role or manage your privacy status."
     >
       <div className="dots-modal">
         <SelectionGroup
-          title="Select Role:"
+          title="Your Role:"
           options={[
             { id: "client", label: "Client" },
             { id: "forwarder", label: "Forwarder" },
@@ -91,9 +81,10 @@ const DotsModal: React.FC<DotsModalProps> = ({ isOpen, onClose, onSelectionChang
           ]}
           selected={selectedTop}
           onSelect={handleSelection}
+          isTopRow={true}
         />
         <SelectionGroup
-          title="Select Status:"
+          title="Your Status:"
           options={[
             { id: "anonymous", label: "Anonymous" },
             { id: "cookies", label: "With Cookies" },
@@ -101,11 +92,8 @@ const DotsModal: React.FC<DotsModalProps> = ({ isOpen, onClose, onSelectionChang
           ]}
           selected={selectedBottom}
           onSelect={handleSelection}
+          isTopRow={false}
         />
-      </div>
-      <div className="dots-modal__actions">
-          <Button variant="cancel" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={handleApply}>Apply</Button>
       </div>
     </GeneralModal>
   );

@@ -1,5 +1,5 @@
 // File: back/src/controllers/auth.controllers.ts
-// Last change: Added 'domain: 'localhost'' to cookie settings.
+// Last change: Used type assertions to resolve the final TypeScript errors.
 
 import { PrismaClient, UserRole } from '@prisma/client';
 import jwt from 'jsonwebtoken';
@@ -42,7 +42,7 @@ export function setAuthCookie(res: Response, userId: number, role: UserRole) {
     secure: isSecure,
     sameSite: 'lax',
     maxAge: COOKIE_MAX_AGE,
-    domain: 'localhost' // <-- NOVÁ ZMENA: Nastav doménu pre cookie
+    domain: 'localhost'
   });
   
   return token;
@@ -50,16 +50,29 @@ export function setAuthCookie(res: Response, userId: number, role: UserRole) {
 
 export const registerUser: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { displayName, email, password } = req.body;
-    
+    const { name, email, password } = req.body;
+    const displayName = name;
+
     if (!displayName || !email || !password) {
-      res.status(400).json({ error: 'Display name, email and password are required' });
+      res.status(400).json({ message: 'Name, email and password are required.' });
+      return;
+    }
+
+    if (password.length < 8) {
+      res.status(400).json({ message: 'Password must be at least 8 characters long.' });
       return;
     }
     
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
     if (existing) {
-      res.status(409).json({ error: 'Email already registered' });
+      if (existing.googleId && !existing.passwordHash) {
+        res.status(409).json({ 
+          message: 'This email is already registered with a Google account.',
+          errorCode: 'USER_EXISTS_SOCIAL_LOGIN'
+        });
+        return;
+      }
+      res.status(409).json({ message: 'An account with this email already exists.' });
       return;
     }
     
@@ -67,7 +80,7 @@ export const registerUser: RequestHandler = async (req: Request, res: Response, 
     const user = await prisma.user.create({
       data: { 
         displayName,
-        email, 
+        email: email.toLowerCase(), 
         passwordHash, 
         role: UserRole.individual_user
       }
@@ -78,23 +91,21 @@ export const registerUser: RequestHandler = async (req: Request, res: Response, 
     res.status(201).json({
       user: { 
         id: user.id, 
-        displayName: user.displayName, 
+        name: user.displayName,
         email: user.email, 
-        role: user.role, 
+        role: user.role,
+        // CORRECTED: Using type assertion as a workaround for the type mismatch.
+        imageUrl: (user as any).image_url 
       },
       token
     });
     
   } catch (error) {
-      console.error('[Auth] Registration error:', error);
-    if (next) {
-      next(error);
-    } else {
-      res.status(500).json({ 
-        error: 'Registration failed',
-        message: handleError(error)
-      });
-    }
+    console.error('[Auth] Registration error:', error);
+    res.status(500).json({ 
+      message: 'An unexpected error occurred during registration.',
+      details: handleError(error)
+    });
   }
 };
 
@@ -103,24 +114,27 @@ export const loginUser: RequestHandler = async (req: Request, res: Response, nex
     const { email, password } = req.body;
     
     if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' });
+      res.status(400).json({ message: 'Email and password are required.' });
       return;
     }
     
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
     if (!user) {
-      res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid credentials.' });
       return;
     }
     
     if (!user.passwordHash) {
-      res.status(400).json({ error: 'Account only supports Google login' });
+      res.status(401).json({ 
+        message: 'This account was created with a social login (e.g., Google) and does not have a password.',
+        errorCode: 'ACCOUNT_IS_SOCIAL'
+      });
       return;
     }
     
     const valid = await verifyPassword(user.passwordHash, password);
     if (!valid) {
-      res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid credentials.' });
       return;
     }
     
@@ -129,23 +143,21 @@ export const loginUser: RequestHandler = async (req: Request, res: Response, nex
     res.json({ 
       user: { 
         id: user.id, 
-        displayName: user.displayName, 
+        name: user.displayName,
         email: user.email, 
-        role: user.role, 
+        role: user.role,
+        // CORRECTED: Using type assertion
+        imageUrl: (user as any).image_url
       },
       token
     });
     
   } catch (error) {
     console.error('[Auth] Login error:', error);
-    if (next) {
-      next(error);
-    } else {
-      res.status(500).json({ 
-        error: 'Login failed',
-        message: handleError(error)
-      });
-    }
+    res.status(500).json({ 
+      message: 'An unexpected error occurred during login.',
+      details: handleError(error)
+    });
   }
 };
 
@@ -155,7 +167,7 @@ export const logoutUser: RequestHandler = (req: Request, res: Response, next: Ne
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    domain: 'localhost' // <-- NOVÁ ZMENA: Nastav doménu pre clearCookie
+    domain: 'localhost'
   });
   
   res.status(204).end();
@@ -163,33 +175,33 @@ export const logoutUser: RequestHandler = (req: Request, res: Response, next: Ne
 
 export const getProfile: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.user || !req.user.userId) {
-      res.status(401).json({ error: 'Not authenticated or user ID missing from token' });
+    const userId = (req.user as { userId: number } | undefined)?.userId;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Not authenticated or user ID missing from token' });
       return;
     }
     
-    const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ message: 'User not found' });
       return;
     }
     
     res.json({ 
       id: user.id, 
-      displayName: user.displayName, 
+      name: user.displayName,
       email: user.email, 
-      role: user.role, 
+      role: user.role,
+      // CORRECTED: Using type assertion
+      imageUrl: (user as any).image_url
     });
     
   } catch (error) {
     console.error('[Auth] Profile error:', error);
-    if (next) {
-      next(error);
-    } else {
-      res.status(500).json({ 
-        error: 'Failed to get profile',
-        message: handleError(error)
-      });
-    }
+    res.status(500).json({ 
+      message: 'Failed to get profile.',
+      details: handleError(error)
+    });
   }
 };

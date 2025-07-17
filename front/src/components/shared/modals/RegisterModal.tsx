@@ -1,8 +1,9 @@
 // File: front/src/components/shared/modals/RegisterModal.tsx
-// Last change: Added password visibility toggle.
+// Last change: Cleaned up and verified for new auth and account linking flow.
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { useAuth } from "@/contexts/AuthContext";
 import GeneralModal from "@/components/shared/modals/general.modal";
 import { Input } from "@/components/shared/ui/input.ui";
@@ -45,26 +46,47 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showAccountLinkOption, setShowAccountLinkOption] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleRequestLink = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await axios.post('/api/auth/request-account-link', { email: formData.email });
+      setError("Success! We've sent a verification link to your email. Please check your inbox.");
+      setShowAccountLinkOption(false);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to send link. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      setError("Heslá sa nezhodujú.");
+      setError("Passwords do not match.");
       return;
     }
     
     setIsLoading(true);
     setError(null);
+    setShowAccountLinkOption(false);
 
     try {
       await register(formData.name, formData.email, formData.password);
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
-      setError(err.message || "Registrácia zlyhala.");
+      if (err.response?.data?.errorCode === 'USER_EXISTS_SOCIAL_LOGIN') {
+        setError("This account already exists and is linked with Google.");
+        setShowAccountLinkOption(true);
+      } else {
+        setError(err.response?.data?.message || "Registration failed.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -74,14 +96,24 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
     <GeneralModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Vytvoriť Nový Účet"
-      description="Zaregistrujte sa a získajte prístup k našej platforme."
+      title="Create a New Account"
+      description="Register to get access to our platform."
     >
       <form id="register-form" className="register-form" onSubmit={handleSubmit}>
         {error && <p className="register-form__error">{error}</p>}
         
+        {showAccountLinkOption && (
+          <div className="register-form__link-account">
+            <p>Would you like to add a password to log in manually?</p>
+            <Button variant="secondary" type="button" onClick={handleRequestLink} disabled={isLoading}>
+              {isLoading ? "Sending..." : "Send Verification Link"}
+            </Button>
+            <hr className="my-4"/>
+          </div>
+        )}
+        
         <div className="register-form__field">
-          <label htmlFor="name">Meno</label>
+          <label htmlFor="name">Name</label>
           <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required />
         </div>
 
@@ -91,24 +123,24 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
         </div>
         
         <div className="register-form__field register-form__field--password">
-          <label htmlFor="password">Heslo</label>
+          <label htmlFor="password">Password</label>
           <Input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} required />
-          <button type="button" className="password-toggle-btn" onClick={() => setShowPassword(!showPassword)} aria-label="Zobraziť heslo">
+          <button type="button" className="password-toggle-btn" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility">
             <EyeIcon closed={showPassword} />
           </button>
         </div>
         
         <div className="register-form__field register-form__field--password">
-          <label htmlFor="confirmPassword">Potvrdenie Hesla</label>
+          <label htmlFor="confirmPassword">Confirm Password</label>
           <Input id="confirmPassword" name="confirmPassword" type={showPassword ? "text" : "password"} value={formData.confirmPassword} onChange={handleChange} required />
         </div>
         
         <div className="register-form__actions">
           <Button variant="cancel" type="button" onClick={onClose} disabled={isLoading}>
-            Zrušiť
+            Cancel
           </Button>
           <Button variant="primary" type="submit" form="register-form" disabled={isLoading}>
-            {isLoading ? "Registrujem..." : "Vytvoriť účet"}
+            {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
         </div>
       </form>

@@ -1,15 +1,18 @@
 // File: front/src/components/shared/navbars/NavbarRegister.tsx
-// Last action: Converted to a declarative Link component for robust navigation.
+// Last action: Cleaned up and verified for new auth system.
 
 import { FC } from "react";
-import { Link } from "react-router-dom";
 import "./NavbarRegister.css";
 
-const NavbarRegister: FC = () => {
+interface NavbarRegisterProps {
+  onOpen: () => void;
+}
+
+const NavbarRegister: FC<NavbarRegisterProps> = ({ onOpen }) => {
   return (
-    <Link to="/register" className="navbar-register">
+    <button onClick={onOpen} className="navbar-register">
       Create account
-    </Link>
+    </button>
   );
 };
 
