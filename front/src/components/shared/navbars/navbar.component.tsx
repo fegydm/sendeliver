@@ -1,5 +1,5 @@
 // File: front/src/components/shared/navbars/navbar.component.tsx
-// Last action: Fixed incorrect import path for NavbarUserInfo.
+// Last change: Fixed incorrect import path for NavbarUserInfo
 
 import { useState, FC, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -13,7 +13,6 @@ import NavbarLanguage from "./NavbarLanguage";
 import NavbarDarkmode from "./NavbarDarkmode";
 import NavbarDots from "./NavbarDots";
 import NavbarAvatar from "./NavbarAvatar";
-// --- OPRAVA: Opravený preklep v ceste k súboru ---
 import NavbarUserInfo from "./NavbarUserInfo";
 import NavbarLogin from "./NavbarLogin";
 import NavbarRegister from "./NavbarRegister";
@@ -67,12 +66,14 @@ const Navbar: FC = () => {
     const consent = localStorage.getItem('cookie_consent');
     if (consent === 'accepted') {
       setCookiesAllowed(true);
+      return;
     } else if (consent === null) {
       const timer = setTimeout(() => {
         if (!isAuthenticated) handleModalOpen('demoWelcome');
       }, 5000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [isAuthenticated]);
 
   const handleModalClose = () => setActiveModal(null);

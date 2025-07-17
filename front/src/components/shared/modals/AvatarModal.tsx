@@ -1,5 +1,5 @@
 // File: front/src/components/shared/modals/AvatarModal.tsx
-// Last action: Cleaned up, translated to English, and verified for new auth system.
+// Last change: Cleaned up, translated to English, and verified for new auth system
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
