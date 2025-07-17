@@ -47,7 +47,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (response.data) {
         setUser(response.data);
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.response?.status !== 401) {
+        console.error('Auth profile fetch error:', err);
+      }
       setUser(null);
     } finally {
       setLoading(false);

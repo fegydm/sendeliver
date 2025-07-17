@@ -1,49 +1,48 @@
 // File: front/src/pages/CookiePolicyPage.tsx
-// Last action: Converted from Tailwind CSS to inline styles for compatibility.
+// Last change: Converted from Tailwind CSS to inline styles for compatibility
 
 import React from 'react';
 
 const CookiePolicyPage: React.FC = () => {
-  // --- Štýly nahradzujúce Tailwind CSS ---
   const containerStyle: React.CSSProperties = {
-    maxWidth: '48rem', // max-w-4xl
-    margin: '0 auto', // mx-auto
-    padding: '3rem 1rem', // py-12 px-4
-    color: '#2d3748', // text-gray-800
+    maxWidth: '48rem',
+    margin: '0 auto',
+    padding: '3rem 1rem',
+    color: '#2d3748',
     fontFamily: 'sans-serif',
   };
 
   const h1Style: React.CSSProperties = {
-    fontSize: '2.25rem', // text-4xl
-    fontWeight: 'bold', // font-bold
-    marginBottom: '1.5rem', // mb-6
+    fontSize: '2.25rem',
+    fontWeight: 'bold',
+    marginBottom: '1.5rem',
   };
   
   const h2Style: React.CSSProperties = {
-    fontSize: '1.5rem', // text-2xl
-    fontWeight: 'bold', // font-bold
-    marginTop: '2rem', // mt-8
-    marginBottom: '1rem', // mb-4
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    marginTop: '2rem',
+    marginBottom: '1rem',
   };
 
   const pStyle: React.CSSProperties = {
-    marginBottom: '1.5rem', // mb-6
+    marginBottom: '1.5rem',
     lineHeight: '1.6',
   };
   
   const pSubtleStyle: React.CSSProperties = {
-    marginBottom: '1rem', // mb-4
+    marginBottom: '1rem',
     color: '#4a5568',
   };
 
   const listStyle: React.CSSProperties = {
-    listStyleType: 'disc', // list-disc
-    listStylePosition: 'inside', // list-inside
-    marginBottom: '1.5rem', // mb-6
+    listStyleType: 'disc',
+    listStylePosition: 'inside',
+    marginBottom: '1.5rem',
   };
 
   const listItemStyle: React.CSSProperties = {
-    marginBottom: '0.5rem', // space-y-2
+    marginBottom: '0.5rem',
   };
 
   return (
