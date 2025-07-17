@@ -1,5 +1,5 @@
 // File: back/src/server.ts
-// Last change: Removed CORS package and restored manual CORS with working config
+// Last change: Added CSRF protection to protected routes
 
 console.log('[SERVER START] Starting server initialization...');
 
@@ -17,6 +17,7 @@ import { fileURLToPath } from "url";
 import { WebSocketManager } from './configs/websocket.config.js';
 import { PrismaClient, UserRole } from '@prisma/client';
 import { configurePassport } from './configs/passport.config.js';
+import { verifyCsrfToken } from "./middlewares/csrf.middleware.js";
 
 import type { Request, Response, NextFunction } from "express";
 
@@ -52,12 +53,10 @@ const server = http.createServer(app as any);
 
 WebSocketManager.initialize(server);
 
-// Basic middleware
 app.use(json());
 app.use(cookieParser());
 app.use(ua.express());
 
-// Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your_session_secret_key',
   resave: false,
@@ -70,7 +69,6 @@ app.use(session({
   }
 }));
 
-// Passport initialization
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -85,7 +83,6 @@ interface RequestWithUserAgent extends Request {
 morgan.token("isBoten", (req: RequestWithUserAgent) => req.useragent?.isBoten ? "BOT" : "HUMAN");
 app.use(morgan(":remote-addr :method :url :status :response-time ms :isBoten"));
 
-// Manual CORS middleware - working configuration
 app.use(function (req: Request, res: Response, next: NextFunction) {
   const allowedOrigins = [
     process.env.FRONTEND_URL || "http://localhost:3000",
@@ -99,7 +96,7 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
   }
   
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key, X-CSRF-Token");
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
   
@@ -110,24 +107,25 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
   next();
 });
 
-// Auth routes - FIRST so they get proper CORS treatment
 app.use('/api/auth', authRoutes);
 
-// Other public routes
-app.use('/api/contact/submit', contactMessagesRoutes);
+app.use('/api/contact/submit', [verifyCsrfToken, contactMessagesRoutes]);
 app.use('/api/verify-pin', verifyPinRouter);
 
-// Protected admin routes
 app.use("/api/contact/admin", [
   authenticateJWT,
+  verifyCsrfToken,
   checkRole(UserRole.org_admin, UserRole.superadmin),
   contactMessagesRoutes
 ]);
 
 console.log("[server.ts] 🔁 externalDeliveriesRouter mounted");
-app.use("/api/external/deliveries", externalDeliveriesRouter);
+app.use("/api/external/deliveries", [
+  authenticateJWT,
+  verifyCsrfToken,
+  externalDeliveriesRouter
+]);
 
-// Public API routes
 app.use("/api/ai", aiRouter);
 app.use("/api/geo/countries", geoCountriesRouter);
 app.use("/api/geo/languages", geoLanguagesRouter);
@@ -138,19 +136,17 @@ app.use("/api/vehicles", vehiclesRouter);
 console.log("[server.ts] 🛰️ GPS router mounted");
 app.use("/api", gpsRouter);
 
-// Protected delivery routes
 app.use("/api", [
   authenticateJWT,
+  verifyCsrfToken,
   checkRole(UserRole.individual_user, UserRole.dispatcher, UserRole.org_admin, UserRole.superadmin),
   deliveryRouter
 ]);
 
-// Health check
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
-// Static file serving
 const projectRoot = path.resolve(__dirname, "../..");
 const frontendPath = path.join(projectRoot, process.env.FRONTEND_PATH || "");
 const publicPath = path.join(projectRoot, process.env.PUBLIC_PATH || "");
@@ -167,12 +163,10 @@ staticPaths.forEach(([url, dir]) => {
 
 app.use("/assets", expressStatic(path.join(frontendPath, "assets")));
 
-// Frontend routing
 app.get("/", (_req: Request, res: Response) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-// Catch-all handler
 app.use((req: Request, res: Response) => {
   if (req.path.startsWith("/api")) {
     res.status(404).json({ error: "API endpoint not found" });
@@ -187,7 +181,6 @@ app.use((req: Request, res: Response) => {
   }
 });
 
-// Error handler
 app.use(function (err: any, req: Request, res: Response, next: NextFunction) {
   if ((res as any).headersSent) {
     return next(err);

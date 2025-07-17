@@ -1,15 +1,17 @@
 // File: back/src/controllers/auth.controllers.ts
-// Last change: Used type assertions to resolve the final TypeScript errors.
+// Last change: Combined all logic into a single, self-contained file
 
 import { PrismaClient, UserRole } from '@prisma/client';
 import jwt from 'jsonwebtoken';
-import { randomBytes, scrypt as _scrypt } from 'crypto';
+import { randomBytes, scrypt as _scrypt, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'util';
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { Request, Response, RequestHandler } from 'express';
+import { setCsrfCookie, CSRF_COOKIE_NAME } from '../middlewares/csrf.middleware.js';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN;
 const scrypt = promisify(_scrypt);
 
 const handleError = (error: unknown): string => {
@@ -21,34 +23,35 @@ const handleError = (error: unknown): string => {
 
 async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString('hex');
-  const derived = (await scrypt(password, salt, 64)) as Buffer;
-  return `${salt}:${derived.toString('hex')}`;
+  const hash = (await scrypt(password, salt, 64)) as Buffer;
+  return `${salt}:${hash.toString('hex')}`;
 }
 
-async function verifyPassword(stored: string, password: string): Promise<boolean> {
-  const [salt, key] = stored.split(':');
-  const derived = (await scrypt(password, salt, 64)) as Buffer;
-  return key === derived.toString('hex');
+async function verifyPassword(storedPasswordHash: string, suppliedPassword: string): Promise<boolean> {
+  const [salt, key] = storedPasswordHash.split(':');
+  if (!salt || !key) return false;
+  const keyBuffer = Buffer.from(key, 'hex');
+  const hashToCompare = (await scrypt(suppliedPassword, salt, 64)) as Buffer;
+  if (keyBuffer.length !== hashToCompare.length) return false;
+  return timingSafeEqual(keyBuffer, hashToCompare);
 }
 
 export function setAuthCookie(res: Response, userId: number, role: UserRole) {
   const token = jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '7d' });
-  
   const isSecure = process.env.NODE_ENV === 'production';
-  console.log(`[setAuthCookie] Setting cookie. NODE_ENV: ${process.env.NODE_ENV}, Secure flag: ${isSecure}`);
 
   res.cookie('auth', token, {
     httpOnly: true,
     secure: isSecure,
-    sameSite: 'lax',
+    sameSite: isSecure ? 'none' : 'lax',
     maxAge: COOKIE_MAX_AGE,
-    domain: 'localhost'
+    domain: COOKIE_DOMAIN || undefined,
   });
   
   return token;
 }
 
-export const registerUser: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const registerUser: RequestHandler = async (req, res) => {
   try {
     const { name, email, password } = req.body;
     const displayName = name;
@@ -57,7 +60,6 @@ export const registerUser: RequestHandler = async (req: Request, res: Response, 
       res.status(400).json({ message: 'Name, email and password are required.' });
       return;
     }
-
     if (password.length < 8) {
       res.status(400).json({ message: 'Password must be at least 8 characters long.' });
       return;
@@ -87,6 +89,7 @@ export const registerUser: RequestHandler = async (req: Request, res: Response, 
     });
     
     const token = setAuthCookie(res, user.id, user.role);
+    const csrfToken = setCsrfCookie(res);
     
     res.status(201).json({
       user: { 
@@ -94,10 +97,10 @@ export const registerUser: RequestHandler = async (req: Request, res: Response, 
         name: user.displayName,
         email: user.email, 
         role: user.role,
-        // CORRECTED: Using type assertion as a workaround for the type mismatch.
-        imageUrl: (user as any).image_url 
+        imageUrl: (user as any).imageUrl 
       },
-      token
+      token,
+      csrfToken
     });
     
   } catch (error) {
@@ -109,7 +112,7 @@ export const registerUser: RequestHandler = async (req: Request, res: Response, 
   }
 };
 
-export const loginUser: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const loginUser: RequestHandler = async (req, res) => {
   try {
     const { email, password } = req.body;
     
@@ -119,16 +122,8 @@ export const loginUser: RequestHandler = async (req: Request, res: Response, nex
     }
     
     const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-    if (!user) {
+    if (!user || !user.passwordHash) {
       res.status(401).json({ message: 'Invalid credentials.' });
-      return;
-    }
-    
-    if (!user.passwordHash) {
-      res.status(401).json({ 
-        message: 'This account was created with a social login (e.g., Google) and does not have a password.',
-        errorCode: 'ACCOUNT_IS_SOCIAL'
-      });
       return;
     }
     
@@ -139,6 +134,7 @@ export const loginUser: RequestHandler = async (req: Request, res: Response, nex
     }
     
     const token = setAuthCookie(res, user.id, user.role);
+    const csrfToken = setCsrfCookie(res);
     
     res.json({ 
       user: { 
@@ -146,10 +142,10 @@ export const loginUser: RequestHandler = async (req: Request, res: Response, nex
         name: user.displayName,
         email: user.email, 
         role: user.role,
-        // CORRECTED: Using type assertion
-        imageUrl: (user as any).image_url
+        imageUrl: (user as any).imageUrl
       },
-      token
+      token,
+      csrfToken
     });
     
   } catch (error) {
@@ -161,19 +157,26 @@ export const loginUser: RequestHandler = async (req: Request, res: Response, nex
   }
 };
 
-export const logoutUser: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export const logoutUser: RequestHandler = (req, res) => {
   res.clearCookie('auth', { 
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     path: '/',
-    domain: 'localhost'
+    domain: COOKIE_DOMAIN || undefined
+  });
+  res.clearCookie(CSRF_COOKIE_NAME, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/',
+    domain: COOKIE_DOMAIN || undefined
   });
   
   res.status(204).end();
 };
 
-export const getProfile: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
+export const getProfile: RequestHandler = async (req, res) => {
   try {
     const userId = (req.user as { userId: number } | undefined)?.userId;
 
@@ -188,13 +191,15 @@ export const getProfile: RequestHandler = async (req: Request, res: Response, ne
       return;
     }
     
+    const csrfToken = setCsrfCookie(res);
+
     res.json({ 
       id: user.id, 
       name: user.displayName,
       email: user.email, 
       role: user.role,
-      // CORRECTED: Using type assertion
-      imageUrl: (user as any).image_url
+      imageUrl: (user as any).imageUrl,
+      csrfToken
     });
     
   } catch (error) {
