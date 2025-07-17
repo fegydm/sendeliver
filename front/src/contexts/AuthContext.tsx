@@ -1,5 +1,5 @@
 // File: front/src/contexts/AuthContext.tsx
-// Last action: Corrected incomplete code and verified for new auth system.
+// Last change: Corrected incomplete code and verified for new auth system
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import axios from 'axios';

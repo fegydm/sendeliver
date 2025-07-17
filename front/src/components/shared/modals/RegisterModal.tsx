@@ -1,5 +1,5 @@
 // File: front/src/components/shared/modals/RegisterModal.tsx
-// Last change: Cleaned up and verified for new auth and account linking flow.
+// Last change: Integrated the usePasswordValidation hook and cleaned up
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import GeneralModal from "@/components/shared/modals/general.modal";
 import { Input } from "@/components/shared/ui/input.ui";
 import { Button } from "@/components/shared/ui/button.ui";
 import "./RegisterModal.css";
+import usePasswordValidation from '@/hooks/usePasswordValidation';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -33,7 +34,6 @@ const EyeIcon = ({ closed }: { closed: boolean }) => (
   </svg>
 );
 
-
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -47,6 +47,17 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showAccountLinkOption, setShowAccountLinkOption] = useState(false);
+
+  const { passwordError, confirmPasswordError, isValid } = usePasswordValidation(
+    formData.password,
+    formData.confirmPassword,
+    {
+      minLength: 8,
+      requireUppercase: true,
+      requireLowercase: true,
+      requireDigit: true,
+    }
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -68,8 +79,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
+    
+    if (!isValid) {
+      setError(passwordError || confirmPasswordError || "Please check your password entries.");
       return;
     }
     
@@ -124,22 +136,38 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
         
         <div className="register-form__field register-form__field--password">
           <label htmlFor="password">Password</label>
-          <Input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} required />
+          <Input 
+            id="password" 
+            name="password" 
+            type={showPassword ? "text" : "password"} 
+            value={formData.password} 
+            onChange={handleChange} 
+            required 
+          />
           <button type="button" className="password-toggle-btn" onClick={() => setShowPassword(!showPassword)} aria-label="Toggle password visibility">
             <EyeIcon closed={showPassword} />
           </button>
+          {passwordError && <p className="register-form__error-inline">{passwordError}</p>}
         </div>
         
         <div className="register-form__field register-form__field--password">
           <label htmlFor="confirmPassword">Confirm Password</label>
-          <Input id="confirmPassword" name="confirmPassword" type={showPassword ? "text" : "password"} value={formData.confirmPassword} onChange={handleChange} required />
+          <Input 
+            id="confirmPassword" 
+            name="confirmPassword" 
+            type={showPassword ? "text" : "password"} 
+            value={formData.confirmPassword} 
+            onChange={handleChange} 
+            required 
+          />
+          {confirmPasswordError && <p className="register-form__error-inline">{confirmPasswordError}</p>}
         </div>
         
         <div className="register-form__actions">
           <Button variant="cancel" type="button" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button variant="primary" type="submit" form="register-form" disabled={isLoading}>
+          <Button variant="primary" type="submit" form="register-form" disabled={isLoading || !isValid}>
             {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
         </div>
