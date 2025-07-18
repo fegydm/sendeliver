@@ -3,7 +3,7 @@
 
 import { logger } from '@sendeliver/logger';
 import { WebSocketManager } from '../configs/websocket.config.js';
-import { sendEmail } from '../utils/email.js';
+import { sendEmail } from '../utils/email.utils.js';
 import { ContactMessage } from '../services/contact.messages.services.js';
 
 export class NotificationService {

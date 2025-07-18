@@ -1,5 +1,5 @@
 // File: back/src/server.ts
-// Last change: Removed CORS package and restored manual CORS with working config
+// Last change: Corrected UserRole enum usage to individual_customer.
 
 console.log('[SERVER START] Starting server initialization...');
 
@@ -15,7 +15,7 @@ import session from 'express-session';
 import passport from 'passport';
 import { fileURLToPath } from "url";
 import { WebSocketManager } from './configs/websocket.config.js';
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client'; // UserRole is imported
 import { configurePassport } from './configs/passport.config.js';
 
 import type { Request, Response, NextFunction } from "express";
@@ -141,7 +141,8 @@ app.use("/api", gpsRouter);
 // Protected delivery routes
 app.use("/api", [
   authenticateJWT,
-  checkRole(UserRole.individual_user, UserRole.dispatcher, UserRole.org_admin, UserRole.superadmin),
+  // Corrected UserRole.individual_user to UserRole.individual_customer
+  checkRole(UserRole.individual_customer, UserRole.dispatcher, UserRole.org_admin, UserRole.superadmin),
   deliveryRouter
 ]);
 

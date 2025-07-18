@@ -1,18 +1,24 @@
 // File: back/src/routes/auth.routes.ts
-// Last change: Fixed redirect type error by using res.status().set().
+// Last change: Added routes for email verification (by code, by link, resend).
 
 import { Router, Request, Response } from 'express';
 import passport from 'passport';
-import jwt from 'jsonwebtoken';
-import { prisma } from '../configs/prisma.config.js';
-import { registerUser, loginUser, logoutUser, getProfile, setAuthCookie } from '../controllers/auth.controllers.js';
-import { authenticateJWT } from '../middlewares/auth.middleware.js';
-import { UserRole } from '@prisma/client';
-// Importujeme našu novú pomocnú funkciu
-import { hashPassword } from '../utils/password.utils.js';
-
-// Assume you have a utility function for sending emails
-// import { sendEmail } from '../utils/mailer.util.js'; 
+import { prisma } from '../configs/prisma.config.js'; 
+import { 
+  registerUser, 
+  loginUser, 
+  logoutUser, 
+  getProfile, 
+  requestAccountLink, 
+  completeAccountLink, 
+  setAuthCookie,
+  registerOrganization,
+  verifyEmailByCode, // Import new function
+  verifyEmailByLink, // Import new function
+  resendVerification // Import new function
+} from '../controllers/auth.controllers.js';
+import { authenticateJWT, checkRole } from '../middlewares/auth.middleware.js';
+import { UserRole, UserType } from '@prisma/client';
 
 const router = Router();
 
@@ -22,110 +28,41 @@ router.post('/login', loginUser);
 router.post('/logout', logoutUser);
 router.get('/profile', authenticateJWT, getProfile);
 
-// --- New Account Linking Routes ---
+// --- New Organization Registration Route ---
+router.post('/register-organization', registerOrganization);
 
-// Step 1: User requests to link their account by adding a password
-router.post('/request-account-link', async (req: Request, res: Response) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: 'Email is required.' });
-  }
+// --- Account Linking Routes ---
+router.post('/request-account-link', requestAccountLink);
+router.post('/complete-account-link', completeAccountLink);
 
-  try {
-    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-
-    // This flow is only for users who exist, registered via social login (e.g., Google), and don't have a password yet.
-    if (!user || !user.googleId || user.passwordHash) {
-      return res.status(400).json({ error: "This account is not eligible for linking." });
-    }
-
-    const linkToken = jwt.sign(
-      { userId: user.id, purpose: 'account-link' },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '15m' }
-    );
-
-    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/complete-account-link?token=${linkToken}`;
-
-    // TODO: Implement the actual email sending logic
-    console.log(`[DEV] Account link URL for ${user.email}: ${verificationUrl}`); 
-
-    res.status(200).json({ message: 'Verification email sent.' });
-
-  } catch (error) {
-    console.error("Error requesting account link:", error);
-    res.status(500).json({ error: 'Failed to process request.' });
-  }
-});
-
-// Step 2: User clicks the link and submits a new password
-router.post('/complete-account-link', async (req: Request, res: Response) => {
-  const { token, password } = req.body;
-
-  if (!token || !password) {
-    return res.status(400).json({ error: 'Token and password are required.' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number; purpose: string };
-    
-    if (decoded.purpose !== 'account-link') {
-      return res.status(400).json({ error: 'Invalid token purpose.' });
-    }
-
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found.' });
-    }
-
-    // --- KĽÚČOVÁ ZMENA ---
-    // Namiesto bcrypt.hash používame našu novú, bezpečnú funkciu
-    const hashedPassword = await hashPassword(password);
-    
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash: hashedPassword },
-    });
-    
-    setAuthCookie(res, updatedUser.id, updatedUser.role);
-
-    res.status(200).json({ 
-      user: { 
-        id: updatedUser.id, 
-        name: updatedUser.displayName,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        selectedRole: updatedUser.selectedRole,
-        imageUrl: (updatedUser as any).imageUrl 
-      } 
-    });
-
-  } catch (error) {
-    console.error("Error completing account link:", error);
-    return res.status(401).json({ error: 'Invalid or expired token.' });
-  }
-});
+// --- Email Verification Routes ---
+router.post('/verify-email-by-code', verifyEmailByCode); // Endpoint for code verification (POST for body)
+router.get('/verify-email-by-link', verifyEmailByLink); // Endpoint for link verification (GET for query params)
+router.post('/resend-verification', resendVerification); // Endpoint to resend verification (POST for body)
 
 
 // --- Existing User Profile and Google OAuth Routes ---
-router.patch('/me/role', authenticateJWT, async (req: Request, res: Response) => {
+// Example of using checkRole middleware: Only ORG_ADMIN or SUPERADMIN can update roles via this endpoint.
+router.patch('/me/role', authenticateJWT, checkRole(UserRole.org_admin, UserRole.superadmin), async (req: Request, res: Response) => {
   const { selectedRole } = req.body;
-  const userId = (req.user as { id: number }).id;
+  // req.user is guaranteed to exist and have userId and primaryRole due to authenticateJWT
+  const userId = req.user!.userId; 
 
-  const validRoles: string[] = ["client", "forwarder", "carrier"];
+  const validRoles: string[] = ["client", "forwarder", "carrier"]; // These map to SelectedRoleType
   if (!selectedRole || !validRoles.includes(selectedRole)) {
     return res.status(400).json({ error: 'Invalid role provided.' });
   }
 
   try {
+    // Note: This endpoint updates 'selectedRole', not the primary 'role' or membership roles.
     await prisma.user.update({
       where: { id: userId },
-      data: { selectedRole: selectedRole },
+      data: { selectedRole: selectedRole as any }, // Type assertion for selectedRole might be needed
     });
     res.status(200).json({ message: 'Role updated successfully.' });
-  } catch (error) {
-    console.error("Error updating user role:", error);
-    res.status(500).json({ error: 'Failed to update role.' });
+  } catch (error: any) { // Explicitly type error
+    console.error("Error updating user selectedRole:", error);
+    res.status(500).json({ error: 'Failed to update selected role.' });
   }
 });
 
@@ -139,24 +76,25 @@ router.get(
   passport.authenticate('google', { 
     failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_failed`
   }),
-  (req: Request, res: Response) => {
+  async (req: Request, res: Response) => {
     try {
-      const user = req.user as { id: number; role: UserRole } | undefined;
+      // Passport.js attaches user data to req.user after successful authentication.
+      // req.user is already of type Express.User from passport.config.ts,
+      // which now includes userType, primaryRole, and memberships.
+      const user = req.user as Express.User | undefined;
 
-      if (!user || !user.id || !user.role) {
-        // OPRAVA: Používame nízko-úrovňové presmerovanie
+      if (!user || !user.userId) { // Check userId, as other fields are guaranteed by Express.User type
         res.status(302).set('Location', `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`).end();
         return;
       }
       
-      setAuthCookie(res, user.id, user.role);
+      // Use data from req.user (which already contains userType, primaryRole, memberships from passport.config.ts)
+      setAuthCookie(res, user.userId, user.userType, user.primaryRole, user.memberships);
       
-      // OPRAVA: Používame nízko-úrovňové presmerovanie
       res.status(302).set('Location', `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/callback?status=success`).end();
       
     } catch (error) {
       console.error('[Google OAuth] Error in callback:', error);
-      // OPRAVA: Používame nízko-úrovňové presmerovanie
       res.status(302).set('Location', `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`).end();
     }
   }

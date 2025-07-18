@@ -1,34 +1,31 @@
 // File: back/src/middlewares/auth.middleware.ts
-// Last change: Fixed TypeScript errors related to 'permissions' property and 'req.user' type conflict with Passport.
+// Last change: Fixed implicit 'any' type for 'membership' parameter.
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaClient, UserRole, UserType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
 
-// Extend the Express.User type for Passport.js to include our custom user properties.
-// This merges with the existing Passport.User definition.
+// Extend Express.User type to include our custom user properties.
 declare global {
   namespace Express {
-    interface User { // This is the type Passport.js uses for req.user
+    interface User {
       userId: number;
-      role: UserRole;
-      // Add other properties if your JWT payload or database user object has them
+      userType: UserType;
+      primaryRole: UserRole; // User's primary role
+      // Array of active memberships: { organizationId, role }
+      memberships: { organizationId: number; role: UserRole }[]; 
+      // activeOrganizationId?: number; // Future: to store currently selected organization context
+      // activeRoleInOrg?: UserRole; // Future: to store currently selected role in organization
     }
-
-    // Also ensure Request type is correctly extended if needed elsewhere,
-    // though extending User is usually sufficient for req.user conflicts.
-    // interface Request {
-    //   user?: User; // If you need to explicitly declare it here
-    // }
   }
 }
 
 /**
  * Middleware to authenticate JWT token from cookies.
- * Attaches user information (userId, role) to req.user.
+ * Attaches user information (userId, userType, primaryRole, memberships) to req.user.
  */
 export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
   const token = req.cookies.auth;
@@ -38,9 +35,16 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
   }
 
   try {
-    // Cast the decoded token directly to the extended Express.User type
+    // Cast decoded token to the extended Express.User type.
     const decoded = jwt.verify(token, JWT_SECRET) as Express.User;
-    req.user = { userId: decoded.userId, role: decoded.role }; // Assign directly to req.user
+    
+    // Assign properties from the decoded token to req.user.
+    req.user = { 
+      userId: decoded.userId, 
+      userType: decoded.userType,
+      primaryRole: decoded.primaryRole, // Assign primary role
+      memberships: decoded.memberships // Assign all memberships
+    };
     next();
   } catch (error) {
     console.error('JWT authentication error:', error);
@@ -50,7 +54,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
 
 /**
  * Middleware to check if the authenticated user has one of the required roles.
- * Must be used after authenticateJWT.
+ * This checks against the user's primaryRole OR any of their active membership roles.
  * @param allowedRoles - A list of UserRole enums that are permitted to access the route.
  */
 export const checkRole = (...allowedRoles: UserRole[]) => {
@@ -59,10 +63,22 @@ export const checkRole = (...allowedRoles: UserRole[]) => {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Access denied: Insufficient permissions' });
+    // Check if primaryRole is allowed.
+    if (allowedRoles.includes(req.user.primaryRole)) {
+      return next();
     }
 
-    next();
+    // Check if any of the user's active membership roles are allowed.
+    // Explicitly type 'membership' parameter.
+    const hasMembershipRole = req.user.memberships.some((membership: { organizationId: number; role: UserRole }) => 
+      allowedRoles.includes(membership.role)
+    );
+
+    if (hasMembershipRole) {
+      return next();
+    }
+
+    // If neither primary role nor any membership role is allowed.
+    return res.status(403).json({ error: 'Access denied: Insufficient permissions' });
   };
 };

@@ -1,14 +1,13 @@
 // File: back/src/services/gps.services.ts
-// Description: Handles storage of GPS data in the database and broadcasting updates via WebSockets.
+// Description: Handles storage of GPS data and broadcasting updates.
 
 import { PrismaClient, GpsData as PrismaGpsData } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Define a type for incoming GPS data, consistent with ParsedGpsData from gps-auth.service.ts
-// and suitable for database storage after timestamp conversion.
+// Defines incoming GPS data payload, consistent with device input.
 interface GpsDataPayload {
-  vehicleId: string;
+  deviceIdentifier: string; // Changed from vehicleId to deviceIdentifier
   latitude: number;
   longitude: number;
   speed?: number;
@@ -21,31 +20,45 @@ interface GpsDataPayload {
 /**
  * Stores GPS data in the database using Prisma.
  * @param gpsData The GPS data payload received from a device.
- * @returns A promise that resolves to the created GpsData record from Prisma.
+ * @returns A promise that resolves to the created GpsData record.
  */
 export async function storeGPSData(gpsData: GpsDataPayload): Promise<PrismaGpsData> {
-  console.log('[GPS Storage] Attempting to store data for vehicle:', gpsData.vehicleId);
+  // Log attempt to find device and store data.
+  console.log('[GPS Storage] Attempting to store data for device:', gpsData.deviceIdentifier);
   
   try {
+    // Find the trackable device by its identifier.
+    const trackableDevice = await prisma.trackableDevice.findUnique({
+      where: { deviceIdentifier: gpsData.deviceIdentifier },
+      select: { id: true } // Select only the ID
+    });
+
+    // If device not found, throw an error.
+    if (!trackableDevice) {
+      throw new Error(`Trackable device with identifier ${gpsData.deviceIdentifier} not found.`);
+    }
+
+    // Create GPS data record using trackableDeviceId.
     const createdGpsData = await prisma.gpsData.create({
       data: {
-        vehicleId: gpsData.vehicleId,
+        trackableDeviceId: trackableDevice.id, // Use the found trackableDeviceId
         latitude: gpsData.latitude,
         longitude: gpsData.longitude,
-        timestamp: new Date(gpsData.timestamp), // Convert ISO string to Date object for DateTime field
+        timestamp: new Date(gpsData.timestamp), // Convert ISO string to Date
         accuracy: gpsData.accuracy,
         speed: gpsData.speed,
         heading: gpsData.heading,
         altitude: gpsData.altitude,
       }
     });
+    // Log successful data storage.
     console.log('[GPS Storage] Data stored successfully. ID:', createdGpsData.id);
     return createdGpsData;
   } catch (error) {
+    // Log and re-throw error if storage fails.
     console.error('[GPS Storage] Error storing data:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : 'No stack trace',
-      // Prisma errors often have 'code' and 'meta' properties
       code: (error as any).code || 'N/A',
       meta: (error as any).meta || 'N/A',
     });
@@ -54,31 +67,29 @@ export async function storeGPSData(gpsData: GpsDataPayload): Promise<PrismaGpsDa
 }
 
 /**
- * Retrieves GPS data from the database based on optional vehicle ID and limit.
- * Note: Sorting is done in-memory to avoid potential index issues with `orderBy()` on large datasets.
- * @param options - An object containing optional vehicleId and a required limit for results.
+ * Retrieves GPS data from the database based on optional device ID and limit.
+ * @param options - Object with optional trackableDeviceId and required limit.
  * @returns A promise that resolves to an array of GpsData records.
  */
-export async function getGpsData({ vehicleId, limit }: { vehicleId?: string; limit: number }): Promise<PrismaGpsData[]> {
+export async function getGpsData({ trackableDeviceId, limit }: { trackableDeviceId?: number; limit: number }): Promise<PrismaGpsData[]> {
   try {
+    // Build query options for findMany.
     const queryOptions: any = {
-      take: limit, // Take the specified number of records
-      // orderBy is removed as per instructions to avoid potential index issues.
-      // Sorting will be done in-memory if needed.
+      take: limit,
     };
 
-    if (vehicleId) {
-      queryOptions.where = { vehicleId: vehicleId };
+    // Add where clause if trackableDeviceId is provided.
+    if (trackableDeviceId) {
+      queryOptions.where = { trackableDeviceId: trackableDeviceId };
     }
 
+    // Fetch results and sort in-memory by timestamp descending.
     const results = await prisma.gpsData.findMany(queryOptions);
-
-    // Sort in-memory if a specific order (e.g., by timestamp) is desired and not handled by DB indexing.
-    // For 'desc' timestamp, you would do:
     results.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
     return results;
   } catch (error) {
+    // Log and re-throw error if retrieval fails.
     console.error('[GPS] Get service error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : 'No stack trace',
@@ -91,27 +102,25 @@ export async function getGpsData({ vehicleId, limit }: { vehicleId?: string; lim
 
 /**
  * Broadcasts a GPS update to connected WebSocket clients.
- * This function assumes a global WebSocket server instance (e.g., `global.wsServer`) is available.
- * You'll need to implement the actual WebSocket server setup and client management.
  * @param gpsData The GPS data payload to broadcast.
  */
 export function broadcastGPSUpdate(gpsData: GpsDataPayload): void {
-  console.log('[GPS Broadcast] Broadcasting update for vehicle:', gpsData.vehicleId);
+  // Log broadcast attempt.
+  console.log('[GPS Broadcast] Broadcasting update for device:', gpsData.deviceIdentifier);
   
-  // Example WebSocket broadcast (replace with your actual WebSocket server logic):
-  // This part needs your WebSocket server instance (e.g., from an app.ts or server.ts file).
-  // For instance, if you have a global WebSocket server instance:
+  // This part needs your WebSocket server instance (e.g., global.wsServer).
+  // Example WebSocket broadcast (uncomment and adapt to your WS setup):
   // if (global.wsServer && global.wsServer.clients) {
-  //   global.wsServer.clients.forEach((client: any) => { // Cast client to 'any' or define WebSocket type
+  //   global.wsServer.clients.forEach((client: any) => {
   //     if (client.readyState === WebSocket.OPEN) {
   //       client.send(JSON.stringify({
-  //         type: 'vehicle_moved', // Consistent with your blueprint's event name
+  //         type: 'device_moved', // Event type for device movement
   //         payload: {
-  //           vehicleId: gpsData.vehicleId,
+  //           deviceIdentifier: gpsData.deviceIdentifier,
   //           latitude: gpsData.latitude,
   //           longitude: gpsData.longitude,
   //           speed: gpsData.speed,
-  //           timestamp: gpsData.timestamp // Send as ISO string for consistency with client
+  //           timestamp: gpsData.timestamp
   //         }
   //       }));
   //     }

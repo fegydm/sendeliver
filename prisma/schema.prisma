@@ -1,5 +1,5 @@
-// File: /prisma/schema.prisma
-// Last change: Added imageUrl to the User model to match the application logic.
+// File: prisma/schema.prisma
+// Last change: Added EmailVerificationToken model for email verification.
 
 generator client {
   provider        = "prisma-client-js"
@@ -13,51 +13,133 @@ datasource db {
 }
 
 model Organization {
-  id        Int      @id @default(autoincrement())
-  name      String
-  vatNumber String?  @unique @map("vat_number")
-  type      OrgType
-  status    VerificationStatus @default(PENDING_VERIFICATION)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  users     User[]
+  id                 Int                @id @default(autoincrement())
+  name               String
+  vatNumber          String?            @unique @map("vat_number")
+  type               OrgType
+  status             VerificationStatus @default(PENDING_VERIFICATION)
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  
+  // Users are now linked via the OrganizationMembership table
+  memberships        OrganizationMembership[]
+
+  trackableDevices   TrackableDevice[]  // Organization can own multiple trackable devices
 
   @@map("organizations")
   @@schema("public")
 }
 
 model User {
-  id                 Int      @id @default(autoincrement())
-  email              String   @unique
-  passwordHash       String?  @map("password_hash")
-  googleId           String?  @unique @map("google_id")
-  displayName        String?  @map("display_name")
-  imageUrl           String?  @map("image_url") // <-- PRIDANÁ CHÝBAJÚCA VLASTNOSŤ
-  role               UserRole @default(individual_user)
-  selectedRole       SelectedRoleType? @map("selected_role")
-  organization       Organization?     @relation(fields: [organizationId], references: [id])
-  organizationId     Int?              @map("organization_id")
-  organizationStatus OrgMembershipStatus @default(NOT_APPLICABLE) @map("organization_status")
-  manager            User?             @relation("Hierarchy", fields: [managerId], references: [id])
-  managerId          Int?              @map("manager_id")
-  subordinates       User[]            @relation("Hierarchy")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id                 Int                 @id @default(autoincrement())
+  email              String              @unique
+  passwordHash       String?             @map("password_hash")
+  googleId           String?             @unique @map("google_id")
+  displayName        String?             @map("display_name")
+  imageUrl           String?             @map("image_url")
+  
+  // Primary role for standalone users or default for new users before joining an org.
+  // For users in organizations, their specific role within that org is in OrganizationMembership.
+  primaryRole        UserRole            @default(individual_customer) 
+  userType           UserType            @default(STANDALONE) // Differentiates between organized and standalone users
+  selectedRole       SelectedRoleType?   @map("selected_role") // Retained for backward compatibility if needed
+  
+  // Flag to indicate if email is verified
+  isEmailVerified    Boolean             @default(false) @map("is_email_verified")
+
+  // Hierarchy remains for manager/subordinates within any context
+  manager            User?               @relation("Hierarchy", fields: [managerId], references: [id])
+  managerId          Int?                @map("manager_id")
+  subordinates       User[]              @relation("Hierarchy")
+
+  // User can have multiple memberships in different organizations
+  memberships        OrganizationMembership[]
+
+  ownedDevices       TrackableDevice[]   @relation("OwnedDevices")     // Devices directly owned by this user (e.g., personal tracker)
+  assignedDevices    TrackableDevice[]   @relation("AssignedDevices")  // Devices this user is assigned to operate (e.g., driver to a vehicle)
+
+  // Verification tokens associated with this user
+  verificationTokens EmailVerificationToken[]
+
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
 
   @@map("users")
   @@schema("auth")
 }
 
-model GpsData {
+// NEW MODEL: OrganizationMembership (Join Table)
+model OrganizationMembership {
+  id                 Int                @id @default(autoincrement())
+  userId             Int
+  organizationId     Int
+  role               UserRole           // The specific role of the user within THIS organization
+  status             OrgMembershipStatus @default(PENDING_APPROVAL) // Status of this specific membership
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  user               User               @relation(fields: [userId], references: [id])
+  organization       Organization       @relation(fields: [organizationId], references: [id])
+
+  @@unique([userId, organizationId]) // A user can only have one membership per organization
+  @@map("organization_memberships")
+  @@schema("public") // Can be in public schema as it links public.organizations and auth.users
+}
+
+// NEW MODEL: EmailVerificationToken
+model EmailVerificationToken {
   id        Int      @id @default(autoincrement())
-  vehicleId String
-  latitude  Float
-  longitude Float
-  speed     Float?
-  timestamp DateTime @default(now())
-  accuracy  Float?
-  heading   Float?
-  altitude  Float?
+  userId    Int
+  token     String   @unique // The actual verification token (link token or code)
+  expiresAt DateTime // When the token expires
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("email_verification_tokens")
+  @@schema("auth") // Store in auth schema as it's related to user authentication
+}
+
+
+model TrackableDevice {
+  id                Int                  @id @default(autoincrement())
+  name              String               // E.g., "Blue Truck", "Hiker John", "Cargo Container"
+  deviceIdentifier  String               @unique // Unique ID from the tracking hardware/app (e.g., IMEI, UUID)
+  deviceType        DeviceType           // Defines the nature of the device (VEHICLE, PERSON, ASSET)
+  
+  apiKey            String               @unique // API key for device authentication
+  isActive          Boolean              @default(true) // Status of the device
+  lastSeen          DateTime?            // Timestamp of last seen activity
+
+  organization      Organization?        @relation(fields: [organizationId], references: [id])
+  organizationId    Int?                 @map("organization_id")
+
+  owner             User?                @relation("OwnedDevices", fields: [ownerId], references: [id])
+  ownerId           Int?                 @map("owner_id")
+
+  assignedToUser    User?                @relation("AssignedDevices", fields: [assignedToUserId], references: [id])
+  assignedToUserId  Int?                 @map("assigned_to_user_id")
+
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  gpsData           GpsData[]            // Link to GPS data entries for this device
+
+  @@map("trackable_devices")
+  @@schema("public") // Stored in public for broader accessibility if needed
+}
+
+model GpsData {
+  id              Int              @id @default(autoincrement())
+  trackableDevice TrackableDevice  @relation(fields: [trackableDeviceId], references: [id])
+  trackableDeviceId Int            @map("trackable_device_id")
+  latitude        Float
+  longitude       Float
+  speed           Float?
+  timestamp       DateTime         @default(now())
+  accuracy        Float?
+  heading         Float?
+  altitude        Float?
 
   @@map("gps_data")
   @@schema("public")
@@ -72,14 +154,35 @@ enum SelectedRoleType {
 }
 
 enum UserRole {
-  superadmin
-  developer
-  org_admin
+  superadmin          // System creator, ultimate control
+  system_admin        // Delegated system administrators
+  
+  org_admin           // Organization administrator
   dispatcher
   driver
-  individual_user
+  accountant          // For financial management
+  employee            // General internal staff
+  external_worker     // External contractors/freelancers
+
+  individual_customer // B2C customer ordering services
+  tracker_user        // Generic user of the Tracker app (e.g., hiker)
 
   @@schema("auth")
+}
+
+enum UserType {
+  ORGANIZED  // User belongs to an organization
+  STANDALONE // Independent user (e.g., individual customer, personal tracker user)
+
+  @@schema("auth")
+}
+
+enum DeviceType {
+  VEHICLE  // Traditional vehicles (cars, trucks)
+  PERSON   // A person (e.g., for hiking scenarios)
+  ASSET    // An asset (e.g., container, pallet, anything trackable without a direct driver)
+
+  @@schema("public") // Stored in public for broader accessibility if needed
 }
 
 enum OrgMembershipStatus {

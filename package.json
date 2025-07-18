@@ -20,10 +20,11 @@
     "build:front": "npm --workspace=front run build",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
-    "postinstall": "npm run prisma:generate && npm run build:logger"
+    "postinstall": "npm run prisma:generate && npm run build:logger",
+    "dev": "npm --workspace=back run dev & npm --workspace=front run dev & wait"
   },
   "dependencies": {
-    "@prisma/client": "^6.11.1",
-    "prisma": "^6.11.1"
+    "@prisma/client": "^6.12.0",
+    "prisma": "^6.12.0"
   }
 }

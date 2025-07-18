@@ -1,27 +1,31 @@
 // File: back/src/services/gps-auth.service.ts
-// Description: Handles GPS device authentication, registration, and in-memory management.
-// Note: Device storage is currently in-memory and should be replaced with a persistent database solution (e.g., Prisma) for production.
+// Description: Handles GPS device authentication, registration, and management.
+// Note: This service uses Prisma for persistent storage of TrackableDevices.
 
 import { randomBytes } from 'crypto';
+import { PrismaClient, DeviceType, TrackableDevice as PrismaTrackableDevice } from '@prisma/client'; // Import Prisma models
 
-// Interface for a GPS device managed by the authentication service
+const prisma = new PrismaClient();
+
+// Interface for a GPS device managed by the authentication service.
 interface GPSDevice {
-  id: string;
-  vehicleId: string;
+  id: number; // Changed to number as per Prisma's Int ID
+  name: string; // Added name as per TrackableDevice model
+  deviceIdentifier: string; // Changed from vehicleId to deviceIdentifier
   apiKey: string;
-  deviceType: 'mobile_app' | 'gps_chip' | 'telematics';
+  deviceType: DeviceType; // Changed to Prisma's DeviceType enum
   isActive: boolean;
   lastSeen?: Date;
   createdAt: Date;
+  // organizationId and ownerId are part of PrismaTrackableDevice, but not directly used in this simplified interface
 }
 
-// Interface for raw GPS data payload received from a device
-// This structure is what parseGPSData will output
+// Interface for raw GPS data payload received from a device.
 interface ParsedGpsData {
-  vehicleId: string;
+  deviceIdentifier: string; // Changed from vehicleId
   latitude: number;
   longitude: number;
-  timestamp: string; // ISO string, will be converted to Date for database storage
+  timestamp: string; // ISO string
   accuracy?: number;
   speed?: number;
   heading?: number;
@@ -29,92 +33,60 @@ interface ParsedGpsData {
 }
 
 class SimpleGPSAuthService {
-  // In-memory storage for GPS devices.
-  // In a real application, this would be backed by a database (e.g., Prisma model for Device).
-  private devices = new Map<string, GPSDevice>(); // deviceId -> GPSDevice object
-  private apiKeyToDevice = new Map<string, string>(); // apiKey -> deviceId
-
-  /**
-   * Constructor: Initializes the service and registers a default service vehicle.
-   */
+  // Constructor: Initializes the service.
   constructor() {
-    this.registerServiceVehicle();
-  }
-
-  /**
-   * Registers a predefined service vehicle for initial testing/setup.
-   * Uses an API key from environment variables or a default.
-   */
-  private registerServiceVehicle() {
-    const serviceApiKey = process.env.GPS_API_KEY || 'gps_service_mbgbf2hr_3471b7b1b0491534';
-    
-    const device: GPSDevice = {
-      id: 'service-device-1',
-      vehicleId: 'service', // A generic vehicle ID for the service device
-      apiKey: serviceApiKey,
-      deviceType: 'mobile_app', // Default type for the service device
-      isActive: true,
-      createdAt: new Date()
-    };
-
-    this.devices.set(device.id, device);
-    this.apiKeyToDevice.set(device.apiKey, device.id);
-
-    console.log('[GPS Auth] Service vehicle registered:');
-    console.log(`  Vehicle ID: ${device.vehicleId}`);
-    console.log(`  API Key: ${device.apiKey}`);
-    console.log(`  Device ID: ${device.id}`);
+    // In a production setup, we might fetch active devices from the DB here
+    // or rely on a separate process to keep in-memory cache updated.
   }
 
   /**
    * Generates a unique API key for a new GPS device.
-   * @param vehicleId The ID of the vehicle associated with the device.
+   * @param deviceIdentifier The unique identifier of the device.
    * @returns A unique API key string.
    */
-  private generateApiKey(vehicleId: string): string {
+  private generateApiKey(deviceIdentifier: string): string {
     const prefix = 'gps';
-    const timestamp = Date.now().toString(36); // Base36 timestamp for compactness
-    const random = randomBytes(8).toString('hex'); // 8 bytes of random data
-    return `${prefix}_${vehicleId}_${timestamp}_${random}`;
+    const timestamp = Date.now().toString(36);
+    const random = randomBytes(8).toString('hex');
+    return `${prefix}_${deviceIdentifier.substring(0, 8)}_${timestamp}_${random}`; // Use part of identifier
   }
 
   /**
-   * Registers a new GPS device.
+   * Registers a new TrackableDevice in the database.
    * This method is typically called by an administrator.
-   * @param data - Object containing vehicleId, deviceType, and an optional customApiKey.
-   * @returns The newly registered GPSDevice object.
+   * @param data - Object containing name, deviceIdentifier, deviceType, and an optional customApiKey.
+   * @returns A promise that resolves to the newly registered TrackableDevice object.
    */
-  registerDevice(data: {
-    vehicleId: string;
-    deviceType: 'mobile_app' | 'gps_chip' | 'telematics';
+  async registerDevice(data: {
+    name: string; // User-friendly name
+    deviceIdentifier: string; // Unique technical ID
+    deviceType: DeviceType; // Prisma enum
     customApiKey?: string;
-  }): GPSDevice {
-    // Generate a unique device ID
-    const deviceId = `${data.vehicleId}-device-${Date.now()}`;
-    const apiKey = data.customApiKey || this.generateApiKey(data.vehicleId);
-
-    // Check for existing API key to prevent collisions if customApiKey is provided
-    if (this.apiKeyToDevice.has(apiKey)) {
-      throw new Error('Custom API key already exists. Please provide a unique key.');
-    }
-    // Check if a device already exists for this vehicleId (optional, but good practice)
-    if (this.getDeviceByVehicle(data.vehicleId)) {
-      throw new Error(`Device already registered for vehicle ID: ${data.vehicleId}`);
+  }): Promise<PrismaTrackableDevice> {
+    // Check for existing deviceIdentifier to prevent collisions.
+    const existingDevice = await prisma.trackableDevice.findUnique({
+      where: { deviceIdentifier: data.deviceIdentifier }
+    });
+    if (existingDevice) {
+      throw new Error(`Device already registered with identifier: ${data.deviceIdentifier}`);
     }
 
-    const device: GPSDevice = {
-      id: deviceId,
-      vehicleId: data.vehicleId,
-      apiKey,
-      deviceType: data.deviceType,
-      isActive: true,
-      createdAt: new Date()
-    };
+    const apiKey = data.customApiKey || this.generateApiKey(data.deviceIdentifier);
 
-    this.devices.set(deviceId, device);
-    this.apiKeyToDevice.set(apiKey, deviceId);
+    // In a real scenario, you'd also check if the customApiKey is unique if provided.
 
-    console.log(`[GPS Auth] Device registered: ${deviceId} for vehicle: ${data.vehicleId}`);
+    const device = await prisma.trackableDevice.create({
+      data: {
+        name: data.name,
+        deviceIdentifier: data.deviceIdentifier,
+        apiKey,
+        deviceType: data.deviceType,
+        isActive: true,
+        createdAt: new Date()
+      }
+    });
+
+    console.log(`[GPS Auth] Device registered: ${device.id} for identifier: ${data.deviceIdentifier}`);
     return device;
   }
 
@@ -123,12 +95,11 @@ class SimpleGPSAuthService {
    * @param headers - Request headers object.
    * @returns An object indicating success/failure, the authenticated device, and an error message if any.
    */
-  authenticateRequest(headers: Record<string, string>): {
+  async authenticateRequest(headers: Record<string, string>): Promise<{
     success: boolean;
-    device?: GPSDevice;
+    device?: PrismaTrackableDevice; // Returns PrismaTrackableDevice
     error?: string;
-  } {
-    // Try to extract API key from common header names
+  }> {
     const apiKey = 
       headers['x-api-key'] || 
       headers['authorization']?.replace('Bearer ', '') ||
@@ -141,15 +112,10 @@ class SimpleGPSAuthService {
       };
     }
 
-    const deviceId = this.apiKeyToDevice.get(apiKey);
-    if (!deviceId) {
-      return {
-        success: false,
-        error: 'Invalid API key'
-      };
-    }
+    const device = await prisma.trackableDevice.findUnique({
+      where: { apiKey: apiKey }
+    });
 
-    const device = this.devices.get(deviceId);
     if (!device || !device.isActive) {
       return {
         success: false,
@@ -157,8 +123,11 @@ class SimpleGPSAuthService {
       };
     }
 
-    // Update last seen timestamp for the device
-    device.lastSeen = new Date();
+    // Update last seen timestamp for the device.
+    await prisma.trackableDevice.update({
+      where: { id: device.id },
+      data: { lastSeen: new Date() }
+    });
 
     return {
       success: true,
@@ -169,21 +138,19 @@ class SimpleGPSAuthService {
   /**
    * Parses and validates raw GPS data received from a device.
    * @param rawData - The raw data object from the request body.
-   * @param device - The authenticated GPS device.
+   * @param device - The authenticated TrackableDevice.
    * @returns An object indicating success/failure, the parsed GPS data, and an error message if any.
    */
-  parseGPSData(rawData: any, device: GPSDevice): {
+  parseGPSData(rawData: any, device: PrismaTrackableDevice): { // Device type is PrismaTrackableDevice
     success: boolean;
     data?: ParsedGpsData;
     error?: string;
   } {
     try {
-      // Basic validation for rawData existence
       if (!rawData) {
         return { success: false, error: 'No GPS data provided' };
       }
 
-      // Parse latitude and longitude, handling common field names
       const latitude = parseFloat(rawData.latitude || rawData.lat);
       const longitude = parseFloat(rawData.longitude || rawData.lng || rawData.lon);
 
@@ -191,21 +158,17 @@ class SimpleGPSAuthService {
         return { success: false, error: 'Invalid latitude or longitude. Must be a number.' };
       }
 
-      // Validate coordinate ranges
       if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
         return { success: false, error: 'Coordinates out of valid range (-90 to 90 for lat, -180 to 180 for lon).' };
       }
 
-      // Construct the parsed GPS data object
       const gpsData: ParsedGpsData = {
-        vehicleId: device.vehicleId, // Associate data with the authenticated device's vehicle
+        deviceIdentifier: device.deviceIdentifier, // Use the authenticated device's identifier
         latitude,
         longitude,
-        // Use provided timestamp or current ISO string if not present
         timestamp: rawData.timestamp || new Date().toISOString(), 
         accuracy: rawData.accuracy ? parseFloat(rawData.accuracy) : undefined,
         speed: rawData.speed ? parseFloat(rawData.speed) : undefined,
-        // Handle common variations for heading/bearing
         heading: rawData.heading || rawData.bearing ? parseFloat(rawData.heading || rawData.bearing) : undefined,
         altitude: rawData.altitude ? parseFloat(rawData.altitude) : undefined
       };
@@ -216,7 +179,6 @@ class SimpleGPSAuthService {
       };
 
     } catch (error) {
-      // Catch any unexpected errors during parsing
       return {
         success: false,
         error: `GPS data parsing failed: ${error instanceof Error ? error.message : 'Unknown error during parsing.'}`
@@ -225,44 +187,52 @@ class SimpleGPSAuthService {
   }
 
   /**
-   * Retrieves a list of all registered GPS devices.
-   * @returns An array of GPSDevice objects.
+   * Retrieves a list of all registered TrackableDevices from the database.
+   * @returns A promise that resolves to an array of TrackableDevice objects.
    */
-  getAllDevices(): GPSDevice[] {
-    return Array.from(this.devices.values());
+  async getAllDevices(): Promise<PrismaTrackableDevice[]> {
+    return prisma.trackableDevice.findMany();
   }
 
   /**
-   * Finds a GPS device by its associated vehicle ID.
-   * @param vehicleId The ID of the vehicle.
-   * @returns The GPSDevice object if found, otherwise null.
+   * Finds a TrackableDevice by its unique identifier.
+   * @param deviceIdentifier The unique identifier of the device.
+   * @returns A promise that resolves to the TrackableDevice object if found, otherwise null.
    */
-  getDeviceByVehicle(vehicleId: string): GPSDevice | null {
-    return Array.from(this.devices.values()).find(d => d.vehicleId === vehicleId) || null;
+  async getDeviceByIdentifier(deviceIdentifier: string): Promise<PrismaTrackableDevice | null> {
+    return prisma.trackableDevice.findUnique({ where: { deviceIdentifier: deviceIdentifier } });
   }
 
   /**
-   * Deactivates a GPS device, preventing it from sending data.
-   * @param deviceId The ID of the device to deactivate.
-   * @returns True if the device was found and deactivated, false otherwise.
+   * Deactivates a TrackableDevice by its unique identifier.
+   * @param deviceIdentifier The unique identifier of the device to deactivate.
+   * @returns A promise that resolves to true if the device was found and deactivated, false otherwise.
    */
-  deactivateDevice(deviceId: string): boolean {
-    const device = this.devices.get(deviceId);
-    if (device) {
-      device.isActive = false;
-      console.log(`[GPS Auth] Device deactivated: ${deviceId}`);
+  async deactivateDeviceByIdentifier(deviceIdentifier: string): Promise<boolean> {
+    try {
+      const device = await prisma.trackableDevice.update({
+        where: { deviceIdentifier: deviceIdentifier },
+        data: { isActive: false }
+      });
+      console.log(`[GPS Auth] Device deactivated: ${device.id} (${device.deviceIdentifier})`);
       return true;
+    } catch (error) {
+      // Handle case where deviceIdentifier is not found (P2025) or other errors
+      console.error(`[GPS Auth] Error deactivating device ${deviceIdentifier}:`, error);
+      return false;
     }
-    return false;
   }
 
   /**
-   * Retrieves the API key for a specific vehicle's device.
-   * @param vehicleId The ID of the vehicle.
-   * @returns The API key string if found, otherwise null.
+   * Retrieves the API key for a specific device's identifier.
+   * @param deviceIdentifier The unique identifier of the device.
+   * @returns A promise that resolves to the API key string if found, otherwise null.
    */
-  getApiKeyForVehicle(vehicleId: string): string | null {
-    const device = this.getDeviceByVehicle(vehicleId);
+  async getApiKeyForDeviceIdentifier(deviceIdentifier: string): Promise<string | null> {
+    const device = await prisma.trackableDevice.findUnique({
+      where: { deviceIdentifier: deviceIdentifier },
+      select: { apiKey: true }
+    });
     return device?.apiKey || null;
   }
 }

@@ -1,87 +1,125 @@
 // File: back/src/configs/passport.config.ts
-// Last change: Fixed session/JWT integration and unified authentication flow
+// Last change: Updated Passport strategy to fetch and include memberships in Express.User.
 
-import passport from 'passport';
+import { PrismaClient, UserRole, UserType, OrgMembershipStatus } from '@prisma/client';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { PrismaClient, UserRole } from '@prisma/client';
+import passport from 'passport';
 
 const prisma = new PrismaClient();
 
-export const configurePassport = () => {
-  console.log('[Passport Config] GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set' : 'NOT SET');
-  console.log('[Passport Config] GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'NOT SET');
-  console.log('[Passport Config] GOOGLE_CALLBACK_URL:', process.env.GOOGLE_CALLBACK_URL || 'http://localhost:10000/api/auth/google/callback');
-  console.log('[Passport Config] SESSION_SECRET:', process.env.SESSION_SECRET ? 'Set' : 'NOT SET');
+// Extend the Express.User type for Passport.js to include our custom user properties.
+declare global {
+  namespace Express {
+    interface User {
+      userId: number;
+      userType: UserType;
+      primaryRole: UserRole;
+      memberships: { organizationId: number; role: UserRole }[];
+    }
+  }
+}
 
-  // Serialize user - store only essential data
-  passport.serializeUser((user: any, done) => {
-    // Store the userId for session identification
+/**
+ * Configures Passport.js strategies for authentication.
+ */
+export const configurePassport = () => {
+  // Google OAuth Strategy
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID as string,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+        callbackURL: process.env.GOOGLE_CALLBACK_URL as string,
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          // Find or create user, including their memberships.
+          let user = await prisma.user.findUnique({
+            where: { googleId: profile.id },
+            include: {
+              memberships: {
+                where: { status: OrgMembershipStatus.ACTIVE },
+                select: { organizationId: true, role: true }
+              }
+            }
+          });
+
+          if (!user) {
+            // If user doesn't exist, create a new one as an individual customer.
+            user = await prisma.user.create({
+              data: {
+                email: profile.emails?.[0]?.value as string,
+                googleId: profile.id,
+                displayName: profile.displayName,
+                imageUrl: profile.photos?.[0]?.value,
+                primaryRole: UserRole.individual_customer, // Default primary role
+                userType: UserType.STANDALONE, // Default user type
+              },
+              include: {
+                memberships: { // Include memberships even if empty for consistency
+                  where: { status: OrgMembershipStatus.ACTIVE },
+                  select: { organizationId: true, role: true }
+                }
+              }
+            });
+          }
+          
+          // Prepare user data for Passport's done callback.
+          const expressUser: Express.User = {
+            userId: user.id,
+            userType: user.userType,
+            primaryRole: user.primaryRole,
+            memberships: user.memberships // Pass fetched memberships
+          };
+
+          done(null, expressUser);
+        } catch (error) {
+          console.error('Google OAuth error:', error);
+          done(error);
+        }
+      }
+    )
+  );
+
+  // Serialize user to store in session (only userId needed for session)
+  passport.serializeUser((user: Express.User, done) => {
     done(null, user.userId);
   });
 
-  // Deserialize user - retrieve user data
-  passport.deserializeUser(async (userId: number, done) => {
+  // Deserialize user from session (fetch full user object from DB with memberships)
+  passport.deserializeUser(async (id: number, done) => {
     try {
-      // Fetch fresh user data from database
-      const user = await prisma.user.findUnique({ where: { id: userId } });
-      
+      const user = await prisma.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          email: true,
+          displayName: true,
+          primaryRole: true,
+          userType: true,
+          imageUrl: true, // Also select imageUrl if needed for profile
+          memberships: { // Fetch all active memberships
+            where: { status: OrgMembershipStatus.ACTIVE },
+            select: { organizationId: true, role: true }
+          }
+        }
+      });
+
       if (user) {
+        // Reconstruct Express.User object from DB data
         const expressUser: Express.User = {
           userId: user.id,
-          role: user.role,
+          userType: user.userType,
+          primaryRole: user.primaryRole,
+          memberships: user.memberships // Pass fetched memberships
         };
         done(null, expressUser);
       } else {
         done(null, false);
       }
     } catch (error) {
-      console.error('[Passport] Deserialize error:', error);
-      done(error, null);
+      console.error('Deserialize user error:', error);
+      done(error);
     }
   });
-
-  // Configure Google OAuth 2.0 Strategy
-  passport.use(new GoogleStrategy({
-      clientID: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:10000/api/auth/google/callback',
-      scope: ['profile', 'email']
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        let user = await prisma.user.findUnique({
-          where: { googleId: profile.id }
-        });
-
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              googleId: profile.id,
-              email: profile.emails && profile.emails[0] ? profile.emails[0].value : `${profile.id}@google.com`,
-              displayName: profile.displayName || profile.name?.givenName || 'Google User',
-              role: UserRole.individual_user,
-              organizationStatus: UserRole.individual_user === UserRole.individual_user ? 'NOT_APPLICABLE' : 'PENDING_APPROVAL',
-            }
-          });
-          console.log(`[Passport] New user registered via Google: ${user.email}`);
-        } else {
-          console.log(`[Passport] User logged in via Google: ${user.email}`);
-        }
-
-        // Return user data that will be passed to serializeUser
-        // This data structure should match what Express.User expects
-        const userData = {
-          userId: user.id, // Changed from 'id' to 'userId' to match Express.User interface
-          role: user.role,
-          email: user.email,
-          displayName: user.displayName
-        };
-
-        done(null, userData);
-      } catch (error) {
-        console.error('[Passport] Google Strategy callback error:', error);
-        done(error, undefined);
-      }
-    }
-  ));
 };

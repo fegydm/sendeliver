@@ -1,5 +1,5 @@
 // File: front/src/App.tsx
-// Last change: Verified routing structure for the new authentication flow.
+// Last change: Added route for VerifyEmailPage.
 
 import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
@@ -21,6 +21,7 @@ const NotFoundPage = lazy(() => import("@/pages/notfound.page"));
 const GoogleAuthCallback = lazy(() => import("@/pages/GoogleAuthCallback"));
 const CookiePolicyPage = lazy(() => import("@/pages/CookiePolicyPage"));
 const CompleteAccountLinkPage = lazy(() => import("@/pages/CompleteAccountLinkPage"));
+const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage")); // Added lazy import for VerifyEmailPage
 
 
 const AppContent: React.FC = () => {
@@ -43,6 +44,7 @@ const AppContent: React.FC = () => {
             <Route path="/auth/callback" element={<GoogleAuthCallback />} />
             <Route path="/cookie-policy" element={<CookiePolicyPage />} />
             <Route path="/complete-account-link" element={<CompleteAccountLinkPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} /> {/* Added route for VerifyEmailPage */}
 
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<div>Dashboard (Protected Content)</div>} />

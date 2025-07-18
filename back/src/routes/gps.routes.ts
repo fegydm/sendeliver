@@ -1,16 +1,15 @@
 // File: back/src/routes/gps.routes.ts
-// Last change: Fixed TypeScript req/res types using proper Express types,
-//              corrected Prisma enum usage, and integrated GPS services.
+// Last change: Added 'await' to all asynchronous calls from services.
 
 import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import gpsAuthService from '../services/gps-auth.service.js';
 import { authenticateJWT, checkRole } from '../middlewares/auth.middleware.js';
-import { UserRole } from '@prisma/client'; // Corrected import from 'Role' to 'UserRole'
-import { storeGPSData, broadcastGPSUpdate } from '../services/gps.services.js'; // Import functions from new service file
+import { UserRole } from '@prisma/client';
+import { storeGPSData, broadcastGPSUpdate } from '../services/gps.services.js';
 
 const router = Router();
 
-// Helper function for error handling
+// Helper function for error handling.
 const handleError = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message;
@@ -18,23 +17,23 @@ const handleError = (error: unknown): string => {
   return String(error);
 };
 
-// Define an interface for the expected GPS data payload
+// Define an interface for the expected GPS data payload.
 interface GpsDataPayload {
-  vehicleId: string;
+  deviceIdentifier: string;
   latitude: number;
   longitude: number;
   speed?: number;
-  timestamp: string; // ISO string
+  timestamp: string;
   accuracy?: number;
   heading?: number;
   altitude?: number;
 }
 
-// GPS data endpoint - main endpoint for receiving GPS data
+// GPS data endpoint - main endpoint for receiving GPS data.
 const handleGPSData: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Authenticate GPS device
-    const auth = gpsAuthService.authenticateRequest(req.headers as Record<string, string>);
+    // Authenticate GPS device.
+    const auth = await gpsAuthService.authenticateRequest(req.headers as Record<string, string>); // ADDED await
     if (!auth.success) {
       res.status(401).json({ 
         error: 'GPS Authentication failed',
@@ -43,10 +42,9 @@ const handleGPSData: RequestHandler = async (req: Request, res: Response, next: 
       return;
     }
 
-    const device = auth.device!;
+    const device = auth.device!; 
 
-    // Parse GPS data
-    // Assuming parseGPSData returns an object conforming to GpsDataPayload
+    // Parse GPS data.
     const parseResult = gpsAuthService.parseGPSData(req.body, device);
     if (!parseResult.success) {
       res.status(400).json({
@@ -56,26 +54,26 @@ const handleGPSData: RequestHandler = async (req: Request, res: Response, next: 
       return;
     }
 
-    const gpsData: GpsDataPayload = parseResult.data!; // Cast to GpsDataPayload
+    const gpsData: GpsDataPayload = parseResult.data!;
 
-    // Log received data
-    console.log(`[GPS] ${device.deviceType} data from ${gpsData.vehicleId}:`, {
+    // Log received data using deviceIdentifier.
+    console.log(`[GPS] ${device.deviceType} data from ${gpsData.deviceIdentifier}:`, {
       lat: gpsData.latitude,
       lng: gpsData.longitude,
       timestamp: gpsData.timestamp,
       speed: gpsData.speed || 'N/A'
     });
 
-    // Store GPS data using the service function
+    // Store GPS data using the service function.
     await storeGPSData(gpsData);
 
-    // Broadcast to WebSocket clients using the service function
+    // Broadcast to WebSocket clients using the service function.
     broadcastGPSUpdate(gpsData);
 
-    // Send success response
+    // Send success response.
     res.json({
       success: true,
-      vehicleId: gpsData.vehicleId,
+      deviceIdentifier: gpsData.deviceIdentifier,
       timestamp: gpsData.timestamp,
       received: new Date().toISOString()
     });
@@ -89,10 +87,10 @@ const handleGPSData: RequestHandler = async (req: Request, res: Response, next: 
   }
 };
 
-// Get GPS device info - for debugging/setup
+// Get GPS device info - for debugging/setup.
 const handleDeviceInfo: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const auth = gpsAuthService.authenticateRequest(req.headers as Record<string, string>);
+    const auth = await gpsAuthService.authenticateRequest(req.headers as Record<string, string>); // ADDED await
     if (!auth.success) {
       res.status(401).json({ 
         error: 'GPS Authentication failed',
@@ -101,10 +99,10 @@ const handleDeviceInfo: RequestHandler = async (req: Request, res: Response, nex
       return;
     }
 
-    const device = auth.device!;
+    const device = auth.device!; 
     res.json({
-      deviceId: device.id,
-      vehicleId: device.vehicleId,
+      id: device.id,
+      deviceIdentifier: device.deviceIdentifier,
       deviceType: device.deviceType,
       isActive: device.isActive,
       lastSeen: device.lastSeen,
@@ -119,14 +117,14 @@ const handleDeviceInfo: RequestHandler = async (req: Request, res: Response, nex
   }
 };
 
-// Get all GPS devices (admin only)
-const handleGetDevices: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+// Get all GPS devices (admin only).
+const handleGetDevices: RequestHandler = async (req: Request, res: Response, next: NextFunction) => { // ADDED async
   try {
-    const devices = gpsAuthService.getAllDevices();
+    const devices = await gpsAuthService.getAllDevices(); // ADDED await
     res.json({
       devices: devices.map(d => ({
         id: d.id,
-        vehicleId: d.vehicleId,
+        deviceIdentifier: d.deviceIdentifier,
         deviceType: d.deviceType,
         isActive: d.isActive,
         lastSeen: d.lastSeen,
@@ -142,30 +140,30 @@ const handleGetDevices: RequestHandler = (req: Request, res: Response, next: Nex
   }
 };
 
-// Register new GPS device (admin only)
-const handleRegisterDevice: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+// Register new GPS device (admin only).
+const handleRegisterDevice: RequestHandler = async (req: Request, res: Response, next: NextFunction) => { // ADDED async
   try {
-    const { vehicleId, deviceType } = req.body;
+    const { name, deviceType, deviceIdentifier } = req.body; 
 
-    if (!vehicleId || !deviceType) {
+    if (!name || !deviceType || !deviceIdentifier) {
       res.status(400).json({ 
-        error: 'vehicleId and deviceType are required' 
+        error: 'name, deviceType, and deviceIdentifier are required' 
       });
       return;
     }
 
-    // Check if device already exists for this vehicle
-    const existingDevice = gpsAuthService.getDeviceByVehicle(vehicleId);
+    const existingDevice = await gpsAuthService.getDeviceByIdentifier(deviceIdentifier); // ADDED await
     if (existingDevice) {
       res.status(409).json({ 
-        error: 'Device already registered for this vehicle',
+        error: 'Device already registered with this identifier',
         existingDeviceId: existingDevice.id
       });
       return;
     }
 
-    const device = gpsAuthService.registerDevice({
-      vehicleId,
+    const device = await gpsAuthService.registerDevice({ // ADDED await
+      name,
+      deviceIdentifier,
       deviceType
     });
 
@@ -173,8 +171,9 @@ const handleRegisterDevice: RequestHandler = (req: Request, res: Response, next:
       success: true,
       device: {
         id: device.id,
-        vehicleId: device.vehicleId,
-        apiKey: device.apiKey, // Full API key for setup
+        name: device.name,
+        deviceIdentifier: device.deviceIdentifier,
+        apiKey: device.apiKey,
         deviceType: device.deviceType,
         isActive: device.isActive
       },
@@ -190,20 +189,20 @@ const handleRegisterDevice: RequestHandler = (req: Request, res: Response, next:
   }
 };
 
-// Get API key for vehicle (admin only)
-const handleGetApiKey: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+// Get API key for device (admin only).
+const handleGetApiKey: RequestHandler = async (req: Request, res: Response, next: NextFunction) => { // ADDED async
   try {
-    const { vehicleId } = req.params;
-    const apiKey = gpsAuthService.getApiKeyForVehicle(vehicleId);
+    const { deviceIdentifier } = req.params;
+    const apiKey = await gpsAuthService.getApiKeyForDeviceIdentifier(deviceIdentifier); // ADDED await
     
     if (!apiKey) {
       res.status(404).json({ 
-        error: 'No device registered for this vehicle' 
+        error: 'No device registered with this identifier' 
       });
       return;
     }
 
-    res.json({ vehicleId, apiKey });
+    res.json({ deviceIdentifier, apiKey });
   } catch (error) {
     res.status(500).json({ 
       error: 'Failed to get API key',
@@ -212,11 +211,11 @@ const handleGetApiKey: RequestHandler = (req: Request, res: Response, next: Next
   }
 };
 
-// Deactivate device (admin only)
-const handleDeactivateDevice: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+// Deactivate device (admin only).
+const handleDeactivateDevice: RequestHandler = async (req: Request, res: Response, next: NextFunction) => { // ADDED async
   try {
-    const { deviceId } = req.params;
-    const success = gpsAuthService.deactivateDevice(deviceId);
+    const { deviceIdentifier } = req.params;
+    const success = await gpsAuthService.deactivateDeviceByIdentifier(deviceIdentifier); // ADDED await
     
     if (!success) {
       res.status(404).json({ error: 'Device not found' });
@@ -232,26 +231,19 @@ const handleDeactivateDevice: RequestHandler = (req: Request, res: Response, nex
   }
 };
 
-// Route definitions
+// Route definitions.
 router.post('/gps', handleGPSData);
 router.get('/gps/device-info', handleDeviceInfo);
 
-// Admin endpoints - require authentication
+// Admin endpoints - require authentication.
 router.use('/gps/admin', authenticateJWT);
-// Corrected Role.admin, Role.carrier to UserRole.superadmin, UserRole.org_admin
-// Assuming 'admin' in context means superadmin or organization admin,
-// and 'carrier' refers to a user role that manages carrier operations,
-// which is best represented by 'org_admin' or 'dispatcher' based on your schema.
-// Using superadmin and org_admin for broad admin access.
 router.get('/gps/admin/devices', checkRole(UserRole.superadmin, UserRole.org_admin), handleGetDevices);
 router.post('/gps/admin/register', checkRole(UserRole.superadmin, UserRole.org_admin), handleRegisterDevice);
-router.get('/gps/admin/apikey/:vehicleId', checkRole(UserRole.superadmin, UserRole.org_admin), handleGetApiKey);
-router.post('/gps/admin/deactivate/:deviceId', checkRole(UserRole.superadmin, UserRole.org_admin), handleDeactivateDevice);
+router.get('/gps/admin/apikey/:deviceIdentifier', checkRole(UserRole.superadmin, UserRole.org_admin), handleGetApiKey);
+router.post('/gps/admin/deactivate/:deviceIdentifier', checkRole(UserRole.superadmin, UserRole.org_admin), handleDeactivateDevice);
 
 
-// Helper functions (moved to gps.services.ts and imported)
-// Removed local storeGPSData and broadcastGPSUpdate functions
-
+// Helper functions (moved to gps.services.ts and imported).
 function getSetupInstructions(device: any): any {
   const baseUrl = process.env.API_BASE_URL || 'http://localhost:5000';
   
@@ -266,7 +258,7 @@ function getSetupInstructions(device: any): any {
           'Content-Type': 'application/json'
         },
         examplePayload: {
-          vehicleId: device.vehicleId,
+          deviceIdentifier: device.deviceIdentifier,
           latitude: 48.1486,
           longitude: 17.1077,
           timestamp: new Date().toISOString(),

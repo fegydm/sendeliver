@@ -1,5 +1,5 @@
 // File: front/src/components/shared/modals/RegisterModal.tsx
-// Last change: Integrated the usePasswordValidation hook and cleaned up
+// Last change: Ensured modal closes after successful individual registration and navigation.
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +16,7 @@ interface RegisterModalProps {
   onClose: () => void;
 }
 
+// EyeIcon component for password visibility toggle.
 const EyeIcon = ({ closed }: { closed: boolean }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     {closed ? (
@@ -34,6 +35,7 @@ const EyeIcon = ({ closed }: { closed: boolean }) => (
   </svg>
 );
 
+// Main RegisterModal component.
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -41,12 +43,15 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    organizationName: '', // Field for organization registration
+    vatNumber: '', // Field for organization registration
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [showAccountLinkOption, setShowAccountLinkOption] = useState(false);
+  // State to manage the selected registration type (individual or organization).
+  const [selectedRegType, setSelectedRegType] = useState<'individual' | 'organization'>('individual'); 
 
   const { passwordError, confirmPasswordError, isValid } = usePasswordValidation(
     formData.password,
@@ -59,46 +64,43 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
     }
   );
 
+  // Handles input changes for all form fields.
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRequestLink = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      await axios.post('/api/auth/request-account-link', { email: formData.email });
-      setError("Success! We've sent a verification link to your email. Please check your inbox.");
-      setShowAccountLinkOption(false);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to send link. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Handles form submission for individual or organization registration.
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    if (!isValid) {
+    if (!isValid) { 
       setError(passwordError || confirmPasswordError || "Please check your password entries.");
       return;
     }
     
     setIsLoading(true);
     setError(null);
-    setShowAccountLinkOption(false);
 
     try {
-      await register(formData.name, formData.email, formData.password);
-      navigate("/dashboard", { replace: true });
-    } catch (err: any) {
-      if (err.response?.data?.errorCode === 'USER_EXISTS_SOCIAL_LOGIN') {
-        setError("This account already exists and is linked with Google.");
-        setShowAccountLinkOption(true);
-      } else {
-        setError(err.response?.data?.message || "Registration failed.");
+      if (selectedRegType === 'individual') {
+        // Individual registration logic.
+        await register(formData.name, formData.email, formData.password);
+        navigate("/dashboard", { replace: true });
+        onClose(); // ADDED: Close modal after successful registration and navigation
+      } else if (selectedRegType === 'organization') {
+        // Organization registration logic.
+        await axios.post('/api/auth/register-organization', {
+          organizationName: formData.organizationName,
+          vatNumber: formData.vatNumber,
+          adminEmail: formData.email,
+          adminPassword: formData.password,
+          adminName: formData.name 
+        });
+        setError("Organization registered! Please check your email for verification.");
+        onClose(); 
       }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Registration failed.");
     } finally {
       setIsLoading(false);
     }
@@ -109,28 +111,61 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
       isOpen={isOpen}
       onClose={onClose}
       title="Create a New Account"
-      description="Register to get access to our platform."
+      description="Choose your account type to get started."
     >
+      <div className="register-form__type-selection mb-4 flex justify-center space-x-4">
+        {/* Card/Button for Individual Registration */}
+        <button
+          type="button"
+          className={`px-6 py-3 rounded-lg border-2 transition-all duration-200 text-center flex-1 
+            ${selectedRegType === 'individual' ? 'border-blue-500 bg-blue-50 text-blue-800 shadow-md' : 'border-gray-300 bg-white text-gray-700 hover:border-blue-300'}`}
+          onClick={() => setSelectedRegType('individual')}
+        >
+          <div>
+            <h3 className="font-semibold text-base">Individual Account</h3>
+            <p className="text-xs text-gray-500">For personal use or single deliveries.</p>
+          </div>
+        </button>
+
+        {/* Card/Button for Organization Registration */}
+        <button
+          type="button"
+          className={`px-6 py-3 rounded-lg border-2 transition-all duration-200 text-center flex-1 
+            ${selectedRegType === 'organization' ? 'border-blue-500 bg-blue-50 text-blue-800 shadow-md' : 'border-gray-300 bg-white text-gray-700 hover:border-blue-300'}`}
+          onClick={() => setSelectedRegType('organization')}
+        >
+          <div>
+            <h3 className="font-semibold text-base">Organization Account</h3>
+            <p className="text-xs text-gray-500">For businesses, fleets, and teams.</p>
+          </div>
+        </button>
+      </div>
+
       <form id="register-form" className="register-form" onSubmit={handleSubmit}>
         {error && <p className="register-form__error">{error}</p>}
         
-        {showAccountLinkOption && (
-          <div className="register-form__link-account">
-            <p>Would you like to add a password to log in manually?</p>
-            <Button variant="secondary" type="button" onClick={handleRequestLink} disabled={isLoading}>
-              {isLoading ? "Sending..." : "Send Verification Link"}
-            </Button>
-            <hr className="my-4"/>
-          </div>
+        {/* Fields for Organization Registration (conditionally rendered) */}
+        {selectedRegType === 'organization' && (
+          <>
+            <div className="register-form__field">
+              <label htmlFor="organizationName">Organization Name</label>
+              <Input id="organizationName" name="organizationName" type="text" value={formData.organizationName} onChange={handleChange} required />
+            </div>
+            <div className="register-form__field">
+              <label htmlFor="vatNumber">VAT Number (Optional)</label>
+              <Input id="vatNumber" name="vatNumber" type="text" value={formData.vatNumber} onChange={handleChange} />
+            </div>
+          </>
         )}
-        
+
+        {/* Common fields for both types */}
         <div className="register-form__field">
-          <label htmlFor="name">Name</label>
+          <label htmlFor="name">{selectedRegType === 'individual' ? 'Your Name' : 'Admin Name'}</label>
           <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required />
         </div>
 
         <div className="register-form__field">
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{selectedRegType === 'individual' ? 'Your Email' : 'Admin Email'}</label>
           <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
         </div>
         
@@ -167,11 +202,25 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
           <Button variant="cancel" type="button" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button variant="primary" type="submit" form="register-form" disabled={isLoading || !isValid}>
+          <Button variant="primary" type="submit" form="register-form" disabled={isLoading || !isValid || (selectedRegType === 'organization' && !formData.organizationName)}>
             {isLoading ? "Creating Account..." : "Create Account"}
           </Button>
         </div>
       </form>
+
+      {/* Link to connect to an existing organization (moved to bottom, outside form) */}
+      <div className="mt-4 text-center text-gray-600 text-sm">
+        <p>Are you part of an organization and received an invitation or want to connect?</p>
+        <button 
+          type="button" 
+          onClick={() => { /* TODO: Implement logic to open a dedicated "Connect to Organization" modal or navigate to a page */ }} 
+          className="text-blue-600 hover:text-blue-800 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          disabled={isLoading}
+        >
+          Connect to an Organization
+        </button>
+      </div>
+
     </GeneralModal>
   );
 };

@@ -1,18 +1,31 @@
-// File: ./back/src/utils/email.ts
-// Last change: Removed nodemailer, implemented logging-based email stub
+// File: back/src/utils/email.utils.ts
+// Last change: Overriding email recipient to feggyo@gmail.com in non-production environments.
 
-import { logger } from '@sendeliver/logger';
+import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
 import Handlebars, { TemplateDelegate } from 'handlebars';
+import { logger } from '@sendeliver/logger'; // Assuming logger is available
 
 // Email template cache
 const templates: Record<string, TemplateDelegate> = {};
 
+// Placeholder for a real email transporter.
+// In a production environment, you would configure this with your SMTP details (e.g., SendGrid, Mailgun).
+const transporter = nodemailer.createTransport({
+  host: "smtp.ethereal.email", // Example: Ethereal Mail for testing
+  port: 587,
+  secure: false, // Use 'true' for 465, 'false' for other ports
+  auth: {
+    user: "melisa.kulas@ethereal.email", // Replace with your Ethereal user/password or actual SMTP credentials
+    pass: "wxrC6jXz4R7RRHgM8t",
+  },
+});
+
 /**
- * Load and compile email template
- * @param templateName - Name of the template file (without extension)
- * @returns Compiled Handlebars template
+ * Load and compile email template.
+ * @param templateName - Name of the template file (without extension).
+ * @returns Compiled Handlebars template.
  */
 const getEmailTemplate = (templateName: string): TemplateDelegate => {
   if (templates[templateName]) {
@@ -46,7 +59,7 @@ interface SendEmailOptions {
 }
 
 /**
- * Send an email (stub implementation, logs instead of sending)
+ * Send an email (stub implementation, logs or sends to test email).
  */
 export const sendEmail = async (options: SendEmailOptions): Promise<any> => {
   const {
@@ -71,15 +84,28 @@ export const sendEmail = async (options: SendEmailOptions): Promise<any> => {
 
     const mailOptions = {
       from,
-      to,
+      to: process.env.NODE_ENV !== 'production' ? 'fedorcak.jan@gmail.com' : to, // OVERRIDE RECIPIENT FOR TESTING
       subject,
       html,
       text: html.replace(/<[^>]*>/g, ''),
     };
 
-    // Log email instead of sending
-    logger.info(`Email would be sent: ${JSON.stringify(mailOptions)}`);
-    return { messageId: `stub-${Date.now()}`, status: 'logged' };
+    // Log email instead of sending in development, or use nodemailer for actual sending.
+    if (process.env.NODE_ENV !== 'production') {
+      logger.info(`Email would be sent to ${mailOptions.to} (originally ${to}): ${JSON.stringify(mailOptions)}`);
+      // In development, you might still want to send via Ethereal for full testing,
+      // or just rely on logs. For now, we'll log it.
+      // If you want to actually send in dev, uncomment transporter.sendMail(mailOptions)
+      // and ensure Ethereal/SMTP credentials are set up.
+      // const info = await transporter.sendMail(mailOptions);
+      // console.log('[EMAIL] Dev email sent. Preview URL: %s', nodemailer.getTestMessageUrl(info));
+    } else {
+      // In production, use the actual transporter.
+      const info = await transporter.sendMail(mailOptions);
+      logger.info(`Email sent to ${to}: ${info.messageId}`);
+    }
+    
+    return { messageId: `stub-${Date.now()}`, status: 'logged' }; // Still return stub for consistency
   } catch (error) {
     logger.error(`Failed to process email to ${options.to}:`, error);
     throw error;
@@ -87,7 +113,7 @@ export const sendEmail = async (options: SendEmailOptions): Promise<any> => {
 };
 
 /**
- * Send a test email (stub implementation, logs instead of sending)
+ * Send a test email (stub implementation, logs or sends to test email).
  */
 export const sendTestEmail = async (): Promise<any> => {
   const testReceiver = process.env.EMAIL_TEST_RECEIVER || process.env.EMAIL_USER;

@@ -1,0 +1,89 @@
+{{!-- File: back/src/templates/emails/email-verification.hbs --}}
+{{!-- Last change: Created Handlebars template for email verification. --}}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Verify Your Logistar Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #28a745; /* Green button */
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .code {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007bff;
+            background-color: #e9f7ff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #777;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Logistar/Sendeliver Account Verification</h2>
+        </div>
+        <div class="content">
+            <p>Hello {{displayName}},</p>
+            <p>Thank you for registering with Logistar. Please verify your email address to activate your account.</p>
+            
+            <p>To verify your email, simply click the button below:</p>
+            <p style="text-align: center;">
+                <a href="{{verificationLink}}" class="button">Verify My Email</a>
+            </p>
+            
+            <p>Alternatively, you can use the following verification code directly in the app:</p>
+            <p style="text-align: center;">
+                <span class="code">{{verificationCode}}</span>
+            </p>
+            
+            <p>This verification code/link will expire in {{expirationMinutes}} minutes.</p>
+            
+            <p>If you did not register for an account, please ignore this email.</p>
+            <p>Best regards,<br/>The Logistar Team</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{currentYear}} Logistar/Sendeliver. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
