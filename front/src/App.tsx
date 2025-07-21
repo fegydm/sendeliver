@@ -1,5 +1,5 @@
 // File: front/src/App.tsx
-// Last change: Added route for VerifyEmailPage.
+// Last change: Integrated MessageBanner component for email verification status display.
 
 import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
@@ -13,6 +13,7 @@ import Navigation from "@/components/shared/navbars/navbar.component";
 import FooterPage from "@/components/shared/footers/footer-page.component";
 import FloatingButton from "@/components/shared/elements/floating-button.element";
 import ProtectedRoute from "@/components/shared/auth/ProtectedRoute";
+import MessageBanner from "@/components/shared/elements/MessageBanner"; // NEW: Import MessageBanner
 
 const HomePage = lazy(() => import("@/pages/home.page"));
 const HaulerPage = lazy(() => import("@/pages/hauler.page"));
@@ -21,13 +22,14 @@ const NotFoundPage = lazy(() => import("@/pages/notfound.page"));
 const GoogleAuthCallback = lazy(() => import("@/pages/GoogleAuthCallback"));
 const CookiePolicyPage = lazy(() => import("@/pages/CookiePolicyPage"));
 const CompleteAccountLinkPage = lazy(() => import("@/pages/CompleteAccountLinkPage"));
-const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage")); // Added lazy import for VerifyEmailPage
-
+const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage"));
 
 const AppContent: React.FC = () => {
   return (
     <div>
       <header><Navigation /></header>
+      {/* NEW: Place MessageBanner directly below the Navbar */}
+      <MessageBanner /> 
       <main>
         <Suspense fallback={<div className="text-center p-12">Loading...</div>}>
           <Routes>
@@ -44,7 +46,7 @@ const AppContent: React.FC = () => {
             <Route path="/auth/callback" element={<GoogleAuthCallback />} />
             <Route path="/cookie-policy" element={<CookiePolicyPage />} />
             <Route path="/complete-account-link" element={<CompleteAccountLinkPage />} />
-            <Route path="/verify-email" element={<VerifyEmailPage />} /> {/* Added route for VerifyEmailPage */}
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
 
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<div>Dashboard (Protected Content)</div>} />

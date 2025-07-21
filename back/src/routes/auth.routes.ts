@@ -1,5 +1,5 @@
 // File: back/src/routes/auth.routes.ts
-// Last change: Added routes for email verification (by code, by link, resend).
+// Last change: Split into public and authenticated routers for precise middleware application.
 
 import { Router, Request, Response } from 'express';
 import passport from 'passport';
@@ -13,82 +13,51 @@ import {
   completeAccountLink, 
   setAuthCookie,
   registerOrganization,
-  verifyEmailByCode, // Import new function
-  verifyEmailByLink, // Import new function
-  resendVerification // Import new function
+  verifyEmailByCode,
+  verifyEmailByLink,
+  resendVerification
 } from '../controllers/auth.controllers.js';
 import { authenticateJWT, checkRole } from '../middlewares/auth.middleware.js';
 import { UserRole, UserType } from '@prisma/client';
 
-const router = Router();
+// --- Public Auth Router (No Authentication/Session Required) ---
+export const publicAuthRouter = Router();
 
-// --- Existing User Authentication Routes ---
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.post('/logout', logoutUser);
-router.get('/profile', authenticateJWT, getProfile);
+publicAuthRouter.post('/register', registerUser);
+publicAuthRouter.post('/login', loginUser);
+publicAuthRouter.post('/register-organization', registerOrganization);
 
-// --- New Organization Registration Route ---
-router.post('/register-organization', registerOrganization);
+// Email Verification Routes - MUST be public
+publicAuthRouter.post('/verify-email-by-code', verifyEmailByCode);
+publicAuthRouter.get('/verify-email-by-link', verifyEmailByLink);
+publicAuthRouter.post('/resend-verification', resendVerification);
 
-// --- Account Linking Routes ---
-router.post('/request-account-link', requestAccountLink);
-router.post('/complete-account-link', completeAccountLink);
+// Account Linking Routes - These typically don't require prior authentication
+publicAuthRouter.post('/request-account-link', requestAccountLink);
+publicAuthRouter.post('/complete-account-link', completeAccountLink);
 
-// --- Email Verification Routes ---
-router.post('/verify-email-by-code', verifyEmailByCode); // Endpoint for code verification (POST for body)
-router.get('/verify-email-by-link', verifyEmailByLink); // Endpoint for link verification (GET for query params)
-router.post('/resend-verification', resendVerification); // Endpoint to resend verification (POST for body)
-
-
-// --- Existing User Profile and Google OAuth Routes ---
-// Example of using checkRole middleware: Only ORG_ADMIN or SUPERADMIN can update roles via this endpoint.
-router.patch('/me/role', authenticateJWT, checkRole(UserRole.org_admin, UserRole.superadmin), async (req: Request, res: Response) => {
-  const { selectedRole } = req.body;
-  // req.user is guaranteed to exist and have userId and primaryRole due to authenticateJWT
-  const userId = req.user!.userId; 
-
-  const validRoles: string[] = ["client", "forwarder", "carrier"]; // These map to SelectedRoleType
-  if (!selectedRole || !validRoles.includes(selectedRole)) {
-    return res.status(400).json({ error: 'Invalid role provided.' });
-  }
-
-  try {
-    // Note: This endpoint updates 'selectedRole', not the primary 'role' or membership roles.
-    await prisma.user.update({
-      where: { id: userId },
-      data: { selectedRole: selectedRole as any }, // Type assertion for selectedRole might be needed
-    });
-    res.status(200).json({ message: 'Role updated successfully.' });
-  } catch (error: any) { // Explicitly type error
-    console.error("Error updating user selectedRole:", error);
-    res.status(500).json({ error: 'Failed to update selected role.' });
-  }
-});
-
-router.get(
+// Google OAuth routes are special:
+// The initial /google route does not need authenticateJWT or passport.session().
+// The /google/callback route is handled by Passport.js and sets the cookie itself.
+publicAuthRouter.get(
   '/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-router.get(
+publicAuthRouter.get(
   '/google/callback',
   passport.authenticate('google', { 
     failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_failed`
   }),
   async (req: Request, res: Response) => {
     try {
-      // Passport.js attaches user data to req.user after successful authentication.
-      // req.user is already of type Express.User from passport.config.ts,
-      // which now includes userType, primaryRole, and memberships.
       const user = req.user as Express.User | undefined;
 
-      if (!user || !user.userId) { // Check userId, as other fields are guaranteed by Express.User type
+      if (!user || !user.userId) {
         res.status(302).set('Location', `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`).end();
         return;
       }
       
-      // Use data from req.user (which already contains userType, primaryRole, memberships from passport.config.ts)
       setAuthCookie(res, user.userId, user.userType, user.primaryRole, user.memberships);
       
       res.status(302).set('Location', `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/callback?status=success`).end();
@@ -100,4 +69,33 @@ router.get(
   }
 );
 
-export default router;
+
+// --- Authenticated Auth Router (Requires authenticateJWT middleware) ---
+export const authenticatedAuthRouter = Router();
+
+// Apply authentication middleware to all routes in this router
+authenticatedAuthRouter.use(authenticateJWT); 
+
+authenticatedAuthRouter.post('/logout', logoutUser);
+authenticatedAuthRouter.get('/profile', getProfile);
+
+authenticatedAuthRouter.patch('/me/role', checkRole(UserRole.org_admin, UserRole.superadmin), async (req: Request, res: Response) => {
+  const { selectedRole } = req.body;
+  const userId = req.user!.userId; 
+
+  const validRoles: string[] = ["client", "forwarder", "carrier"];
+  if (!selectedRole || !validRoles.includes(selectedRole)) {
+    return res.status(400).json({ error: 'Invalid role provided.' });
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { selectedRole: selectedRole as any },
+    });
+    res.status(200).json({ message: 'Role updated successfully.' });
+  } catch (error: any) {
+    console.error("Error updating user selectedRole:", error);
+    res.status(500).json({ error: 'Failed to update selected role.' });
+  }
+});

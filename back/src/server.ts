@@ -1,5 +1,5 @@
 // File: back/src/server.ts
-// Last change: Corrected UserRole enum usage to individual_customer.
+// Last change: Fixed middleware order to prevent authenticateJWT from blocking public auth routes
 
 console.log('[SERVER START] Starting server initialization...');
 
@@ -15,7 +15,7 @@ import session from 'express-session';
 import passport from 'passport';
 import { fileURLToPath } from "url";
 import { WebSocketManager } from './configs/websocket.config.js';
-import { PrismaClient, UserRole } from '@prisma/client'; // UserRole is imported
+import { PrismaClient, UserRole } from '@prisma/client';
 import { configurePassport } from './configs/passport.config.js';
 
 import type { Request, Response, NextFunction } from "express";
@@ -29,7 +29,7 @@ import contactMessagesRoutes from "./routes/contact.messages.routes.js";
 import vehiclesRouter from "./routes/vehicles.routes.js";
 import deliveryRouter from "./routes/delivery.routes.js";
 import externalDeliveriesRouter from "./routes/external.deliveries.routes.js";
-import authRoutes from "./routes/auth.routes.js";
+import { publicAuthRouter, authenticatedAuthRouter } from "./routes/auth.routes.js";
 import verifyPinRouter from "./routes/verify-pin.routes.js";
 import gpsRouter from "./routes/gps.routes.js";
 import { authenticateJWT, checkRole } from "./middlewares/auth.middleware.js";
@@ -57,34 +57,6 @@ app.use(json());
 app.use(cookieParser());
 app.use(ua.express());
 
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your_session_secret_key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-  }
-}));
-
-// Passport initialization
-app.use(passport.initialize());
-app.use(passport.session());
-
-configurePassport();
-
-interface RequestWithUserAgent extends Request {
-  useragent?: {
-    isBoten?: boolean;
-  };
-}
-
-morgan.token("isBoten", (req: RequestWithUserAgent) => req.useragent?.isBoten ? "BOT" : "HUMAN");
-app.use(morgan(":remote-addr :method :url :status :response-time ms :isBoten"));
-
 // Manual CORS middleware - working configuration
 app.use(function (req: Request, res: Response, next: NextFunction) {
   const allowedOrigins = [
@@ -110,48 +82,84 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
   next();
 });
 
-// Auth routes - FIRST so they get proper CORS treatment
-app.use('/api/auth', authRoutes);
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your_session_secret_key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  }
+}));
 
-// Other public routes
-app.use('/api/contact/submit', contactMessagesRoutes);
-app.use('/api/verify-pin', verifyPinRouter);
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
-// Protected admin routes
-app.use("/api/contact/admin", [
-  authenticateJWT,
-  checkRole(UserRole.org_admin, UserRole.superadmin),
-  contactMessagesRoutes
-]);
+configurePassport();
 
-console.log("[server.ts] 🔁 externalDeliveriesRouter mounted");
-app.use("/api/external/deliveries", externalDeliveriesRouter);
+interface RequestWithUserAgent extends Request {
+  useragent?: {
+    isBoten?: boolean;
+  };
+}
 
-// Public API routes
+morgan.token("isBoten", (req: RequestWithUserAgent) => req.useragent?.isBoten ? "BOT" : "HUMAN");
+app.use(morgan(":remote-addr :method :url :status :response-time ms :isBoten"));
+
+// =============================================================================
+// PUBLIC ROUTES (NO AUTHENTICATION REQUIRED)
+// =============================================================================
+
+// Auth routes (both public and authenticated)
+app.use('/api/auth', publicAuthRouter);
+app.use('/api/auth', authenticatedAuthRouter);
+
+// Other public API routes
 app.use("/api/ai", aiRouter);
 app.use("/api/geo/countries", geoCountriesRouter);
 app.use("/api/geo/languages", geoLanguagesRouter);
 app.use("/api/geo/translations", geoTranslationsRouter);
 app.use("/api/maps", mapsRouter);
 app.use("/api/vehicles", vehiclesRouter);
-
-console.log("[server.ts] 🛰️ GPS router mounted");
 app.use("/api", gpsRouter);
+app.use('/api/contact/submit', contactMessagesRoutes);
+app.use('/api/verify-pin', verifyPinRouter);
 
-// Protected delivery routes
-app.use("/api", [
-  authenticateJWT,
-  // Corrected UserRole.individual_user to UserRole.individual_customer
-  checkRole(UserRole.individual_customer, UserRole.dispatcher, UserRole.org_admin, UserRole.superadmin),
-  deliveryRouter
-]);
-
-// Health check
+// Health check (public)
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
 });
 
-// Static file serving
+// =============================================================================
+// PROTECTED ROUTES (AUTHENTICATION REQUIRED)
+// =============================================================================
+
+// Apply authentication only to specific protected routes
+app.use("/api/contact/admin", [
+  authenticateJWT,
+  checkRole(UserRole.org_admin, UserRole.superadmin),
+  contactMessagesRoutes
+]);
+
+app.use("/api/external/deliveries", [
+  authenticateJWT,
+  externalDeliveriesRouter
+]);
+
+app.use("/api/delivery", [
+  authenticateJWT,
+  checkRole(UserRole.individual_customer, UserRole.dispatcher, UserRole.org_admin, UserRole.superadmin),
+  deliveryRouter
+]);
+
+// =============================================================================
+// STATIC FILE SERVING
+// =============================================================================
+
 const projectRoot = path.resolve(__dirname, "../..");
 const frontendPath = path.join(projectRoot, process.env.FRONTEND_PATH || "");
 const publicPath = path.join(projectRoot, process.env.PUBLIC_PATH || "");

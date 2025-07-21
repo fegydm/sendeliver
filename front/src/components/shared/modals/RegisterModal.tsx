@@ -1,8 +1,7 @@
 // File: front/src/components/shared/modals/RegisterModal.tsx
-// Last change: Ensured modal closes after successful individual registration and navigation.
+// Last change: Adjusted registration flow to set pending email verification status and close modal without auto-login.
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "@/contexts/AuthContext";
 import GeneralModal from "@/components/shared/modals/general.modal";
@@ -16,7 +15,6 @@ interface RegisterModalProps {
   onClose: () => void;
 }
 
-// EyeIcon component for password visibility toggle.
 const EyeIcon = ({ closed }: { closed: boolean }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     {closed ? (
@@ -35,22 +33,19 @@ const EyeIcon = ({ closed }: { closed: boolean }) => (
   </svg>
 );
 
-// Main RegisterModal component.
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
-  const { register } = useAuth();
-  const navigate = useNavigate();
+  const { register, setPendingEmailVerification } = useAuth(); // Destructure setPendingEmailVerification
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    organizationName: '', // Field for organization registration
-    vatNumber: '', // Field for organization registration
+    organizationName: '',
+    vatNumber: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  // State to manage the selected registration type (individual or organization).
   const [selectedRegType, setSelectedRegType] = useState<'individual' | 'organization'>('individual'); 
 
   const { passwordError, confirmPasswordError, isValid } = usePasswordValidation(
@@ -64,12 +59,10 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
     }
   );
 
-  // Handles input changes for all form fields.
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Handles form submission for individual or organization registration.
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -83,12 +76,24 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
 
     try {
       if (selectedRegType === 'individual') {
-        // Individual registration logic.
         await register(formData.name, formData.email, formData.password);
-        navigate("/dashboard", { replace: true });
-        onClose(); // ADDED: Close modal after successful registration and navigation
+        
+        // After successful registration, set the pending email verification status
+        // Assuming the verification link expires in 15 minutes (900 seconds)
+        const expiresAt = Date.now() + (15 * 60 * 1000); // 15 minutes in milliseconds
+        setPendingEmailVerification({ email: formData.email, expiresAt: expiresAt });
+
+        onClose(); // Close the modal
+        // Reset form data after successful submission
+        setFormData({
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+            organizationName: '',
+            vatNumber: '',
+        });
       } else if (selectedRegType === 'organization') {
-        // Organization registration logic.
         await axios.post('/api/auth/register-organization', {
           organizationName: formData.organizationName,
           vatNumber: formData.vatNumber,
@@ -98,6 +103,15 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
         });
         setError("Organization registered! Please check your email for verification.");
         onClose(); 
+        // Reset form data after successful submission
+        setFormData({
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+            organizationName: '',
+            vatNumber: '',
+        });
       }
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed.");
@@ -114,7 +128,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
       description="Choose your account type to get started."
     >
       <div className="register-form__type-selection mb-4 flex justify-center space-x-4">
-        {/* Card/Button for Individual Registration */}
         <button
           type="button"
           className={`px-6 py-3 rounded-lg border-2 transition-all duration-200 text-center flex-1 
@@ -127,7 +140,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
           </div>
         </button>
 
-        {/* Card/Button for Organization Registration */}
         <button
           type="button"
           className={`px-6 py-3 rounded-lg border-2 transition-all duration-200 text-center flex-1 
@@ -144,7 +156,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
       <form id="register-form" className="register-form" onSubmit={handleSubmit}>
         {error && <p className="register-form__error">{error}</p>}
         
-        {/* Fields for Organization Registration (conditionally rendered) */}
         {selectedRegType === 'organization' && (
           <>
             <div className="register-form__field">
@@ -158,7 +169,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
           </>
         )}
 
-        {/* Common fields for both types */}
         <div className="register-form__field">
           <label htmlFor="name">{selectedRegType === 'individual' ? 'Your Name' : 'Admin Name'}</label>
           <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required />
@@ -208,7 +218,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
         </div>
       </form>
 
-      {/* Link to connect to an existing organization (moved to bottom, outside form) */}
       <div className="mt-4 text-center text-gray-600 text-sm">
         <p>Are you part of an organization and received an invitation or want to connect?</p>
         <button 

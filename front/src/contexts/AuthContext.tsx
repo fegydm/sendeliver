@@ -1,5 +1,5 @@
 // File: front/src/contexts/AuthContext.tsx
-// Last change: Corrected incomplete code and verified for new auth system
+// Last change: Optimized fetchUserProfile calls to prevent excessive polling and flickering.
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import axios from 'axios';
@@ -14,6 +14,12 @@ export interface User {
   role: UserRole;
   imageUrl?: string;
   selectedRole?: TopRowType;
+  emailVerified?: boolean; 
+}
+
+export interface PendingVerificationInfo {
+  email: string;
+  expiresAt: number;
 }
 
 export interface AuthContextType {
@@ -22,6 +28,8 @@ export interface AuthContextType {
   isAdmin: boolean;
   loading: boolean;
   error: string | null;
+  pendingEmailVerification: PendingVerificationInfo | null;
+  setPendingEmailVerification: (info: PendingVerificationInfo | null) => void;
   register: (name: string, email:string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -38,6 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [pendingEmailVerification, setPendingEmailVerification] = useState<PendingVerificationInfo | null>(null);
 
   const fetchUserProfile = useCallback(async () => {
     try {
@@ -46,26 +55,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await axios.get<User>(`${API_BASE_URL}/api/auth/profile`, { withCredentials: true });
       if (response.data) {
         setUser(response.data);
+        if (response.data.emailVerified) {
+          setPendingEmailVerification(null);
+        }
       }
     } catch (err: any) {
       if (err.response?.status !== 401) {
         console.error('Auth profile fetch error:', err);
       }
       setUser(null);
+      // Remove this block as it was causing issues with pending state persistence
+      // if (pendingEmailVerification && err.response?.status === 401) {
+      //     // Keep pending state if user is logged out but waiting for email verification
+      // } else {
+      //    setPendingEmailVerification(null);
+      // }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // fetchUserProfile itself doesn't need pendingEmailVerification in its deps
 
   const register = useCallback(async (name: string, email: string, password: string): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.post<{ user: User }>(`${API_BASE_URL}/api/auth/register`, { name, email, password }, { withCredentials: true });
-      if (response.data.user) {
-        setUser(response.data.user);
-      }
-    } catch (err) {
+      await axios.post<{ user: User, message: string }>(
+        `${API_BASE_URL}/api/auth/register`,
+        { name, email, password },
+        { withCredentials: true }
+      );
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Registration failed.");
       throw err;
     } finally {
       setLoading(false);
@@ -78,9 +98,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setError(null);
       const response = await axios.post<{ user: User }>(`${API_BASE_URL}/api/auth/login`, { email, password }, { withCredentials: true });
       if (response.data.user) {
+        if (!response.data.user.emailVerified) {
+          setError("Váš e-mail nie je overený. Prosím, skontrolujte si schránku a overte si účet.");
+          setUser(null);
+          throw new Error("Email not verified."); 
+        }
         setUser(response.data.user);
+        setPendingEmailVerification(null);
       }
     } catch (err: any) {
+      setError(err.response?.data?.message || "Login failed.");
       throw err;
     } finally {
       setLoading(false);
@@ -93,7 +120,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.error('Logout request failed, continuing with client-side logout:', err);
     } finally {
-      setUser(null); 
+      setUser(null);
+      setPendingEmailVerification(null); 
     }
   }, []);
 
@@ -123,9 +151,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [user]);
   
+  // --- ZMENA TU: Optimalizácia volania fetchUserProfile ---
   useEffect(() => {
+    // Voláme fetchUserProfile iba raz pri prvom načítaní komponentu
     fetchUserProfile();
-  }, [fetchUserProfile]);
+
+    // Načítanie pendingEmailVerification zo `localStorage` pri štarte, ak používateľ refresne stránku
+    const storedPending = localStorage.getItem('pendingEmailVerification');
+    if (storedPending) {
+        try {
+            const parsedPending = JSON.parse(storedPending);
+            // Overíme, či čas ešte nevypršal
+            if (parsedPending.expiresAt > Date.now()) {
+                setPendingEmailVerification(parsedPending);
+            } else {
+                localStorage.removeItem('pendingEmailVerification'); // Vypršal, odstránime
+            }
+        } catch (e) {
+            console.error("Failed to parse pendingEmailVerification from localStorage:", e);
+            localStorage.removeItem('pendingEmailVerification');
+        }
+    }
+    // Tento useEffect má prázdne pole závislostí, čo znamená, že sa spustí len raz pri mountovaní.
+    // fetchUserProfile je už useCallback, takže sa jeho referencia nemení.
+  }, []); // Prázdne pole závislostí
+
+  // Ukladanie pendingEmailVerification do localStorage pri zmene
+  useEffect(() => {
+    if (pendingEmailVerification) {
+        localStorage.setItem('pendingEmailVerification', JSON.stringify(pendingEmailVerification));
+    } else {
+        localStorage.removeItem('pendingEmailVerification');
+    }
+  }, [pendingEmailVerification]);
+
 
   const isAuthenticated = !loading && !!user;
   const isAdmin = !loading && (user?.role === 'superadmin' || user?.role === 'org_admin');
@@ -136,6 +195,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     isAdmin,
     loading,
     error,
+    pendingEmailVerification,
+    setPendingEmailVerification,
     register,
     login,
     logout,
