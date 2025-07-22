@@ -1,5 +1,5 @@
 // File: front/src/App.tsx
-// Last change: Integrated MessageBanner component for email verification status display.
+// Last change: Added ShowEmailBannerButton for cases when user dismissed the banner but still needs email verification.
 
 import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
@@ -13,7 +13,8 @@ import Navigation from "@/components/shared/navbars/navbar.component";
 import FooterPage from "@/components/shared/footers/footer-page.component";
 import FloatingButton from "@/components/shared/elements/floating-button.element";
 import ProtectedRoute from "@/components/shared/auth/ProtectedRoute";
-import MessageBanner from "@/components/shared/elements/MessageBanner"; // NEW: Import MessageBanner
+import MessageBanner from "@/components/shared/elements/MessageBanner"; // Email verification banner
+
 
 const HomePage = lazy(() => import("@/pages/home.page"));
 const HaulerPage = lazy(() => import("@/pages/hauler.page"));
@@ -28,8 +29,10 @@ const AppContent: React.FC = () => {
   return (
     <div>
       <header><Navigation /></header>
-      {/* NEW: Place MessageBanner directly below the Navbar */}
-      <MessageBanner /> 
+      
+      {/* Email verification components */}
+        <MessageBanner />
+      
       <main>
         <Suspense fallback={<div className="text-center p-12">Loading...</div>}>
           <Routes>

@@ -1,5 +1,5 @@
 // File: back/src/controllers/auth.controllers.ts
-// Last change: Adjusted registration and email verification flows to prevent automatic login, ensuring email verification before full access.
+// Last change: Complete final version with email dev mode using existing ENV variables
 
 import { PrismaClient, UserRole, UserType, OrgMembershipStatus, VerificationStatus } from '@prisma/client';
 import jwt from 'jsonwebtoken';
@@ -35,7 +35,6 @@ export async function verifyPassword(stored: string, password: string): Promise<
 
 export function setAuthCookie(res: Response, userId: number, userType: UserType, primaryRole: UserRole, memberships: { organizationId: number; role: UserRole }[]) {
   const token = jwt.sign({ userId, userType, primaryRole, memberships }, JWT_SECRET, { expiresIn: '7d' });
-  
   const isSecure = process.env.NODE_ENV === 'production';
   console.log(`[setAuthCookie] Setting cookie. NODE_ENV: ${process.env.NODE_ENV}, Secure flag: ${isSecure}`);
 
@@ -45,7 +44,6 @@ export function setAuthCookie(res: Response, userId: number, userType: UserType,
     sameSite: 'lax',
     maxAge: COOKIE_MAX_AGE,
   });
-  
   return token;
 }
 
@@ -72,15 +70,35 @@ async function sendUserVerificationEmail(user: { id: number; email: string; disp
   const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
   const verificationCode = verificationToken.substring(0, 6).toUpperCase();
 
+  // 🎯 USE YOUR EXISTING ENV VARIABLES
+  const isDevMode = process.env.EMAIL_MODE === 'development';
+  const emailRecipient = isDevMode ? process.env.TEST_EMAIL || user.email : user.email;
+  const isTestEmail = isDevMode && (emailRecipient !== user.email);
+
+  console.log('[EMAIL_SENDING] =================================');
+  console.log('[EMAIL_SENDING] Email configuration:');
+  console.log('[EMAIL_SENDING] Mode:', process.env.EMAIL_MODE);
+  console.log('[EMAIL_SENDING] Is dev mode:', isDevMode);
+  console.log('[EMAIL_SENDING] Is test email redirect:', isTestEmail);
+  console.log('[EMAIL_SENDING] Original user email:', user.email);
+  console.log('[EMAIL_SENDING] Actual recipient:', emailRecipient);
+  console.log('[EMAIL_SENDING] Verification code:', verificationCode);
+  console.log('[EMAIL_SENDING] =================================');
+
   await sendEmail({
-    to: user.email,
-    subject: 'Verify Your Logistar Account',
+    to: emailRecipient,
+    subject: 'Verify Your Sendeliver Account',
     template: 'email-verification',
     context: {
       displayName: user.displayName || user.email,
       verificationLink: verificationLink,
       verificationCode: verificationCode,
-      expirationMinutes: VERIFICATION_TOKEN_EXPIRATION_MINUTES
+      expirationMinutes: VERIFICATION_TOKEN_EXPIRATION_MINUTES,
+      // 🎯 INCLUDE ORIGINAL EMAIL INFO WHEN REDIRECTED TO TEST EMAIL
+      ...(isTestEmail && { 
+        originalUserEmail: user.email,
+        isTestMode: true
+      })
     }
   });
 }
@@ -125,27 +143,22 @@ export const registerUser: any = async (req: Request, res: Response, next: NextF
       }
     });
     
-    // --- ZMENA TU: NEPRIHLASUJEME POUŽÍVATEĽA HNEĎ PO REGISTRÁCII ---
-    // const token = setAuthCookie(res, user.id, user.userType, user.primaryRole, []); 
-    
     await sendUserVerificationEmail(user);
 
     res.status(201).json({
-      message: 'Registration successful! Please check your email for verification.', // Vrátime len správu
-      user: { 
-        id: user.id, 
-        name: user.displayName,
-        email: user.email, 
-        primaryRole: user.primaryRole,
-        userType: user.userType,
-        selectedRole: user.selectedRole,
-        imageUrl: user.imageUrl,
-        isEmailVerified: user.isEmailVerified,
-        memberships: []
-      },
-      // --- ZMENA TU: NEVRACIAME TOKEN ---
-      // token
-    });
+  message: 'Registration successful! Please check your email for verification.',
+  user: { 
+    id: user.id, 
+    name: user.displayName,
+    email: user.email, 
+    primaryRole: user.primaryRole,
+    userType: user.userType,
+    selectedRole: user.selectedRole,
+    imageUrl: user.imageUrl,
+    emailVerified: user.isEmailVerified,    // ← KEEP ONLY THIS LINE
+    memberships: []
+  },
+});
     return;
     
   } catch (error) {
@@ -221,31 +234,26 @@ export const registerOrganization: any = async (req: Request, res: Response, nex
       }
     });
 
-    // --- ZMENA TU: NEPRIHLASUJEME POUŽÍVATEĽA HNEĎ PO REGISTRÁCII ORGANIZÁCIE ---
-    // const token = setAuthCookie(res, orgAdminUser.id, orgAdminUser.userType, orgAdminUser.primaryRole, orgAdminUser.memberships);
-
     await sendUserVerificationEmail(orgAdminUser);
 
     res.status(201).json({
-      message: 'Organization registered! Please check your email for verification.', // Vrátime len správu
-      user: {
-        id: orgAdminUser.id,
-        name: orgAdminUser.displayName,
-        email: orgAdminUser.email,
-        primaryRole: orgAdminUser.primaryRole,
-        userType: orgAdminUser.userType,
-        imageUrl: orgAdminUser.imageUrl,
-        isEmailVerified: orgAdminUser.isEmailVerified,
-        memberships: orgAdminUser.memberships
-      },
-      organization: {
-        id: newOrganization.id,
-        name: newOrganization.name,
-        status: newOrganization.status
-      },
-      // --- ZMENA TU: NEVRACIAME TOKEN ---
-      // token
-    });
+  message: 'Organization registered! Please check your email for verification.',
+  user: {
+    id: orgAdminUser.id,
+    name: orgAdminUser.displayName,
+    email: orgAdminUser.email,
+    primaryRole: orgAdminUser.primaryRole,
+    userType: orgAdminUser.userType,
+    imageUrl: orgAdminUser.imageUrl,
+    emailVerified: orgAdminUser.isEmailVerified,    // ← KEEP ONLY THIS LINE
+    memberships: orgAdminUser.memberships
+  },
+  organization: {
+    id: newOrganization.id,
+    name: newOrganization.name,
+    status: newOrganization.status
+  },
+});
     return;
 
   } catch (error) {
@@ -296,7 +304,6 @@ export const loginUser: any = async (req: Request, res: Response, next: NextFunc
       return;
     }
     
-    // --- NOVÉ: KONTROLA OVERENIA E-MAILU PRED PRIHLÁSENÍM ---
     if (!user.isEmailVerified) {
       res.status(403).json({ message: 'Váš e-mail nie je overený. Prosím, skontrolujte si schránku a overte si účet.' });
       return;
@@ -305,19 +312,19 @@ export const loginUser: any = async (req: Request, res: Response, next: NextFunc
     const token = setAuthCookie(res, user.id, user.userType, user.primaryRole, user.memberships); 
     
     res.json({ 
-      user: { 
-        id: user.id, 
-        name: user.displayName,
-        email: user.email, 
-        primaryRole: user.primaryRole,
-        userType: user.userType,
-        selectedRole: user.selectedRole,
-        imageUrl: user.imageUrl,
-        isEmailVerified: user.isEmailVerified,
-        memberships: user.memberships
-      },
-      token
-    });
+  user: { 
+    id: user.id, 
+    name: user.displayName,
+    email: user.email, 
+    primaryRole: user.primaryRole,
+    userType: user.userType,
+    selectedRole: user.selectedRole,
+    imageUrl: user.imageUrl,
+    emailVerified: user.isEmailVerified,    // ← KEEP ONLY THIS LINE
+    memberships: user.memberships
+  },
+  token
+});
     return;
     
   } catch (error) {
@@ -367,16 +374,16 @@ export const getProfile: RequestHandler = async (req: Request, res: Response, ne
     }
     
     res.json({ 
-      id: user.id, 
-      name: user.displayName,
-      email: user.email, 
-      primaryRole: user.primaryRole,
-      userType: user.userType,
-      selectedRole: user.selectedRole,
-      imageUrl: user.imageUrl,
-      isEmailVerified: user.isEmailVerified,
-      memberships: user.memberships
-    });
+  id: user.id, 
+  name: user.displayName,
+  email: user.email, 
+  primaryRole: user.primaryRole,
+  userType: user.userType,
+  selectedRole: user.selectedRole,
+  imageUrl: user.imageUrl,
+  emailVerified: user.isEmailVerified,    // ← KEEP ONLY THIS LINE
+  memberships: user.memberships
+});
     return;
     
   } catch (error) {
@@ -481,18 +488,18 @@ export const completeAccountLink: any = async (req: Request, res: Response) => {
     setAuthCookie(res, updatedUser.id, updatedUser.userType, updatedUser.primaryRole, user.memberships);
 
     res.status(200).json({ 
-      user: { 
-        id: updatedUser.id, 
-        name: updatedUser.displayName,
-        email: updatedUser.email,
-        primaryRole: updatedUser.primaryRole,
-        userType: updatedUser.userType,
-        selectedRole: updatedUser.selectedRole,
-        imageUrl: updatedUser.imageUrl,
-        isEmailVerified: user.isEmailVerified,
-        memberships: user.memberships
-      } 
-    });
+  user: { 
+    id: updatedUser.id, 
+    name: updatedUser.displayName,
+    email: updatedUser.email,
+    primaryRole: updatedUser.primaryRole,
+    userType: updatedUser.userType,
+    selectedRole: updatedUser.selectedRole,
+    imageUrl: updatedUser.imageUrl,
+    emailVerified: user.isEmailVerified,    // ← KEEP ONLY THIS LINE
+    memberships: user.memberships
+  } 
+});
     return;
 
   } catch (error) {
@@ -504,143 +511,300 @@ export const completeAccountLink: any = async (req: Request, res: Response) => {
 export const verifyEmailByCode: any = async (req: Request, res: Response) => {
   const { email, code } = req.body;
 
+  console.log('[EMAIL_VERIFICATION_CODE] =================================');
+  console.log('[EMAIL_VERIFICATION_CODE] Starting email verification by code');
+  console.log('[EMAIL_VERIFICATION_CODE] Request data:', {
+    email: email,
+    code: code,
+    emailMode: process.env.EMAIL_MODE,
+    testEmail: process.env.TEST_EMAIL
+  });
+
   if (!email || !code) {
-    return res.status(400).json({ message: 'Email and verification code are required.' });
+    console.log('[EMAIL_VERIFICATION_CODE] ❌ ERROR: Missing required fields');
+    return res.status(400).json({ 
+      success: false,
+      message: 'Email and verification code are required.' 
+    });
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    // Find user by email
+    console.log('[EMAIL_VERIFICATION_CODE] 🔍 Looking up user by email...');
+    const user = await prisma.user.findUnique({ 
+      where: { email: email.toLowerCase() },
+      include: {
+        memberships: {
+          where: { status: OrgMembershipStatus.ACTIVE },
+          select: { organizationId: true, role: true }
+        }
+      }
+    });
+
+    console.log('[EMAIL_VERIFICATION_CODE] User lookup result:', {
+      userFound: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      isAlreadyVerified: user?.isEmailVerified
+    });
+
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      console.log('[EMAIL_VERIFICATION_CODE] ❌ ERROR: User not found');
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found with this email address.' 
+      });
     }
 
-    const verificationToken = await prisma.emailVerificationToken.findUnique({
-      where: { token: code },
+    if (user.isEmailVerified) {
+      console.log('[EMAIL_VERIFICATION_CODE] ⚠️ WARNING: Email is already verified');
+      return res.status(400).json({ 
+        success: false,
+        message: 'Email is already verified.' 
+      });
+    }
+
+    // Find verification token
+    console.log('[EMAIL_VERIFICATION_CODE] 🔍 Looking up verification token...');
+    let verificationToken = await prisma.emailVerificationToken.findFirst({
+      where: { 
+        userId: user.id,
+        token: code.toLowerCase()
+      },
       include: { user: true }
     });
 
-    if (!verificationToken || verificationToken.userId !== user.id || verificationToken.expiresAt < new Date()) {
-      return res.status(400).json({ message: 'Invalid or expired verification code.' });
+    // If not found by full code, try by first 6 characters
+    if (!verificationToken) {
+      console.log('[EMAIL_VERIFICATION_CODE] 🔍 Trying lookup by first 6 characters...');
+      const allUserTokens = await prisma.emailVerificationToken.findMany({
+        where: { userId: user.id },
+        include: { user: true }
+      });
+
+      console.log('[EMAIL_VERIFICATION_CODE] Available tokens for user:', allUserTokens.map(t => ({
+        id: t.id,
+        prefix: t.token.substring(0, 6).toUpperCase(),
+        expiresAt: t.expiresAt
+      })));
+      
+      verificationToken = allUserTokens.find(token => 
+        token.token.substring(0, 6).toUpperCase() === code.toUpperCase()
+      ) || null;
+
+      if (verificationToken) {
+        console.log('[EMAIL_VERIFICATION_CODE] ✅ Token found by prefix match');
+      }
     }
 
-    await prisma.user.update({
+    if (!verificationToken) {
+      console.log('[EMAIL_VERIFICATION_CODE] ❌ ERROR: Invalid verification code');
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid or expired verification code.' 
+      });
+    }
+
+    // Check expiration
+    if (verificationToken.expiresAt < new Date()) {
+      console.log('[EMAIL_VERIFICATION_CODE] ❌ ERROR: Code has expired');
+      return res.status(400).json({ 
+        success: false,
+        message: 'Verification code has expired. Please request a new one.' 
+      });
+    }
+
+    console.log('[EMAIL_VERIFICATION_CODE] ✅ Code validation successful');
+    console.log('[EMAIL_VERIFICATION_CODE] 🔄 Updating user verification status...');
+
+    // Update user verification status
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: { isEmailVerified: true }
+      data: { isEmailVerified: true },
+      include: {
+        memberships: {
+          where: { status: OrgMembershipStatus.ACTIVE },
+          select: { organizationId: true, role: true }
+        }
+      }
     });
 
-    await prisma.emailVerificationToken.delete({
-      where: { id: verificationToken.id }
+    // Clean up verification tokens
+    console.log('[EMAIL_VERIFICATION_CODE] 🗑️ Cleaning up verification tokens...');
+    await prisma.emailVerificationToken.deleteMany({ 
+      where: { userId: user.id } 
     });
 
-    // --- ZMENA TU: NEPRIHLASUJEME POUŽÍVATEĽA PO OVERENÍ KÓDOM ---
-    // Re-fetch user with updated status and memberships for new cookie.
-    // const updatedUser = await prisma.user.findUnique({
-    //   where: { id: user.id },
-    //   include: {
-    //     memberships: {
-    //       where: { status: OrgMembershipStatus.ACTIVE },
-    //       select: { organizationId: true, role: true }
-    //     }
-    //   }
-    // });
-    // if (!updatedUser) {
-    //   return res.status(500).json({ message: 'User data refresh failed after verification.' });
-    // }
-    // Set new auth cookie with updated isEmailVerified status.
-    // setAuthCookie(res, updatedUser.id, updatedUser.userType, updatedUser.primaryRole, updatedUser.memberships);
+    // Set authentication cookie
+    console.log('[EMAIL_VERIFICATION_CODE] 🍪 Setting authentication cookie...');
+    const authToken = setAuthCookie(res, updatedUser.id, updatedUser.userType, updatedUser.primaryRole, updatedUser.memberships);
 
-    res.status(200).json({ message: 'Email successfully verified!' });
+    console.log('[EMAIL_VERIFICATION_CODE] 🎉 EMAIL VERIFICATION COMPLETED');
+    console.log('[EMAIL_VERIFICATION_CODE] =================================');
+
+    res.status(200).json({ 
+      success: true,
+      message: 'Email successfully verified! You are now logged in.',
+     user: {
+  id: updatedUser.id,
+  name: updatedUser.displayName,
+  email: updatedUser.email,
+  primaryRole: updatedUser.primaryRole,
+  userType: updatedUser.userType,
+  selectedRole: updatedUser.selectedRole,
+  imageUrl: updatedUser.imageUrl,
+  emailVerified: updatedUser.isEmailVerified,         // ← KEEP ONLY THIS LINE
+  memberships: updatedUser.memberships
+},
+
+      token: authToken
+    });
     return;
 
   } catch (error) {
-    console.error('[Auth] Email verification by code error:', error);
+    console.error('[EMAIL_VERIFICATION_CODE] 💥 CRITICAL ERROR:', error);
     res.status(500).json({
+      success: false,
       message: 'An unexpected error occurred during email verification.',
-      details: handleError(error)
+      details: process.env.NODE_ENV === 'development' ? handleError(error) : 'Internal server error'
     });
     return;
   }
 };
 
-export const verifyEmailByLink: any = async (req: Request, res: Response) => { // Removed & { redirect: (url: string) => void }
+export const verifyEmailByLink: any = async (req: Request, res: Response) => {
   const token = req.query.token as string;
 
+  console.log('[EMAIL_VERIFICATION_LINK] =================================');
+  console.log('[EMAIL_VERIFICATION_LINK] Starting email verification by link');
+  console.log('[EMAIL_VERIFICATION_LINK] Token received:', token?.substring(0, 12) + '...');
+
   if (!token) {
-    return res.status(400).json({ message: 'Invalid verification link: Token missing.' }); // Changed to JSON response
+    console.log('[EMAIL_VERIFICATION_LINK] ❌ ERROR: Token missing');
+    return res.status(400).json({ 
+      success: false,
+      message: 'Invalid verification link: Token missing.' 
+    });
   }
 
   try {
+    console.log('[EMAIL_VERIFICATION_LINK] 🔍 Looking up token in database...');
     const verificationToken = await prisma.emailVerificationToken.findUnique({
       where: { token: token },
       include: { user: true }
     });
 
-    if (!verificationToken || verificationToken.expiresAt < new Date()) {
-      return res.status(400).json({ message: 'Invalid or expired verification link.' }); // Changed to JSON response
+    if (!verificationToken) {
+      console.log('[EMAIL_VERIFICATION_LINK] ❌ ERROR: Token not found');
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid verification link: Token not found.' 
+      });
     }
 
-    await prisma.user.update({
+    if (verificationToken.expiresAt < new Date()) {
+      console.log('[EMAIL_VERIFICATION_LINK] ❌ ERROR: Token expired');
+      return res.status(400).json({ 
+        success: false,
+        message: 'Verification link has expired. Please request a new one.' 
+      });
+    }
+
+    // Check if already verified
+    if (verificationToken.user.isEmailVerified) {
+      console.log('[EMAIL_VERIFICATION_LINK] ⚠️ WARNING: Already verified');
+      await prisma.emailVerificationToken.delete({ where: { id: verificationToken.id } });
+      return res.status(200).json({
+        success: true,
+        message: 'Email is already verified.',
+        alreadyVerified: true
+      });
+    }
+
+    console.log('[EMAIL_VERIFICATION_LINK] ✅ Starting verification process...');
+    
+    // Update user verification status
+    const updatedUser = await prisma.user.update({
       where: { id: verificationToken.user.id },
-      data: { isEmailVerified: true }
+      data: { isEmailVerified: true },
+      include: {
+        memberships: {
+          where: { status: OrgMembershipStatus.ACTIVE },
+          select: { organizationId: true, role: true }
+        }
+      }
     });
 
-    await prisma.emailVerificationToken.delete({
-      where: { id: verificationToken.id }
+    // Clean up verification token
+    await prisma.emailVerificationToken.delete({ where: { id: verificationToken.id } });
+
+    // Set authentication cookie
+    const authToken = setAuthCookie(res, updatedUser.id, updatedUser.userType, updatedUser.primaryRole, updatedUser.memberships);
+
+    console.log('[EMAIL_VERIFICATION_LINK] 🎉 EMAIL VERIFICATION COMPLETED');
+    console.log('[EMAIL_VERIFICATION_LINK] =================================');
+
+    res.status(200).json({
+      success: true,
+      message: 'Email successfully verified! You are now logged in.',
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.displayName,
+        email: updatedUser.email,
+        primaryRole: updatedUser.primaryRole,
+        userType: updatedUser.userType,
+        selectedRole: updatedUser.selectedRole,
+        imageUrl: updatedUser.imageUrl,
+        emailVerified: updatedUser.isEmailVerified, // For compatibility
+        memberships: updatedUser.memberships
+      },
+      token: authToken
     });
-
-    // --- ZMENA TU: NEPRIHLASUJEME POUŽÍVATEĽA PO OVERENÍ LINKOM A NEROBIŤ REDIRECT ---
-    // Fetch user with updated status and memberships for new cookie.
-    // const user = await prisma.user.findUnique({
-    //   where: { id: verificationToken.user.id },
-    //   include: {
-    //     memberships: {
-    //       where: { status: OrgMembershipStatus.ACTIVE },
-    //       select: { organizationId: true, role: true }
-    //     }
-    //   }
-    // });
-    // if (!user) {
-    //   return res.status(500).send('User data refresh failed after verification.');
-    // }
-    // Set auth cookie to log in the user.
-    // setAuthCookie(res, user.id, user.userType, user.primaryRole, user.memberships);
-    // Redirect to dashboard.
-    // res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`);
-
-    res.status(200).json({ message: 'Email successfully verified!' }); // Vrátime len JSON odpoveď
     return;
 
   } catch (error) {
-    console.error('[Auth] Email verification by link error:', error);
-    res.status(500).json({ message: 'An unexpected error occurred during email verification.' }); // Changed to JSON response
+    console.error('[EMAIL_VERIFICATION_LINK] 💥 CRITICAL ERROR:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'An unexpected error occurred during email verification.',
+      details: process.env.NODE_ENV === 'development' ? handleError(error) : 'Internal server error'
+    });
     return;
   }
 };
 
-export const resendVerification: any = async (req: Request, res: Response) => {
+export const resendVerification: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   const { email } = req.body;
 
   if (!email) {
-    return res.status(400).json({ message: 'Email is required.' });
+    res.status(400).json({ message: 'Email is required.' });
+    return;
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+      select: { id: true, email: true, displayName: true, isEmailVerified: true }
+    });
+
     if (!user) {
-      return res.status(200).json({ message: 'If an account with that email exists, a verification email has been sent.' });
+      res.status(404).json({ message: 'User not found.' });
+      return;
+    }
+
+    if (user.isEmailVerified) {
+      res.status(400).json({ message: 'Email is already verified.' });
+      return;
     }
 
     await sendUserVerificationEmail(user);
 
-    res.status(200).json({ message: 'Verification email re-sent. Please check your inbox.' });
-    return;
-
+    res.status(200).json({ message: 'Verification email resent successfully.' });
   } catch (error) {
     console.error('[Auth] Resend verification error:', error);
     res.status(500).json({
-      message: 'An unexpected error occurred while resending verification.',
+      message: 'An unexpected error occurred while resending verification email.',
       details: handleError(error)
     });
-    return;
   }
 };

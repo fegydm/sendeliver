@@ -1,5 +1,5 @@
 // File: back/src/services/gmail.simple.service.ts
-// Last change: Fuck SendGrid - simple Gmail SMTP service that just works
+// Last change: Added dev mode support with original email display in template
 
 import nodemailer from 'nodemailer';
 
@@ -11,7 +11,7 @@ interface EmailOptions {
 }
 
 class SimpleGmailService {
-  private transporter!: nodemailer.Transporter; // Add ! to indicate it will be assigned
+  private transporter!: nodemailer.Transporter;
   private isInitialized: boolean = false;
 
   constructor() {
@@ -20,16 +20,14 @@ class SimpleGmailService {
 
   private async initialize(): Promise<void> {
     try {
-      // Create Gmail transporter
-      this.transporter = nodemailer.createTransport({ // Fix: createTransport not createTransporter
+      this.transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: process.env.GMAIL_USER || 'your.email@gmail.com',
-          pass: process.env.GMAIL_APP_PASSWORD || 'your_app_password', // NOT your regular password!
+          pass: process.env.GMAIL_APP_PASSWORD || 'your_app_password',
         },
       });
 
-      // Test connection
       await this.transporter.verify();
       this.isInitialized = true;
       
@@ -54,41 +52,51 @@ class SimpleGmailService {
     try {
       const htmlContent = this.renderTemplate(options.template, options.context);
       
-      // Check EMAIL_MODE to determine recipient
+      // 🎯 USE YOUR EXISTING EMAIL_MODE LOGIC
       const isProduction = process.env.EMAIL_MODE === 'production';
       const finalRecipient = isProduction ? options.to : (process.env.TEST_EMAIL || options.to);
       const finalSubject = isProduction ? options.subject : `[DEV] ${options.subject}`;
       
       const mailOptions = {
-        from: `"SendEliver" <${process.env.GMAIL_USER}>`,
+        from: `"${process.env.FROM_NAME || 'SendEliver'}" <${process.env.FROM_EMAIL || process.env.GMAIL_USER}>`,
         to: finalRecipient,
         subject: finalSubject,
         html: htmlContent,
-        text: this.htmlToText(htmlContent), // Fallback text version
+        text: this.htmlToText(htmlContent),
       };
 
-      // Log what's happening
-      if (isProduction) {
-        console.log(`📧 [PRODUCTION] Sending email to: ${options.to}`);
-      } else {
-        console.log(`📧 [DEVELOPMENT] Original recipient: ${options.to}`);
-        console.log(`📧 [DEVELOPMENT] Redirected to TEST_EMAIL: ${finalRecipient}`);
-        console.log(`📧 [DEVELOPMENT] Subject prefixed with [DEV]`);
+      // Enhanced logging
+      console.log('[GMAIL_SERVICE] =================================');
+      console.log('[GMAIL_SERVICE] Email preparation:');
+      console.log('[GMAIL_SERVICE] EMAIL_MODE:', process.env.EMAIL_MODE);
+      console.log('[GMAIL_SERVICE] Original recipient:', options.to);
+      console.log('[GMAIL_SERVICE] Final recipient:', finalRecipient);
+      console.log('[GMAIL_SERVICE] Is dev mode redirect:', !isProduction && finalRecipient !== options.to);
+      console.log('[GMAIL_SERVICE] Template:', options.template);
+      
+      if (!isProduction && finalRecipient !== options.to) {
+        console.log('[GMAIL_SERVICE] 📧 [DEVELOPMENT] Email redirected to TEST_EMAIL');
+        console.log('[GMAIL_SERVICE] 📧 [DEVELOPMENT] Subject prefixed with [DEV]');
       }
 
       const info = await this.transporter.sendMail(mailOptions);
       
-      console.log(`✅ Email sent successfully to ${finalRecipient}`);
-      console.log(`📧 Message ID: ${info.messageId}`);
+      console.log('[GMAIL_SERVICE] ✅ Email sent successfully');
+      console.log('[GMAIL_SERVICE] Message ID:', info.messageId);
+      console.log('[GMAIL_SERVICE] =================================');
       
     } catch (error) {
-      console.error(`❌ Failed to send email to ${options.to}:`, error);
+      console.error('[GMAIL_SERVICE] ❌ Failed to send email:', error);
       throw error;
     }
   }
 
   private renderTemplate(template: string, context: Record<string, any>): string {
     if (template === 'email-verification') {
+      // 🎯 CHECK IF THIS IS TEST MODE (dev mode with email redirect)
+      const isDevMode = context.isTestMode || false;
+      const originalEmail = context.originalUserEmail || '';
+      
       return `
         <!DOCTYPE html>
         <html lang="sk">
@@ -156,6 +164,14 @@ class SimpleGmailService {
                     margin: 20px 0;
                     border-radius: 4px;
                 }
+                .dev-mode-alert {
+                    background: #fff3cd;
+                    border: 2px solid #ffc107;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin: 20px 0;
+                    color: #856404;
+                }
                 .footer {
                     margin-top: 40px;
                     font-size: 14px;
@@ -166,6 +182,14 @@ class SimpleGmailService {
         </head>
         <body>
             <div class="container">
+                ${isDevMode ? `
+                <div class="dev-mode-alert">
+                    <h3 style="margin: 0 0 10px 0; color: #856404;">🧪 Development Mode</h3>
+                    <p style="margin: 0;"><strong>Original user:</strong> ${originalEmail}</p>
+                    <p style="margin: 0;"><strong>Redirected to:</strong> Test email for development</p>
+                </div>
+                ` : ''}
+                
                 <div class="header">
                     <div class="logo">🚚 SendEliver</div>
                     <h1>Overte svoj účet</h1>
@@ -185,6 +209,9 @@ class SimpleGmailService {
                 
                 <div class="code-box">
                     <div class="code">${context.verificationCode}</div>
+                    <p style="margin: 10px 0 0 0; font-size: 14px; color: #6b7280;">
+                        Zadajte tento kód do aplikácie
+                    </p>
                 </div>
                 
                 <div class="warning">
@@ -192,6 +219,13 @@ class SimpleGmailService {
                 </div>
                 
                 <p>Ak ste si nevytvorili účet, ignorujte tento email.</p>
+                
+                ${isDevMode ? `
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+                <p style="color: #999; font-size: 12px; text-align: center;">
+                    <em>Development Mode: Tento email bol pôvodne určený pre ${originalEmail}</em>
+                </p>
+                ` : ''}
                 
                 <div class="footer">
                     <p><strong>S pozdravom,<br>SendEliver Team</strong></p>
@@ -228,7 +262,7 @@ class SimpleGmailService {
 // Export singleton
 export const simpleGmailService = new SimpleGmailService();
 
-// Backward compatibility - same interface as before
+// Backward compatibility
 export const sendEmail = async (options: { to: string; subject: string; template: string; context: Record<string, any> }) => {
   await simpleGmailService.sendEmail(options);
 };
@@ -236,50 +270,3 @@ export const sendEmail = async (options: { to: string; subject: string; template
 export const testEmailConnection = () => {
   return simpleGmailService.testConnection();
 };
-
-/*
-SETUP INSTRUCTIONS (takes 2 minutes):
-
-1. Enable 2-Factor Authentication on Gmail:
-   - Go to https://myaccount.google.com/security
-   - Turn on 2-Step Verification
-
-2. Generate App Password:
-   - Go to https://myaccount.google.com/apppasswords
-   - Select "Mail" and "Other" 
-   - Enter "SendEliver" as app name
-   - Copy the 16-character password (like: "abcd efgh ijkl mnop")
-
-3. Add to .env:
-   GMAIL_USER=your.email@gmail.com
-   GMAIL_APP_PASSWORD=abcdefghijklmnop
-
-4. Install nodemailer:
-   npm install nodemailer
-   npm install -D @types/nodemailer
-
-5. Replace SendGrid import in auth.controllers.ts:
-   import { sendEmail } from '../services/gmail.simple.service.js';
-
-BENEFITS:
-✅ Works immediately - no complex setup
-✅ Free - 500 emails per day limit
-✅ Reliable - Gmail infrastructure  
-✅ No domain verification needed
-✅ No API keys management
-✅ Familiar interface
-
-LIMITS:
-⚠️ 500 emails per day (more than enough for startup)
-⚠️ Uses your personal Gmail (can create dedicated account)
-
-ALTERNATIVE - Use company email:
-If you have SMTP access to deutschmann.sk:
-GMAIL_USER=noreply@deutschmann.sk
-GMAIL_APP_PASSWORD=your_company_smtp_password
-
-And change service from 'gmail' to:
-host: 'mail.deutschmann.sk',
-port: 587,
-secure: false,
-*/
