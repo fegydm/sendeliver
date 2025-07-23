@@ -6,6 +6,7 @@ import { AIResponse } from "@/types/transport-forms.types";
 import { useTranslationContext } from "@/contexts/TranslationContext";
 import { Tabs } from "@/components/shared/ui/tabs.ui"; // Import Tabs component
 import Button from "@/components/shared/ui/button.ui";  // Import Button component
+import "./ai-form.component.css";
 
 // Define prompt options with corresponding translation keys for placeholder
 const PROMPT_OPTIONS = [

@@ -670,8 +670,8 @@ const ResultTable: React.FC<ResultTableProps> = ({
                 <th
                   key={col.key}
                   className={`result-table__header-cell ${col.cssClass || ''} ${
-                    filterStates[col.key]?.selected !== "all" ? "result-table__header-cell--filtered" : ""
-                  } ${filterStates[col.key]?.isOpen ? "result-table__header-cell--open" : ""}`}
+                    type === "sender" && filterStates[col.key]?.selected !== "all" ? "result-table__header-cell--filtered" : ""
+                  } ${type === "sender" && filterStates[col.key]?.isOpen ? "result-table__header-cell--open" : ""}`}
                 >
                   <div className="result-table__header-content">
                     {/* Render filter component for sender, simple label for hauler */}

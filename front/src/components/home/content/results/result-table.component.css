@@ -8,13 +8,11 @@
 .result-table {
   width: 100%; 
   max-width: 1000px; 
-  margin: 20px auto; 
   position: relative; 
   overflow: visible; 
   min-width: 300px;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
   margin: 2rem 0;
   border-radius: var(--border-radius);
   box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.10);
@@ -39,6 +37,7 @@
   position: relative;
   z-index: 3000;
   pointer-events: none;
+  padding: 0 1rem;
 }
 
 .result-table__dropdown-container .result-table__dropdown-content {
@@ -54,6 +53,7 @@
   justify-content: space-between; 
   align-items: center; 
   margin-bottom: 10px; 
+  padding: 0 1rem;
 }
 
 .result-table__reset-button { 
@@ -78,6 +78,7 @@
   border: 1px solid #ddd; 
   border-radius: 4px; 
   position: relative;
+  padding: 1rem;
 }
 
 /* =============================================================================
@@ -114,7 +115,7 @@
 
 .result-table__header-cell { 
   border: 1px solid #ddd; 
-  background-color: #c9c9c9; 
+  background-color: #c9c9c9; /* Consistent gray header for both sender and hauler */
   vertical-align: middle; 
   padding: 2px; 
   white-space: nowrap; 

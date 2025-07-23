@@ -15,6 +15,7 @@ import Input from "@/components/shared/ui/input.ui";
 import Label from "@/components/shared/ui/label.ui";
 import { SenderResultData } from "@/components/home/content/results/result-table.component";
 import usePrevious from "@/hooks/usePrevious";
+import "./manual-form.component.css";
 
 const DEFAULT_PICKUP_TIME = new Date(new Date().getTime() + 3 * 60 * 60 * 1000).toISOString();
 const DEFAULT_DELIVERY_TIME = new Date(new Date().getTime() + 6 * 60 * 60 * 1000).toISOString();

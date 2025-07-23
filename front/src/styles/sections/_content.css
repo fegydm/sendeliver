@@ -1,300 +1,44 @@
 /* File: ./front/src/styles/sections/_content.css */
-/* Last change: Removed result-table properties - moved to result-table.component.css */
+/* Last change: Refactored - moved component styles to individual component files */
 
 @import '../components/dropdown.css'; 
 @import '../components/ui/ui-components.css';
 
-/* Global content container styling */
-.content {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.navigation-button-wrapper:hover .content__navigation-description {
-  opacity: 1;
-}
-
-/* Form and Content Title Styling */
-.content__title {
-  margin: 1.0rem;
-  text-align: center;
-  padding-bottom: 0.5rem;
-  position: relative;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-/* COMMON FORM STYLING - needed by ai-form and manual-form */
-.ai-form,
-.manual-form {
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-  margin: 2rem 0;
-  border-radius: var(--border-radius);
-  box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.10);
-}
-
-/* AI Form specific */
-.ai-form__textarea {
-  position: relative;
-  z-index: 1;  
-  width: 95%;         
-  min-height: 50px;
-  padding: 0.5rem;
-  border-radius: var(--border-radius);
-  resize: vertical;
-}
-
-.ai-form__tabs {
-  position: relative;
-  z-index: 2; 
-  margin-top: 16px;
-  margin-left: 8px;
-  margin-bottom: -1px;
-}
-
-/* Manual Form specific */
-.manual-form {
-  gap: 1.2rem;
-}
+/* =============================================================================
+   GLOBAL CONTENT LAYOUT
+   ============================================================================= */
+.content { max-width: 1400px; margin: 0 auto; }
 
 /* =============================================================================
-   SENDER STYLING
+   NAVIGATION - Global behavior
    ============================================================================= */
-
-.content__navigation--sender .navigation-button-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.content__navigation--sender .content__navigation-description {
-  position: absolute;
-  top: 100%;
-  right: 5px;
-  margin-top: 0.2rem;
-  opacity: 0;
-  color: gray;
-  font-size: 0.875rem;
-  transition: opacity 600ms ease-in-out;
-  pointer-events: none;
-  width: auto;
-  white-space: nowrap;
-}
-
-.content--sender .content__title {
-  color: var(--sender-primary);
-  border-bottom: 2px solid transparent;
-  border-image: linear-gradient(to right, transparent, var(--sender-primary), transparent) 1;
-}
-
-.content--sender .content__description {
-  color: var(--sender-primary);
-  line-height: 1.2;
-  margin: 1rem 2rem;
-}
-
-.ai-form--sender,
-.manual-form--sender {
-  border: 2px solid var(--sender-medium);
-  background: var(--sender-light);
-}
-
-.content--sender .ai-form__title,
-.content--sender .manual-form__title {
-  color: var(--sender-primary, #005f99);
-  margin-left: 8px; 
-  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.ai-form--sender .ai-form__textarea {
-  border-color: var(--sender-primary-hover);
-  border-left: 3px solid var(--sender-primary-hover);
-}
-
-.manual-form--sender .manual-form__pickup,
-.manual-form--sender .manual-form__delivery,
-.manual-form--sender .manual-form__cargo {
-  border: 1px solid var(--sender-primary-hover);
-  border-left: 3px solid var(--sender-primary-hover);
-  background-color: var(--sender-medium);
-  padding: 1.2rem;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-light);
-}
+.navigation-button-wrapper:hover .content__navigation-description { opacity: 1; }
+.content__navigation--sender .navigation-button-wrapper { position: relative; display: inline-block; }
+.content__navigation--sender .content__navigation-description { position: absolute; top: 100%; right: 5px; margin-top: 0.2rem; opacity: 0; color: gray; font-size: 0.875rem; transition: opacity 600ms ease-in-out; pointer-events: none; width: auto; white-space: nowrap; }
+.content__navigation--hauler .navigation-button-wrapper { position: relative; display: inline-block; }
+.content__navigation--hauler .content__navigation-description { position: absolute; top: 100%; left: 5px; margin-top: 0.2rem; opacity: 0; color: gray; font-size: 0.875rem; transition: opacity 600ms ease-in-out; pointer-events: none; width: auto; white-space: nowrap; }
 
 /* =============================================================================
-   HAULER STYLING  
+   GLOBAL TYPOGRAPHY - Shared across components
    ============================================================================= */
-
-.content__navigation--hauler .navigation-button-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.content__navigation--hauler .content__navigation-description {
-  position: absolute;
-  top: 100%;
-  left: 5px;
-  margin-top: 0.2rem;
-  opacity: 0;
-  color: gray;
-  font-size: 0.875rem;
-  transition: opacity 600ms ease-in-out;
-  pointer-events: none;
-  width: auto;
-  white-space: nowrap;
-}
-
-.content--hauler .content__title {
-  color: var(--hauler-primary);
-  border-bottom: 2px solid transparent;
-  border-image: linear-gradient(to right, transparent, var(--hauler-primary), transparent) 1;
-}
-
-.content--hauler .content__description {
-  color: var(--hauler-primary);
-  line-height: 1.2;
-  margin: 1rem 2rem;
-}
-
-.ai-form--hauler,
-.manual-form--hauler {
-  border: 2px solid var(--hauler-medium);
-  background: var(--hauler-light);
-}
-
-.content--hauler .ai-form__title,
-.content--hauler .manual-form__title {
-  color: var(--hauler-primary, #005f99);
-  margin-left: 8px; 
-  text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.ai-form--hauler .ai-form__textarea {
-  border-color: var(--hauler-primary);
-  border-left: 3px solid var(--hauler-primary);
-  box-shadow: 0 0 0 2px var(--hauler-light);
-}
-
-.manual-form--hauler .manual-form__pickup,
-.manual-form--hauler .manual-form__delivery,
-.manual-form--hauler .manual-form__cargo {
-  border: 1px solid var(--hauler-primary);
-  border-left: 3px solid var(--hauler-primary);
-  background-color: var(--hauler-medium);
-  padding: 1.2rem;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-light);
-}
+.content__title { margin: 1.0rem; text-align: center; padding-bottom: 0.5rem; position: relative; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+.content__description { line-height: 1.2; margin: 1rem 2rem; }
+.content--sender .content__title { color: var(--sender-primary); border-bottom: 2px solid transparent; border-image: linear-gradient(to right, transparent, var(--sender-primary), transparent) 1; }
+.content--sender .content__description { color: var(--sender-primary); }
+.content--hauler .content__title { color: var(--hauler-primary); border-bottom: 2px solid transparent; border-image: linear-gradient(to right, transparent, var(--hauler-primary), transparent) 1; }
+.content--hauler .content__description { color: var(--hauler-primary); }
 
 /* =============================================================================
-   FOCUS STATES
+   SHARED FORM COMPONENTS - Used by multiple components
    ============================================================================= */
-
-.ai-form--sender .ai-form__textarea:focus {
-  outline: none; 
-  border-bottom: 3px solid var(--sender-primary-hover, #e5e7eb);
-}
-
-.ai-form--hauler .ai-form__textarea:focus {
-  outline: none; 
-  border-bottom: 3px solid var(--hauler-primary-hover, #e5e7eb);
-}
-
-/* =============================================================================
-   MANUAL FORM COMPONENTS - needed by other components
-   ============================================================================= */
-
-.manual-form__cargo-row {
-  display: flex;
-  gap: 1rem;
-  width: 100%;
-}
-
-.cargo-label {
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.cargo-field {
-  flex: 1;
-}
-
-.cargo-field input {
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.manual-form__grid {
-  display: grid;
-  grid-template-columns: 70px minmax(0, 1fr);
-  gap: 1rem;
-}
-
-/* =============================================================================
-   FORM COMPONENTS - needed by other components
-   ============================================================================= */
-
-.country-select__flag {
-  width: 24px;
-  height: auto;
-}
-
-.country-select__flag--inactive {
-  filter: grayscale(100%);
-  opacity: 0.5;
-}
-
-.country-select__input {
-  width: 24px;
-  text-align: center;
-}
-
-.country-select,
-.location-select {
-  display: flex;
-  position: relative;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.location-select__psc {
-  width: 85px;
-  flex: 0 0 85px;
-  border-radius: 4px;
-  min-width: 30px;
-  border: 1px solid var(--input-border);
-  padding: 0.3rem; 
-  box-sizing: border-box;
-}
-
-.location-select__city {
-  width: 100%;
-  flex: 1 1 0;
-  border-radius: 4px;
-  min-width: 15px;
-  border: 1px solid var(--input-border);
-  padding: 0.3rem;
-  box-sizing: border-box;
-}
-
-.location-select .input-wrapper {
-  display: flex;
-  width: 100%;
-}
-
-.datetime-select {
-  display: flex;
-  gap: 0.5rem;
-  width: 100%;
-}
-
-.datetime-select__date,
-.datetime-select__time {
-  flex: 1 1 0;
-  border-radius: 4px;
-  min-width: 50px;
-  border: 1px solid var(--input-border);
-  padding: 0.3rem;
-  box-sizing: border-box;
-}
+.country-select__flag { width: 24px; height: auto; }
+.country-select__flag--inactive { filter: grayscale(100%); opacity: 0.5; }
+.country-select__input { width: 24px; text-align: center; }
+.country-select { display: flex; position: relative; align-items: center; gap: 0.5rem; }
+.location-select { display: flex; position: relative; align-items: center; gap: 0.5rem; }
+.location-select__psc { width: 85px; flex: 0 0 85px; border-radius: 4px; min-width: 30px; border: 1px solid var(--input-border); padding: 0.3rem; box-sizing: border-box; }
+.location-select__city { width: 100%; flex: 1 1 0; border-radius: 4px; min-width: 15px; border: 1px solid var(--input-border); padding: 0.3rem; box-sizing: border-box; }
+.location-select .input-wrapper { display: flex; width: 100%; }
+.datetime-select { display: flex; gap: 0.5rem; width: 100%; }
+.datetime-select__date { flex: 1 1 0; border-radius: 4px; min-width: 50px; border: 1px solid var(--input-border); padding: 0.3rem; box-sizing: border-box; }
+.datetime-select__time { flex: 1 1 0; border-radius: 4px; min-width: 50px; border: 1px solid var(--input-border); padding: 0.3rem; box-sizing: border-box; }
