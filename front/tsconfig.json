@@ -13,9 +13,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "back/*": ["../back/src/*"]
-    },
-    "rootDir": ".",
+      "back/*": ["../back/src/*"],
+      "@shared/*": ["../shared/*"] },
     "outDir": "dist",
     "strict": true,
     "noUnusedLocals": true,
@@ -23,24 +22,27 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
-    "declaration": true,
+    "declaration": false,
     "removeComments": true,
     "importHelpers": true,
     "isolatedModules": true,
     "incremental": true,
-    "composite": true,
+    "composite": false,
     "allowJs": true,
     "checkJs": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "skipLibCheck": true
   },
+
   "include": [
     "src/**/*",
     "src/**/*.json",
     "src/types/env.d.ts",
-    "src/types/recharts.d.ts"
+    "src/types/recharts.d.ts",
+    "../shared/**/*"  
   ],
+
   "exclude": [
     "**/node_modules",
     "**/dist",

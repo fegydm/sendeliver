@@ -1,4 +1,4 @@
-// File: ./back/src/constants/vehicle.constants.ts
+// File: ./shared/constants/vehicle.constants.ts
 // Constants for backend vehicle logic and database filtering
 
 export interface VehicleType {

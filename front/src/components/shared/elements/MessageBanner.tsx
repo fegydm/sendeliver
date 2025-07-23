@@ -31,11 +31,29 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
 
   const PENDING_VERIFICATION_KEY = 'pendingEmailVerification';
 
-  // 🎯 ONLY SHOW BANNER ON HOME/MAIN PAGES
+
+// ADD this effect RIGHT AFTER:
+  // 🎯 RESET INITIAL SETUP WHEN PENDING VERIFICATION CHANGES
+  useEffect(() => {
+    if (pendingEmailVerification && !showBanner) {
+      console.log('[MESSAGE_BANNER] Pending verification changed, resetting initial setup');
+      isInitialSetup.current = true;
+    }
+  }, [pendingEmailVerification, showBanner]);
+
+// THEN find the main useEffect and add this at the very beginning:
   const shouldShowBannerOnThisPage = () => {
     const allowedPaths = ['/', '/dashboard', '/home'];
     return allowedPaths.includes(location.pathname);
   };
+
+  useEffect(() => {
+    // 🎯 FORCE RE-INITIALIZATION IF PENDING VERIFICATION EXISTS BUT BANNER NOT SHOWN
+    if (pendingEmailVerification && !showBanner && !isInitialSetup.current) {
+      console.log('[MESSAGE_BANNER] Force re-initialization due to pending verification');
+      isInitialSetup.current = true;
+    }
+  }, [pendingEmailVerification, showBanner]);
 
   useEffect(() => {
     if (!isInitialSetup.current) return;
@@ -60,10 +78,10 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
 
    if (typedUser) {
       // User is logged in - check if email needs verification
-      if (typedUser.email && !typedUser.EmailVerified) {
+      if (typedUser.email && !typedUser.emailVerified) {
         console.log('[MESSAGE_BANNER] User needs email verification:', {
           email: typedUser.email,
-          emailVerified: typedUser.EmailVerified
+          emailVerified: typedUser.emailVerified
         });
         const verification = {
           email: typedUser.email,
@@ -75,7 +93,7 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
       } else {
         console.log('[MESSAGE_BANNER] User email already verified:', {
           email: typedUser.email,
-          emailVerified: typedUser.EmailVerified
+          emailVerified: typedUser.emailVerified
         });
         setPendingEmailVerification(null);
         localStorage.removeItem(PENDING_VERIFICATION_KEY);

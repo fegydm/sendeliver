@@ -1,0 +1,419 @@
+/* File: front/src/components/home/content/results/result-table.component.css
+   Last change: Extracted and refactored result-table styles from global _content.css */
+
+/* =============================================================================
+   RESULT TABLE - BEM Convention
+   ============================================================================= */
+
+/* Base result table container */
+.result-table {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  margin: 2rem 0;
+  border-radius: var(--border-radius);
+  box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.10);
+}
+
+/* Theme variants for sender/hauler */
+.result-table--sender {
+  border: 2px solid var(--sender-medium);
+  background: var(--sender-light);
+}
+
+.result-table--hauler {
+  border: 2px solid var(--hauler-medium);
+  background: var(--hauler-light);
+}
+
+/* =============================================================================
+   RESULT TABLE HEADER
+   ============================================================================= */
+
+.result-table__header {
+  display: grid;
+  background: var(--color-canvas-darker);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.result-table__header-cell {
+  padding: var(--spacing-sm);
+  border-right: 1px solid var(--border-color);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.result-table__header-cell:last-child {
+  border-right: none;
+}
+
+.result-table__header-cell:hover {
+  background: var(--color-canvas-hover);
+}
+
+.result-table__header-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text);
+  text-align: center;
+}
+
+/* Column-specific widths */
+.result-table__col--distance {
+  width: 100px;
+  min-width: 80px;
+}
+
+.result-table__col--type {
+  width: 120px;
+  min-width: 100px;
+}
+
+.result-table__col--status {
+  width: 200px;
+  min-width: 150px;
+}
+
+.result-table__col--availability {
+  width: 140px;
+  min-width: 120px;
+}
+
+.result-table__col--transit {
+  width: 100px;
+  min-width: 80px;
+}
+
+.result-table__col--rating {
+  width: 120px;
+  min-width: 100px;
+}
+
+.result-table__col--contact {
+  width: 100px;
+  min-width: 80px;
+}
+
+/* Hauler-specific columns */
+.result-table__col--route {
+  width: 200px;
+  min-width: 150px;
+}
+
+.result-table__col--cargo {
+  width: 150px;
+  min-width: 120px;
+}
+
+.result-table__col--price {
+  width: 100px;
+  min-width: 80px;
+}
+
+.result-table__col--client {
+  width: 140px;
+  min-width: 120px;
+}
+
+.result-table__col--posted {
+  width: 90px;
+  min-width: 70px;
+}
+
+/* =============================================================================
+   RESULT TABLE BODY
+   ============================================================================= */
+
+.result-table__body {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+/* Table rows */
+.result-table__row {
+  display: grid;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s ease;
+  min-height: 48px;
+  align-items: center;
+}
+
+.result-table__row:hover {
+  background: var(--color-canvas-hover);
+}
+
+.result-table__row:last-child {
+  border-bottom: none;
+}
+
+/* Table cells */
+.result-table__cell {
+  padding: var(--spacing-sm);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.result-table__cell:last-child {
+  border-right: none;
+}
+
+/* =============================================================================
+   RESULT TABLE FOOTER
+   ============================================================================= */
+
+.result-table__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-canvas-darker);
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  border-top: 1px solid var(--border-color);
+  gap: var(--spacing-md);
+}
+
+.result-table__footer-left {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.result-table__footer-right {
+  display: flex;
+  align-items: center;
+}
+
+.result-table__stat-item {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.result-table__reset-button {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.result-table__reset-button:hover:not(:disabled) {
+  background: var(--color-danger-hover);
+}
+
+.result-table__reset-button:disabled {
+  background: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+/* =============================================================================
+   LOADING AND EMPTY STATES
+   ============================================================================= */
+
+.result-table__loading,
+.result-table__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  color: var(--color-text-secondary);
+  font-size: 16px;
+}
+
+.result-table__loading {
+  gap: var(--spacing-md);
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* =============================================================================
+   CELL CONTENT STYLES
+   ============================================================================= */
+
+/* Status badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  gap: 4px;
+}
+
+.status-badge--available {
+  background: var(--color-success-light);
+  color: var(--color-success-dark);
+}
+
+.status-badge--urgent {
+  background: var(--color-danger-light);
+  color: var(--color-danger-dark);
+}
+
+.status-badge--bidding {
+  background: var(--color-warning-light);
+  color: var(--color-warning-dark);
+}
+
+.status-badge--available-now {
+  background: var(--color-success-light);
+  color: var(--color-success-dark);
+}
+
+.status-badge--available-tomorrow {
+  background: var(--color-info-light);
+  color: var(--color-info-dark);
+}
+
+.status-badge--available-in-2-days {
+  background: var(--color-warning-light);
+  color: var(--color-warning-dark);
+}
+
+/* Rating display */
+.rating-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rating-stars {
+  color: var(--color-warning);
+  font-size: 14px;
+}
+
+.rating-number {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* Contact button */
+.contact-button {
+  padding: 4px 12px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.contact-button:hover {
+  background: var(--color-primary-hover);
+}
+
+/* Cargo-specific cell styling */
+.result-table__cell--cargo {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.result-table__cell--price {
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.result-table__cell--route {
+  font-weight: 500;
+}
+
+/* =============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================= */
+
+@media (max-width: 1024px) {
+  .result-table {
+    margin: 1rem 0;
+    padding: 0.75rem;
+  }
+  
+  .result-table__header-cell,
+  .result-table__cell {
+    padding: var(--spacing-xs);
+    font-size: 13px;
+  }
+  
+  .result-table__col--status {
+    width: 150px;
+    min-width: 120px;
+  }
+  
+  .result-table__col--availability {
+    width: 120px;
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 768px) {
+  .result-table {
+    overflow-x: auto;
+  }
+  
+  .result-table__header,
+  .result-table__row {
+    min-width: 800px;
+  }
+  
+  .result-table__footer {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: stretch;
+  }
+  
+  .result-table__footer-left {
+    justify-content: center;
+  }
+  
+  .result-table__footer-right {
+    justify-content: center;
+  }
+}
+
+/* =============================================================================
+   DARK THEME SUPPORT
+   ============================================================================= */
+
+[data-theme="dark"] .result-table {
+  background: var(--hauler-dark, var(--color-canvas-darker));
+}
+
+[data-theme="dark"] .result-table--sender {
+  background: var(--sender-dark, var(--color-canvas-darker));
+}
+
+[data-theme="dark"] .result-table__header {
+  background: var(--color-canvas-darker);
+}
+
+[data-theme="dark"] .result-table__footer {
+  background: var(--color-canvas-darker);
+}

@@ -48,6 +48,7 @@ export default defineConfig({
       allow: [
         path.resolve(__dirname),
         path.resolve(__dirname, '../back/src'),
+        path.resolve(__dirname, '../shared'),
         path.resolve(__dirname, '../packages/logger/src')
       ],
     },
@@ -89,6 +90,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src'),      // Frontend source alias
       'back': path.resolve(__dirname, '../back/src'), // Backend source alias
+      '@shared': path.resolve(__dirname, '../shared'),
       '@sendeliver/logger': path.resolve(__dirname, '../packages/logger/src') // Shared logger alias
     },
   },

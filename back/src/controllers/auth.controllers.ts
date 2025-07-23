@@ -8,6 +8,7 @@ import { promisify } from 'util';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { sendEmail } from '../services/gmail.simple.service.js';
 
+
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
@@ -738,27 +739,15 @@ export const verifyEmailByLink: any = async (req: Request, res: Response) => {
     // Clean up verification token
     await prisma.emailVerificationToken.delete({ where: { id: verificationToken.id } });
 
-    // Set authentication cookie
-    const authToken = setAuthCookie(res, updatedUser.id, updatedUser.userType, updatedUser.primaryRole, updatedUser.memberships);
-
-    console.log('[EMAIL_VERIFICATION_LINK] 🎉 EMAIL VERIFICATION COMPLETED');
+    // 🎯 NO AUTO-LOGIN FOR LINK VERIFICATION - Security best practice
+    console.log('[EMAIL_VERIFICATION_LINK] 🎉 EMAIL VERIFICATION COMPLETED (no auto-login)');
     console.log('[EMAIL_VERIFICATION_LINK] =================================');
 
     res.status(200).json({
       success: true,
-      message: 'Email successfully verified! You are now logged in.',
-      user: {
-        id: updatedUser.id,
-        name: updatedUser.displayName,
-        email: updatedUser.email,
-        primaryRole: updatedUser.primaryRole,
-        userType: updatedUser.userType,
-        selectedRole: updatedUser.selectedRole,
-        imageUrl: updatedUser.imageUrl,
-        emailVerified: updatedUser.isEmailVerified, // For compatibility
-        memberships: updatedUser.memberships
-      },
-      token: authToken
+      message: 'Email successfully verified! You can now log in with your credentials.',
+      emailVerified: true,
+      // 🎯 NO user data or auth token - user must log in manually
     });
     return;
 

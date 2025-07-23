@@ -40,7 +40,7 @@ model User {
   
   // Primary role for standalone users or default for new users before joining an org.
   // For users in organizations, their specific role within that org is in OrganizationMembership.
-  primaryRole        UserRole            @default(individual_customer) 
+  primaryRole        UserRole            @default(individual_customer) @map("primary_role")
   userType           UserType            @default(STANDALONE) // Differentiates between organized and standalone users
   selectedRole       SelectedRoleType?   @map("selected_role") // Retained for backward compatibility if needed
   

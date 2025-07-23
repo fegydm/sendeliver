@@ -10,7 +10,7 @@ import AvailabilityFilter, { availabilityColumn } from "./AvailabilityFilter";
 import TransitFilter, { transitColumn } from "./TransitFilter";
 import RatingFilter, { ratingColumn } from "./RatingFilter";
 import ContactFilter, { contactColumn } from "./ContactFilter";
-import { DELIVERY_CONSTANTS } from "back/constants/vehicle.constants";
+import { DELIVERY_CONSTANTS } from "@shared/constants/vehicle.constants";
 
 export interface SenderResultData {
   distance: number;
