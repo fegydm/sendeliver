@@ -1,12 +1,20 @@
-/* File: front/src/components/home/content/results/result-table.component.css
-   Last change: Extracted and refactored result-table styles from global _content.css */
+/* File: src/components/sections/content/results/result-table.component.css */
+/* Last change: Pridané properties z _content.css pre kompletný component styling */
 
 /* =============================================================================
-   RESULT TABLE - BEM Convention
+   RESULT TABLE CONTAINER - presunuté z _content.css
    ============================================================================= */
 
-/* Base result table container */
 .result-table {
+  /* Original detailed styling */
+  width: 100%; 
+  max-width: 1000px; 
+  margin: 20px auto; 
+  position: relative; 
+  overflow: visible; 
+  min-width: 300px;
+  
+  /* Properties from _content.css */
   display: flex;
   flex-direction: column;
   padding: 1rem;
@@ -15,7 +23,7 @@
   box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.10);
 }
 
-/* Theme variants for sender/hauler */
+/* Theme variants - presunuté z _content.css */
 .result-table--sender {
   border: 2px solid var(--sender-medium);
   background: var(--sender-light);
@@ -27,393 +35,314 @@
 }
 
 /* =============================================================================
-   RESULT TABLE HEADER
+   DROPDOWN CONTAINER - Original positioning logic
    ============================================================================= */
 
-.result-table__header {
-  display: grid;
-  background: var(--color-canvas-darker);
-  border-radius: var(--border-radius) var(--border-radius) 0 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.result-table__header-cell {
-  padding: var(--spacing-sm);
-  border-right: 1px solid var(--border-color);
+.result-table-dropdown-container {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+  z-index: 3000;
+  pointer-events: none;
 }
 
-.result-table__header-cell:last-child {
-  border-right: none;
-}
-
-.result-table__header-cell:hover {
-  background: var(--color-canvas-hover);
-}
-
-.result-table__header-label {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--color-text);
-  text-align: center;
-}
-
-/* Column-specific widths */
-.result-table__col--distance {
-  width: 100px;
-  min-width: 80px;
-}
-
-.result-table__col--type {
-  width: 120px;
-  min-width: 100px;
-}
-
-.result-table__col--status {
-  width: 200px;
-  min-width: 150px;
-}
-
-.result-table__col--availability {
-  width: 140px;
-  min-width: 120px;
-}
-
-.result-table__col--transit {
-  width: 100px;
-  min-width: 80px;
-}
-
-.result-table__col--rating {
-  width: 120px;
-  min-width: 100px;
-}
-
-.result-table__col--contact {
-  width: 100px;
-  min-width: 80px;
-}
-
-/* Hauler-specific columns */
-.result-table__col--route {
-  width: 200px;
-  min-width: 150px;
-}
-
-.result-table__col--cargo {
-  width: 150px;
-  min-width: 120px;
-}
-
-.result-table__col--price {
-  width: 100px;
-  min-width: 80px;
-}
-
-.result-table__col--client {
-  width: 140px;
-  min-width: 120px;
-}
-
-.result-table__col--posted {
-  width: 90px;
-  min-width: 70px;
+.result-table-dropdown-container .dropfilter__content {
+  pointer-events: auto;
 }
 
 /* =============================================================================
-   RESULT TABLE BODY
+   FILTER SUMMARY AND CONTROLS
    ============================================================================= */
 
-.result-table__body {
-  flex: 1;
+.result-table__filter-summary { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 10px; 
+}
+
+.result-table__reset-button { 
+  padding: 5px 10px; 
+  font-size: 14px; 
+  cursor: pointer; 
+}
+
+.result-table__reset-button:disabled { 
+  opacity: 0.5; 
+  cursor: not-allowed; 
+}
+
+/* =============================================================================
+   SCROLL CONTAINER - Excel-like stable scrolling
+   ============================================================================= */
+
+.result-table__scroll-container { 
+  max-height: 400px; 
+  min-height: 150px;
+  overflow-y: auto; 
+  border: 1px solid #ddd; 
+  border-radius: 4px; 
+  position: relative;
+}
+
+/* =============================================================================
+   TABLE STRUCTURE - Fixed layout for Excel-like behavior
+   ============================================================================= */
+
+.result-table__table { 
+  width: 100%; 
+  table-layout: fixed; 
+  border-collapse: collapse; 
+  min-width: 210px;
+} 
+
+.result-table__table col {
+  width: 14%;
+  min-width: 30px;
+}
+
+/* =============================================================================
+   HEADER - Sticky positioning with Excel-like appearance
+   ============================================================================= */
+
+.result-table__header { 
+  position: sticky; 
+  top: 0; 
+  z-index: 10; 
+  min-height: 50px !important; 
+  height: 40px; 
+}
+
+.result-table__header-row {
+  border-bottom: 1px solid #aaa;
+}
+
+.result-table__header-cell { 
+  border: 1px solid #ddd; 
+  background-color: #c9c9c9; 
+  vertical-align: middle; 
+  padding: 2px; 
+  white-space: nowrap; 
+  position: relative; 
+  cursor: pointer;
+  user-select: none;
+}
+
+.result-table__header-cell--filtered { 
+  background-color: #d0e0ff; 
+}
+
+.result-table__header-cell--open { 
+  background-color: #e0e0e0; 
+  z-index: 11;
+}
+
+/* Header cell content structure */
+.header-cell__first-row { 
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+}
+
+.header-cell__second-row { 
+  display: flex; 
+  justify-content: center; 
+}
+
+.column-label { 
+  font-size: 14px; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.filter-value { 
+  font-size: 10px; 
+  color: #666; 
+}
+
+.drop-icon-wrapper { 
+  position: relative; 
+  display: inline-block;
+  margin-left: auto;
+}
+
+/* =============================================================================
+   BODY CELLS - Excel-like row styling
+   ============================================================================= */
+
+.result-table__body-cell { 
+  padding: 2px; 
+  border: 1px solid #ddd; 
+  text-align: center; 
+  vertical-align: middle; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap; 
+}
+
+.result-table__body-row:nth-child(odd) { 
+  background-color: #fafafa; 
+}
+
+.result-table__body-row:nth-child(even) { 
+  background-color: #f0f0f0; 
+}
+
+.result-table__body-row--placeholder { 
+  background-color: #f8f8f8; 
+  color: #757575; 
+  font-style: italic; 
+}
+
+.result-table__body-row--placeholder .result-table__body-cell { 
+  border-color: #e5e5e5; 
+  animation: placeholderPulse 2s infinite; 
+}
+
+.result-table__body-row:only-child td {
+  height: 100px;
+}
+
+/* =============================================================================
+   FOOTER - Sticky bottom with statistics
+   ============================================================================= */
+
+.result-table__footer { 
+  position: sticky; 
+  bottom: 0; 
+  z-index: 10; 
+  min-height: 30px !important; 
+  height: 30px; 
+}
+
+.result-table__footer-cell { 
+  border: 1px solid #ddd; 
+  background-color: #c9c9c9; 
+  vertical-align: middle; 
+  padding: 2px; 
+  white-space: nowrap; 
+  font-size: 13px; 
+}
+
+.result-table__footer-content { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+}
+
+.result-table__stats { 
+  display: flex; 
+  width: 100%; 
+}
+
+.result-table__stat-item.total-deliveries { 
+  margin-left: auto; 
+  text-align: right; 
+}
+
+/* =============================================================================
+   RESIZER - Column width adjustment
+   ============================================================================= */
+
+.result-table__resizer { 
+  position: absolute; 
+  right: 0; 
+  top: 0; 
+  height: 100%; 
+  width: 5px; 
+  background: rgba(0,0,0,0.1); 
+  cursor: col-resize; 
+  user-select: none;
+  z-index: 12;
+}
+
+.result-table__resizer:hover { 
+  background: #0d47a1; 
+}
+
+.result-table__resizer--active { 
+  background: #0d47a1; 
+}
+
+/* =============================================================================
+   DROPDOWN FILTERS - Positioning and styling
+   ============================================================================= */
+
+.dropfilter__content { 
+  background: #fff; 
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
+  z-index: 3000 !important; 
+  transform-origin: top left; 
+  width: max-content; 
+  min-width: 120px; 
+  border: 1px solid #ddd; 
+  border-radius: 4px; 
+  max-height: 300px; 
   overflow-y: auto;
-  max-height: 600px;
+  position: absolute;
 }
 
-/* Table rows */
-.result-table__row {
-  display: grid;
-  border-bottom: 1px solid var(--border-color);
-  transition: background-color 0.2s ease;
-  min-height: 48px;
-  align-items: center;
+.dropfilter__item { 
+  padding: 8px 12px; 
+  cursor: pointer; 
+  white-space: nowrap; 
+  display: flex; 
+  align-items: center; 
+  font-weight: normal;
+  font-size: 13px;
 }
 
-.result-table__row:hover {
-  background: var(--color-canvas-hover);
+.dropfilter__item:hover { 
+  background-color: #f0f0f0; 
 }
 
-.result-table__row:last-child {
-  border-bottom: none;
+.dropfilter__item--grey { 
+  color: grey; 
 }
 
-/* Table cells */
-.result-table__cell {
-  padding: var(--spacing-sm);
-  border-right: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  color: var(--color-text);
+.dropfilter__item-with-icon { 
+  display: flex; 
+  align-items: center; 
+  width: 100%; 
 }
 
-.result-table__cell:last-child {
-  border-right: none;
+.dropfilter__item-icon { 
+  width: 20px; 
+  height: 20px; 
+  margin-right: 8px; 
+  flex-shrink: 0; 
 }
 
 /* =============================================================================
-   RESULT TABLE FOOTER
+   ICONS - Sort and filter controls
    ============================================================================= */
 
-.result-table__footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-canvas-darker);
-  border-radius: 0 0 var(--border-radius) var(--border-radius);
-  border-top: 1px solid var(--border-color);
-  gap: var(--spacing-md);
-}
-
-.result-table__footer-left {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: center;
-}
-
-.result-table__footer-right {
-  display: flex;
-  align-items: center;
-}
-
-.result-table__stat-item {
-  font-size: 14px;
-  color: var(--color-text-secondary);
-}
-
-.result-table__reset-button {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--color-danger);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius-sm);
+.sort-icon {
   cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.2s ease;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
-.result-table__reset-button:hover:not(:disabled) {
-  background: var(--color-danger-hover);
+.sort-icon:hover {
+  opacity: 1;
 }
 
-.result-table__reset-button:disabled {
-  background: var(--color-text-disabled);
-  cursor: not-allowed;
-}
-
-/* =============================================================================
-   LOADING AND EMPTY STATES
-   ============================================================================= */
-
-.result-table__loading,
-.result-table__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xl);
-  color: var(--color-text-secondary);
-  font-size: 16px;
-}
-
-.result-table__loading {
-  gap: var(--spacing-md);
-}
-
-.loading-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--color-border);
-  border-top: 2px solid var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* =============================================================================
-   CELL CONTENT STYLES
-   ============================================================================= */
-
-/* Status badges */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: var(--border-radius-sm);
-  font-size: 12px;
-  font-weight: 500;
-  gap: 4px;
-}
-
-.status-badge--available {
-  background: var(--color-success-light);
-  color: var(--color-success-dark);
-}
-
-.status-badge--urgent {
-  background: var(--color-danger-light);
-  color: var(--color-danger-dark);
-}
-
-.status-badge--bidding {
-  background: var(--color-warning-light);
-  color: var(--color-warning-dark);
-}
-
-.status-badge--available-now {
-  background: var(--color-success-light);
-  color: var(--color-success-dark);
-}
-
-.status-badge--available-tomorrow {
-  background: var(--color-info-light);
-  color: var(--color-info-dark);
-}
-
-.status-badge--available-in-2-days {
-  background: var(--color-warning-light);
-  color: var(--color-warning-dark);
-}
-
-/* Rating display */
-.rating-display {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.rating-stars {
-  color: var(--color-warning);
-  font-size: 14px;
-}
-
-.rating-number {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  font-weight: 500;
-}
-
-/* Contact button */
-.contact-button {
-  padding: 4px 12px;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius-sm);
+.drop-icon {
   cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.2s ease;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
-.contact-button:hover {
-  background: var(--color-primary-hover);
-}
-
-/* Cargo-specific cell styling */
-.result-table__cell--cargo {
-  font-weight: 500;
-  color: var(--color-primary);
-}
-
-.result-table__cell--price {
-  font-weight: 600;
-  color: var(--color-success);
-}
-
-.result-table__cell--route {
-  font-weight: 500;
+.drop-icon:hover {
+  opacity: 1;
 }
 
 /* =============================================================================
-   RESPONSIVE DESIGN
+   ANIMATIONS
    ============================================================================= */
 
-@media (max-width: 1024px) {
-  .result-table {
-    margin: 1rem 0;
-    padding: 0.75rem;
-  }
-  
-  .result-table__header-cell,
-  .result-table__cell {
-    padding: var(--spacing-xs);
-    font-size: 13px;
-  }
-  
-  .result-table__col--status {
-    width: 150px;
-    min-width: 120px;
-  }
-  
-  .result-table__col--availability {
-    width: 120px;
-    min-width: 100px;
-  }
-}
-
-@media (max-width: 768px) {
-  .result-table {
-    overflow-x: auto;
-  }
-  
-  .result-table__header,
-  .result-table__row {
-    min-width: 800px;
-  }
-  
-  .result-table__footer {
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    align-items: stretch;
-  }
-  
-  .result-table__footer-left {
-    justify-content: center;
-  }
-  
-  .result-table__footer-right {
-    justify-content: center;
-  }
-}
-
-/* =============================================================================
-   DARK THEME SUPPORT
-   ============================================================================= */
-
-[data-theme="dark"] .result-table {
-  background: var(--hauler-dark, var(--color-canvas-darker));
-}
-
-[data-theme="dark"] .result-table--sender {
-  background: var(--sender-dark, var(--color-canvas-darker));
-}
-
-[data-theme="dark"] .result-table__header {
-  background: var(--color-canvas-darker);
-}
-
-[data-theme="dark"] .result-table__footer {
-  background: var(--color-canvas-darker);
+@keyframes placeholderPulse { 
+  0% { opacity: 0.7; } 
+  50% { opacity: 0.9; } 
+  100% { opacity: 0.7; } 
 }

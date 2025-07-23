@@ -2,7 +2,7 @@
 // Last change: Added dropdown container within the component to improve positioning
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import "./result-table.css";
+import "./result-table.component.css";
 import DistanceFilter, { distanceColumn } from "./DistanceFilter";
 import TypeFilter, { typeColumn } from "./TypeFilter";
 import StatusFilter, { statusColumn } from "./StatusFilter";
@@ -11,6 +11,7 @@ import TransitFilter, { transitColumn } from "./TransitFilter";
 import RatingFilter, { ratingColumn } from "./RatingFilter";
 import ContactFilter, { contactColumn } from "./ContactFilter";
 import { DELIVERY_CONSTANTS } from "@shared/constants/vehicle.constants";
+import { CARGO_MOCK_DATA } from "@/data/mockCargoData";
 
 export interface SenderResultData {
   distance: number;
