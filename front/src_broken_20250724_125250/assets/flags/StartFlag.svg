@@ -1,6 +1,0 @@
-<!-- Start Flag with white S on black -->
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-  <line x1="3" y1="0" x2="3" y2="24" stroke="#000" stroke-width="1"/>
-  <rect x="3" y="0" width="16" height="14" fill="#000" stroke="#000" stroke-width="1"/>
-  <text x="11" y="11" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#fff" text-anchor="middle">S</text>
-</svg>
