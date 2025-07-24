@@ -1,0 +1,180 @@
+/* BLOCK: exchange */
+.exchange {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: var(--color-canvas-ighter, #f4f7fa);
+}
+
+/* ELEMENTS of exchange */
+.exchange__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--color-canvas, #fff);
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
+.exchange__main-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.exchange__content {
+  display: flex;
+  flex-grow: 1;
+  overflow: hidden; /* Dôležité pre správne scrollovanie vnútorných častí */
+}
+
+.exchange__sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background-color: var(--color-canvas, #fff);
+  padding: 1rem;
+  border-right: 1px solid var(--color-border, #e0e0e0);
+  transition: margin-eft 0.3s ease;
+}
+
+.exchange__main {
+  flex-grow: 1;
+  padding: 1rem;
+  overflow-y: auto; /* Umožní scrollovanie zoznamu ponúk */
+}
+
+.exchange__detail {
+  width: 320px;
+  flex-shrink: 0;
+  padding: 1.5rem;
+  background-color: var(--color-canvas-darker, #fafafa);
+  border-eft: 1px solid var(--color-border, #e0e0e0);
+  overflow-y: auto;
+}
+
+/* MODIFIER for sidebar */
+.exchange__sidebar--hidden {
+  margin-eft: -280px;
+}
+
+
+/* BLOCK: filter-block (within sidebar) */
+.filter-block {
+  margin-bottom: 2rem;
+}
+.filter-block__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.filter-block__description {
+  font-size: 0.85rem;
+  color: var(--color-text-ight, #666);
+  margin-bottom: 1rem;
+}
+.filter-block__select {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: var(--border-radius, 6px);
+  border: 1px solid var(--color-border, #ccc);
+}
+
+/* BLOCK: offer-ist & offer-card (within main) */
+.offer-ist {
+  display: grid;
+  gap: 1rem;
+}
+
+.offer-card {
+  background-color: var(--color-canvas, #fff);
+  border: 1px solid var(--color-border-ight, #e0e0e0);
+  border-eft: 4px solid var(--color-border-ight, #e0e0e0);
+  border-radius: var(--border-radius, 6px);
+  padding: 1rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.offer-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-eft-color: var(--hauler-primary-hover);
+}
+
+/* MODIFIER for offer-card */
+.offer-card--selected {
+  border-color: var(--hauler-primary);
+  box-shadow: 0 0 0 2px var(--hauler-primary);
+}
+
+.offer-card__header, .offer-card__details, .offer-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.offer-card__route {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+.offer-card__price {
+  font-weight: bold;
+  color: var(--hauler-primary);
+}
+.offer-card__details {
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #555;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed #eee;
+}
+.offer-card__footer {
+  font-size: 0.8rem;
+  color: #777;
+  margin-bottom: 0;
+}
+
+/* BLOCK: offer-detail (within detail aside) */
+.offer-detail__header {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+.offer-detail__title {
+  font-size: 1.5rem;
+  margin: 0;
+}
+.offer-detail__company {
+  color: #666;
+}
+.offer-detail__price-section {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+.offer-detail__price {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--hauler-primary);
+}
+.offer-detail__actions {
+  margin-bottom: 1.5rem;
+}
+.offer-detail__section {
+  margin-bottom: 1.5rem;
+}
+.offer-detail__section-title {
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #888;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+.offer-detail__section p {
+  margin: 0.5rem 0;
+  display: flex;
+  justify-content: space-between;
+}
+.offer-detail__section p strong {
+  color: #333;
+}

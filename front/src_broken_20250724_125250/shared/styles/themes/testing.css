@@ -1,0 +1,22 @@
+/* File: src/styles/themes/default.css */
+
+/* Import default variables 
+@import '../base/_variables-default.css'; */
+@import '../base/_variables-testing.css';
+
+/* Import the basic ayout and structure styles */
+@import './basic.css';
+
+/*Import components */
+@import '../sections/_content2.css';
+
+@import '../sections/_banner.css';
+
+
+/* Default theme styles */
+body { background-color: var(--body-background-color-default, #f6f7f9); }
+header { background-color: var(--header-background-color-default, #ffffff); }
+footer { background-color: var(--footer-background-color-default, #ffffff); }
+
+
+

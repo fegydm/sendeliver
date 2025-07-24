@@ -1,0 +1,146 @@
+/* ==========================================================================
+   BLOCK: widget-dashboard
+   ========================================================================== */
+
+.widget-dashboard {
+  padding: 1rem 2rem;
+  background-color: var(--color-canvas-lighter, #f4f7fa);
+  min-height: 100%;
+}
+
+.widget-dashboard__title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: var(--color-text-darker, #333);
+}
+
+.widget-dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ==========================================================================
+   BLOCK: widget
+   ========================================================================== */
+
+.widget {
+  background-color: var(--color-canvas, #ffffff);
+  border-radius: var(--border-radius, 8px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.widget__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border, #eee);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.widget__content {
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: var(--color-text-light, #555);
+  flex-grow: 1;
+}
+
+.widget__content p {
+  margin: 0 0 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ==========================================================================
+   BLOCK: alert-item
+   ========================================================================== */
+
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.alert-item:not(:last-child) {
+  border-bottom: 1px solid var(--color-border-light, #f0f0f0);
+}
+
+.alert-item__icon {
+  font-size: 1.5rem;
+}
+
+.alert-item__text {
+  flex-grow: 1;
+  font-size: 0.9rem;
+}
+
+.alert-item__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* ==========================================================================
+   MODIFIERS of alert-item
+   ========================================================================== */
+
+.alert-item__icon--sos {
+  /* Ikonu definuje emoji, môžeme pridať animáciu */
+  animation: pulse-sos 1.5s infinite;
+}
+.alert-item__icon--delay {
+  /* Farbu definuje emoji */
+}
+.alert-item__icon--service {
+  /* Farbu definuje emoji */
+}
+
+/* ==========================================================================
+   SHARED/UTILITY classes (príklad pre tlačidlá)
+   ========================================================================== */
+.button {
+  border: 1px solid #ccc;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.2s;
+}
+.button:hover {
+  background-color: #eee;
+}
+
+/* Modifier pre malé tlačidlá */
+.button--small {
+  padding: 2px 6px;
+  font-size: 0.75rem;
+}
+
+/* Modifier pre link-style tlačidlá */
+.button--link {
+  background: none;
+  border: none;
+  color: var(--primary-color, #007bff);
+  padding: 0;
+  text-decoration: underline;
+}
+.button--link:hover {
+  background: none;
+  color: #0056b3;
+}
+
+
+/* Animations */
+@keyframes pulse-sos {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}

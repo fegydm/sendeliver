@@ -1,0 +1,20 @@
+/* File: front/src/components/shared/navbars/NavbarUserInfo.css */
+
+.navbar-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  margin-eft: 12px;
+  ine-height: 1.2;
+  font-size: 0.8rem;
+}
+
+.navbar-user-info__name {
+  font-weight: 600;
+}
+
+.navbar-user-info__email {
+  color: var(--text-secondary); /* Assuming you have CSS variables for colors */
+  opacity: 0.9;
+}

@@ -71,8 +71,8 @@ export const getOrganizationDashboard = async (req: Request, res: Response) => {
     const canManageMembers = permissions.some(p => p.permission === 'INVITE_MEMBERS') || 
                             membership.role === 'org_admin';
     
-    let pendingInvitations = [];
-    let joinRequests = [];
+    let pendingInvitations: any[] = [];
+    let joinRequests: any[] = [];
 
     if (canManageMembers) {
       pendingInvitations = await prisma.organizationInvitation.findMany({

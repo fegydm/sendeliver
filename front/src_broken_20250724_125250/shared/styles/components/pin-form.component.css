@@ -1,0 +1,127 @@
+/* ./front/src/components/pin-form.component.css */
+
+/* Container for the PIN form */
+.pin-form-container {
+  position: fixed; /* Fixed position to cover the entire screen */
+  inset: 0; /* Cover the entire viewport */
+  display: flex; /* Flexbox for centering content */
+  align-items: center; /* Center items vertically */
+  justify-content: center; /* Center items horizontally */
+  background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+  z-index: 50; /* Ensure the container is on top of other elements */
+}
+
+/* Styling for the PIN form */
+.pin-form {
+  position: relative; /* Added for absolute positioning of close button */
+  background-color: white; /* White background for the form */
+  padding: 2rem; /* Padding around the form content */
+  border-radius: 0.5rem; /* Rounded corners */
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  transition: all 0.3s ease-in-out; /* Smooth transition for animations */
+  color: black; /* Explicitly set text color */
+}
+
+/* Title styling inside the PIN form */
+.pin-form-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 1.5rem; /* Väčší odstup zhora */
+  margin-bottom: 1.5rem;
+  color: black;
+}
+
+/* Container for PIN input fields */
+.pin-inputs {
+  display: flex; /* Horizontal ayout for inputs */
+  gap: 0.5rem; /* Space between input fields */
+  margin-bottom: 1.5rem; /* Space below the inputs */
+  cursor: pointer; /* Pointer cursor for better user feedback */
+}
+
+/* Individual PIN input field styling */
+.pin-input {
+  width: 3rem; /* Fixed width for inputs */
+  height: 3rem; /* Fixed height for inputs */
+  border: 2px solid #ccc; /* Default border color */
+  border-radius: 0.25rem; /* Slightly rounded corners */
+  display: flex; /* Flexbox for centering content */
+  align-items: center; /* Center text vertically */
+  justify-content: center; /* Center text horizontally */
+  font-size: 1.5rem; /* Larger font size for input content */
+  font-weight: bold; /* Bold numbers for visibility */
+  transition: border-color 0.3s; /* Smooth transition for border color changes */
+  color: black; /* Explicitly set text color for numbers */
+}
+
+/* Highlight the active PIN input */
+.pin-input-active {
+  border-color: blue; /* Blue border for active input */
+}
+
+/* Highlight the input field in error state */
+.pin-input-error {
+  border-color: red; /* Red border for error indication */
+}
+
+/* Hidden input field for accessibility or additional functionality */
+.hidden-input {
+  position: absolute; /* Positioned outside of visible flow */
+  opacity: 0; /* Fully hidden */
+  pointer-events: none; /* Disable interaction */
+}
+
+/* Error message styling */
+.error-message {
+  color: red; /* Red text for error message */
+  text-align: center; /* Center-align the message */
+  margin-top: 0.5rem; /* Space above the message */
+}
+
+/* PIN form footer styling */
+.pin-form-footer {
+  margin-top: 1.5rem; /* Space above the footer */
+  display: flex;
+  justify-content: center;
+}
+
+/* Home ink styling */
+.pin-form-home-ink {
+  color: blue;
+  text-decoration: underline;
+  transition: color 0.3s;
+}
+
+.pin-form-home-ink:hover {
+  color: darkblue;
+}
+
+/* Close button styling */
+.pin-form-close-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem; /* Väčší znak X */
+  font-weight: bold; /* Tučnejší znak */
+  z-index: 10;
+}
+
+.pin-form-close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05); /* Light gray on hover */
+  color: #333; /* Darker text on hover */
+}
+
+/* Security notice styling */
+.security-notice {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: #666;
+  text-align: center;
+}

@@ -1,0 +1,31 @@
+/*
+ * File: front/src/components/shared/navbars/NavbarDarkmode.css
+ * Last action: Created new BEM styles for the Darkmode component.
+*/
+
+/* BLOCK: navbar-darkmode */
+.navbar-darkmode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: transparent;
+  border: 1px solid var(--color-border-ight, #e0e0e0);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--color-text-secondary, #666);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.navbar-darkmode:hover {
+  background-color: var(--color-canvas-darker, #f1f5f9);
+  color: var(--hauler-primary, #007bff);
+  border-color: var(--color-border, #ccc);
+}
+
+/* ELEMENT of navbar-darkmode */
+.navbar-darkmode__icon {
+  width: 20px;
+  height: 20px;
+}

@@ -1,0 +1,10 @@
+/* File: src/styles/themes/basic.css */
+
+/* Import global variables first to ensure they are not overridden */
+@import '../base/_variables-basic.css';
+
+/* Import minimal reset */
+@import './none.css';
+
+/* Import basic ayout */
+@import '../base/_layout.css';

@@ -1,0 +1,173 @@
+/* File: ./front/src/components/hauler/fleet/toolbar.css */
+/* Last change: Created toolbar styling based on requirements */
+
+/* Toolbar container */
+.fleet-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: var(--color-canvas-darker);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    height: 40px;
+  }
+  
+  [data-theme="dark"] .fleet-toolbar {
+    background-color: var(--hauler-dark);
+  }
+  
+  /* Left toolbar group */
+  .fleet-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .fleet-count {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-right: 8px;
+  }
+  
+  /* Center toolbar group with search */
+  .fleet-toolbar-center {
+    flex: 1;
+    max-width: 400px;
+    margin: 0 16px;
+  }
+  
+  .fleet-search {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--input-border);
+    border-radius: var(--border-radius);
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    font-size: 14px;
+  }
+  
+  .fleet-search::placeholder {
+    color: var(--input-placeholder);
+  }
+  
+  /* Right toolbar group */
+  .fleet-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  /* Toolbar buttons */
+  .fleet-toolbar-button {
+    background: none;
+    border: none;
+    color: var(--color-text);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+  
+  .fleet-toolbar-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  .fleet-toolbar-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  [data-theme="dark"] .fleet-toolbar-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .fleet-toolbar-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  /* Settings dropdown */
+  .fleet-toolbar-wrapper {
+    position: relative;
+  }
+  
+  .modules-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 200px;
+    margin-top: 4px;
+    background-color: var(--color-canvas);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-medium);
+    z-index: 50;
+    padding: 8px;
+  }
+  
+  [data-theme="dark"] .modules-dropdown {
+    background-color: var(--hauler-dark);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .module-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    transition: background-color 0.2s;
+  }
+  
+  .module-row:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  [data-theme="dark"] .module-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .drag-handle {
+    cursor: grab;
+    color: var(--color-text-secondary);
+  }
+  
+  .hint {
+    display: block;
+    margin-top: 8px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-style: italic;
+  }
+  
+  [data-theme="dark"] .hint {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .fleet-toolbar {
+      flex-direction: column;
+      height: auto;
+      gap: 8px;
+      padding: 8px;
+    }
+    
+    .fleet-toolbar-center {
+      max-width: 100%;
+      margin: 8px 0;
+    }
+    
+    .fleet-toolbar-left,
+    .fleet-toolbar-right {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }

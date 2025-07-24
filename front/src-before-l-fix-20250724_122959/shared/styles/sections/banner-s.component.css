@@ -1,0 +1,94 @@
+/* File: front/src/styles/banner-s.component.css */
+
+/* Main Container */
+.banner-s-container {
+    background-color: #4a5568;
+    color: white;
+    position: relative;
+    margin-top: 16px;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.banner-s-container.banner-s-dark {
+    background-color: #2d3748;
+}
+
+/* Title Styling */
+.banner-s-title {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Menu Grid */
+.banner-s-menu-container {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+}
+
+@media (min-width: 768px) {
+    .banner-s-menu-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .banner-s-menu-container {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* Menu Item Styling */
+.banner-s-menu-item {
+    padding: 16px;
+    border-radius: 8px 8px 0 0;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s, background-color 0.3s;
+    background-color: #a0aec0;
+    color: white;
+}
+
+.banner-s-menu-item:hover {
+    transform: scale(1.05);
+    background-color: #718096;
+}
+
+.banner-s-menu-item.banner-s-active {
+    background-color: #edf2f7;
+    color: #2d3748;
+}
+
+.banner-s-menu-item.banner-s-dark {
+    background-color: #2d3748;
+    color: white;
+}
+
+/* Icon and Title Styling */
+.banner-s-menu-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.banner-s-menu-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* Underline Animation */
+.banner-s-menu-underline {
+    width: 0;
+    height: 2px;
+    background-color: #4a5568;
+    margin: 0 auto;
+    transition: width 0.3s;
+}
+
+.banner-s-menu-item:hover .banner-s-menu-underline,
+.banner-s-menu-item.banner-s-active .banner-s-menu-underline {
+    width: 100%;
+    background-color: #2d3748;
+}

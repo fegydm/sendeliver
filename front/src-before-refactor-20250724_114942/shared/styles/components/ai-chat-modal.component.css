@@ -1,0 +1,146 @@
+/* ./front/src/components/modals/ai-chat-modal.component.css */
+
+/* Základné vlastnosti modalu */
+.ai-chat-modal {
+  position: fixed;
+  top: var(--banner-bottom, 200px); /* Dynamická pozícia pod banner sekciou */
+  right: 0; /* Zarovnanie na carrier area */
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  width: 50%; /* Pokrytie pravej polovice obrazovky */
+  min-height: 400px;
+  max-height: 100%; /* Zrušenie scrollovania modalu */
+  margin: 0;
+  padding: 0;
+  z-index: 1000;
+}
+
+/* Modal Header */
+.ai-chat-modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgb(219, 179, 246); /* Light magenta pre client */
+}
+
+.ai-chat-modal-header.carrier {
+  background-color: #3c8031; /* Apple green pre carrier */
+}
+
+.ai-chat-modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color:rgb(38, 15, 52); /* Client farba */
+}
+
+.ai-chat-modal-title.carrier {
+  color: white; /* Biely text pre carrier */
+}
+
+/* Tabs sekcia */
+.ai-chat-modal-tabs {
+  padding: 0.5rem 1rem 0;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  gap: 16px;
+  background-color: white;
+}
+
+.ai-chat-modal-tab {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.ai-chat-modal-tab.active {
+  background-color: rgb(230, 186, 54);
+  color: white;
+  border-color: #b75af2;
+}
+
+.ai-chat-modal-tab.active.carrier {
+  background-color: #3c8031;
+  border-color: #3c8031;
+}
+
+.ai-chat-modal-tab:hover:not(.active) {
+  background-color: #f3f4f6;
+}
+
+/* Content sekcia */
+.ai-chat-modal-content {
+  padding: 1rem;
+  background-color: white;
+  height: auto; /* Umožňuje dynamickú výšku podľa obsahu */
+}
+
+/* Close tlačidlo */
+.ai-chat-modal-close {
+  padding: 8px 24px;
+  border: none;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.ai-chat-modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Processing indikátor */
+.processing-indicator {
+  margin-left: 1rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Map view */
+.map-view-container {
+  height: 100%;
+  min-height: 400px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Responsívne úpravy */
+@media (max-width: 640px) {
+  .ai-chat-modal {
+    min-height: 300px;
+    width: 100%; /* Pre malé obrazovky pokryje celú šírku */
+    top: 0; /* Zarovnanie na vrch obrazovky */
+  }
+
+  .ai-chat-modal-header {
+    padding: 0.75rem;
+  }
+
+  .ai-chat-modal-title {
+    font-size: 1rem;
+  }
+
+  .ai-chat-modal-tab {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+  }
+
+  .ai-chat-modal-content {
+    padding: 0.75rem;
+  }
+}

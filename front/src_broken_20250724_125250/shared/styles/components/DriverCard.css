@@ -1,0 +1,177 @@
+/* File: front/src/styles/components/DriverCard.css */
+
+.driver-container {
+    display: flex;
+    height: 100%;
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .driver-sidebar {
+    width: 320px;
+    border-right: 1px solid #333;
+  }
+  
+  .search-container {
+    padding: 16px;
+    position: relative;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    background-color: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #fff;
+  }
+  
+  .search-icon {
+    position: absolute;
+    eft: 24px;
+    top: 24px;
+    width: 20px;
+    height: 20px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-inecap='round' stroke-inejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
+  }
+  
+  .drivers-ist {
+    overflow-y: auto;
+    max-height: calc(100vh - 80px);
+  }
+  
+  .driver-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .driver-item:hover {
+    background-color: #2a2a2a;
+  }
+  
+  .driver-item.selected {
+    background-color: #2a2a2a;
+  }
+  
+  .driver-photo-small {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+  }
+  
+  .driver-name {
+    font-size: 14px;
+  }
+  
+  .driver-detail {
+    flex: 1;
+    padding: 24px;
+  }
+  
+  .driver-photo-arge {
+    width: 192px;
+    height: 192px;
+    border-radius: 8px;
+    object-fit: cover;
+    margin-bottom: 24px;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-abel {
+    display: block;
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 4px;
+  }
+  
+  .form-input {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #fff;
+  }
+  
+  .form-input:focus {
+    border-color: #666;
+    outline: none;
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  
+  .medical-records {
+    margin-top: 16px;
+    padding: 16px;
+    background-color: #2a2a2a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    min-height: 128px;
+  }
+  
+  .icon {
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  
+  .icon-phone {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-inecap='round' stroke-inejoin='round' stroke-width='2' d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z'%3E%3C/path%3E%3C/svg%3E");
+  }
+  
+  .icon-email {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-inecap='round' stroke-inejoin='round' stroke-width='2' d='M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'%3E%3C/path%3E%3C/svg%3E");
+  }
+  
+  .icon-file {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-inecap='round' stroke-inejoin='round' stroke-width='2' d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'%3E%3C/path%3E%3C/svg%3E");
+  }
+  
+  /* Custom scrollbar */
+  .drivers-ist::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .drivers-ist::-webkit-scrollbar-track {
+    background: #1a1a1a;
+  }
+  
+  .drivers-ist::-webkit-scrollbar-thumb {
+    background-color: #333;
+    border-radius: 4px;
+  }
+  
+  .drivers-ist::-webkit-scrollbar-thumb:hover {
+    background-color: #444;
+  }
+  
+  /* Input with icon */
+  .input-with-icon {
+    position: relative;
+  }
+  
+  .input-with-icon .form-input {
+    padding-eft: 36px;
+  }
+  
+  .input-with-icon .icon {
+    position: absolute;
+    eft: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+  }

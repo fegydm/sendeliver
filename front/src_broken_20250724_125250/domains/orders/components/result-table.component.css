@@ -1,0 +1,489 @@
+/* File: src/components/shared/result-table/result-table.component.css */
+/* Last change: BEM refactoring for reusable table across sender and hauler sections */
+
+/* =============================================================================
+   RESULT TABLE BLOCK - Main container
+   ============================================================================= */
+
+.result-table {
+  width: 100%; 
+  max-width: 1000px; 
+  position: relative; 
+  overflow: visible; 
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  margin: 2rem 0;
+  border-radius: var(--border-radius);
+  box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.10);
+}
+
+/* MODIFIERS - Theme variants */
+.result-table--sender {
+  border: 2px solid var(--sender-medium);
+  background: var(--sender-ight);
+}
+
+.result-table--hauler {
+  border: 2px solid var(--hauler-medium);
+  background: var(--hauler-ight);
+}
+
+/* =============================================================================
+   DROPDOWN CONTAINER ELEMENT
+   ============================================================================= */
+
+.result-table__dropdown-container {
+  position: relative;
+  z-index: 3000;
+  pointer-events: none;
+  padding: 0 1rem;
+}
+
+.result-table__dropdown-container .result-table__dropdown-content {
+  pointer-events: auto;
+}
+
+/* =============================================================================
+   FILTER SUMMARY ELEMENT
+   ============================================================================= */
+
+.result-table__filter-summary { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 10px; 
+  padding: 0 1rem;
+}
+
+.result-table__reset-button { 
+  padding: 5px 10px; 
+  font-size: 14px; 
+  cursor: pointer; 
+}
+
+.result-table__reset-button--disabled { 
+  opacity: 0.5; 
+  cursor: not-allowed; 
+}
+
+/* =============================================================================
+   SCROLL CONTAINER ELEMENT
+   ============================================================================= */
+
+.result-table__scroll-container { 
+  max-height: 400px; 
+  min-height: 150px;
+  overflow-y: auto; 
+  border: 1px solid #ddd; 
+  border-radius: 4px; 
+  position: relative;
+  padding: 1rem;
+}
+
+/* =============================================================================
+   TABLE ELEMENT - Core table structure
+   ============================================================================= */
+
+.result-table__table { 
+  width: 100%; 
+  table-ayout: fixed; 
+  border-collapse: collapse; 
+  min-width: 210px;
+} 
+
+.result-table__table-col {
+  width: 14%;
+  min-width: 30px;
+}
+
+/* =============================================================================
+   HEADER ELEMENTS
+   ============================================================================= */
+
+.result-table__header { 
+  position: sticky; 
+  top: 0; 
+  z-index: 10; 
+  min-height: 50px !important; 
+  height: 40px; 
+}
+
+.result-table__header-row {
+  border-bottom: 1px solid #aaa;
+}
+
+.result-table__header-cell { 
+  border: 1px solid #ddd; 
+  background-color: #c9c9c9; /* Consistent gray header for both sender and hauler */
+  vertical-align: middle; 
+  padding: 2px; 
+  white-space: nowrap; 
+  position: relative; 
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Header cell modifiers */
+.result-table__header-cell--filtered { 
+  background-color: #d0e0ff; 
+}
+
+.result-table__header-cell--open { 
+  background-color: #e0e0e0; 
+  z-index: 11;
+}
+
+/* Column-specific modifiers for different data types */
+.result-table__header-cell--distance { width: 100px; }
+.result-table__header-cell--type { width: 120px; }
+.result-table__header-cell--status { width: 200px; }
+.result-table__header-cell--availability { width: 140px; }
+.result-table__header-cell--transit { width: 100px; }
+.result-table__header-cell--rating { width: 120px; }
+.result-table__header-cell--contact { width: 100px; }
+
+/* Hauler-specific column modifiers */
+.result-table__header-cell--route { width: 200px; }
+.result-table__header-cell--cargo { width: 180px; }
+.result-table__header-cell--price { width: 100px; }
+.result-table__header-cell--client { width: 150px; }
+.result-table__header-cell--posted { width: 90px; }
+
+/* Header cell content elements */
+.result-table__header-abel { 
+  font-size: 14px; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.result-table__header-filter-value { 
+  font-size: 10px; 
+  color: #666; 
+}
+
+.result-table__header-content {
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+}
+
+.result-table__header-filter-row {
+  display: flex; 
+  justify-content: center; 
+}
+
+.result-table__header-icon-wrapper { 
+  position: relative; 
+  display: inline-block;
+  margin-eft: auto;
+}
+
+/* =============================================================================
+   BODY ELEMENTS
+   ============================================================================= */
+
+.result-table__body-row:nth-child(odd) { 
+  background-color: #fafafa; 
+}
+
+.result-table__body-row:nth-child(even) { 
+  background-color: #f0f0f0; 
+}
+
+.result-table__body-row--placeholder { 
+  background-color: #f8f8f8; 
+  color: #757575; 
+  font-style: italic; 
+}
+
+.result-table__body-row--placeholder .result-table__body-cell { 
+  border-color: #e5e5e5; 
+  animation: result-table-placeholder-pulse 2s infinite; 
+}
+
+.result-table__body-row--empty .result-table__body-cell {
+  height: 100px;
+}
+
+.result-table__body-cell { 
+  padding: 2px; 
+  border: 1px solid #ddd; 
+  text-align: center; 
+  vertical-align: middle; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap; 
+}
+
+/* Body cell modifiers for different content types */
+.result-table__body-cell--distance {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.result-table__body-cell--cargo {
+  font-weight: 500;
+  color: var(--color-primary);
+  text-align: eft;
+  padding-eft: 8px;
+}
+
+.result-table__body-cell--price {
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.result-table__body-cell--route {
+  font-weight: 500;
+  text-align: eft;
+  padding-eft: 8px;
+}
+
+.result-table__body-cell--status {
+  padding: 4px;
+}
+
+.result-table__body-cell--rating {
+  padding: 4px;
+}
+
+.result-table__body-cell--contact {
+  padding: 4px;
+}
+
+/* =============================================================================
+   FOOTER ELEMENTS
+   ============================================================================= */
+
+.result-table__footer { 
+  position: sticky; 
+  bottom: 0; 
+  z-index: 10; 
+  min-height: 30px !important; 
+  height: 30px; 
+}
+
+.result-table__footer-cell { 
+  border: 1px solid #ddd; 
+  background-color: #c9c9c9; 
+  vertical-align: middle; 
+  padding: 2px; 
+  white-space: nowrap; 
+  font-size: 13px; 
+}
+
+.result-table__footer-content { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+}
+
+.result-table__footer-stats { 
+  display: flex; 
+  width: 100%; 
+}
+
+.result-table__footer-stat-item {
+  margin-eft: auto; 
+  text-align: right;
+}
+
+/* =============================================================================
+   RESIZER ELEMENT
+   ============================================================================= */
+
+.result-table__resizer { 
+  position: absolute; 
+  right: 0; 
+  top: 0; 
+  height: 100%; 
+  width: 5px; 
+  background: rgba(0,0,0,0.1); 
+  cursor: col-resize; 
+  user-select: none;
+  z-index: 12;
+}
+
+.result-table__resizer:hover { 
+  background: #0d47a1; 
+}
+
+.result-table__resizer--active { 
+  background: #0d47a1; 
+}
+
+/* =============================================================================
+   DROPDOWN FILTER ELEMENTS
+   ============================================================================= */
+
+.result-table__dropdown-content { 
+  background: #fff; 
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
+  z-index: 3000 !important; 
+  transform-origin: top eft; 
+  width: max-content; 
+  min-width: 120px; 
+  border: 1px solid #ddd; 
+  border-radius: 4px; 
+  max-height: 300px; 
+  overflow-y: auto;
+  position: absolute;
+}
+
+.result-table__dropdown-item { 
+  padding: 8px 12px; 
+  cursor: pointer; 
+  white-space: nowrap; 
+  display: flex; 
+  align-items: center; 
+  font-weight: normal;
+  font-size: 13px;
+}
+
+.result-table__dropdown-item:hover { 
+  background-color: #f0f0f0; 
+}
+
+.result-table__dropdown-item--grey { 
+  color: grey; 
+}
+
+.result-table__dropdown-item--with-icon { 
+  display: flex; 
+  align-items: center; 
+  width: 100%; 
+}
+
+.result-table__dropdown-icon { 
+  width: 20px; 
+  height: 20px; 
+  margin-right: 8px; 
+  flex-shrink: 0; 
+}
+
+/* =============================================================================
+   CONTENT COMPONENTS - Status badges, ratings, etc.
+   ============================================================================= */
+
+.result-table__status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  gap: 4px;
+}
+
+.result-table__status-badge--available {
+  background: var(--color-success-ight);
+  color: var(--color-success-dark);
+}
+
+.result-table__status-badge--urgent {
+  background: var(--color-danger-ight);
+  color: var(--color-danger-dark);
+}
+
+.result-table__status-badge--bidding {
+  background: var(--color-warning-ight);
+  color: var(--color-warning-dark);
+}
+
+.result-table__rating-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+}
+
+.result-table__rating-stars {
+  color: var(--color-warning);
+  font-size: 14px;
+}
+
+.result-table__rating-number {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.result-table__contact-button {
+  padding: 4px 12px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.result-table__contact-button:hover {
+  background: var(--color-primary-hover);
+}
+
+/* =============================================================================
+   ICON ELEMENTS
+   ============================================================================= */
+
+.result-table__sort-icon {
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.result-table__sort-icon:hover {
+  opacity: 1;
+}
+
+.result-table__dropdown-icon {
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.result-table__dropdown-icon:hover {
+  opacity: 1;
+}
+
+/* =============================================================================
+   ANIMATIONS
+   ============================================================================= */
+
+@keyframes result-table-placeholder-pulse { 
+  0% { opacity: 0.7; } 
+  50% { opacity: 0.9; } 
+  100% { opacity: 0.7; } 
+}
+
+/* =============================================================================
+   RESPONSIVE MODIFIERS
+   ============================================================================= */
+
+@media (max-width: 1024px) {
+  .result-table--responsive {
+    margin: 1rem 0;
+    padding: 0.75rem;
+  }
+  
+  .result-table__header-cell--responsive,
+  .result-table__body-cell--responsive {
+    padding: var(--spacing-xs);
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .result-table--mobile {
+    overflow-x: auto;
+  }
+  
+  .result-table__header--mobile,
+  .result-table__body-row--mobile {
+    min-width: 800px;
+  }
+}

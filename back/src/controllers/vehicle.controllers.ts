@@ -256,7 +256,7 @@ export const assignDriverToVehicle = async (req: Request, res: Response) => {
       const driver = await prisma.organizationMembership.findFirst({
         where: {
           userId: driverId,
-          organizationId: vehicle.organizationId,
+          organizationId: vehicle.organizationId || undefined,
           status: 'ACTIVE',
           OR: [
             { role: 'driver' },

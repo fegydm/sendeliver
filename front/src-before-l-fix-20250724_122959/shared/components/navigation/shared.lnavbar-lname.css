@@ -1,0 +1,40 @@
+/*
+ * File: front/src/components/shared/navbars/NavbarName.css
+ * Last action: Changed underline animation to expand from center.
+*/
+
+.navbar-name {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+}
+
+.navbar-name__text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-darker);
+  letter-spacing: 1px;
+  position: relative;
+  padding-bottom: 6px; /* Priestor pre podčiarknutie */
+}
+
+/* Podčiarknutie vytvorené pomocou ::after pseudoelementu */
+.navbar-name__text::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--hauler-primary, #007bff);
+  transform: scaleX(0);
+  transform-origin: center; /* ZMENA: Animácia teraz vychádza zo stredu */
+  transition: transform 0.3s ease-in-out;
+}
+
+.navbar-name:hover .navbar-name__text::after {
+  transform: scaleX(1);
+}

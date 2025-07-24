@@ -1,0 +1,200 @@
+// File: ./front/src/hooks/useAuth.ts
+// Last change: Fixed TypeScript errors with context typing and syntax
+
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+
+// Type definitions
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  permissions: string[];
+}
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
+  checkAuth: () => Promise<void>;
+}
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+// Create context with proper typing
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Provider component
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Function to check authentication status
+  const checkAuth = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/me', {
+        credentials: 'include' // Important for cookies
+      });
+      
+      if (res.ok) {
+        const userData = await res.json();
+        setUser(userData);
+      } else {
+        // If server returns an error, user is not logged in
+        setUser(null);
+      }
+    } catch (err) {
+      console.error('Failed to fetch user:', err);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load user on initialization
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  // Login with email/password
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include' // Important for cookies
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to login');
+      }
+      
+      const data = await res.json();
+      setUser(data.user);
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Login with Google
+  const loginWithGoogle = async (idToken: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ idToken }),
+        credentials: 'include' // Important for cookies
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Google login failed');
+      }
+      
+      const data = await res.json();
+      setUser(data.user);
+    } catch (err: any) {
+      setError(err.message || 'Google login failed');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Registration
+  const register = async (name: string, email: string, password: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, password }),
+        credentials: 'include' // Important for cookies
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
+      
+      const data = await res.json();
+      setUser(data.user);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Logout
+  const logout = async () => {
+    setLoading(true);
+    
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include' // Important for cookies
+      });
+      
+      setUser(null);
+    } catch (err) {
+      console.error('Logout failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AuthContext.Provider 
+      value={{
+        user,
+        loading,
+        error,
+        login,
+        loginWithGoogle,
+        logout,
+        register,
+        checkAuth
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Hook for using authentication
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

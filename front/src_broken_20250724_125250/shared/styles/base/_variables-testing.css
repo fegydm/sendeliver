@@ -1,0 +1,142 @@
+/* File: ./front/src/styles/base/variables-testing.css */
+/* Last updated: Added hauler shade variables for reusability */
+
+/* === NEW CORE VARIABLES (USE THESE ONLY) === */
+:root {
+    /* Canvas HSL variables */
+    --canvas-h: 40;
+    --canvas-s: 30%;
+    --canvas-l: 95%;
+    --color-canvas-neutral: hsl(0, 0%, 90%);
+    --color-canvas-warm: hsl(40, 30%, 98%);
+    --color-canvas-cool: hsl(210, 20%, 98%);
+    --color-canvas: hsl(var(--canvas-h), var(--canvas-s), var(--canvas-l));
+    --color-canvas-darker: hsl(var(--canvas-h), var(--canvas-s), calc(var(--canvas-l) - 10%));
+    --color-text: #333333;
+  
+    /* Hauler HSL variables */
+    --hauler-h: 110;
+    --hauler-s: 60%;
+    --hauler-l: 30%;
+    --hauler-primary: hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l));
+    --hauler-primary-hover: hsl(var(--hauler-h), var(--hauler-s), calc(var(--hauler-l) + 5%));
+    /* New hauler shades */
+    --hauler-ight: hsl(var(--hauler-h), calc(var(--hauler-s) - 10%), calc(var(--hauler-l) + 65%)); /* ~ hsl(110, 50%, 95%) */
+    --hauler-medium: hsl(var(--hauler-h), calc(var(--hauler-s) - 20%), calc(var(--hauler-l) + 50%)); /* ~ hsl(110, 40%, 80%) */
+    --hauler-dark: hsl(var(--hauler-h), calc(var(--hauler-s) - 30%), calc(var(--hauler-l) + 20%)); /* ~ hsl(110, 30%, 50%) */
+  
+    /* Sender HSL variables */
+    --sender-h: 290;
+    --sender-s: 40%;
+    --sender-l: 40%;
+    --sender-primary: hsl(var(--sender-h), var(--sender-s), var(--sender-l));
+    --sender-primary-hover: hsl(var(--sender-h), var(--sender-s), calc(var(--sender-l) + 5%));
+  }
+  
+  /* Dark Mode Overrides */
+  [data-theme="dark"] {
+    /* Canvas HSL variables */
+    --canvas-h: 40;
+    --canvas-s: 20%;
+    --canvas-l: 10%;
+    --color-canvas-neutral: #ffffff;
+    --color-canvas-warm: hsl(40, 20%, 15%);
+    --color-canvas-cool: hsl(210, 15%, 15%);
+    --color-canvas: hsl(var(--canvas-h), var(--canvas-s), var(--canvas-l));
+    --color-canvas-darker: hsl(var(--canvas-h), var(--canvas-s), calc(var(--canvas-l) - 3%));
+    --color-text: #e0e0e0;
+  
+    /* Hauler variables */
+    --hauler-h: 110;
+    --hauler-s: 50%;
+    --hauler-l: 45%;
+    --hauler-primary: hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l));
+    --hauler-primary-hover: hsl(var(--hauler-h), var(--hauler-s), calc(var(--hauler-l) + 10%));
+    /* Hauler shades for dark mode */
+    --hauler-ight: hsl(var(--hauler-h), calc(var(--hauler-s) - 10%), calc(var(--hauler-l) + 25%)); /* ~ hsl(110, 40%, 70%) */
+    --hauler-medium: hsl(var(--hauler-h), calc(var(--hauler-s) - 15%), calc(var(--hauler-l) + 15%)); /* ~ hsl(110, 35%, 60%) */
+    --hauler-dark: hsl(var(--hauler-h), calc(var(--hauler-s) - 20%), calc(var(--hauler-l) + 5%)); /* ~ hsl(110, 30%, 50%) */
+  
+    /* Sender variables */
+    --sender-h: 290;
+    --sender-s: 35%;
+    --sender-l: 50%;
+    --sender-primary: hsl(var(--sender-h), var(--sender-s), var(--sender-l));
+    --sender-primary-hover: hsl(var(--sender-h), var(--sender-s), calc(var(--sender-l) + 10%));
+  }
+  
+  /* === LEGACY VARIABLES (PRESERVE FOR BACKWARD COMPATIBILITY) === */
+  :root {
+    /* Global Colors */
+    --color-page-bg: #ffffff;
+    --color-navbar-bg: #f8f8f8;
+    --color-footer-bg: #f5f5f5;
+    --color-modal-bg: #ffffff;
+    --color-text-primary: #333333;
+    --color-text-secondary: #666666;
+    
+    /* Brand Colors (Static) */
+    --ogo-1-color: hsl(290, 87%, 53%);
+    --ogo-2-color: hsl(110, 60%, 50%);
+    
+    /* Sender Theme (Light) */
+    --sender-ight: hsl(290, 50%, 95%);
+    --sender-medium: hsl(290, 50%, 90%);
+    --sender-dark: hsl(290, 50%, 80%);
+    
+    /* Hauler Theme (Light) */
+    --hauler-ight: hsl(110, 50%, 95%);
+    --hauler-medium: hsl(110, 50%, 90%);
+    --hauler-dark: hsl(110, 30%, 60%);
+   
+    /* Form & UI Elements */
+    --input-bg: #ffffff;
+    --input-border: hsl(0, 0%, 50%);
+    --input-text: #333333;
+    --input-placeholder: hsl(0, 0%, 60%);
+    --button-text: #ffffff;
+    --dropdown-bg: #ffffff;
+    --dropdown-border: #eeeeee;
+    --dropdown-hover: #f5f5f5;
+    --abel-text: hsl(0, 0%, 40%);
+    
+    /* Layout, Typography, Spacing, Shadows */
+    --height-header: 100px;
+    --height-footer: 200px;
+    --height-banner: 300px;
+    --modal-offset-top: 10vh;
+    --font-size-base: 16px;
+    --font-size-g: 20px;
+    --font-size-sm: 14px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-g: 24px;
+    --border-radius: 6px;
+    --common-spacing: 1rem;
+    --shadow-ight: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.15);
+    --transition-speed: 0.2s;
+  }
+  
+  /* Dark Mode Overrides for Legacy */
+  [data-theme="dark"] {
+    /* Legacy overrides */
+    --color-page-bg: #121212;
+    --color-navbar-bg: #222222;
+    --color-footer-bg: #333333;
+    --color-modal-bg: #1e1e1e;
+    --color-text-secondary: #bbbbbb;
+    --hauler-ight: hsl(110, 30%, 25%);
+    --hauler-medium: hsl(110, 30%, 20%);
+    --hauler-dark: hsl(110, 30%, 15%);
+    --input-bg: #333333;
+    --input-border: #555555;
+    --input-text: #ffffff;
+    --input-placeholder: hsl(0, 0%, 50%);
+    --dropdown-bg: #2a2a2a;
+    --dropdown-border: #444444;
+    --dropdown-hover: #3a3a3a;
+    --shadow-ight: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }

@@ -1,0 +1,72 @@
+/*
+ * File: front/src/components/shared/modals/general.modal.css
+ * Last action: Final fix for modal positioning, z-index, and backdrop blur.
+*/
+
+.modal__backdrop {
+  position: fixed; /* Kľúčové: Zafixuje pozadie voči oknu prehliadača */
+  inset: 0; /* Roztiahne na celú obrazovku */
+  background-color: rgba(24, 38, 59, 0.6); /* Mierne tmavšie pozadie */
+  z-index: 1010; /* Musí byť nad obsahom stránky a navbarom (ktorý má 1000) */
+  
+  /* Efekt rozmazania pozadia */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.modal__container {
+  position: fixed; /* Kľúčové: Vytrhne kontajner z toku stránky, takže nič neposúva */
+  z-index: 1020; /* Musí byť nad všetkým ostatným */
+  
+  /* Kľúčové: Požadované umiestnenie */
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 90vw;
+  max-width: 550px;
+}
+
+.modal__content {
+  background-color: var(--color-canvas, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  border: 1px solid rgba(0,0,0,0.05);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal__header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.modal__description {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin-top: -0.75rem; /* Posunieme bližšie k nadpisu */
+  padding: 0 1.5rem;
+}
+
+.modal__body {
+  padding: 1.5rem;
+  flex-grow: 1;
+}
+
+.modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  /* ... štýly pre zatváracie tlačidlo ... */
+}

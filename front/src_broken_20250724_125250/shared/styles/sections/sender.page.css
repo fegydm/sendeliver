@@ -1,0 +1,57 @@
+/* ./front/src/styles/sender.page.css */
+
+:root {
+  --bg-ight: #f9f9f9;
+  --bg-dark: #1a202c;
+  --text-ight: #333;
+  --text-dark: #f9f9f9;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+.sender-page {
+  min-height: 100vh;
+  background-color: var(--bg-ight);
+  color: var(--text-ight);
+  display: flex;
+  flex-direction: column;
+}
+
+.sender-page.dark {
+  background-color: var(--bg-dark);
+  color: var(--text-dark);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.banner {
+  background-color: #e2e8f0;
+  padding: 20px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.banner.dark {
+  background-color: #2d3748;
+  color: var(--text-dark);
+}
+
+.under-construction {
+  text-align: center;
+  margin: 50px 0;
+  font-size: 18px;
+  color: #718096;
+}
+
+.under-construction.dark {
+  color: #a0aec0;
+}

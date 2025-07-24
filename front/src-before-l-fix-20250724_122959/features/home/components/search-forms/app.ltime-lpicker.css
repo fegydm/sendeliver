@@ -1,0 +1,33 @@
+/* File: src/components/sections/content/search-forms/TimePicker.css */
+/* Last change: Simplified styles with one-line formatting */
+
+.time-picker { display: flex; background-color: white; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100px; }
+.time-picker-columns { display: flex; width: 100%; position: relative; }
+.time-picker-column { position: relative; display: flex; width: 50%; height: 280px; overflow: hidden; }
+.time-picker-scroll-container { flex-grow: 1; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; cursor: ns-resize; }
+.time-picker-scroll-container::before, .time-picker-scroll-container::after { content: ''; position: absolute; left: 0; right: 0; height: 80px; pointer-events: none; z-index: 1; }
+.time-picker-scroll-container::before { top: 0; background: linear-gradient(to bottom, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 100%); }
+.time-picker-scroll-container::after { bottom: 0; background: linear-gradient(to top, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 100%); }
+.time-picker-scroll-content { display: flex; flex-direction: column; align-items: center; transition: transform 0.1s linear; }
+.time-picker-scroll-item { height: 40px; width: 40px; display: flex; justify-content: center; align-items: center; font-size: 16px; color: #333; transition: all 0.2s ease; user-select: none; border-radius: 4px; }
+.time-picker-scroll-item:hover { background-color: rgba(37,99,235,0.1); }
+.time-picker-scroll-item.active { background-color: #2563eb; color: white; font-weight: 600; }
+.time-picker-controls { position: absolute; display: flex; flex-direction: column; justify-content: space-between; align-items: center; width: 24px; top: 10px; bottom: 10px; z-index: 2; }
+.time-picker-column.hours .time-picker-controls { left: 2px; }
+.time-picker-column.minutes .time-picker-controls { right: 2px; }
+.time-picker-control-button { width: 24px; height: 24px; padding: 0; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+.time-picker-control-button:hover { transform: scale(1.1); }
+.time-picker-control-button svg { width: 16px; height: 16px; fill: #666; }
+.time-picker-control-button:hover svg { fill: #2563eb; }
+.time-picker-control-circle { width: 8px; height: 8px; background-color: #666; border-radius: 50%; transition: all 0.2s ease; }
+.time-picker-control-button:hover .time-picker-control-circle { background-color: #2563eb; transform: scale(1.2); }
+.time-picker-column.hours::after { content: ':'; position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 24px; color: #666; pointer-events: none; }
+.time-picker-scroll-container:hover::before { background: linear-gradient(to bottom, rgba(37,99,235,0.1) 0%, rgba(255,255,255,0) 100%); }
+.time-picker-scroll-container:hover::after { background: linear-gradient(to top, rgba(37,99,235,0.1) 0%, rgba(255,255,255,0) 100%); }
+
+/* ThreeScroll component styles */
+.three-scroll { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.three-scroll-button { width: 24px; height: 24px; padding: 0; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; }
+.three-scroll-button:hover { transform: scale(1.1); }
+.three-scroll-button svg { width: 16px; height: 16px; fill: #666; }
+.three-scroll-circle { width: 16px; height: 16px; background-color: #ccc; border-radius: 50%; }

@@ -1,0 +1,47 @@
+{
+  "folders": [
+	{
+		"name": "sendeliver",
+		"path": "../../.."
+	}
+],
+  "settings": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "tailwindCSS.includeLanguages": {
+      "typescript": "javascript",
+      "typescriptreact": "javascript"
+    },
+    "workbench.panel.defaultLocation": "right",
+    "remote.autoForwardPortsSource": "output",
+    "remote.portsAttributes": {
+      "3000": {
+        "label": "Frontend",
+        "onAutoForward": "openBrowser",
+        "elevateIfNeeded": true
+      },
+      "5000": {
+        "label": "Backend",
+        "onAutoForward": "notify",
+        "elevateIfNeeded": true
+      }
+    },
+    "remote.autoForwardPorts": true,
+    "remote.forwardOnOpen": true,
+    "files.associations": {
+      "*.css": "postcss"
+    },
+    "cSpell.words": [
+      "darkmode",
+      "grayscale",
+      "Košice",
+      "navbars",
+      "openai",
+      "preinstall",
+      "sendeliver",
+      "tailwindcss",
+      "tsoa",
+      "VITE"
+    ]
+  }
+}

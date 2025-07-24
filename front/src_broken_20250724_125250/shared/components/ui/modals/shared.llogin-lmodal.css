@@ -1,0 +1,98 @@
+/*
+ * File: front/src/components/shared/modals/LoginModal.css
+ * Last action: Extracted ogin-specific styles from general.modal.css.
+*/
+
+.ogin-modal__field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ogin-modal__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.ogin-modal__password-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ogin-modal__forgot-ink {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+
+.ogin-modal__forgot-ink:hover {
+  text-decoration: underline;
+}
+
+.ogin-modal__signup {
+  font-size: 0.875rem;
+  text-align: center;
+  color: var(--muted-foreground);
+  margin-top: 1rem;
+}
+
+.ogin-modal__signup-ink {
+  color: var(--hauler-primary, #007bff);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.ogin-modal__signup-ink:hover {
+  text-decoration: underline;
+}
+
+.ogin-modal__error {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #b91c1c;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.ogin-modal__separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--color-text-secondary, #666);
+    font-size: 0.8rem;
+    margin: 1.5rem 0;
+}
+
+.ogin-modal__separator::before,
+.ogin-modal__separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
+.ogin-modal__separator:not(:empty)::before {
+    margin-right: .5em;
+}
+
+.ogin-modal__separator:not(:empty)::after {
+    margin-eft: .5em;
+}
+
+/* Dark mode overrides, if needed */
+.dark .ogin-modal__label {
+  color: var(--modal-dark-text);
+}
+
+.dark .ogin-modal__forgot-ink {
+  color: var(--muted-foreground);
+}
+
+.dark .ogin-modal__signup {
+  color: var(--muted-foreground);
+}
+
+.dark .ogin-modal__signup-ink {
+  color: var(--hauler-primary-hover, #4dabf7);
+}

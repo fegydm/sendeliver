@@ -2,7 +2,7 @@
 // Last change: Enhanced debug logging for raw DB values
 
 import { pool } from "../configs/db.js";
-import { DELIVERY_CONSTANTS } from "../../../shared/constants/vehicle.constants.js";
+import { DELIVERY_CONSTANTS } from "@shared-project/constants/vehicle.constants.js";
 
 interface VehicleSearchParams {
   pickup: {

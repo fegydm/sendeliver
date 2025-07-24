@@ -1,0 +1,74 @@
+/* File: ./front/src/styles/sections/manual-form.content.css */
+/* Styles for manual form content section */
+
+@import '../components/dropdown.css';
+
+/* Simplified manual form styles */
+.manual-form { padding: 20px; max-width: 1200px; margin: 0 auto; }
+.manual-form--sender { border-eft: 3px solid var(--ogo-1-color); }
+.manual-form--hauler { border-eft: 3px solid var(--ogo-2-color); }
+.manual-form__pickup, .manual-form__delivery, .manual-form__cargo { 
+  border: 1px solid #ccc; 
+  border-radius: 4px; 
+  padding: 10px; 
+  margin-bottom: 10px; 
+}
+.manual-form__pickup--valid { border-eft: 4px solid #4CAF50; }
+.manual-form__delivery--valid { border-eft: 4px solid #4CAF50; }
+.manual-form__title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #333; }
+.manual-form__label { font-size: 0.9rem; color: #666; margin-bottom: 4px; display: block; }
+
+/* Layout */
+.manual-form__grid { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; gap: 1rem; }
+.manual-form__country { grid-column: 1; grid-row: 1; }
+.manual-form__location { grid-column: 2; grid-row: 1; }
+.manual-form__load-img, .manual-form__deliver-img { grid-column: 1; grid-row: 2; align-self: center; display: flex; justify-content: center; }
+.manual-form__load-img img, .manual-form__deliver-img img { width: 70%; height: auto; filter: grayscale(100%); opacity: 0.3; }
+.manual-form__datetime { grid-column: 2; grid-row: 2; }
+
+/* Country Select */
+.country-select { display: flex; flex-wrap: wrap; gap: 0.5rem; position: relative; }
+.country-select__flag { width: 24px; height: auto; }
+.country-select__flag--inactive { filter: grayscale(100%); opacity: 0.5; }
+.country-select__input { width: 24px; padding: 0.3rem; border: 2px solid #ccc; border-radius: 4px; text-align: center; }
+.country-select--pickup .country-select__input { border-color: var(--color-pickup-section); }
+.country-select--delivery .country-select__input { border-color: var(--color-delivery-section); }
+
+/* Location Select */
+.ocation-select { display: flex; flex-wrap: wrap; gap: 0.5rem; position: relative; }
+.ocation-select__psc { width: 70px; padding: 0.3rem; border: 2px solid #ccc; border-radius: 4px; }
+.ocation-select__city { flex: 1; padding: 0.3rem; border: 2px solid #ccc; border-radius: 4px; }
+.ocation-select--pickup .ocation-select__psc,
+.ocation-select--pickup .ocation-select__city { border-color: var(--color-pickup-section); }
+.ocation-select--delivery .ocation-select__psc,
+.ocation-select--delivery .ocation-select__city { border-color: var(--color-delivery-section); }
+
+/* DateTime Select */
+.datetime-select { display: flex; flex-wrap: wrap; gap: 0.5rem; position: relative; }
+.datetime-select--disabled { opacity: 0.6; cursor: not-allowed; }
+.datetime-select__date-input { flex: 1; padding: 0.3rem; border: 2px solid #ccc; border-radius: 4px; cursor: pointer; }
+.datetime-select__time-input { width: 80px; padding: 0.3rem; border: 2px solid #ccc; border-radius: 4px; cursor: pointer; text-align: center; }
+.datetime-select--pickup .datetime-select__date-input,
+.datetime-select--pickup .datetime-select__time-input { border-color: var(--color-pickup-section); }
+.datetime-select--delivery .datetime-select__date-input,
+.datetime-select--delivery .datetime-select__time-input { border-color: var(--color-delivery-section); }
+
+/* Cargo Inputs */
+.manual-form__cargo-inputs { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.manual-form__field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.manual-form__input-number { width: 100%; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; text-align: right; }
+
+/* Submit Button */
+.manual-form__submit { 
+  padding: 0.75rem 1.5rem; 
+  background-color: #0066cc; 
+  color: #fff; 
+  border: none; 
+  border-radius: 0.25rem; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: background-color 0.2s ease; 
+  margin-top: 1rem; 
+}
+.manual-form__submit:hover { background-color: #0052a3; }
+.manual-form__submit--disabled { background-color: #cccccc; cursor: not-allowed; }

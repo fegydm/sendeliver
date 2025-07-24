@@ -1,5 +1,5 @@
 // File: prisma/schema.prisma
-// Last change: Added EmailVerificationToken model for email verification.
+// Last change: Added missing organization management models
 
 generator client {
   provider        = "prisma-client-js"
@@ -18,98 +18,164 @@ model Organization {
   vatNumber          String?            @unique @map("vat_number")
   type               OrgType
   status             VerificationStatus @default(PENDING_VERIFICATION)
+  foundedByUserId    Int?               @map("founded_by_user_id")
+  foundedAt          DateTime?          @map("founded_at")
   createdAt          DateTime           @default(now()) @map("created_at")
   updatedAt          DateTime           @updatedAt @map("updated_at")
   
-  // Users are now linked via the OrganizationMembership table
+  // Relations
   memberships        OrganizationMembership[]
-
-  trackableDevices   TrackableDevice[]  // Organization can own multiple trackable devices
+  trackableDevices   TrackableDevice[]
+  invitations        OrganizationInvitation[]
+  joinRequests       OrganizationJoinRequest[]
+  permissions        OrganizationPermission[]
+  
+  // Self-reference for founder
+  foundedBy          User?              @relation("FoundedOrganizations", fields: [foundedByUserId], references: [id])
 
   @@map("organizations")
   @@schema("public")
 }
 
 model User {
-  id                 Int                 @id @default(autoincrement())
-  email              String              @unique
-  passwordHash       String?             @map("password_hash")
-  googleId           String?             @unique @map("google_id")
-  displayName        String?             @map("display_name")
-  imageUrl           String?             @map("image_url")
+  id                   Int                 @id @default(autoincrement())
+  email                String              @unique
+  passwordHash         String?             @map("password_hash")
+  googleId             String?             @unique @map("google_id")
+  displayName          String?             @map("display_name")
+  imageUrl             String?             @map("image_url")
   
-  // Primary role for standalone users or default for new users before joining an org.
-  // For users in organizations, their specific role within that org is in OrganizationMembership.
-  primaryRole        UserRole            @default(individual_customer) @map("primary_role")
-  userType           UserType            @default(STANDALONE) // Differentiates between organized and standalone users
-  selectedRole       SelectedRoleType?   @map("selected_role") // Retained for backward compatibility if needed
+  primaryRole          UserRole            @default(individual_customer) @map("primary_role")
+  userType             UserType            @default(STANDALONE)
+  selectedRole         SelectedRoleType?   @map("selected_role")
   
-  // Flag to indicate if email is verified
-  isEmailVerified    Boolean             @default(false) @map("is_email_verified")
+  // NEW: Forwarder mode toggle
+  forwarderActiveMode  ForwarderModeType?  @map("forwarder_active_mode")
+  
+  isEmailVerified      Boolean             @default(false) @map("is_email_verified")
 
-  // Hierarchy remains for manager/subordinates within any context
-  manager            User?               @relation("Hierarchy", fields: [managerId], references: [id])
-  managerId          Int?                @map("manager_id")
-  subordinates       User[]              @relation("Hierarchy")
+  // Hierarchy
+  manager              User?               @relation("Hierarchy", fields: [managerId], references: [id])
+  managerId            Int?                @map("manager_id")
+  subordinates         User[]              @relation("Hierarchy")
 
-  // User can have multiple memberships in different organizations
-  memberships        OrganizationMembership[]
+  // Organization relations
+  memberships          OrganizationMembership[]
+  foundedOrganizations Organization[]      @relation("FoundedOrganizations")
+  sentInvitations      OrganizationInvitation[] @relation("InvitationSender")
+  joinRequests         OrganizationJoinRequest[]
+  reviewedJoinRequests OrganizationJoinRequest[] @relation("ReviewedJoinRequests")
+  grantedPermissions   OrganizationPermission[] @relation("PermissionGranter")
+  receivedPermissions  OrganizationPermission[] @relation("PermissionReceiver")
 
-  ownedDevices       TrackableDevice[]   @relation("OwnedDevices")     // Devices directly owned by this user (e.g., personal tracker)
-  assignedDevices    TrackableDevice[]   @relation("AssignedDevices")  // Devices this user is assigned to operate (e.g., driver to a vehicle)
+  // Device relations
+  ownedDevices         TrackableDevice[]   @relation("OwnedDevices")
+  assignedDevices      TrackableDevice[]   @relation("AssignedDevices")
+  createdDevices       TrackableDevice[]   @relation("CreatedDevices")
+  deviceAssignments    DeviceAssignment[]  @relation("AssignedUser")
+  assignedByMe         DeviceAssignment[]  @relation("AssignedBy")
+  unassignedByMe       DeviceAssignment[]  @relation("UnassignedBy")
 
-  // Verification tokens associated with this user
-  verificationTokens EmailVerificationToken[]
+  // Verification
+  verificationTokens   EmailVerificationToken[]
 
-  createdAt          DateTime            @default(now()) @map("created_at")
-  updatedAt          DateTime            @updatedAt @map("updated_at")
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @updatedAt @map("updated_at")
 
   @@map("users")
   @@schema("auth")
 }
 
-// NEW MODEL: OrganizationMembership (Join Table)
 model OrganizationMembership {
-  id                 Int                @id @default(autoincrement())
-  userId             Int
-  organizationId     Int
-  role               UserRole           // The specific role of the user within THIS organization
-  status             OrgMembershipStatus @default(PENDING_APPROVAL) // Status of this specific membership
-  createdAt          DateTime           @default(now()) @map("created_at")
-  updatedAt          DateTime           @updatedAt @map("updated_at")
+  id             Int                @id @default(autoincrement())
+  userId         Int                @map("user_id") 
+  organizationId Int                @map("organization_id")
+  role           UserRole
+  status         OrgMembershipStatus @default(PENDING_APPROVAL)
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
 
-  user               User               @relation(fields: [userId], references: [id])
-  organization       Organization       @relation(fields: [organizationId], references: [id])
+  user           User               @relation(fields: [userId], references: [id])
+  organization   Organization       @relation(fields: [organizationId], references: [id])
 
-  @@unique([userId, organizationId]) // A user can only have one membership per organization
+  @@unique([userId, organizationId])
   @@map("organization_memberships")
-  @@schema("public") // Can be in public schema as it links public.organizations and auth.users
+  @@schema("public")
 }
 
-// NEW MODEL: EmailVerificationToken
-model EmailVerificationToken {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  token     String   @unique // The actual verification token (link token or code)
-  expiresAt DateTime // When the token expires
-  createdAt DateTime @default(now())
+// NEW: Organization Invitations
+model OrganizationInvitation {
+  id              Int              @id @default(autoincrement())
+  organizationId  Int              @map("organization_id")
+  invitedByUserId Int              @map("invited_by_user_id") 
+  email           String
+  role            UserRole
+  token           String           @unique
+  expiresAt       DateTime         @map("expires_at")
+  status          InvitationStatus @default(PENDING)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
 
-  user      User     @relation(fields: [userId], references: [id])
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy       User             @relation("InvitationSender", fields: [invitedByUserId], references: [id])
 
-  @@map("email_verification_tokens")
-  @@schema("auth") // Store in auth schema as it's related to user authentication
+  @@unique([organizationId, email])
+  @@map("organization_invitations")
+  @@schema("public")
 }
 
+// NEW: Join Requests (driver-initiated)
+model OrganizationJoinRequest {
+  id                Int               @id @default(autoincrement())
+  organizationId    Int               @map("organization_id")
+  userId            Int               @map("user_id")
+  requestedRole     UserRole          @map("requested_role")
+  message           String?
+  status            JoinRequestStatus @default(PENDING)
+  createdAt         DateTime          @default(now()) @map("created_at")
+  reviewedAt        DateTime?         @map("reviewed_at")
+  reviewedByUserId  Int?              @map("reviewed_by_user_id")
+
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy        User?             @relation("ReviewedJoinRequests", fields: [reviewedByUserId], references: [id])
+
+  @@unique([organizationId, userId])
+  @@map("organization_join_requests")
+  @@schema("public")
+}
+
+// NEW: Organization Permissions
+model OrganizationPermission {
+  id              Int            @id @default(autoincrement())
+  organizationId  Int            @map("organization_id")
+  userId          Int            @map("user_id")
+  permission      PermissionType
+  grantedByUserId Int            @map("granted_by_user_id")
+  grantedAt       DateTime       @default(now()) @map("granted_at")
+
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user            User           @relation("PermissionReceiver", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy       User           @relation("PermissionGranter", fields: [grantedByUserId], references: [id])
+
+  @@unique([organizationId, userId, permission])
+  @@map("organization_permissions")
+  @@schema("public")
+}
 
 model TrackableDevice {
   id                Int                  @id @default(autoincrement())
-  name              String               // E.g., "Blue Truck", "Hiker John", "Cargo Container"
-  deviceIdentifier  String               @unique // Unique ID from the tracking hardware/app (e.g., IMEI, UUID)
-  deviceType        DeviceType           // Defines the nature of the device (VEHICLE, PERSON, ASSET)
+  name              String
+  deviceIdentifier  String               @unique
+  deviceType        DeviceType
+  apiKey            String               @unique
+  isActive          Boolean              @default(true)
+  lastSeen          DateTime?
   
-  apiKey            String               @unique // API key for device authentication
-  isActive          Boolean              @default(true) // Status of the device
-  lastSeen          DateTime?            // Timestamp of last seen activity
+  // NEW: Additional fields
+  createdByUserId   Int?                 @map("created_by_user_id")
+  isShared          Boolean              @default(false)
+  notes             String?
 
   organization      Organization?        @relation(fields: [organizationId], references: [id])
   organizationId    Int?                 @map("organization_id")
@@ -119,14 +185,39 @@ model TrackableDevice {
 
   assignedToUser    User?                @relation("AssignedDevices", fields: [assignedToUserId], references: [id])
   assignedToUserId  Int?                 @map("assigned_to_user_id")
+  
+  // NEW: Created by relation
+  createdBy         User?                @relation("CreatedDevices", fields: [createdByUserId], references: [id])
+
+  gpsData           GpsData[]
+  assignments       DeviceAssignment[]
 
   createdAt         DateTime             @default(now()) @map("created_at")
-  updatedAt          DateTime           @updatedAt @map("updated_at")
-
-  gpsData           GpsData[]            // Link to GPS data entries for this device
+  updatedAt         DateTime             @updatedAt @map("updated_at")
 
   @@map("trackable_devices")
-  @@schema("public") // Stored in public for broader accessibility if needed
+  @@schema("public")
+}
+
+// NEW: Device Assignment History
+model DeviceAssignment {
+  id                 Int                @id @default(autoincrement())
+  deviceId           Int                @map("device_id")
+  userId             Int?               @map("user_id")
+  assignedByUserId   Int                @map("assigned_by_user_id")
+  assignedAt         DateTime           @default(now()) @map("assigned_at")
+  unassignedAt       DateTime?          @map("unassigned_at")
+  unassignedByUserId Int?               @map("unassigned_by_user_id")
+  isActive           Boolean            @default(true)
+  notes              String?
+
+  device             TrackableDevice    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user               User?              @relation("AssignedUser", fields: [userId], references: [id], onDelete: SetNull)
+  assignedBy         User               @relation("AssignedBy", fields: [assignedByUserId], references: [id])
+  unassignedBy       User?              @relation("UnassignedBy", fields: [unassignedByUserId], references: [id])
+
+  @@map("device_assignments")
+  @@schema("public")
 }
 
 model GpsData {
@@ -145,6 +236,20 @@ model GpsData {
   @@schema("public")
 }
 
+model EmailVerificationToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("email_verification_tokens")
+  @@schema("auth")
+}
+
+// ENUMS
 enum SelectedRoleType {
   client
   forwarder
@@ -154,35 +259,41 @@ enum SelectedRoleType {
 }
 
 enum UserRole {
-  superadmin          // System creator, ultimate control
-  system_admin        // Delegated system administrators
-  
-  org_admin           // Organization administrator
+  superadmin
+  system_admin
+  org_admin
   dispatcher
   driver
-  accountant          // For financial management
-  employee            // General internal staff
-  external_worker     // External contractors/freelancers
-
-  individual_customer // B2C customer ordering services
-  tracker_user        // Generic user of the Tracker app (e.g., hiker)
+  accountant
+  employee
+  external_worker
+  individual_customer
+  tracker_user
 
   @@schema("auth")
 }
 
 enum UserType {
-  ORGANIZED  // User belongs to an organization
-  STANDALONE // Independent user (e.g., individual customer, personal tracker user)
+  ORGANIZED
+  STANDALONE
+
+  @@schema("auth")
+}
+
+// NEW: Forwarder Mode Enum
+enum ForwarderModeType {
+  CLIENT
+  CARRIER
 
   @@schema("auth")
 }
 
 enum DeviceType {
-  VEHICLE  // Traditional vehicles (cars, trucks)
-  PERSON   // A person (e.g., for hiking scenarios)
-  ASSET    // An asset (e.g., container, pallet, anything trackable without a direct driver)
+  VEHICLE
+  PERSON
+  ASSET
 
-  @@schema("public") // Stored in public for broader accessibility if needed
+  @@schema("public")
 }
 
 enum OrgMembershipStatus {
@@ -207,6 +318,36 @@ enum VerificationStatus {
   PENDING_VERIFICATION
   VERIFIED
   REJECTED
+
+  @@schema("public")
+}
+
+// NEW: Invitation Status Enum
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+
+  @@schema("public")
+}
+
+// NEW: Join Request Status Enum
+enum JoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("public")
+}
+
+// NEW: Permission Type Enum
+enum PermissionType {
+  MANAGE_VEHICLES
+  ASSIGN_DRIVERS
+  INVITE_MEMBERS
+  MANAGE_PERMISSIONS
+  VIEW_ANALYTICS
 
   @@schema("public")
 }

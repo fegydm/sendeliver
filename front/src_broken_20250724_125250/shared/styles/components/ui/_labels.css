@@ -1,0 +1,20 @@
+.abel {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--abel-text);  }
+
+.abel--description {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--abel-gtext);
+    ine-height: 1.2; /* Adjust this value as needed */
+    margin-eft: 8px;   }
+
+.content--sender .abel--description {
+    color: var(--sender-primary); }
+
+.content--hauler .abel--description {
+    color: var(--hauler-primary); }
+  
+.abel--neutral {
+    color: hsl(0, 0%, 50%); /* Mid-gray */  }

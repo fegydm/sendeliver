@@ -6,7 +6,6 @@
     "moduleResolution": "NodeNext",
     "lib": ["ES2022", "DOM"],
     "outDir": "dist",
-    "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -18,7 +17,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@shared/*": ["../shared/*"]
+      "@shared-project/*": ["../shared-project/*"]
     },
     "typeRoots": [
       "../node_modules/@types",
@@ -31,8 +30,9 @@
     ]
   },
   "include": [
-    "src/**/*"
-, "../shared/**/*"   ],
+    "src/**/*",
+    "../shared-project/**/*"
+  ],
   "exclude": [
     "**/node_modules",
     "**/dist",

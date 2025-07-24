@@ -1,0 +1,171 @@
+/* File: ./front/src/components/hauler/fleet/connectors.css */
+/* Refactor from modules.css → new BEM selectors
+   Block for row       : .fleet-connectors
+   Block for item card : .connector
+-------------------------------------------------------------------*/
+
+/* === Row container (rail track) =======================================*/
+.fleet-connectors {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding: 10px 0;
+  position: relative;
+}
+
+/* Rail track line */
+.fleet-connectors::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.1);
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+[data-theme="dark"] .fleet-connectors::before {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Empty state */
+.fleet-connectors--empty {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+/* === Connector card ===================================================*/
+.connector {
+  background: var(--color-canvas-darker);
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 150px;
+  min-width: 250px;
+  box-shadow: var(--shadow-light);
+  position: relative;
+  transition: transform .2s, box-shadow .2s;
+  margin: 0 5px;
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.connector:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-medium);
+}
+
+.connector--dragging {
+  opacity: .7;
+  box-shadow: var(--shadow-medium);
+}
+
+/* === Couplers (train links) ==========================================*/
+.connector__coupler {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 5px;
+  background: var(--hauler-primary);
+  z-index: 3;
+  transform: translateY(-50%);
+}
+
+.connector__coupler--left  { left:  -5px; border-radius: 3px 0 0 3px; }
+.connector__coupler--right { right: -5px; border-radius: 0 3px 3px 0; }
+
+/* === Internal layout ==================================================*/
+.connector__content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header / title (optional) */
+.connector__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0,0,0,.1);
+}
+
+[data-theme="dark"] .connector__header {
+  border-color: rgba(255,255,255,.1);
+}
+
+.connector__title {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--hauler-primary);
+}
+
+[data-theme="dark"] .connector__title {
+  color: var(--hauler-primary-hover);
+}
+
+/* === Specific connector modifiers =====================================*/
+/* Photo within driver or vehicle connector */
+.connector--driver .photo-card,
+.connector--vehicle .photo-card {
+  margin: 0 auto 12px;
+}
+
+/* Status rows */
+.connector--status .connector__stat-row {
+  margin-bottom: 6px;
+}
+
+/* Map */
+.connector--map iframe {
+  width: 100%;
+  height: 180px;
+  border: 0;
+}
+
+/* Responsive -----------------------------------------------------------*/
+@media (max-width: 1200px) {
+  .fleet-connectors {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+  }
+
+  .fleet-connectors::before,
+  .connector__coupler {
+    display: none;
+  }
+
+  .connector { margin: 0; }
+}
+
+/* === Legacy PhotoModule hover (converted to PhotoCard) ===============*/
+.photo-card:hover .photo-card__overlay { opacity: 1; }
+.photo-card--circle { border-radius: 50%; }
+.photo-card--square { border-radius: 4px; }
+.photo-card--fallback { opacity: .7; }
+
+
+/* základná farba spojky podľa modifikátora */
+.connector--driver  .connector__coupler { background: var(--success); }
+.connector--status  .connector__coupler { background: var(--info); }
+.connector--map     .connector__coupler { background: var(--warning); }
+/* pri aktívnom dragu zvýrazni */
+.connector--dragging .connector__coupler { background: var(--danger); }
+
+
+.connector__coupler::after {
+  content: \"\";
+  position: absolute;
+  inset: 1px;
+  background: var(--color-canvas);
+  border-radius: inherit;
+}

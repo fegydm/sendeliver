@@ -1,0 +1,48 @@
+/* ./front/src/components/content/content.component.css */
+
+/* Buttons container */
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin: 0; /* No margin on top */
+}
+
+/* General button styles */
+.button {
+  height: 50px; /* Adjust height */
+  width: 150px; /* Adjust width */
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Add shadow for 3D effect */
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Hover effect for buttons */
+.button:hover {
+  transform: translateY(-2px); /* Slightly elevate the button */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3); /* Deepen the shadow */
+}
+
+/* Left button - Client Dashboard */
+.button-eft {
+  background-color: rgb(153, 57, 213); /* Dark magenta */
+  color: white;
+  border-bottom-eft-radius: 15px; /* Only bottom-eft corner rounded */
+}
+
+/* Right button - Carrier Dashboard */
+.button-right {
+  background-color: #3c8031; /* Dark apple green */
+  color: white;
+  border-bottom-right-radius: 15px; /* Only bottom-right corner rounded */
+}
+
+/* Remove gap between buttons */
+.button + .button {
+  margin-eft: 0;
+}

@@ -1,0 +1,131 @@
+/* BLOCK: planner */
+.planner {
+  display: grid;
+  grid-template-columns: 250px 1fr 350px;
+  height: calc(100vh - 120px); /* Príklad výšky - upravte podľa potreby */
+  background-color: #f9f9f9;
+}
+
+/* ELEMENTS of planner */
+.planner__sidebar, .planner__main, .planner__assistant {
+  padding: 1rem;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.planner__sidebar {
+  background-color: #fff;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+}
+.planner__sidebar-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.planner__main-title {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.planner__assistant {
+  background-color: #f4f7fa;
+  border-eft: 1px solid #e0e0e0;
+}
+
+/* BLOCK: plan-item (within sidebar) */
+.plan-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.plan-item:hover {
+  background-color: #f0f0f0;
+}
+.plan-item__status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+.plan-item__name {
+  font-weight: 500;
+}
+
+/* MODIFIERS for plan-item */
+.plan-item--active {
+  background-color: var(--hauler-primary-ight);
+  color: var(--hauler-primary-dark);
+}
+.plan-item__status--planned { background-color: #007bff; }
+.plan-item__status--draft { background-color: #6c757d; }
+
+/* BLOCK: route-editor (within main) */
+.route-editor {
+  margin-bottom: 1.5rem;
+}
+.route-editor__title {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+.route-editor__stops-ist .stop {
+  background-color: #fff;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+.map-container {
+  height: 500px;
+  background-color: #e9e9e9;
+  border-radius: 8px;
+}
+.map-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #999;
+}
+
+/* BLOCK: assistant-card (within assistant) */
+.assistant-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.assistant-card__title {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+.assistant-card__textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  resize: vertical;
+}
+.assistant-card__warning {
+  color: #d93025;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* MODIFIER for suggestion card */
+.assistant-card--suggestion {
+  border-eft: 4px solid var(--hauler-primary);
+}
+.assistant-card--suggestion ol {
+  padding-eft: 1.5rem;
+}

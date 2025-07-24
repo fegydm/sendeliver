@@ -88,10 +88,14 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),      // Frontend source alias
-      'back': path.resolve(__dirname, '../back/src'), // Backend source alias
-      '@shared': path.resolve(__dirname, '../shared'),
-      '@sendeliver/logger': path.resolve(__dirname, '../packages/logger/src') // Shared logger alias
+      '@': path.resolve(__dirname, 'src'),
+      '@features': path.resolve(__dirname, 'src/features'),
+      '@domains': path.resolve(__dirname, 'src/domains'),
+      '@pages': path.resolve(__dirname, 'src/pages'),
+      '@shared': path.resolve(__dirname, 'src/shared'),              // Frontend shared
+      '@shared-project': path.resolve(__dirname, '../shared-project'),       // Project shared
+      'back': path.resolve(__dirname, '../back/src'),
+      '@sendeliver/logger': path.resolve(__dirname, '../packages/logger/src')
     },
   },
   assetsInclude: ['**/*.webp'],

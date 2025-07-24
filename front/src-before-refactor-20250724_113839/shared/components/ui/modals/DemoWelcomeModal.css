@@ -1,0 +1,32 @@
+/* File: front/src/components/shared/modals/DemoWelcomeModal.css */
+
+.demo-welcome-modal {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  gap: 1rem;
+}
+
+.demo-welcome-modal__text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.demo-welcome-modal__subtext {
+  font-size: 0.9rem;
+  color: var(--color-text-tertiary);
+}
+
+.demo-welcome-modal__link {
+  color: var(--hauler-primary, #007bff);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.demo-welcome-modal__actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}

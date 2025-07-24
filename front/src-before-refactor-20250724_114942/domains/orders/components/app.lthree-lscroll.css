@@ -1,0 +1,47 @@
+.three-scroll {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .three-scroll-button {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+  }
+  
+  .three-scroll-button:hover {
+    transform: scale(1.1);
+  }
+  
+  .three-scroll-button svg {
+    width: 20px;
+    height: 20px;
+    fill: #666;
+  }
+  
+  .circle-button {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .three-scroll-circle {
+    width: 18px;
+    height: 18px;
+    background-color: #2196f3;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+  }

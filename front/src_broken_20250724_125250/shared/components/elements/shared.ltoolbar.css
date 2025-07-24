@@ -1,0 +1,75 @@
+/* File: ./front/src/components/shared/elements/toolbar.css */
+/* Last change: Created basic styling for the shared toolbar */
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .toolbar-eft,
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .toolbar-center {
+    flex: 1;
+    max-width: 400px;
+    margin: 0 16px;
+  }
+  
+  .item-count {
+    font-weight: 500;
+    font-size: 14px;
+    color: #495057;
+  }
+  
+  .toolbar-button {
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #495057;
+  }
+  
+  .toolbar-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  .toolbar-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .toolbar-icon {
+    font-size: 16px;
+  }
+  
+  .search-container {
+    width: 100%;
+    position: relative;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 6px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }

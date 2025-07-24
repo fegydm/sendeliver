@@ -1,0 +1,22 @@
+.navbar-ogo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+.navbar-ogo__image {
+  height: 36px;
+  width: auto;
+}
+.navbar-ogo__toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  color: #888;
+  transition: transform 0.2s;
+}
+.navbar-ogo__toggle--open {
+  transform: rotate(180deg);
+}

@@ -1,0 +1,44 @@
+/* File: ./front/src/styles/sections/_content.css */
+/* Last change: Refactored - moved component styles to individual component files */
+
+@import '../components/dropdown.css'; 
+@import '../components/ui/ui-components.css';
+
+/* =============================================================================
+   GLOBAL CONTENT LAYOUT
+   ============================================================================= */
+.content { max-width: 1400px; margin: 0 auto; }
+
+/* =============================================================================
+   NAVIGATION - Global behavior
+   ============================================================================= */
+.navigation-button-wrapper:hover .content__navigation-description { opacity: 1; }
+.content__navigation--sender .navigation-button-wrapper { position: relative; display: inline-block; }
+.content__navigation--sender .content__navigation-description { position: absolute; top: 100%; right: 5px; margin-top: 0.2rem; opacity: 0; color: gray; font-size: 0.875rem; transition: opacity 600ms ease-in-out; pointer-events: none; width: auto; white-space: nowrap; }
+.content__navigation--hauler .navigation-button-wrapper { position: relative; display: inline-block; }
+.content__navigation--hauler .content__navigation-description { position: absolute; top: 100%; left: 5px; margin-top: 0.2rem; opacity: 0; color: gray; font-size: 0.875rem; transition: opacity 600ms ease-in-out; pointer-events: none; width: auto; white-space: nowrap; }
+
+/* =============================================================================
+   GLOBAL TYPOGRAPHY - Shared across components
+   ============================================================================= */
+.content__title { margin: 1.0rem; text-align: center; padding-bottom: 0.5rem; position: relative; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+.content__description { line-height: 1.2; margin: 1rem 2rem; }
+.content--sender .content__title { color: var(--sender-primary); border-bottom: 2px solid transparent; border-image: linear-gradient(to right, transparent, var(--sender-primary), transparent) 1; }
+.content--sender .content__description { color: var(--sender-primary); }
+.content--hauler .content__title { color: var(--hauler-primary); border-bottom: 2px solid transparent; border-image: linear-gradient(to right, transparent, var(--hauler-primary), transparent) 1; }
+.content--hauler .content__description { color: var(--hauler-primary); }
+
+/* =============================================================================
+   SHARED FORM COMPONENTS - Used by multiple components
+   ============================================================================= */
+.country-select__flag { width: 24px; height: auto; }
+.country-select__flag--inactive { filter: grayscale(100%); opacity: 0.5; }
+.country-select__input { width: 24px; text-align: center; }
+.country-select { display: flex; position: relative; align-items: center; gap: 0.5rem; }
+.location-select { display: flex; position: relative; align-items: center; gap: 0.5rem; }
+.location-select__psc { width: 85px; flex: 0 0 85px; border-radius: 4px; min-width: 30px; border: 1px solid var(--input-border); padding: 0.3rem; box-sizing: border-box; }
+.location-select__city { width: 100%; flex: 1 1 0; border-radius: 4px; min-width: 15px; border: 1px solid var(--input-border); padding: 0.3rem; box-sizing: border-box; }
+.location-select .input-wrapper { display: flex; width: 100%; }
+.datetime-select { display: flex; gap: 0.5rem; width: 100%; }
+.datetime-select__date { flex: 1 1 0; border-radius: 4px; min-width: 50px; border: 1px solid var(--input-border); padding: 0.3rem; box-sizing: border-box; }
+.datetime-select__time { flex: 1 1 0; border-radius: 4px; min-width: 50px; border: 1px solid var(--input-border); padding: 0.3rem; box-sizing: border-box; }

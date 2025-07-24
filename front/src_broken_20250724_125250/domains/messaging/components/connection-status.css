@@ -1,0 +1,568 @@
+/* File: front/src/components/shared/webrtc/connection-status.css */
+/* Last change: Created comprehensive styling for connection status components */
+
+/* Main Connection Status Component */
+.connection-status {
+  background: var(--color-canvas-darker);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .connection-status {
+  background: var(--hauler-dark);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.connection-status:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Main Status Section */
+.status-main {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.status-main:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .status-main:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Status Indicator */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+  position: relative;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.status-dot.connecting {
+  animation: pulse 2s infinite;
+}
+
+.pulse-ring {
+  position: absolute;
+  top: -4px;
+  eft: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid;
+  animation: pulse-ring 2s infinite;
+  opacity: 0;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Signal Bars */
+.signal-bars {
+  display: flex;
+  align-items: end;
+  gap: 1px;
+  margin-eft: 8px;
+  height: 12px;
+}
+
+.signal-bar {
+  width: 2px;
+  background-color: #e0e0e0;
+  transition: background-color 0.3s ease;
+}
+
+.signal-bar:nth-child(1) { height: 4px; }
+.signal-bar:nth-child(2) { height: 6px; }
+.signal-bar:nth-child(3) { height: 8px; }
+.signal-bar:nth-child(4) { height: 10px; }
+.signal-bar:nth-child(5) { height: 12px; }
+
+.signal-bar.active {
+  background-color: var(--status-color, #4caf50);
+}
+
+/* Status Text */
+.status-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.status-primary {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.status-secondary {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.status-quality {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--hauler-primary);
+}
+
+/* Details Toggle */
+.details-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.details-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .details-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.chevron {
+  transition: transform 0.3s ease;
+}
+
+.chevron.expanded {
+  transform: rotate(180deg);
+}
+
+/* Status Details Section */
+.status-details {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.02);
+  animation: expandDetails 0.3s ease-out;
+}
+
+[data-theme="dark"] .status-details {
+  border-top-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+@keyframes expandDetails {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 300px;
+  }
+}
+
+/* Quality Metrics */
+.quality-metrics {
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .quality-metrics {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.metric-abel {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.metric-value {
+  color: var(--color-text);
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+/* Action Buttons */
+.status-actions {
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-button.reconnect {
+  background: var(--hauler-primary);
+  color: white;
+}
+
+.action-button.reconnect:hover:not(:disabled) {
+  background: var(--hauler-primary-hover);
+  transform: translateY(-1px);
+}
+
+.action-button.call {
+  background: #4caf50;
+  color: white;
+}
+
+.action-button.call:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.action-button.stream {
+  background: #2196f3;
+  color: white;
+}
+
+.action-button.stream:hover {
+  background: #1976d2;
+  transform: translateY(-1px);
+}
+
+.action-button svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Connection History */
+.connection-history {
+  padding: 8px 16px 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .connection-history {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+.history-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  etter-spacing: 0.5px;
+}
+
+.history-item {
+  font-size: 11px;
+  color: var(--color-text);
+  padding: 2px 0;
+}
+
+/* Compact Connection Status */
+.compact-connection-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.compact-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.disconnected-ine {
+  position: absolute;
+  top: 50%;
+  eft: 50%;
+  width: 10px;
+  height: 1px;
+  background: white;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.compact-signal-bars {
+  display: flex;
+  align-items: end;
+  gap: 1px;
+  height: 8px;
+}
+
+.compact-signal-bar {
+  width: 1px;
+  background-color: #e0e0e0;
+  transition: background-color 0.3s ease;
+}
+
+.compact-signal-bar:nth-child(1) { height: 3px; }
+.compact-signal-bar:nth-child(2) { height: 5px; }
+.compact-signal-bar:nth-child(3) { height: 8px; }
+
+.compact-signal-bar.active {
+  background-color: var(--status-color, #4caf50);
+}
+
+/* Multi-Vehicle Status */
+.multi-vehicle-status {
+  background: var(--color-canvas-darker);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .multi-vehicle-status {
+  background: var(--hauler-dark);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.status-summary {
+  margin-bottom: 16px;
+}
+
+.summary-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.summary-indicator {
+  height: 4px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .summary-indicator {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.summary-bar {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.5s ease;
+  border-radius: 2px;
+}
+
+.vehicles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.vehicle-status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-canvas);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+[data-theme="dark"] .vehicle-status-item {
+  background: var(--color-canvas-darker);
+}
+
+.vehicle-status-item:hover {
+  background-color: var(--hauler-ight);
+  border-color: var(--hauler-primary);
+  transform: translateY(-1px);
+}
+
+.vehicle-status-item.connected {
+  border-eft: 3px solid #4caf50;
+}
+
+.vehicle-status-item.disconnected {
+  border-eft: 3px solid #f44336;
+  opacity: 0.7;
+}
+
+.vehicle-id {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .quality-metrics {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  
+  .status-actions {
+    flex-direction: column;
+  }
+  
+  .action-button {
+    flex: none;
+  }
+  
+  .vehicles-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 6px;
+  }
+  
+  .vehicle-status-item {
+    padding: 6px 8px;
+    flex-direction: column;
+    text-align: center;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .connection-status {
+    margin: 0 -4px;
+  }
+  
+  .status-main {
+    padding: 10px 12px;
+  }
+  
+  .quality-metrics {
+    padding: 10px 12px;
+  }
+  
+  .status-actions {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+  
+  .action-button {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  
+  .action-button svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Animation States */
+.status-dot.failed {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Connection Quality Color Indicators */
+.quality-excellent { --status-color: #4caf50; }
+.quality-good { --status-color: #8bc34a; }
+.quality-fair { --status-color: #ff9800; }
+.quality-poor { --status-color: #ff5722; }
+.quality-very-poor { --status-color: #f44336; }
+
+/* Loading States */
+.oading-dots {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.oading-dots::after {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: oading-dots 1.5s infinite;
+}
+
+@keyframes oading-dots {
+  0%, 20% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Tooltips for compact view */
+.compact-connection-status[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  eft: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 4px;
+  animation: tooltip-fade-in 0.2s ease;
+}
+
+@keyframes tooltip-fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

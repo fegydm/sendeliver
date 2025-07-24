@@ -1,0 +1,155 @@
+/* ./front/src/styles/_footer.css */
+
+/* Base styles for social icons */
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  color: var(--text-muted, #555); /* Default color for icons */
+}
+
+.social-icon:hover {
+  color: #000; /* Icon color on hover */
+}
+
+/* Specific styling for each platform */
+.social-facebook {
+  color: #3b5998;
+}
+.social-facebook:hover {
+  color: #2d4373;
+}
+
+.social-twitter {
+  color: #1da1f2;
+}
+.social-twitter:hover {
+  color: #0d8bdc;
+}
+
+.social-linkedin {
+  color: #0077b5;
+}
+.social-linkedin:hover {
+  color: #005582;
+}
+
+.social-instagram {
+  color: #e1306c;
+}
+.social-instagram:hover {
+  color: #bc2464;
+}
+
+/* General footer styles */
+.page-footer,
+.test-footer {
+  position: relative;
+  width: 100%;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center align all elements */
+  justify-content: center;
+}
+
+.page-footer {
+  background-color: var(--footer-light-bg);
+  color: var(--footer-light-text);
+}
+.page-footer.dark,
+.test-footer.dark {
+  background-color: var(--footer-dark-bg);
+  color: var(--footer-dark-text);
+}
+
+.test-footer {
+  background-color: #e5e7eb; /* Light gray background */
+  color: #374151; /* Gray text */
+}
+
+/* Social links container */
+.social-links,
+.footer-social {
+  display: flex;
+  gap: 24px; /* Space between icons */
+  justify-content: center;
+  margin-bottom: 16px; /* Reduced margin below social links */
+}
+
+/* Footer menu container */
+.footer-menu {
+  display: flex;
+  gap: 16px; /* Space between items */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 14px; /* Increased font size */
+  justify-content: center; /* Center align menu items */
+}
+
+/* Footer menu links */
+.footer-menu li a {
+  text-decoration: none;
+  color: inherit; /* Inherits text color from parent */
+  transition: text-decoration 0.3s;
+}
+.footer-menu li a:hover {
+  text-decoration: underline; /* Adds underline on hover */
+}
+
+/* Footer rows */
+.footer-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  font-size: 12px; /* Reduced font size */
+}
+
+/* Admin button (visible only in production) */
+.admin-button {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  color: #6c757d; /* Gray color for admin button */
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.admin-button:hover {
+  color: #343a40; /* Darker gray on hover */
+}
+
+.admin-button.production-hidden {
+  color: transparent; /* Makes the button invisible */
+  pointer-events: none; /* Disables interaction with the button */
+}
+
+.admin-button:focus {
+  outline: none;
+}
+
+
+
+
+
+/* Specific sections for TestFooter */
+.footer-left {
+  display: flex;
+  gap: 8px; /* Space between items */
+  align-items: center;
+  justify-content: center; /* Center align left section */
+}
+
+.footer-right {
+  display: flex;
+  gap: 16px; /* Space between buttons */
+  justify-content: center; /* Center align right section */
+}
+/* ./front/src/styles/floating-button.css */
+

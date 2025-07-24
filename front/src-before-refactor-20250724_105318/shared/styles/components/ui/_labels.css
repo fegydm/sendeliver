@@ -1,0 +1,20 @@
+.label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--label-text);  }
+
+.label--description {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--label-gtext);
+    line-height: 1.2; /* Adjust this value as needed */
+    margin-left: 8px;   }
+
+.content--sender .label--description {
+    color: var(--sender-primary); }
+
+.content--hauler .label--description {
+    color: var(--hauler-primary); }
+  
+.label--neutral {
+    color: hsl(0, 0%, 50%); /* Mid-gray */  }

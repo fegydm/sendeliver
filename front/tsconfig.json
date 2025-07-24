@@ -1,55 +1,59 @@
 {
-  "name": "front/tsconfig",
-  "compilerOptions": {
-    "target": "es2022",
-    "module": "esnext",
-    "lib": ["es2022", "dom"],
-    "jsx": "react-jsx",
-    "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "back/*": ["../back/src/*"],
-      "@shared/*": ["../shared/*"] },
-    "outDir": "dist",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "sourceMap": true,
-    "declaration": false,
-    "removeComments": true,
-    "importHelpers": true,
-    "isolatedModules": true,
-    "incremental": true,
-    "composite": false,
-    "allowJs": true,
-    "checkJs": false,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "skipLibCheck": true
-  },
-
-  "include": [
-    "src/**/*",
-    "src/**/*.json",
-    "src/types/env.d.ts",
-    "src/types/recharts.d.ts",
-    "../shared/**/*"  
-  ],
-
-  "exclude": [
-    "**/node_modules",
-    "**/dist",
-    "**/build",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/*.spec.tsx",
-    "**/*.test.tsx"
-  ]
+ "name": "front/tsconfig",
+ "compilerOptions": {
+   "target": "es2022",
+   "module": "esnext",
+   "lib": ["es2022", "dom"],
+   "jsx": "react-jsx",
+   "moduleResolution": "bundler",
+   "esModuleInterop": true,
+   "allowSyntheticDefaultImports": true,
+   "resolveJsonModule": true,
+   "forceConsistentCasingInFileNames": true,
+   "baseUrl": ".",
+   "paths": {
+     "@/*": ["src/*"],
+     "@domains/*": ["src/domains/*"],
+     "@features/*": ["src/features/*"],
+     "@shared/*": ["src/shared/*"],
+     "@pages/*": ["src/pages/*"],
+     "@assets/*": ["src/assets/*"],
+     "@styles/*": ["src/styles/*"],
+     "back/*": ["../back/src/*"],
+     "@shared-project/*": ["../shared-project/*"]
+   },
+   "outDir": "dist",
+   "strict": true,
+   "noUnusedLocals": true,
+   "noUnusedParameters": true,
+   "noImplicitReturns": true,
+   "noFallthroughCasesInSwitch": true,
+   "sourceMap": true,
+   "declaration": false,
+   "removeComments": true,
+   "importHelpers": true,
+   "isolatedModules": true,
+   "incremental": true,
+   "composite": false,
+   "allowJs": true,
+   "checkJs": false,
+   "experimentalDecorators": true,
+   "emitDecoratorMetadata": true,
+   "skipLibCheck": true
+ },
+ "include": [
+   "src/**/*",
+   "src/**/*.json",
+   "src/types/env.d.ts",
+   "src/types/recharts.d.ts"
+ ],
+ "exclude": [
+   "**/node_modules",
+   "**/dist",
+   "**/build",
+   "**/*.test.ts",
+   "**/*.spec.ts",
+   "**/*.spec.tsx",
+   "**/*.test.tsx"
+ ]
 }

@@ -1,0 +1,92 @@
+/* Theme Switcher Styles */
+
+/* Toggle group container styles */
+.toggle-group {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  background-color: var(--background, #f3f4f6);
+  border-radius: 8px;
+}
+
+/* Individual toggle item styles */
+.toggle-item {
+  position: relative;
+  padding: 8px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted, #4b5563);
+  transition: all 0.2s ease;
+}
+
+/* Hover state for toggle items */
+.toggle-item:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Active state using data-state attribute */
+.toggle-item[data-state="on"] {
+  background-color: var(--foreground, white);
+  color: var(--text-primary, #1f2937);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Triangle indicator for active item */
+.toggle-item[data-state="on"]::after {
+  content: "";
+  position: absolute;
+  bottom: -12px;
+  eft: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-eft: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--text-primary, #1f2937);
+}
+
+/* Group abel styles */
+.toggle-group-abel {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted, #4b5563);
+}
+
+/* Responsive styles */
+@media (max-width: 640px) {
+  .toggle-group {
+    width: 100%;
+  }
+
+  .toggle-item {
+    flex: 1;
+    text-align: center;
+  }
+}
+/* Theme Switcher Styles */
+.theme-switcher-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.theme-switcher-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.theme-switcher-abel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted, #4b5563);
+}
+
+.theme-switcher-toggle {
+  position: relative;
+}

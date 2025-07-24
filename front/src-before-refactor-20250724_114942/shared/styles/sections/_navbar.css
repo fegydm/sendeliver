@@ -1,0 +1,100 @@
+/* File: front/src/styles/components/navbar.css */
+/* Last change: BEM optimization and streamlined structure */
+
+/* Navbar Block */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--navbar-height, 50px); /* Controlled via global variables */
+    background-color: var(--navbar-bg-color, #f8f8f8);
+    border-bottom: 1px solid var(--navbar-border-color, #ccc);
+    padding: var(--navbar-padding, 10px);
+}
+
+/* Navbar Items */
+.navbar__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 var(--navbar-item-spacing, 10px);
+    min-width: 40px;
+    min-height: 40px;
+}
+
+.navbar__item img {
+    height: calc(var(--navbar-height, 50px) - 10px);
+}
+
+/* Navbar Dots */
+.navbar__dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: var(--navbar-icon-size, 40px);
+    height: var(--navbar-icon-size, 40px);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.navbar__dots-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+    align-items: center;
+    width: var(--navbar-dots-size, 24px);
+    height: var(--navbar-dots-size, 24px);
+}
+
+.navbar__dots-item {
+    width: 8px;
+    height: 8px;
+    background-color: var(--navbar-dot-color, gray);
+    border-radius: 50%;
+}
+
+/* Navbar Language */
+.navbar__language {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    width: var(--navbar-icon-size, 40px);
+    height: var(--navbar-icon-size, 40px);
+}
+
+.navbar__language-icon {
+    width: 30px;
+    height: 20px;
+    object-fit: cover;
+    border: 1px solid var(--navbar-border-color, #ccc);
+    border-radius: 3px;
+}
+
+/* Navbar Darkmode */
+.navbar__darkmode {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.navbar__darkmode:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.navbar__darkmode-icon {
+    font-size: 1.5rem;
+    color: var(--text-color, #000);
+    transition: color 0.3s ease;
+}
+
+.navbar__darkmode:hover .navbar__darkmode-icon {
+    color: var(--text-hover-color, #666);
+}
