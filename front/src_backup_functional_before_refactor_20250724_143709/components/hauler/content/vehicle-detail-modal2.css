@@ -1,0 +1,141 @@
+/* File: front/src/components/hauler/content/vehicle-detail-modal-part2.css */
+/* Last change: Part 2 - Elevation profile and SCD sections with optimized heights */
+
+/* Elevation Profile - optimized height with progress bars */
+.elevation-profile {
+  background: var(--color-canvas-darker);
+  border-radius: 6px;
+  padding: 10px 16px;
+  min-height: 120px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .elevation-profile {
+  background: var(--hauler-dark);
+}
+
+.elevation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.elevation-header h3 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.elevation-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.elevation-chart {
+  background: var(--color-canvas);
+  border-radius: 4px;
+  padding: 8px;
+  height: 100px;
+}
+
+[data-theme="dark"] .elevation-chart {
+  background: var(--color-canvas-darker);
+}
+
+/* Route Status Section - SCD optimized height */
+.route-status-section {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  padding: 12px 16px;
+  background: var(--color-canvas-darker);
+  border-radius: 6px;
+  gap: 16px;
+  min-height: 100px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .route-status-section {
+  background: var(--hauler-dark);
+}
+
+.route-point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.route-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  margin-bottom: 6px;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.route-marker.current {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.route-info {
+  text-align: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.route-location {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-text);
+  word-wrap: break-word;
+  line-height: 1.2;
+}
+
+.route-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+
+.country-flag {
+  width: 14px;
+  height: 10px;
+  border-radius: 1px;
+  margin-bottom: 2px;
+  align-self: center;
+}
+
+.delay-info {
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.departure-time,
+.current-time,
+.current-speed,
+.planned-arrival,
+.estimated-arrival {
+  font-size: 10px;
+  line-height: 1.1;
+}
