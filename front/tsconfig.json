@@ -46,7 +46,7 @@
    "src/**/*.json",
    "src/types/env.d.ts",
    "src/types/recharts.d.ts"
- ],
+, "src/shared/navigation/navbar.tsx" ],
  "exclude": [
    "**/node_modules",
    "**/dist",

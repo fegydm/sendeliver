@@ -4,7 +4,7 @@
 import { forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import BaseFilter from "./BaseFilter";
 import { SenderResultData } from "./result-table.component";
-import { logAvailability } from "@/utils/logger";
+import { logAvailability } from "@/lib/utils/logger";
 import { SEARCH_CONSTANTS } from "@/constants/search.constants";
 
 // Function to calculate difference between two dates in hours

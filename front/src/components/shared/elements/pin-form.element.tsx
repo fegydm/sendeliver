@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { logger } from "@sendeliver/logger";
-import { Button }  from "@/components/shared/ui/button.ui";
+import { Button }  from "@/shared/ui/button.ui";
 import "@/styles/components/pin-form.component.css";
 
 interface PinFormProps {

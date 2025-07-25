@@ -1,7 +1,7 @@
 // File: src/components/elements/floating-button.element.tsx
 import React, { useState, useEffect } from "react";
 import { FaArrowUp } from "react-icons/fa";
-import Button from "@/components/shared/ui/button.ui"; 
+import Button from "@/shared/ui/button.ui"; 
 const FloatingButton: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 

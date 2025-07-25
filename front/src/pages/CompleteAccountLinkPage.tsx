@@ -4,8 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Input } from '@/components/shared/ui/input.ui';
-import { Button } from '@/components/shared/ui/button.ui';
+import { Input } from '@/shared/ui/input.ui';
+import { Button } from '@/shared/ui/button.ui';
 
 const CompleteAccountLinkPage = () => {
   const [searchParams] = useSearchParams();

@@ -2,8 +2,8 @@
 // Purpose: Finálna verzia kontajnera s kartami, ktorá implementuje novú architektúru.
 
 import React, { useState } from "react";
-import { Tabs } from "@/components/shared/ui/tabs.ui";
-import Button from "@/components/shared/ui/button.ui";
+import { Tabs } from "@/shared/ui/tabs.ui";
+import Button from "@/shared/ui/button.ui";
 
 // Importy z novej, modulárnej štruktúry
 import DashboardComponent from "./dashboard/dashboard.component";

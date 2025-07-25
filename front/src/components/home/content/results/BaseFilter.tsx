@@ -2,8 +2,8 @@
 // Last modified: Updated to correctly position dropdowns in local container
 
 import { forwardRef, useImperativeHandle, useRef, useEffect, useState } from "react";
-import { getAnimatedArrow } from "@/utils/animateArrow";
-import { getAnimatedTriangle } from "@/utils/animateTriangle";
+import { getAnimatedArrow } from "@/lib/utils/animateArrow";
+import { getAnimatedTriangle } from "@/lib/utils/animateTriangle";
 
 interface BaseFilterProps<T> {
   data: T[];

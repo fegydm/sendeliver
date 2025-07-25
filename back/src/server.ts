@@ -1,5 +1,5 @@
 // File: back/src/server.ts
-// Last change: Fixed middleware order to prevent authenticateJWT from blocking public auth routes
+// Last change: Added device type test routes
 
 console.log('[SERVER START] Starting server initialization...');
 
@@ -33,6 +33,9 @@ import { publicAuthRouter, authenticatedAuthRouter } from "./routes/auth.routes.
 import verifyPinRouter from "./routes/verify-pin.routes.js";
 import gpsRouter from "./routes/gps.routes.js";
 import { authenticateJWT, checkRole } from "./middlewares/auth.middleware.js";
+
+// NEW: Device type test routes
+import { deviceTypeTestRouter } from "./routes/device-type-test.routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -156,6 +159,12 @@ app.use("/api/delivery", [
   deliveryRouter
 ]);
 
+// NEW: Device type test routes (protected)
+app.use("/api/device-type-test", [
+  authenticateJWT,
+  deviceTypeTestRouter
+]);
+
 // =============================================================================
 // STATIC FILE SERVING
 // =============================================================================
@@ -215,4 +224,5 @@ app.use(function (err: any, req: Request, res: Response, next: NextFunction) {
 const PORT = parseInt(process.env.PORT || "10000", 10);
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server listening on port ${PORT}`);
+  console.log('[DEVICE TYPE] Test routes available at /api/device-type-test');
 });

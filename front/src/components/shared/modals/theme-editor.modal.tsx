@@ -2,9 +2,9 @@
 // Last change: Display only browser defaults without storing them
 
 import React, { useState, useEffect } from "react";
-import { Input, Button, Tabs } from "@/components/shared/ui";
-import GeneralModal from "@/components/shared/modals/general.modal";
-import ColorPaletteModal from "@/components/shared/modals/color-palette.modal";
+import { Input, Button, Tabs } from "@/shared/ui";
+import GeneralModal from "@/shared/modals/general.modal";
+import ColorPaletteModal from "@/shared/modals/_color-palette.modal";
 
 export type ThemeField =
     | 'color-page-bg'

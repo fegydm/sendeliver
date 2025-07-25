@@ -2,8 +2,8 @@
 // Last change: Refactored to use GeneralModal base with custom styling
 
 import React from 'react';
-import GeneralModal from './general.modal';
-import { Button } from '@/components/shared/ui/button.ui';
+import GeneralModal from '../../../shared/modals/general.modal';
+import { Button } from '@/shared/ui/button.ui';
 import './LogoutModal.css';
 
 interface LogoutModalProps {

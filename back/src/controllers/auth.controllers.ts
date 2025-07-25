@@ -202,59 +202,76 @@ export const registerOrganization: any = async (req: Request, res: Response, nex
 
     const hashedPassword = await hashPassword(adminPassword);
 
-    const newOrganization = await prisma.organization.create({
-      data: {
-        name: organizationName,
-        vatNumber: vatNumber || null,
-        type: 'CARRIER',
-        status: VerificationStatus.PENDING_VERIFICATION,
-      }
-    });
+    // 🎯 FIX: Use transaction to create org + admin, then update org with founder info
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create organization without founder info first
+      const organization = await tx.organization.create({
+        data: {
+          name: organizationName,
+          vatNumber: vatNumber || null,
+          type: 'CARRIER',
+          status: VerificationStatus.PENDING_VERIFICATION,
+        }
+      });
 
-    const orgAdminUser = await prisma.user.create({
-      data: {
-        displayName: adminName,
-        email: adminEmail.toLowerCase(),
-        passwordHash: hashedPassword,
-        primaryRole: UserRole.org_admin,
-        userType: UserType.ORGANIZED,
-        isEmailVerified: false,
-        memberships: {
-          create: {
-            organization: { connect: { id: newOrganization.id } },
-            role: UserRole.org_admin,
-            status: OrgMembershipStatus.ACTIVE
+      // 2. Create admin user with membership
+      const adminUser = await tx.user.create({
+        data: {
+          displayName: adminName,
+          email: adminEmail.toLowerCase(),
+          passwordHash: hashedPassword,
+          primaryRole: UserRole.org_admin,
+          userType: UserType.ORGANIZED,
+          isEmailVerified: false,
+          memberships: {
+            create: {
+              organizationId: organization.id,
+              role: UserRole.org_admin,
+              status: OrgMembershipStatus.ACTIVE
+            }
+          }
+        },
+        include: {
+          memberships: {
+            where: { status: OrgMembershipStatus.ACTIVE },
+            select: { organizationId: true, role: true }
           }
         }
-      },
-      include: {
-        memberships: {
-          where: { status: OrgMembershipStatus.ACTIVE },
-          select: { organizationId: true, role: true }
+      });
+
+      // 3. 🎯 UPDATE organization with founder information
+      const updatedOrganization = await tx.organization.update({
+        where: { id: organization.id },
+        data: {
+          foundedByUserId: adminUser.id,
+          foundedAt: new Date()
         }
-      }
+      });
+
+      return { organization: updatedOrganization, adminUser };
     });
 
-    await sendUserVerificationEmail(orgAdminUser);
+    await sendUserVerificationEmail(result.adminUser);
 
     res.status(201).json({
-  message: 'Organization registered! Please check your email for verification.',
-  user: {
-    id: orgAdminUser.id,
-    name: orgAdminUser.displayName,
-    email: orgAdminUser.email,
-    primaryRole: orgAdminUser.primaryRole,
-    userType: orgAdminUser.userType,
-    imageUrl: orgAdminUser.imageUrl,
-    emailVerified: orgAdminUser.isEmailVerified,    // ← KEEP ONLY THIS LINE
-    memberships: orgAdminUser.memberships
-  },
-  organization: {
-    id: newOrganization.id,
-    name: newOrganization.name,
-    status: newOrganization.status
-  },
-});
+      message: 'Organization registered! Please check your email for verification.',
+      user: {
+        id: result.adminUser.id,
+        name: result.adminUser.displayName,
+        email: result.adminUser.email,
+        primaryRole: result.adminUser.primaryRole,
+        userType: result.adminUser.userType,
+        imageUrl: result.adminUser.imageUrl,
+        emailVerified: result.adminUser.isEmailVerified,
+        memberships: result.adminUser.memberships
+      },
+      organization: {
+        id: result.organization.id,
+        name: result.organization.name,
+        status: result.organization.status,
+        foundedAt: result.organization.foundedAt  // 🎯 Now includes foundedAt
+      },
+    });
     return;
 
   } catch (error) {

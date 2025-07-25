@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { getCountryFromIP } from '@/utils/getCountryFromIP';
+import { getCountryFromIP } from '@/lib/utils/getCountryFromIP';
 
 // Interface for language information
 export interface LanguageInfo {

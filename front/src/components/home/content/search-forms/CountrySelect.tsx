@@ -6,7 +6,7 @@ import { BaseDropdown } from "@/components/shared/elements/BaseDropdown";
 import type { Country } from "@/types/transport-forms.types";
 import { useCountriesContext } from "@/contexts/CountriesContext";
 import { useUINavigation } from "@/hooks/useUINavigation";
-import Input from "@/components/shared/ui/input.ui";
+import Input from "@/shared/ui/input.ui";
 
 interface CountrySelectProps {
   onCountrySelect: (cc: string, flag: string) => void;

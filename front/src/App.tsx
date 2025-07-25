@@ -9,7 +9,7 @@ import { LanguagesProvider } from "@/contexts/LanguagesContext";
 import { CountriesProvider } from "@/contexts/CountriesContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
-import Navigation from "@/components/shared/navbars/navbar.component";
+import Navigation from "@/shared/navigation/navbar";
 import FooterPage from "@/components/shared/footers/footer-page.component";
 import FloatingButton from "@/components/shared/elements/floating-button.element";
 import ProtectedRoute from "@/components/shared/auth/ProtectedRoute";

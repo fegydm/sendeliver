@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import AIForm from "@/components/home/content/search-forms/ai-form.component";
 import ManualForm from "@/components/home/content/search-forms/manual-form.component";
 import ResultTable, { SenderResultData } from "@/components/home/content/results/result-table.component";
-import Button from "@/components/shared/ui/button.ui";
+import Button from "@/shared/ui/button.ui";
 import { TransportFormData } from "@/types/transport-forms.types";
 import { useTranslationContext } from "@/contexts/TranslationContext";
 

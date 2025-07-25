@@ -1,5 +1,5 @@
 // File: prisma/schema.prisma
-// Last change: Added missing organization management models
+// Last change: Added comprehensive logistics extensions for future-proof implementation with strict snake_case mapping
 
 generator client {
   provider        = "prisma-client-js"
@@ -20,6 +20,21 @@ model Organization {
   status             VerificationStatus @default(PENDING_VERIFICATION)
   foundedByUserId    Int?               @map("founded_by_user_id")
   foundedAt          DateTime?          @map("founded_at")
+  
+  // Company details
+  address            String?
+  city               String?
+  postalCode         String?            @map("postal_code")
+  country            String?
+  phone              String?
+  email              String?
+  website            String?
+  
+  // Business settings
+  timeZone           String?            @default("Europe/Bratislava") @map("time_zone")
+  currency           String?            @default("EUR")
+  language           String?            @default("sk")
+  
   createdAt          DateTime           @default(now()) @map("created_at")
   updatedAt          DateTime           @updatedAt @map("updated_at")
   
@@ -29,6 +44,7 @@ model Organization {
   invitations        OrganizationInvitation[]
   joinRequests       OrganizationJoinRequest[]
   permissions        OrganizationPermission[]
+  trips              Trip[]
   
   // Self-reference for founder
   foundedBy          User?              @relation("FoundedOrganizations", fields: [foundedByUserId], references: [id])
@@ -46,13 +62,38 @@ model User {
   imageUrl             String?             @map("image_url")
   
   primaryRole          UserRole            @default(individual_customer) @map("primary_role")
-  userType             UserType            @default(STANDALONE)
+  userType             UserType            @default(STANDALONE) @map("user_type")
   selectedRole         SelectedRoleType?   @map("selected_role")
-  
-  // NEW: Forwarder mode toggle
   forwarderActiveMode  ForwarderModeType?  @map("forwarder_active_mode")
   
   isEmailVerified      Boolean             @default(false) @map("is_email_verified")
+
+  // Personal details
+  firstName            String?             @map("first_name")
+  lastName             String?             @map("last_name")
+  phone                String?
+  emergencyContact     String?             @map("emergency_contact")
+  dateOfBirth          DateTime?           @map("date_of_birth")
+  address              String?
+  city                 String?
+  postalCode           String?             @map("postal_code")
+  country              String?
+
+  // Driver specific fields
+  licenseNumber        String?             @map("license_number")
+  licenseCategories    String[]            @map("license_categories") // ["C", "CE", "ADR"]
+  licenseExpiresAt     DateTime?           @map("license_expires_at")
+  medicalExpiresAt     DateTime?           @map("medical_expires_at")
+  adnNumber            String?             @map("adn_number") // ADR certificate
+  adnExpiresAt         DateTime?           @map("adn_expires_at")
+  
+  // Work patterns
+  workingHoursStart    String?             @map("working_hours_start") // "08:00"
+  workingHoursEnd      String?             @map("working_hours_end")   // "16:00"
+  isAvailable          Boolean             @default(true) @map("is_available")
+  currentShiftStart    DateTime?           @map("current_shift_start")
+  maxDrivingHours      Int?                @default(9) @map("max_driving_hours") // EU regulation
+  maxWorkingHours      Int?                @default(13) @map("max_working_hours")
 
   // Hierarchy
   manager              User?               @relation("Hierarchy", fields: [managerId], references: [id])
@@ -76,6 +117,9 @@ model User {
   assignedByMe         DeviceAssignment[]  @relation("AssignedBy")
   unassignedByMe       DeviceAssignment[]  @relation("UnassignedBy")
 
+  // Trip relations
+  trips                Trip[]              @relation("TripDriver")
+  
   // Verification
   verificationTokens   EmailVerificationToken[]
 
@@ -92,6 +136,10 @@ model OrganizationMembership {
   organizationId Int                @map("organization_id")
   role           UserRole
   status         OrgMembershipStatus @default(PENDING_APPROVAL)
+  
+  // Device type for permission control
+  deviceType     MembershipDeviceType @default(COMPANY) @map("device_type")
+  
   createdAt      DateTime           @default(now()) @map("created_at")
   updatedAt      DateTime           @updatedAt @map("updated_at")
 
@@ -103,13 +151,13 @@ model OrganizationMembership {
   @@schema("public")
 }
 
-// NEW: Organization Invitations
 model OrganizationInvitation {
   id              Int              @id @default(autoincrement())
   organizationId  Int              @map("organization_id")
   invitedByUserId Int              @map("invited_by_user_id") 
   email           String
   role            UserRole
+  deviceType      MembershipDeviceType @default(COMPANY) @map("device_type")
   token           String           @unique
   expiresAt       DateTime         @map("expires_at")
   status          InvitationStatus @default(PENDING)
@@ -124,12 +172,12 @@ model OrganizationInvitation {
   @@schema("public")
 }
 
-// NEW: Join Requests (driver-initiated)
 model OrganizationJoinRequest {
   id                Int               @id @default(autoincrement())
   organizationId    Int               @map("organization_id")
   userId            Int               @map("user_id")
   requestedRole     UserRole          @map("requested_role")
+  requestedDeviceType MembershipDeviceType @default(PERSONAL) @map("requested_device_type")
   message           String?
   status            JoinRequestStatus @default(PENDING)
   createdAt         DateTime          @default(now()) @map("created_at")
@@ -145,7 +193,6 @@ model OrganizationJoinRequest {
   @@schema("public")
 }
 
-// NEW: Organization Permissions
 model OrganizationPermission {
   id              Int            @id @default(autoincrement())
   organizationId  Int            @map("organization_id")
@@ -166,17 +213,46 @@ model OrganizationPermission {
 model TrackableDevice {
   id                Int                  @id @default(autoincrement())
   name              String
-  deviceIdentifier  String               @unique
-  deviceType        DeviceType
-  apiKey            String               @unique
-  isActive          Boolean              @default(true)
-  lastSeen          DateTime?
+  deviceIdentifier  String               @unique @map("device_identifier")
+  deviceType        DeviceType           @map("device_type")
+  apiKey            String               @unique @map("api_key")
+  isActive          Boolean              @default(true) @map("is_active")
+  lastSeen          DateTime?            @map("last_seen")
   
-  // NEW: Additional fields
+  // Vehicle specific fields
+  registrationPlate    String?             @map("registration_plate")
+  vinNumber           String?             @unique @map("vin_number")
+  manufacturerYear    Int?                @map("manufacturer_year")
+  manufacturer        String?
+  model               String?
+  fuelType           FuelType?            @map("fuel_type")
+  
+  // Capacity and specifications
+  maxWeightCapacity  Float?              @map("max_weight_capacity") // tons
+  maxVolumeCapacity  Float?              @map("max_volume_capacity") // m³
+  licenseCatRequired String?             @map("license_cat_required") // C, C+E, CE, etc.
+  
+  // Legal documents
+  insuranceCompany   String?             @map("insurance_company")
+  insuranceNumber    String?             @map("insurance_number")
+  insuranceExpiresAt DateTime?           @map("insurance_expires_at")
+  inspectionExpiresAt DateTime?          @map("inspection_expires_at") // STK
+  
+  // Current vehicle state
+  currentFuelLevel   Float?              @map("current_fuel_level") // %
+  currentMileage     Int?                @map("current_mileage") // km
+  fuelTankCapacity   Float?              @map("fuel_tank_capacity") // liters
+  engineStatus      EngineStatus?        @map("engine_status")
+  lastServiceAt     DateTime?            @map("last_service_at")
+  nextServiceDue    DateTime?            @map("next_service_due")
+  
+  // Additional metadata
   createdByUserId   Int?                 @map("created_by_user_id")
-  isShared          Boolean              @default(false)
+  isShared          Boolean              @default(false) @map("is_shared")
   notes             String?
-
+  color             String?              // Vehicle color
+  
+  // Relations
   organization      Organization?        @relation(fields: [organizationId], references: [id])
   organizationId    Int?                 @map("organization_id")
 
@@ -186,11 +262,11 @@ model TrackableDevice {
   assignedToUser    User?                @relation("AssignedDevices", fields: [assignedToUserId], references: [id])
   assignedToUserId  Int?                 @map("assigned_to_user_id")
   
-  // NEW: Created by relation
   createdBy         User?                @relation("CreatedDevices", fields: [createdByUserId], references: [id])
 
   gpsData           GpsData[]
   assignments       DeviceAssignment[]
+  trips             Trip[]
 
   createdAt         DateTime             @default(now()) @map("created_at")
   updatedAt         DateTime             @updatedAt @map("updated_at")
@@ -199,7 +275,6 @@ model TrackableDevice {
   @@schema("public")
 }
 
-// NEW: Device Assignment History
 model DeviceAssignment {
   id                 Int                @id @default(autoincrement())
   deviceId           Int                @map("device_id")
@@ -208,7 +283,7 @@ model DeviceAssignment {
   assignedAt         DateTime           @default(now()) @map("assigned_at")
   unassignedAt       DateTime?          @map("unassigned_at")
   unassignedByUserId Int?               @map("unassigned_by_user_id")
-  isActive           Boolean            @default(true)
+  isActive           Boolean            @default(true) @map("is_active")
   notes              String?
 
   device             TrackableDevice    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
@@ -217,6 +292,94 @@ model DeviceAssignment {
   unassignedBy       User?              @relation("UnassignedBy", fields: [unassignedByUserId], references: [id])
 
   @@map("device_assignments")
+  @@schema("public")
+}
+
+model Trip {
+  id                Int             @id @default(autoincrement())
+  organizationId    Int             @map("organization_id")
+  vehicleId         Int             @map("vehicle_id")
+  driverId          Int             @map("driver_id")
+  dispatcherId      Int?            @map("dispatcher_id")
+  
+  tripNumber        String          @unique @map("trip_number") // Auto-generated
+  status           TripStatus       @default(PLANNED)
+  
+  // Timing
+  plannedStartAt    DateTime        @map("planned_start_at")
+  actualStartAt     DateTime?       @map("actual_start_at")
+  plannedEndAt      DateTime        @map("planned_end_at")
+  actualEndAt       DateTime?       @map("actual_end_at")
+  
+  // Distance and duration
+  plannedDistance   Float?          @map("planned_distance") // km
+  actualDistance    Float?          @map("actual_distance")
+  plannedDuration   Int?            @map("planned_duration") // minutes
+  actualDuration    Int?            @map("actual_duration")
+  
+  // Locations
+  startLocation     String?         @map("start_location")
+  endLocation       String?         @map("end_location")
+  waypoints         Json?           // Array of coordinates
+  
+  // Financial
+  plannedCost       Float?          @map("planned_cost")
+  actualCost        Float?          @map("actual_cost")
+  currency          String?         @default("EUR")
+  
+  // Additional info
+  notes             String?
+  priority          TripPriority    @default(NORMAL)
+  
+  // Relations
+  organization      Organization    @relation(fields: [organizationId], references: [id])
+  vehicle          TrackableDevice @relation(fields: [vehicleId], references: [id])
+  driver           User           @relation("TripDriver", fields: [driverId], references: [id])
+  cargo            Cargo[]
+  
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  @@map("trips")
+  @@schema("public")
+}
+
+model Cargo {
+  id              Int       @id @default(autoincrement())
+  tripId          Int?      @map("trip_id")
+  
+  // Cargo details
+  description     String
+  weight          Float?    // kg
+  volume          Float?    // m³
+  cargoType      CargoType  @map("cargo_type")
+  isHazardous    Boolean   @default(false) @map("is_hazardous")
+  hazardClass    String?   @map("hazard_class") // UN classification
+  
+  // Locations and timing
+  pickupLocation  String    @map("pickup_location")
+  deliveryLocation String   @map("delivery_location")
+  pickupTime     DateTime? @map("pickup_time")
+  deliveryTime   DateTime? @map("delivery_time")
+  
+  // Customer info
+  customerName   String?   @map("customer_name")
+  customerPhone  String?   @map("customer_phone")
+  
+  // Special requirements
+  temperatureMin Float?    @map("temperature_min") // °C
+  temperatureMax Float?    @map("temperature_max")
+  specialInstructions String? @map("special_instructions")
+  
+  // Status
+  status         CargoStatus @default(PENDING)
+  
+  trip           Trip?     @relation(fields: [tripId], references: [id])
+  
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("cargo")
   @@schema("public")
 }
 
@@ -229,19 +392,23 @@ model GpsData {
   speed           Float?
   timestamp       DateTime         @default(now())
   accuracy        Float?
-  heading         Float?
-  altitude        Float?
-
+  heading         Float?           // degrees 0-360
+  altitude        Float?           // meters
+  
+  // Additional GPS data
+  satellites      Int?             // number of satellites
+  hdop            Float?           // horizontal dilution of precision
+  
   @@map("gps_data")
   @@schema("public")
 }
 
 model EmailVerificationToken {
   id        Int      @id @default(autoincrement())
-  userId    Int
+  userId    Int      @map("user_id")
   token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   user      User     @relation(fields: [userId], references: [id])
 
@@ -280,7 +447,6 @@ enum UserType {
   @@schema("auth")
 }
 
-// NEW: Forwarder Mode Enum
 enum ForwarderModeType {
   CLIENT
   CARRIER
@@ -292,6 +458,13 @@ enum DeviceType {
   VEHICLE
   PERSON
   ASSET
+
+  @@schema("public")
+}
+
+enum MembershipDeviceType {
+  PERSONAL
+  COMPANY
 
   @@schema("public")
 }
@@ -322,7 +495,6 @@ enum VerificationStatus {
   @@schema("public")
 }
 
-// NEW: Invitation Status Enum
 enum InvitationStatus {
   PENDING
   ACCEPTED
@@ -332,7 +504,6 @@ enum InvitationStatus {
   @@schema("public")
 }
 
-// NEW: Join Request Status Enum
 enum JoinRequestStatus {
   PENDING
   APPROVED
@@ -341,13 +512,78 @@ enum JoinRequestStatus {
   @@schema("public")
 }
 
-// NEW: Permission Type Enum
 enum PermissionType {
   MANAGE_VEHICLES
   ASSIGN_DRIVERS
   INVITE_MEMBERS
   MANAGE_PERMISSIONS
   VIEW_ANALYTICS
+  MANAGE_TRIPS
+  VIEW_FINANCIALS
+
+  @@schema("public")
+}
+
+enum FuelType {
+  DIESEL
+  PETROL  
+  LPG
+  CNG
+  ELECTRIC
+  HYBRID
+
+  @@schema("public")
+}
+
+enum EngineStatus {
+  RUNNING
+  IDLE
+  OFF
+  FAULT
+  MAINTENANCE
+
+  @@schema("public")
+}
+
+enum TripStatus {
+  PLANNED
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DELAYED
+
+  @@schema("public")
+}
+
+enum TripPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+
+  @@schema("public")
+}
+
+enum CargoType {
+  GENERAL
+  REFRIGERATED
+  HAZARDOUS
+  FRAGILE
+  OVERSIZED
+  LIQUID
+  BULK
+
+  @@schema("public")
+}
+
+enum CargoStatus {
+  PENDING
+  LOADED
+  IN_TRANSIT
+  DELIVERED
+  DAMAGED
+  LOST
 
   @@schema("public")
 }

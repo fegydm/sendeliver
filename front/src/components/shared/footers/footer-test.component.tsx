@@ -4,8 +4,8 @@
 import React, { useState, useEffect } from "react";
 import ThemeSwitcher from "@/components/shared/elements/theme-switcher.element";
 import ThemeEditorModal from "@/components/shared/modals/theme-editor.modal";
-import ColorPaletteModal from "@/components/shared/modals/color-palette.modal";
-import { Button } from "@/components/shared/ui";
+import ColorPaletteModal from "@/shared/modals/_color-palette.modal";
+import { Button } from "@/shared/ui";
 import KeystrokeAndQueryTiming from "@/components/KeystrokeAndQueryTiming";
 import "./footer-test.component.css";
 

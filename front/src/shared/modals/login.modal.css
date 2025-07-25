@@ -1,0 +1,98 @@
+/*
+ * File: front/src/shared/modals/login.modal.css
+ * Last action: Extracted login-specific styles from general.modal.css.
+*/
+
+.login-modal__field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.login-modal__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.login-modal__password-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.login-modal__forgot-link {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+
+.login-modal__forgot-link:hover {
+  text-decoration: underline;
+}
+
+.login-modal__signup {
+  font-size: 0.875rem;
+  text-align: center;
+  color: var(--muted-foreground);
+  margin-top: 1rem;
+}
+
+.login-modal__signup-link {
+  color: var(--hauler-primary, #007bff);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.login-modal__signup-link:hover {
+  text-decoration: underline;
+}
+
+.login-modal__error {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: #b91c1c;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.login-modal__separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: var(--color-text-secondary, #666);
+    font-size: 0.8rem;
+    margin: 1.5rem 0;
+}
+
+.login-modal__separator::before,
+.login-modal__separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
+.login-modal__separator:not(:empty)::before {
+    margin-right: .5em;
+}
+
+.login-modal__separator:not(:empty)::after {
+    margin-left: .5em;
+}
+
+/* Dark mode overrides, if needed */
+.dark .login-modal__label {
+  color: var(--modal-dark-text);
+}
+
+.dark .login-modal__forgot-link {
+  color: var(--muted-foreground);
+}
+
+.dark .login-modal__signup {
+  color: var(--muted-foreground);
+}
+
+.dark .login-modal__signup-link {
+  color: var(--hauler-primary-hover, #4dabf7);
+}
