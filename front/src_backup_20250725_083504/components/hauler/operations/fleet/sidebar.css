@@ -1,0 +1,136 @@
+/* File: ./front/src/components/hauler/fleet/sidebar.css */
+/* Styles for FleetSideFilter component */
+
+/* Container styling */
+.fleet-side-filter {
+  width: 300px;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-canvas-darker);
+  overflow: hidden;
+}
+
+/* Dark theme container border */
+[data-theme="dark"] .fleet-side-filter {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Search box wrapper */
+.fleet-side-filter__search {
+  padding: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme search box border */
+[data-theme="dark"] .fleet-side-filter__search {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Search input field */
+.fleet-side-filter__search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  font-size: 14px;
+}
+
+/* Placeholder text in search input */
+.fleet-side-filter__search-input::placeholder {
+  color: var(--input-placeholder);
+}
+
+/* Controls wrapper (dropdowns) */
+.fleet-side-filter__controls {
+  display: flex;
+  padding: 0 12px 12px;
+  gap: 8px;
+}
+
+/* Select elements styling */
+.fleet-side-filter__select {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  font-size: 14px;
+}
+
+/* Vehicle list container */
+.fleet-side-filter__list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-canvas-darker);
+}
+
+/* Empty state message */
+.fleet-side-filter__empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+/* List item styling */
+.fleet-side-filter__item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* Hover effect on list items */
+.fleet-side-filter__item:hover {
+  background-color: var(--color-canvas);
+}
+
+/* Active list item styling */
+.fleet-side-filter__item--active {
+  background-color: var(--color-canvas);
+  border-left: 4px solid var(--hauler-primary);
+  padding-left: 8px;
+}
+
+/* Dark theme list item border */
+[data-theme="dark"] .fleet-side-filter__item {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Dark theme hover and active states */
+[data-theme="dark"] .fleet-side-filter__item:hover,
+[data-theme="dark"] .fleet-side-filter__item--active {
+  background-color: var(--color-canvas);
+}
+
+/* Thumbnail image in list items */
+.fleet-side-filter__img {
+  width: 60px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+/* Info container (name and status) */
+.fleet-side-filter__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Vehicle name styling */
+.fleet-side-filter__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}

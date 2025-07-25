@@ -1,6 +1,6 @@
 // ./front/src/types/dots.ts
 
-import colors from "@/constants/colors";
+import colors from "@/lib/constants/colors";
 
 // basic
 export type TopRowType = "client" | "forwarder" | "carrier" | null;

@@ -1,0 +1,44 @@
+/* Tabs container styling */
+  
+  /* Base style for each tab trigger button */
+  .tabs-trigger {
+    border-bottom: none; /* Connect with content */
+    padding: 0.3rem 1rem;
+    cursor: pointer;
+    transition: background-color 200ms ease, box-shadow 200ms ease;
+    margin-right: -1px; /* Collapse borders */
+    border-top-left-radius: var(--border-radius, 0.3rem ); /* Zaoblenie pre všetky taby hore vľavo */
+    border-top-right-radius: var(--border-radius, 0.3rem); /* Zaoblenie pre všetky taby hore vpravo */
+  }
+  .tabs-trigger--sender {
+    background-color: var(--sender-medium, #e5e7eb);
+    border: 1px solid var(--sender-primary, #005f99); }
+
+  .tabs-trigger--hauler {
+        background-color: var(--hauler-medium, #e5e7eb);
+        border: 1px solid var(--hauler-primary, #005f99); } 
+  
+        /* Hover effect on inactive tabs (only if not active) */
+  .tabs-trigger--sender:hover:not(.tabs-trigger--active) {
+    background-color: var(--sender-light, #e5e7eb);
+  }
+  .tabs-trigger--hauler:hover:not(.tabs-trigger--active) {
+    background-color: var(--hauler-light, #e5e7eb);
+  }
+  /* Active tab: simulate pressed effect */
+  .tabs-trigger--active {
+    background-color: #ffffff ;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+    border-bottom: 1px solid #e9e9e9;
+    margin-bottom: -1px;
+    z-index: 3;
+  }
+  
+   /* Tabs content styling */
+
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }

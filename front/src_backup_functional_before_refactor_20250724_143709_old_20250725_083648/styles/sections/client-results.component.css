@@ -1,0 +1,12 @@
+/* ./front/src/styles/client-results.component.css */
+
+.client-results-container {
+  margin-bottom: 16px;
+}
+
+.client-results-title {
+  font-size: 1.25rem; /* Equivalent to text-xl */
+  font-weight: bold; /* Equivalent to font-bold */
+  margin-bottom: 16px; /* Equivalent to mb-4 */
+  color: #6b46c1; /* Equivalent to text-purple-700 */
+}

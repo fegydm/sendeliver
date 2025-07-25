@@ -1,0 +1,426 @@
+/* File: front/src/components/hauler/content/vehicle-detail-modal-part3.css */
+/* Last change: Part 3 - NCS section with 3 equal columns taking remaining space */
+
+/* NCS Section - 3 equal columns taking remaining space */
+.ncs-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  flex: 1;
+  min-height: 240px;
+}
+
+/* Navigation Section */
+.navigation-section {
+  background: var(--color-canvas-darker);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .navigation-section {
+  background: var(--hauler-dark);
+}
+
+.navigation-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.map-placeholder {
+  background: var(--color-canvas);
+  border-radius: 4px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--color-text-secondary);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  min-height: 150px;
+}
+
+[data-theme="dark"] .map-placeholder {
+  background: var(--color-canvas-darker);
+}
+
+/* Communication Section */
+.communication-section {
+  background: var(--color-canvas-darker);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="dark"] .communication-section {
+  background: var(--hauler-dark);
+}
+
+.comm-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .comm-tabs {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.comm-tab {
+  flex: 1;
+  padding: 8px 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comm-tab:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .comm-tab:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.comm-tab.active {
+  color: var(--hauler-primary);
+  border-bottom-color: var(--hauler-primary);
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .comm-tab.active {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.comm-content {
+  padding: 12px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Stream Section */
+.stream-section {
+  background: var(--color-canvas-darker);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .stream-section {
+  background: var(--hauler-dark);
+}
+
+.stream-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.stream-placeholder {
+  background: var(--color-canvas);
+  border-radius: 4px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--color-text-secondary);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  min-height: 150px;
+}
+
+[data-theme="dark"] .stream-placeholder {
+  background: var(--color-canvas-darker);
+}
+
+.stream-disabled {
+  color: #999;
+  font-style: italic;
+}
+
+/* Chat Communication */
+.comm-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 100px;
+  max-height: 140px;
+}
+
+.chat-message {
+  display: flex;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.chat-message.received {
+  align-self: flex-start;
+}
+
+.chat-message.sent {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.message-time {
+  color: var(--color-text-secondary);
+  font-size: 9px;
+  min-width: 30px;
+  flex-shrink: 0;
+}
+
+.message-text {
+  background: var(--color-canvas);
+  padding: 4px 8px;
+  border-radius: 10px;
+  max-width: 120px;
+  word-wrap: break-word;
+  font-size: 11px;
+}
+
+[data-theme="dark"] .message-text {
+  background: var(--color-canvas-darker);
+}
+
+.chat-message.sent .message-text {
+  background: var(--hauler-primary);
+  color: white;
+}
+
+.chat-input {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  font-size: 11px;
+  background: var(--input-bg);
+  color: var(--input-text);
+}
+
+.chat-input button {
+  padding: 4px 8px;
+  background: var(--hauler-primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.chat-input button:hover {
+  background: var(--hauler-primary-hover);
+}
+
+/* Yes/No Communication */
+.comm-yesno {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.yesno-question {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.yesno-question h4 {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-text);
+}
+
+.yesno-question input {
+  padding: 4px 8px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  font-size: 11px;
+  background: var(--input-bg);
+  color: var(--input-text);
+}
+
+.yesno-question button {
+  padding: 4px 8px;
+  background: var(--hauler-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.yesno-question button:hover {
+  background: var(--hauler-primary-hover);
+}
+
+.yesno-history {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.yesno-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--color-canvas);
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+[data-theme="dark"] .yesno-item {
+  background: var(--color-canvas-darker);
+}
+
+.yesno-item .question {
+  flex: 1;
+  color: var(--color-text);
+}
+
+.yesno-item .answer {
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin: 0 6px;
+}
+
+.yesno-item .answer.yes {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+}
+
+.yesno-item .answer.no {
+  background: rgba(244, 67, 54, 0.2);
+  color: #F44336;
+}
+
+.yesno-item .time {
+  color: var(--color-text-secondary);
+  font-size: 9px;
+}
+
+/* Voice/Video Communication */
+.comm-voice,
+.comm-video {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 10px;
+}
+
+.voice-call-btn,
+.video-call-btn {
+  padding: 8px 16px;
+  background: var(--hauler-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.voice-call-btn:hover,
+.video-call-btn:hover {
+  background: var(--hauler-primary-hover);
+}
+
+.voice-status {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.stream-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.stream-controls label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.stream-controls input[type="checkbox"] {
+  width: 12px;
+  height: 12px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .vehicle-modal-content {
+    width: 95vw;
+    height: 95vh;
+  }
+  
+  .ncs-section {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .basic-info-section {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .route-status-section {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .route-point {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+  }
+  
+  .route-marker {
+    margin-right: 8px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+}

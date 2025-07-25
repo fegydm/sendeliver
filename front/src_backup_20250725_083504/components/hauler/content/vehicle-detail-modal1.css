@@ -1,0 +1,149 @@
+/* File: front/src/components/hauler/content/vehicle-detail-modal-part1.css */
+/* Last change: Part 1 - Modal overlay, header, basic info sections with optimized heights */
+
+.vehicle-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.vehicle-modal-content {
+  background: var(--color-canvas);
+  border-radius: 12px;
+  width: 900px;
+  height: 700px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Small Header - optimized height */
+.vehicle-modal-header {
+  background: var(--color-canvas-darker);
+  padding: 8px 20px;
+  border-top: 4px solid #4CAF50;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 50px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .vehicle-modal-header {
+  background: var(--hauler-dark);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.header-left h2 {
+  margin: 0 0 2px 0;
+  font-size: 16px;
+  color: var(--color-text);
+}
+
+.vehicle-status {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.vehicle-modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.vehicle-modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Body */
+.vehicle-modal-body {
+  flex: 1;
+  padding: 12px 20px 20px 20px;
+  overflow-y: scroll; /* Force scrollbar visibility */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0; /* Fix for flexbox scrolling */
+  max-height: calc(700px - 50px - 40px); /* Modal height minus header minus padding */
+}
+
+/* Basic Info Section - 3 equal columns: Vehicle | Cargo | Driver */
+.basic-info-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--color-canvas-darker);
+  border-radius: 6px;
+  min-height: 60px;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .basic-info-section {
+  background: var(--hauler-dark);
+}
+
+.vehicle-info,
+.cargo-info,
+.driver-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vehicle-info h4,
+.cargo-info h4,
+.driver-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hauler-primary);
+  border-bottom: 1px solid var(--color-text-secondary);
+  padding-bottom: 2px;
+}
+
+[data-theme="dark"] .vehicle-info h4,
+[data-theme="dark"] .cargo-info h4,
+[data-theme="dark"] .driver-info h4 {
+  color: var(--hauler-primary-hover);
+}
+
+.info-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.info-label {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  min-width: 60px;
+  font-size: 11px;
+}
+
+.info-value {
+  color: var(--color-text);
+  font-weight: 500;
+  font-size: 11px;
+}

@@ -9,11 +9,11 @@ import { LanguagesProvider } from "@/contexts/LanguagesContext";
 import { CountriesProvider } from "@/contexts/CountriesContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
-import Navigation from "@/components/shared/navbars/navbar.component";
-import FooterPage from "@/components/shared/footers/footer-page.component";
-import FloatingButton from "@/components/shared/elements/floating-button.element";
-import ProtectedRoute from "@/components/shared/auth/ProtectedRoute";
-import MessageBanner from "@/components/shared/elements/MessageBanner"; // Email verification banner
+import Navigation from "@/shared/navbars/navbar.component";
+import FooterPage from "@/shared/footers/footer-page.component";
+import FloatingButton from "@/shared/elements/floating-button.element";
+import ProtectedRoute from "@/shared/auth/ProtectedRoute";
+import MessageBanner from "@/shared/elements/MessageBanner"; // Email verification banner
 
 
 const HomePage = lazy(() => import("@/pages/home.page"));

@@ -1,0 +1,115 @@
+/* File: ./front/src/components/hauler/content/hc.component.css */
+/* Comments in English: Updated class prefix from "banner-h" to "hc" to simplify naming. Preserved original styling while integrating dynamic DriverCard content. */
+
+.hc-container {
+    /* background and positioning for the header container */
+    background-color: #4a5568;
+    color: white;
+    position: relative;
+    margin-top: 16px;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.hc-dark {
+    /* darker theme variation */
+    background-color: #2d3748;
+}
+
+.hc-title {
+    /* main title styling */
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.hc-menu-container {
+    /* grid layout for menu items */
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+}
+
+@media (min-width: 768px) {
+    .hc-menu-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .hc-menu-container {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+.hc-menu-item {
+    /* individual menu item styling */
+    padding: 16px;
+    border-radius: 8px 8px 0 0;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s, background-color 0.3s;
+    background-color: #a0aec0;
+    color: white;
+}
+
+.hc-menu-item:hover {
+    /* hover effect on menu items */
+    transform: scale(1.05);
+    background-color: #718096;
+}
+
+.hc-active {
+    /* active state styling for selected item */
+    background-color: #edf2f7;
+    color: #2d3748;
+}
+
+.hc-dark .hc-menu-item {
+    /* menu item colors when dark theme is applied */
+    background-color: #2d3748;
+    color: white;
+}
+
+.hc-menu-icon {
+    /* icon size and spacing */
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.hc-menu-title {
+    /* title text styling within menu items */
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.hc-menu-underline {
+    /* underline indicator for hover/active states */
+    width: 0;
+    height: 2px;
+    background-color: #4a5568;
+    margin: 0 auto;
+    transition: width 0.3s;
+}
+
+.hc-menu-item:hover .hc-menu-underline,
+.hc-active .hc-menu-underline {
+    width: 100%;
+    background-color: #2d3748;
+}
+
+/* CONTENT SECTION BELOW MENU */
+.hc-content {
+    /* content area styling */
+    padding: 20px;
+    background-color: #fff;
+}
+
+.hc-placeholder {
+    /* placeholder text styling when no content loaded */
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+    padding: 50px 0;
+}

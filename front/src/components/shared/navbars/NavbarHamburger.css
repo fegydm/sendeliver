@@ -1,0 +1,63 @@
+/*
+ * File: front/src/components/shared/navbars/NavbarHamburger.css
+ * Last action: Created new BEM styles for the Hamburger component.
+*/
+
+/* BLOCK: navbar-hamburger */
+.navbar-hamburger {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* ELEMENTS of navbar-hamburger */
+.navbar-hamburger__toggle {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  margin: -0.5rem; /* Negative margin to increase clickable area */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text);
+}
+
+.navbar-hamburger__menu {
+  position: absolute;
+  top: calc(100% + 0.75rem); /* Position below the navbar */
+  right: 0;
+  background-color: var(--color-canvas, #ffffff);
+  border-radius: var(--border-radius, 8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--color-border, #e0e0e0);
+  width: 200px;
+  z-index: 110; /* Must be above navbar */
+  overflow: hidden;
+}
+
+.navbar-hamburger__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar-hamburger__item {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  text-align: left;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.navbar-hamburger__item:not(:last-child) {
+  border-bottom: 1px solid var(--color-border-light, #f0f0f0);
+}
+
+.navbar-hamburger__item:hover {
+  background-color: var(--hauler-primary-light, #e6f2ff);
+  color: var(--hauler-primary-dark, #004085);
+}
