@@ -1,4 +1,4 @@
-export { Toolbar } from "./elements/Toolbar";
+export { Toolbar } from "../../shared/layouts/toolbar/toolbar";
 export { default as DetailLayout, type ModuleConfig } from "./elements/DetailLayout";
 export { SidebarList, type Column } from "./elements/SideFilter";
 

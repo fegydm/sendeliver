@@ -10,7 +10,7 @@ import AvailabilityFilter, { availabilityColumn } from "./AvailabilityFilter";
 import TransitFilter, { transitColumn } from "./TransitFilter";
 import RatingFilter, { ratingColumn } from "./RatingFilter";
 import ContactFilter, { contactColumn } from "./ContactFilter";
-import { DELIVERY_CONSTANTS } from "@shared-project/constants/vehicle.constants";
+import { DELIVERY_CONSTANTS } from "@common/constants/vehicle.constants";
 import { CARGO_MOCK_DATA, CargoResultData } from "@/data/mockCargoData";
 
 export interface SenderResultData {

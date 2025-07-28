@@ -1,0 +1,136 @@
+/* File: front/src/apps/hauler/operations/fleet/sidebar.fleet.css */
+/* Last change: Fixed BEM naming convention and updated CSS class names */
+
+/* Container styling - BEM block */
+.sidebar-fleet {
+  width: 300px;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-canvas-darker);
+  overflow: hidden;
+}
+
+/* Dark theme container border */
+[data-theme="dark"] .sidebar-fleet {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Search box wrapper - BEM element */
+.sidebar-fleet__search {
+  padding: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme search box border */
+[data-theme="dark"] .sidebar-fleet__search {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Search input field - BEM element */
+.sidebar-fleet__search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  font-size: 14px;
+}
+
+/* Placeholder text in search input */
+.sidebar-fleet__search-input::placeholder {
+  color: var(--input-placeholder);
+}
+
+/* Controls wrapper (dropdowns) - BEM element */
+.sidebar-fleet__controls {
+  display: flex;
+  padding: 0 12px 12px;
+  gap: 8px;
+}
+
+/* Select elements styling - BEM element */
+.sidebar-fleet__select {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  font-size: 14px;
+}
+
+/* Vehicle list container - BEM element */
+.sidebar-fleet__list {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-canvas-darker);
+}
+
+/* Empty state message - BEM element */
+.sidebar-fleet__empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+/* List item styling - BEM element */
+.sidebar-fleet__item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* Hover effect on list items */
+.sidebar-fleet__item:hover {
+  background-color: var(--color-canvas);
+}
+
+/* Active list item styling - BEM modifier */
+.sidebar-fleet__item--active {
+  background-color: var(--color-canvas);
+  border-left: 4px solid var(--hauler-primary);
+  padding-left: 8px;
+}
+
+/* Dark theme list item border */
+[data-theme="dark"] .sidebar-fleet__item {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Dark theme hover and active states */
+[data-theme="dark"] .sidebar-fleet__item:hover,
+[data-theme="dark"] .sidebar-fleet__item--active {
+  background-color: var(--color-canvas);
+}
+
+/* Thumbnail image in list items - BEM element */
+.sidebar-fleet__img {
+  width: 60px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+
+/* Info container (name and status) - BEM element */
+.sidebar-fleet__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Vehicle name styling - BEM element */
+.sidebar-fleet__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}

@@ -1,0 +1,335 @@
+/* File: src/apps/hauler/hauler.tabs.css */
+/* Last change: Extracted from hauler.cards.css and converted to BEM methodology */
+
+/* ==========================================================================
+   BLOCK: hauler-tabs (main navigation container)
+   ========================================================================== */
+
+.hauler-tabs {
+  /* Main container for tabs navigation */
+}
+
+/* ==========================================================================
+   ELEMENTS of hauler-tabs
+   ========================================================================== */
+
+/* --- Header Elements --- */
+.hauler-tabs__header {
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--color-canvas);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.hauler-tabs__title {
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  color: var(--hauler-primary);
+}
+
+[data-theme="dark"] .hauler-tabs__title {
+  color: var(--hauler-primary-hover);
+}
+
+.hauler-tabs__settings-btn {
+  display: block;
+  margin: 0 0 0 auto; /* right-aligned */
+}
+
+/* --- Modal Elements --- */
+.hauler-tabs__modal {
+  position: absolute;
+  top: calc(var(--height-header) + var(--spacing-md));
+  right: var(--spacing-lg);
+  background: var(--color-canvas);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-medium);
+  z-index: 20;
+  max-height: 60vh;
+  width: 220px;
+  overflow-y: auto;
+}
+
+.hauler-tabs__modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.hauler-tabs__settings-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  width: 100%;
+  cursor: pointer;
+}
+
+.hauler-tabs__settings-divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--spacing-sm) 0;
+}
+
+/* --- Menu Elements --- */
+.hauler-tabs__menu {
+  display: flex;
+  gap: var(--spacing-md);
+  overflow-x: auto;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--color-canvas-lighter);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.hauler-tabs__menu-item {
+  position: relative;
+  flex-shrink: 0;
+  min-width: 120px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 1px solid var(--hauler-primary);
+  border-bottom: 0;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  background-color: var(--color-canvas);
+  color: var(--color-text);
+  text-align: center;
+  cursor: grab;
+  transition: all var(--transition-speed);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.hauler-tabs__menu-item:active {
+  cursor: grabbing;
+}
+
+.hauler-tabs__menu-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-light);
+}
+
+.hauler-tabs__menu-icon {
+  font-size: var(--font-size-md);
+  transition: transform var(--transition-speed);
+}
+
+.hauler-tabs__menu-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.hauler-tabs__menu-underline {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 70%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--hauler-primary), transparent);
+  transform-origin: center;
+  transition: transform var(--transition-speed);
+}
+
+[data-theme="dark"] .hauler-tabs__menu-underline {
+  background: linear-gradient(to right, transparent, var(--hauler-primary-hover), transparent);
+}
+
+/* --- Content Elements --- */
+.hauler-tabs__content {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   MODIFIERS of hauler-tabs elements
+   ========================================================================== */
+
+/* --- Empty state modifier --- */
+.hauler-tabs--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* --- Active menu item modifier --- */
+.hauler-tabs__menu-item--active {
+  background-color: var(--hauler-primary);
+  color: var(--color-canvas);
+  transform: translateY(1px) scale(1.05);
+  box-shadow: var(--shadow-medium);
+  z-index: 1;
+  cursor: default;
+}
+
+.hauler-tabs__menu-item--active .hauler-tabs__menu-icon {
+  transform: scale(1.2);
+}
+
+.hauler-tabs__menu-item--active .hauler-tabs__menu-underline {
+  transform: translateX(-50%) scaleX(1);
+}
+
+/* ==========================================================================
+   BLOCK: hauler-card (content area for each tab)
+   ========================================================================== */
+
+.hauler-card {
+  background: linear-gradient(
+    to bottom,
+    var(--color-canvas-darker) 0%,
+    var(--color-canvas) 100%
+  );
+  color: var(--color-text);
+  height: calc(100vh - var(--height-header) - 60px); /* Adjusted for tabs height */
+  overflow-y: auto;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-light);
+  transition: box-shadow var(--transition-speed);
+  padding: var(--spacing-lg);
+}
+
+[data-theme="dark"] .hauler-card {
+  background: linear-gradient(
+    to bottom,
+    var(--color-canvas-lighter) 0%,
+    var(--hauler-dark) 100%
+  );
+  box-shadow: var(--shadow-medium);
+}
+
+/* ==========================================================================
+   BLOCK: card-header (common header for card content)
+   ========================================================================== */
+
+.card-header {
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.card-header h1 {
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  color: var(--hauler-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+[data-theme="dark"] .card-header h1 {
+  color: var(--hauler-primary-hover);
+}
+
+.card-subheader {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   BLOCK: card-content (layout for card body)
+   ========================================================================== */
+
+.card-content {
+  display: flex;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   BLOCK: card-item (individual items within cards)
+   ========================================================================== */
+
+.card-item {
+  background-color: var(--hauler-medium);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-light);
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.card-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-medium);
+}
+
+[data-theme="dark"] .card-item {
+  background-color: var(--hauler-dark);
+}
+
+/* ==========================================================================
+   BLOCK: card-button (common button styles)
+   ========================================================================== */
+
+.card-button {
+  background-color: var(--hauler-primary);
+  color: var(--button-text);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color var(--transition-speed);
+}
+
+.card-button:hover {
+  background-color: var(--hauler-primary-hover);
+}
+
+/* ==========================================================================
+   BLOCK: status-chip (status indicators)
+   ========================================================================== */
+
+.status-chip {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: 12px;
+  font-size: var(--font-size-sm);
+  background-color: var(--hauler-dark);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .status-chip {
+  background-color: var(--hauler-medium);
+}
+
+/* ==========================================================================
+   BLOCK: card-grid (grid layout for cards)
+   ========================================================================== */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .hauler-tabs__menu {
+    padding: var(--spacing-xs) var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+  
+  .hauler-tabs__menu-item {
+    min-width: 80px;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  .hauler-tabs__menu-title {
+    font-size: var(--font-size-xs);
+  }
+  
+  .hauler-tabs__modal {
+    width: 180px;
+    right: var(--spacing-md);
+  }
+  
+  .hauler-card {
+    padding: var(--spacing-md);
+  }
+}

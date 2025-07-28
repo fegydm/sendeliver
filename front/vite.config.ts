@@ -93,7 +93,7 @@ export default defineConfig({
       '@domains': path.resolve(__dirname, 'src/domains'),
       '@pages': path.resolve(__dirname, 'src/pages'),
       '@shared': path.resolve(__dirname, 'src/shared'),              // Frontend shared
-      '@shared-project': path.resolve(__dirname, '../shared-project'),       // Project shared
+      '@common': path.resolve(__dirname, '../common'),       // Project shared
       'back': path.resolve(__dirname, '../back/src'),
       '@sendeliver/logger': path.resolve(__dirname, '../packages/logger/src')
     },

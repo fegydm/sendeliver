@@ -1,0 +1,149 @@
+/* File: src/shared/elements/list-item.element.css */
+/* Last change: Created universal list item styles based on FleetItem design */
+
+/* Block - main list item container */
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 0;
+}
+
+/* Hover state */
+.list-item:hover {
+  background-color: var(--color-canvas);
+}
+
+/* Selected state - modifier */
+.list-item--selected {
+  background-color: var(--color-canvas);
+  border-left: 4px solid var(--hauler-primary);
+  padding-left: 8px;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .list-item {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .list-item:hover,
+[data-theme="dark"] .list-item--selected {
+  background-color: var(--color-canvas);
+}
+
+/* Image container - element */
+.list-item__image-container {
+  width: 60px;
+  height: 45px;
+  margin-right: 8px;
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .list-item__image-container {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Image - element */
+.list-item__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.2s;
+}
+
+/* Fallback image state - modifier */
+.list-item__image--fallback {
+  opacity: 0.7;
+}
+
+/* Content container - element */
+.list-item__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Item name - element */
+.list-item__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Meta information container - element */
+.list-item__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  flex-wrap: wrap;
+}
+
+/* Type text - element */
+.list-item__type {
+  color: var(--color-text-secondary);
+}
+
+/* Separator - element */
+.list-item__separator {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+/* Status text (fallback) - element */
+.list-item__status {
+  color: var(--color-text-secondary);
+}
+
+/* Status chip in list item - element */
+.list-item__status-chip {
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+/* Accessibility improvements */
+.list-item:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.list-item:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .list-item {
+    padding: 10px;
+  }
+  
+  .list-item__image-container {
+    width: 50px;
+    height: 38px;
+    margin-right: 10px;
+  }
+  
+  .list-item__name {
+    font-size: 13px;
+  }
+  
+  .list-item__meta {
+    font-size: 11px;
+  }
+}

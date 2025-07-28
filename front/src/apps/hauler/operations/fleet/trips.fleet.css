@@ -1,0 +1,346 @@
+/* File: src/apps/hauler/operations/fleet/trips.fleet.css */
+/* Last change: Created comprehensive styles for vehicle trips table */
+
+/* Block - main trips container */
+.trips-fleet {
+  background-color: var(--color-canvas);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+/* Modifier - empty state */
+.trips-fleet--empty {
+  padding: 40px 20px;
+  text-align: center;
+  background-color: var(--color-canvas-lighter);
+}
+
+[data-theme="dark"] .trips-fleet {
+  background-color: var(--hauler-dark);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .trips-fleet--empty {
+  background-color: var(--hauler-light);
+}
+
+/* Element - header section */
+.trips-fleet__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-canvas-darker);
+}
+
+[data-theme="dark"] .trips-fleet__header {
+  border-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--hauler-light);
+}
+
+/* Element - title */
+.trips-fleet__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Element - trip count */
+.trips-fleet__count {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background-color: var(--color-canvas);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .trips-fleet__count {
+  background-color: var(--hauler-dark);
+}
+
+/* Element - content wrapper */
+.trips-fleet__content {
+  overflow-x: auto;
+}
+
+/* Element - table container */
+.trips-fleet__table {
+  width: 100%;
+  min-width: 500px;
+}
+
+/* Element - table header */
+.trips-fleet__table-header {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 2fr 1fr;
+  gap: 16px;
+  padding: 12px 20px;
+  background-color: var(--color-canvas-darker);
+  border-bottom: 2px solid var(--color-border);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .trips-fleet__table-header {
+  background-color: var(--hauler-light);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Element - table body */
+.trips-fleet__table-body {
+  /* Container for table rows */
+}
+
+/* Element - table row */
+.trips-fleet__table-row {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 2fr 1fr;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.2s;
+}
+
+.trips-fleet__table-row:hover {
+  background-color: var(--color-canvas-lighter);
+}
+
+.trips-fleet__table-row:last-child {
+  border-bottom: none;
+}
+
+[data-theme="dark"] .trips-fleet__table-row {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .trips-fleet__table-row:hover {
+  background-color: var(--hauler-light);
+}
+
+/* Element - table cell */
+.trips-fleet__table-cell {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+/* Cell type modifiers */
+.trips-fleet__table-cell--date {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.trips-fleet__table-cell--driver {
+  /* Driver styling handled by nested elements */
+}
+
+.trips-fleet__table-cell--destination {
+  /* Destination styling handled by nested elements */
+}
+
+.trips-fleet__table-cell--status {
+  justify-content: flex-end;
+}
+
+/* Element - driver info */
+.trips-fleet__driver {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trips-fleet__driver-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.trips-fleet__driver-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+/* Element - destination info */
+.trips-fleet__destination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trips-fleet__destination-icon {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.trips-fleet__destination-text {
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Element - status badge */
+.trips-fleet__status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Status modifiers */
+.trips-fleet__status--completed {
+  background-color: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+}
+
+.trips-fleet__status--in-progress {
+  background-color: rgba(0, 123, 255, 0.15);
+  color: #007bff;
+}
+
+.trips-fleet__status--pending {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+
+.trips-fleet__status--cancelled {
+  background-color: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
+}
+
+.trips-fleet__status--scheduled {
+  background-color: rgba(108, 117, 125, 0.15);
+  color: #6c757d;
+}
+
+.trips-fleet__status--unknown {
+  background-color: rgba(108, 117, 125, 0.15);
+  color: #6c757d;
+}
+
+[data-theme="dark"] .trips-fleet__status--completed {
+  background-color: rgba(40, 167, 69, 0.25);
+  color: #48d362;
+}
+
+[data-theme="dark"] .trips-fleet__status--in-progress {
+  background-color: rgba(0, 123, 255, 0.25);
+  color: #4dabf7;
+}
+
+[data-theme="dark"] .trips-fleet__status--pending {
+  background-color: rgba(255, 193, 7, 0.25);
+  color: #ffd93d;
+}
+
+[data-theme="dark"] .trips-fleet__status--cancelled {
+  background-color: rgba(220, 53, 69, 0.25);
+  color: #ff6b7a;
+}
+
+[data-theme="dark"] .trips-fleet__status--scheduled {
+  background-color: rgba(108, 117, 125, 0.25);
+  color: #adb5bd;
+}
+
+/* Empty state elements */
+.trips-fleet__empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.trips-fleet__empty-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.trips-fleet__empty-subtext {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .trips-fleet__table-header,
+  .trips-fleet__table-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  
+  .trips-fleet__table-cell--date,
+  .trips-fleet__table-cell--status {
+    grid-column: span 1;
+  }
+  
+  .trips-fleet__table-cell--driver,
+  .trips-fleet__table-cell--destination {
+    grid-column: span 1;
+  }
+  
+  .trips-fleet__header {
+    padding: 12px 16px;
+  }
+  
+  .trips-fleet__table-header,
+  .trips-fleet__table-row {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .trips-fleet__table-header,
+  .trips-fleet__table-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .trips-fleet__table-cell {
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  
+  .trips-fleet__table-cell:last-child {
+    border-bottom: none;
+  }
+  
+  .trips-fleet__table-cell::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  
+  .trips-fleet__table-header {
+    display: none;
+  }
+  
+  .trips-fleet__destination-text {
+    white-space: normal;
+    text-overflow: initial;
+  }
+}

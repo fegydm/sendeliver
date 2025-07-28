@@ -17,7 +17,7 @@ import MessageBanner from "@/components/shared/elements/MessageBanner"; // Email
 
 
 const HomePage = lazy(() => import("@/pages/home.page"));
-const HaulerPage = lazy(() => import("@/pages/hauler.page"));
+const HaulerPage = lazy(() => import("@/apps/hauler/hauler.page"));
 const SenderPage = lazy(() => import("@/pages/sender.page"));
 const NotFoundPage = lazy(() => import("@/pages/notfound.page"));
 const GoogleAuthCallback = lazy(() => import("@/pages/GoogleAuthCallback"));

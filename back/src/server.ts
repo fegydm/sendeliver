@@ -31,7 +31,7 @@ import deliveryRouter from "./routes/delivery.routes.js";
 import externalDeliveriesRouter from "./routes/external.deliveries.routes.js";
 import { publicAuthRouter, authenticatedAuthRouter } from "./routes/auth.routes.js";
 import verifyPinRouter from "./routes/verify-pin.routes.js";
-import gpsRouter from "./routes/gps.routes.js";
+import gpsRouter from "./routes/gps-enhanced.routes.js";
 import { authenticateJWT, checkRole } from "./middlewares/auth.middleware.js";
 
 // NEW: Device type test routes

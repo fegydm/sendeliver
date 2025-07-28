@@ -20,7 +20,7 @@
      "@assets/*": ["src/assets/*"],
      "@styles/*": ["src/styles/*"],
      "back/*": ["../back/src/*"],
-     "@shared-project/*": ["../shared-project/*"]
+     "@common/*": ["../common/*"]
    },
    "outDir": "dist",
    "strict": true,
@@ -46,7 +46,7 @@
    "src/**/*.json",
    "src/types/env.d.ts",
    "src/types/recharts.d.ts"
-, "src/shared/navigation/navbar.tsx" ],
+,  "src/shared/navigation/navbar.tsx" ],
  "exclude": [
    "**/node_modules",
    "**/dist",

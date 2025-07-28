@@ -1,0 +1,218 @@
+/* File: src/shared/layouts/toolbar/toolbar.css */
+/* Last change: Created universal toolbar styles for all apps */
+
+/* Block - main toolbar container */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: var(--color-canvas-darker);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  border-bottom: 1px solid var(--color-border);
+  min-height: 48px;
+  gap: 16px;
+}
+
+[data-theme="dark"] .toolbar {
+  background-color: var(--hauler-dark);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Element - toolbar groups */
+.toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar__group--left {
+  justify-content: flex-start;
+  min-width: 80px;
+}
+
+.toolbar__group--center {
+  flex: 1;
+  justify-content: center;
+  max-width: 400px;
+}
+
+.toolbar__group--right {
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+/* Element - count display */
+.toolbar__count {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.toolbar__count-selected {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.toolbar__count-separator {
+  margin: 0 4px;
+  opacity: 0.5;
+}
+
+.toolbar__count-total {
+  color: var(--color-text-secondary);
+}
+
+/* Element - search container */
+.toolbar__search {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Element - search input */
+.toolbar__search-input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-canvas);
+  color: var(--color-text);
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.toolbar__search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.toolbar__search-input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .toolbar__search-input {
+  background-color: var(--hauler-dark);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Element - search icon */
+.toolbar__search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+  font-size: 14px;
+}
+
+/* Element - action buttons */
+.toolbar__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--border-radius);
+  background-color: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  position: relative;
+}
+
+.toolbar__button:hover:not(:disabled) {
+  background-color: var(--color-canvas);
+  color: var(--color-primary);
+}
+
+.toolbar__button:active:not(:disabled) {
+  background-color: var(--color-canvas-darker);
+}
+
+.toolbar__button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+[data-theme="dark"] .toolbar__button:hover:not(:disabled) {
+  background-color: var(--hauler-light);
+}
+
+[data-theme="dark"] .toolbar__button:active:not(:disabled) {
+  background-color: var(--hauler-dark);
+}
+
+/* Element - button icon */
+.toolbar__button-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Modifiers - button variants */
+.toolbar__button--primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.toolbar__button--primary:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+  color: white;
+}
+
+.toolbar__button--danger {
+  color: var(--color-danger);
+}
+
+.toolbar__button--danger:hover:not(:disabled) {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+  
+  .toolbar__group--left {
+    order: 1;
+    min-width: auto;
+  }
+  
+  .toolbar__group--right {
+    order: 2;
+  }
+  
+  .toolbar__group--center {
+    order: 3;
+    width: 100%;
+    max-width: none;
+  }
+  
+  .toolbar__search {
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .toolbar__button {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .toolbar__button-icon {
+    font-size: 14px;
+  }
+  
+  .toolbar__count {
+    font-size: 13px;
+  }
+}

@@ -1,0 +1,277 @@
+/* File: src/apps/hauler/operations/fleet/services.fleet.css */
+/* Last change: Created comprehensive styles for vehicle services table */
+
+/* Block - main services container */
+.services-fleet {
+  background-color: var(--color-canvas);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+/* Modifier - empty state */
+.services-fleet--empty {
+  padding: 40px 20px;
+  text-align: center;
+  background-color: var(--color-canvas-lighter);
+}
+
+[data-theme="dark"] .services-fleet {
+  background-color: var(--hauler-dark);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .services-fleet--empty {
+  background-color: var(--hauler-light);
+}
+
+/* Element - header section */
+.services-fleet__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-canvas-darker);
+}
+
+[data-theme="dark"] .services-fleet__header {
+  border-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--hauler-light);
+}
+
+/* Element - title */
+.services-fleet__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Element - record count */
+.services-fleet__count {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background-color: var(--color-canvas);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .services-fleet__count {
+  background-color: var(--hauler-dark);
+}
+
+/* Element - content wrapper */
+.services-fleet__content {
+  overflow-x: auto;
+}
+
+/* Element - table container */
+.services-fleet__table {
+  width: 100%;
+  min-width: 400px;
+}
+
+/* Element - table header */
+.services-fleet__table-header {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr 0.8fr;
+  gap: 16px;
+  padding: 12px 20px;
+  background-color: var(--color-canvas-darker);
+  border-bottom: 2px solid var(--color-border);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .services-fleet__table-header {
+  background-color: var(--hauler-light);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Element - table body */
+.services-fleet__table-body {
+  /* Container for table rows */
+}
+
+/* Element - table row */
+.services-fleet__table-row {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr 0.8fr;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.2s;
+}
+
+.services-fleet__table-row:hover {
+  background-color: var(--color-canvas-lighter);
+}
+
+.services-fleet__table-row:last-child {
+  border-bottom: none;
+}
+
+[data-theme="dark"] .services-fleet__table-row {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .services-fleet__table-row:hover {
+  background-color: var(--hauler-light);
+}
+
+/* Element - table cell */
+.services-fleet__table-cell {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+/* Cell type modifiers */
+.services-fleet__table-cell--date {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.services-fleet__table-cell--type {
+  font-weight: 500;
+}
+
+.services-fleet__table-cell--status {
+  /* Status styling handled by nested element */
+}
+
+.services-fleet__table-cell--cost {
+  font-weight: 600;
+  color: var(--color-primary);
+  justify-content: flex-end;
+}
+
+/* Element - status badge */
+.services-fleet__status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Status modifiers */
+.services-fleet__status--completed {
+  background-color: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+}
+
+.services-fleet__status--pending {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+}
+
+.services-fleet__status--cancelled {
+  background-color: rgba(220, 53, 69, 0.15);
+  color: #dc3545;
+}
+
+.services-fleet__status--scheduled {
+  background-color: rgba(0, 123, 255, 0.15);
+  color: #007bff;
+}
+
+[data-theme="dark"] .services-fleet__status--completed {
+  background-color: rgba(40, 167, 69, 0.25);
+  color: #48d362;
+}
+
+[data-theme="dark"] .services-fleet__status--pending {
+  background-color: rgba(255, 193, 7, 0.25);
+  color: #ffd93d;
+}
+
+[data-theme="dark"] .services-fleet__status--cancelled {
+  background-color: rgba(220, 53, 69, 0.25);
+  color: #ff6b7a;
+}
+
+[data-theme="dark"] .services-fleet__status--scheduled {
+  background-color: rgba(0, 123, 255, 0.25);
+  color: #4dabf7;
+}
+
+/* Empty state elements */
+.services-fleet__empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.services-fleet__empty-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.services-fleet__empty-subtext {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .services-fleet__table-header,
+  .services-fleet__table-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  
+  .services-fleet__table-cell--type,
+  .services-fleet__table-cell--cost {
+    grid-column: span 1;
+  }
+  
+  .services-fleet__table-cell--date,
+  .services-fleet__table-cell--status {
+    grid-column: span 1;
+  }
+  
+  .services-fleet__header {
+    padding: 12px 16px;
+  }
+  
+  .services-fleet__table-header,
+  .services-fleet__table-row {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .services-fleet__table-header,
+  .services-fleet__table-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  
+  .services-fleet__table-cell {
+    justify-content: space-between;
+  }
+  
+  .services-fleet__table-cell::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  
+  .services-fleet__table-header {
+    display: none;
+  }
+}
