@@ -1,101 +1,153 @@
-// File: front/src/apps/hauler/operations/fleet/sidebar.fleet.tsx
-// Last change: Updated export name to follow SidebarFleet convention
+// File: src/apps/hauler/operations/fleet/sidebar.fleet.tsx
+// Last change: Fixed import path and TypeScript errors with undefined values
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { Sidebar, SidebarFilter } from "@/shared/layouts/sidebar/sidebar";
+import { ListItem } from "@/shared/elements/list-item.element";
 import { Vehicle } from "@/data/mockFleet";
-import { StatusChip } from "@/shared/elements/status-chip.element"; // Correct import path
+import "./sidebar.fleet.css";
 
 interface SidebarFleetProps {
   vehicles: Vehicle[];
   selectedId?: string;
   onSelect: (vehicle: Vehicle) => void;
+  isLoading?: boolean;
 }
 
-const SidebarFleet: React.FC<SidebarFleetProps> = ({
+export const SidebarFleet: React.FC<SidebarFleetProps> = ({
   vehicles,
   selectedId,
-  onSelect
+  onSelect,
+  isLoading = false
 }) => {
-  const [searchTerm, setSearchTerm] = useState("");
+  // Local filter state
+  const [quickSearch, setQuickSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const types = ["All", ...Array.from(new Set(vehicles.map(v => v.type)))];
-  const statuses = ["All", ...Array.from(new Set(vehicles.map(v => v.status)))];
+  // Generate filter options from vehicles
+  const typeOptions = useMemo(() => {
+    const types = vehicles
+      .map(v => v.type)
+      .filter((type): type is string => Boolean(type))
+      .filter((type, index, arr) => arr.indexOf(type) === index)
+      .sort();
+      
+    return [
+      { value: "All", label: "All Types" },
+      ...types.map(type => ({ value: type, label: type }))
+    ];
+  }, [vehicles]);
 
-  const filtered = vehicles.filter(v => {
-    const mSearch =
-      v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.plateNumber.toLowerCase().includes(searchTerm.toLowerCase());
-    const mType = typeFilter === "All" || v.type === typeFilter;
-    const mStatus = statusFilter === "All" || v.status === statusFilter;
-    return mSearch && mType && mStatus;
-  });
+  const statusOptions = useMemo(() => {
+    const statuses = vehicles
+      .map(v => v.status)
+      .filter((status): status is string => Boolean(status))
+      .filter((status, index, arr) => arr.indexOf(status) === index)
+      .sort();
+      
+    return [
+      { value: "All", label: "All Statuses" },
+      ...statuses.map(status => ({ value: status, label: status }))
+    ];
+  }, [vehicles]);
+
+  // Define filters configuration
+  const filters: SidebarFilter[] = [
+    {
+      key: "type",
+      type: "select",
+      options: typeOptions,
+      value: typeFilter,
+      onChange: (value) => setTypeFilter(value as string),
+      className: "sidebar-fleet__type-filter"
+    },
+    {
+      key: "status", 
+      type: "select",
+      options: statusOptions,
+      value: statusFilter,
+      onChange: (value) => setStatusFilter(value as string),
+      className: "sidebar-fleet__status-filter"
+    }
+  ];
+
+  // Apply filters to vehicles
+  const filteredVehicles = useMemo(() => {
+    return vehicles.filter(vehicle => {
+      // Quick search in basic fields (plate, name, type)
+      const matchesSearch = quickSearch === "" || 
+        vehicle.name.toLowerCase().includes(quickSearch.toLowerCase()) ||
+        vehicle.plateNumber?.toLowerCase().includes(quickSearch.toLowerCase()) ||
+        vehicle.type?.toLowerCase().includes(quickSearch.toLowerCase());
+
+      // Type filter
+      const matchesType = typeFilter === "All" || vehicle.type === typeFilter;
+      
+      // Status filter  
+      const matchesStatus = statusFilter === "All" || vehicle.status === statusFilter;
+
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [vehicles, quickSearch, typeFilter, statusFilter]);
+
+  // Render individual vehicle item
+  const renderVehicleItem = (vehicle: Vehicle, isSelected: boolean) => {
+    return (
+      <ListItem
+        item={{
+          id: vehicle.id,
+          name: vehicle.name,
+          image: vehicle.image,
+          type: vehicle.type,
+          status: vehicle.status,
+          plateNumber: vehicle.plateNumber,
+        }}
+        isSelected={isSelected}
+        onClick={() => onSelect(vehicle)}
+        imageAlt={`${vehicle.name} vehicle`}
+        fallbackImage="/vehicles/placeholder.jpg"
+        showImage={true}
+        showStatus={true}
+        renderMeta={(item) => (
+          <>
+            <span className="sidebar-fleet__plate">{item.plateNumber}</span>
+            <span className="sidebar-fleet__separator">•</span>
+            <span className="sidebar-fleet__type">{item.type}</span>
+          </>
+        )}
+        className="sidebar-fleet__vehicle-item"
+      />
+    );
+  };
 
   return (
-    <aside className="fleet-side-filter">
-      {/* Search box */}
-      <div className="fleet-side-filter__search">
-        <input
-          type="text"
-          className="fleet-side-filter__search-input"
-          placeholder="Search vehicle..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      {/* Type & Status dropdowns */}
-      <div className="fleet-side-filter__controls">
-        <select
-          className="fleet-side-filter__select"
-          value={typeFilter}
-          onChange={e => setTypeFilter(e.target.value)}
-        >
-          {types.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-        <select
-          className="fleet-side-filter__select"
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-        >
-          {statuses.map(s => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Vehicle list */}
-      <ul className="fleet-side-filter__list">
-        {filtered.length === 0 && (
-          <li className="fleet-side-filter__empty">No vehicles found</li>
-        )}
-        {filtered.map(v => (
-          <li
-            key={v.id}
-            className={`fleet-side-filter__item${v.id === selectedId ? ' fleet-side-filter__item--active' : ''}`}
-            onClick={() => onSelect(v)}
-          >
-            <img
-              src={v.image}
-              alt={v.name}
-              className="fleet-side-filter__img"
-              onError={e => {
-                (e.target as HTMLImageElement).src = "/vehicles/placeholder.jpg";
-              }}
-            />
-            <div className="fleet-side-filter__info">
-              <div className="fleet-side-filter__name">{v.name}</div>
-              <StatusChip status={v.status || 'INACTIVE'} />
-            </div>
-          </li>
-        ))}
-      </ul>
-    </aside>
+    <Sidebar
+      // Search configuration
+      searchTerm={quickSearch}
+      searchPlaceholder="Plate, name, type or..."
+      onSearchChange={setQuickSearch}
+      showSearch={true}
+      
+      // Filters configuration
+      filters={filters}
+      showFilters={true}
+      
+      // Items configuration
+      items={filteredVehicles}
+      selectedId={selectedId}
+      onSelectItem={onSelect}
+      renderItem={renderVehicleItem}
+      
+      // State configuration
+      isLoading={isLoading}
+      loadingMessage="Loading vehicles..."
+      emptyMessage="No vehicles found"
+      
+      // Styling
+      className="sidebar-fleet"
+    />
   );
 };
 
-export { SidebarFleet };
 export default SidebarFleet;

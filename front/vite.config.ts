@@ -41,7 +41,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 3001,
     strictPort: true,
     fs: {
       // Allow serving files from front, back, and shared logger

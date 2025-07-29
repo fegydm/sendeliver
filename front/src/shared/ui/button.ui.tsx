@@ -1,4 +1,4 @@
-// File: front/src/components/shared/ui/button.ui.tsx
+// File: front/src/shared/ui/button.ui.tsx
 // Last action: Added 'danger' variant and refactored class name composition.
 
 import React from "react";

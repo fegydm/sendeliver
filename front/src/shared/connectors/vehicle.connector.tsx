@@ -1,4 +1,4 @@
-// File: front/src/components/shared/connectors/VehicleConnector.tsx
+// File: front/src/shared/connectors/vehicle.connector.tsx
 import React from "react";
 import PhotoCard from "@/components/shared/elements/PhotoCard";
 import type { Vehicle } from "@/data/mockFleet";

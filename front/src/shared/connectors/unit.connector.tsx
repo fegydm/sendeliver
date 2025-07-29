@@ -1,9 +1,9 @@
-// File: front/src/components/shared/connectors/UnitConnector.tsx
+// File: front/src/shared/connectors/unit.connector.tsx
 // Displays a chained group of VehicleConnectors that belong to one physical unit
 // (tractor + trailers). BEM block: `connector connector--unit`.
 
 import React from "react";
-import VehicleConnector from "@/shared/connectors/VehicleConnector";
+import VehicleConnector from "@/shared/connectors/vehicle.connector";
 import type { Vehicle } from "@/data/mockFleet";
 
 interface UnitConnectorProps {
@@ -24,10 +24,7 @@ export const UnitConnector: React.FC<UnitConnectorProps> = ({ vehicles, classNam
           {idx > 0 && <div className="connector__coupler connector__coupler--left" />}
 
           <VehicleConnector
-            src={v.image}
-            alt={v.name}
-            type={v.type as any}
-            label={v.plateNumber}
+            vehicle={v} // TU JE OPRAVA: Odovzdajte celý objekt 'v' ako prop 'vehicle'
             editable={false}
             size={100}
             className="connector__vehicle"

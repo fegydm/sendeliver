@@ -6,7 +6,7 @@ import { VehicleService } from "../services/vehicles.services.js";
 import * as fs from "fs/promises";
 import { fileURLToPath } from "url";
 import * as path from "path";
-import { DELIVERY_CONSTANTS } from "@shared-project/constants/vehicle.constants.js"; // Import centralized constants
+import { DELIVERY_CONSTANTS } from "@common/constants/vehicle.constants.js"; // Import centralized constants
 
 const router = Router();
 const vehicleService = VehicleService.getInstance();

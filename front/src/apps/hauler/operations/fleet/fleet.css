@@ -1,23 +1,17 @@
-/* File: ./front/src/components/hauler/fleet/fleet.css */
+/* File: front/src/apps/hauler/operations/fleet/fleet.css */
 /* Unified fleet layout – BEM block: `fleet` (elements `fleet__toolbar`, `fleet__sidebar` …) */
 
-/* === Toolbar ============================================================*/
-.fleet__toolbar {
-  width: 100%;
-  height: 50px;
+/* === Main flex container ===============================================*/
+.fleet {
   display: flex;
-  align-items: center;
-  padding: 0 16px;
-  background: var(--color-canvas-darker);
-  border-bottom: 1px solid var(--input-border);
+  flex-direction: column;
+  height: 100%;
 }
 
-/* === Main flex container ===============================================*/
 .fleet__content {
   display: flex;
   flex: 1;
   overflow: hidden;
-  height: calc(100% - 50px);
 }
 
 /* Expanded modifier */
@@ -27,9 +21,7 @@
 /* === Sidebar (vehicle list) ============================================*/
 .fleet__sidebar {
   width: 300px;
-  overflow-y: auto;
-  background: var(--color-canvas);
-  border-right: 1px solid var(--input-border);
+  
 }
 
 /* === Details panel ======================================================*/
@@ -100,6 +92,17 @@
 .vehicle-trips__empty {
   padding: 20px;
   text-align: center;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* === Loading and Empty States ==========================================*/
+.fleet__loading-msg,
+.fleet__no-selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
   color: var(--color-text-secondary);
   font-style: italic;
 }

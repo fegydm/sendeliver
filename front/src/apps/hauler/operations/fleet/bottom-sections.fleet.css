@@ -1,0 +1,40 @@
+/* File: src/apps/hauler/operations/fleet/bottom-sections.fleet.css */
+/* Last change: Created styles for bottom sections container */
+
+/* Block - main bottom sections container */
+.bottom-sections-fleet {
+  padding: 20px 0;
+}
+
+/* Element - sections container */
+.bottom-sections-fleet__container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Element - individual section wrapper */
+.bottom-sections-fleet__section {
+  /* Individual section styling is handled by child components */
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .bottom-sections-fleet {
+    padding: 16px 0;
+  }
+  
+  .bottom-sections-fleet__container {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .bottom-sections-fleet {
+    padding: 12px 0;
+  }
+  
+  .bottom-sections-fleet__container {
+    gap: 16px;
+  }
+}

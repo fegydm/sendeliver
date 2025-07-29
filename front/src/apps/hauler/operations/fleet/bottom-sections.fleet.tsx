@@ -1,7 +1,7 @@
 // File: front/src/components/hauler/fleet/sections/BottomSections.tsx
 import React from "react";
-import { VehicleTrips } from "./trips.fleet";
-import { VehicleServices } from "./vehicle-services.fleet";
+import  TripsFleet  from "./trips.fleet";
+import  ServicesFleet  from "./vehicle-services.fleet";
 
 export interface BottomSectionsProps {
   vehicleId: string;
@@ -19,8 +19,8 @@ export const BottomSections: React.FC<BottomSectionsProps> = ({
   showServices,
 }) => (
   <div className="bottom-sections">
-    {showTrips && <VehicleTrips vehicleId={vehicleId} />}
-    {showServices && <VehicleServices vehicleId={vehicleId} />}
+    {showTrips && <TripsFleet vehicleId={vehicleId} />}
+    {showServices && <ServicesFleet vehicleId={vehicleId} />}
   </div>
 );
 

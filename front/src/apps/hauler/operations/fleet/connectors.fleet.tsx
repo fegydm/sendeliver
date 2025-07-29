@@ -5,11 +5,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import type { ConnectorConfig } from "./interfaces.fleet";
 
 // Shared connectors
-import VehicleConnector from "@/shared/connectors/VehicleConnector";
-import StatusConnector from "@/shared/connectors/StatusConnector";
-import DriverConnector from "@/shared/connectors/DriverConnector";
-import MapConnector from "@/shared/connectors/MapConnector";
-import UnitConnector from "@/shared/connectors/UnitConnector";
+import VehicleConnector from "@/shared/connectors/vehicle.connector";
+import StatusConnector from "@/shared/connectors/status.connector";
+import DriverConnector from "@/shared/connectors/driver.connector";
+import MapConnector from "@/shared/connectors/map.connector";
+import UnitConnector from "@/shared/connectors/unit.connector";
 
 import { Vehicle, mockVehicles } from "@/data/mockFleet";
 import { Person, mockPeople } from "@/data/mockPeople";
