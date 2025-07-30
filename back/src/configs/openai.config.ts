@@ -1,6 +1,6 @@
 // File: ./back/src/configs/openai.config.ts
 
-import { config as loadEnv } from "dotenv";
+import { loadEnv } from '../utils/env-loader.js';
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import OpenAI from "openai";
@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Load the .env file from the monorepo root (3 levels up)
-loadEnv({ path: resolve(__dirname, "../../../.env") });
+loadEnv();
 
 // Extend ProcessEnv interface to include our key
 declare global {

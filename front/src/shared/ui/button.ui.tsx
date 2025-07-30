@@ -1,11 +1,11 @@
 // File: front/src/shared/ui/button.ui.tsx
-// Last action: Added 'danger' variant and refactored class name composition.
+// Last action: Added 'link' variant to the component props.
 
 import React from "react";
 import './button.ui.css';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "danger" | "cancel" | "close" | "ghost" | "floating";
+  variant?: "primary" | "secondary" | "danger" | "cancel" | "close" | "ghost" | "floating" | "link";
   size?: "default" | "small" | "large" | "icon";
   fullWidth?: boolean;
   role?: "sender" | "hauler";

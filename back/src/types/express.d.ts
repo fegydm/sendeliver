@@ -1,40 +1,43 @@
 // File: back/src/types/express.d.ts
-// Last change: Updated Express types to support both old and new auth systems
+// Last change: Consolidated all type definitions
 
-import { UserRole, UserType } from '@prisma/client';
-import { PermissionSet } from '../services/permissions.service';
+// Add missing modules
+declare module 'passport';
+declare module 'passport-google-oauth20';
+declare module 'pg';
+declare module 'ws';
+declare module 'jsonwebtoken';
+declare module 'nodemailer';
+declare module 'cors';
+declare module '@sendeliver/logger';
 
+// Express extensions
 declare global {
   namespace Express {
     interface Request {
-      // Legacy user format (for compatibility)
+      // Auth system
       user?: {
         id?: string;
+        userId?: number;
         email?: string;
         role?: string;
-        // New auth format
-        userId?: number;
-        userType?: UserType;
         primaryRole?: UserRole;
+        userType?: UserType;
         memberships?: { organizationId: number; role: UserRole }[];
       };
       
-      // Device type functionality
+      // Permissions
       organizationId?: number;
       userPermissions?: PermissionSet;
       
-      // Existing useragent support
+      // User agent
       useragent?: {
         isBoten?: boolean;
-        isBot?: boolean;
-        browser?: string;
-        version?: string;
-        os?: string;
-        platform?: string;
-        source?: string;
       };
+      
+      // Session/cookies
+      cookies: Record<string, string>;
+      session: any;
     }
   }
 }
-
-export {};

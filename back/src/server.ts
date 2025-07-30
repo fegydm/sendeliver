@@ -1,5 +1,5 @@
 // File: back/src/server.ts
-// Last change: Added device type test routes
+// Last change: Removed express-session dependency, using custom session middleware
 
 console.log('[SERVER START] Starting server initialization...');
 
@@ -7,11 +7,11 @@ import express, { json, static as expressStatic } from "express";
 import http from "http";
 import path from "path";
 import fs from "fs";
-import morgan from "morgan";
-import * as ua from "express-useragent";
-import * as dotenv from "dotenv";
-import cookieParser from "cookie-parser";
-import session from 'express-session';
+
+import { userAgentMiddleware } from './utils/user-agent-parser.js';
+import { loadEnv } from './utils/env-loader.js';
+import { cookieMiddleware } from './utils/cookie-parser.js';
+import { sessionMiddleware } from './utils/session-middleware.js';
 import passport from 'passport';
 import { fileURLToPath } from "url";
 import { WebSocketManager } from './configs/websocket.config.js';
@@ -37,12 +37,12 @@ import { authenticateJWT, checkRole } from "./middlewares/auth.middleware.js";
 // NEW: Device type test routes
 import { deviceTypeTestRouter } from "./routes/device-type-test.routes.js";
 
+import { httpLogger } from './utils/http-logger.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({
-  path: "../../.env",
-});
+loadEnv();
 
 console.log('[SERVER ENV CHECK] GOOGLE_CLIENT_ID loaded:', process.env.GOOGLE_CLIENT_ID ? 'YES' : 'NO');
 console.log('[SERVER ENV CHECK] GOOGLE_CLIENT_SECRET loaded:', process.env.GOOGLE_CLIENT_SECRET ? 'YES' : 'NO');
@@ -57,8 +57,9 @@ WebSocketManager.initialize(server);
 
 // Basic middleware
 app.use(json());
-app.use(cookieParser());
-app.use(ua.express());
+app.use(cookieMiddleware);
+app.use(userAgentMiddleware);
+app.use(httpLogger);
 
 // Manual CORS middleware - working configuration
 app.use(function (req: Request, res: Response, next: NextFunction) {
@@ -85,33 +86,14 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
   next();
 });
 
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your_session_secret_key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-  }
-}));
+// Custom session middleware
+app.use(sessionMiddleware);
 
 // Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
 
 configurePassport();
-
-interface RequestWithUserAgent extends Request {
-  useragent?: {
-    isBoten?: boolean;
-  };
-}
-
-morgan.token("isBoten", (req: RequestWithUserAgent) => req.useragent?.isBoten ? "BOT" : "HUMAN");
-app.use(morgan(":remote-addr :method :url :status :response-time ms :isBoten"));
 
 // =============================================================================
 // PUBLIC ROUTES (NO AUTHENTICATION REQUIRED)

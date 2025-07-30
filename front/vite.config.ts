@@ -49,12 +49,13 @@ export default defineConfig({
         path.resolve(__dirname),
         path.resolve(__dirname, '../back/src'),
         path.resolve(__dirname, '../shared'),
-        path.resolve(__dirname, '../packages/logger/src')
+        path.resolve(__dirname, '../packages/logger/src'),
+        path.resolve(__dirname, '../common/dist') // <--- Added: Allow serving files from common/dist
       ],
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:10000',
+        target: 'http://localhost:10001',
         changeOrigin: true,
         secure: false,
         ws: true,
@@ -92,10 +93,10 @@ export default defineConfig({
       '@features': path.resolve(__dirname, 'src/features'),
       '@domains': path.resolve(__dirname, 'src/domains'),
       '@pages': path.resolve(__dirname, 'src/pages'),
-      '@shared': path.resolve(__dirname, 'src/shared'),              // Frontend shared
-      '@common': path.resolve(__dirname, '../common'),       // Project shared
+      '@shared': path.resolve(__dirname, 'src/shared'),
+      '@common': path.resolve(__dirname, '../common/dist'), // <--- CRITICAL FIX: Point to common's 'dist'
       'back': path.resolve(__dirname, '../back/src'),
-      '@sendeliver/logger': path.resolve(__dirname, '../packages/logger/src')
+      '@sendeliver/logger': path.resolve(__dirname, '../logger/src')
     },
   },
   assetsInclude: ['**/*.webp'],

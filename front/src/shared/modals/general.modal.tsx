@@ -1,4 +1,4 @@
-// File: front/src/components/shared/modals/general.modal.tsx
+// File: front/src/shared/modals/general.modal.tsx
 
 import React, { useEffect } from "react";
 import { Button } from "@/shared/ui/button.ui";

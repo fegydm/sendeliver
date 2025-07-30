@@ -7,17 +7,19 @@
     "schema": "prisma/schema.prisma"
   },
   "workspaces": [
-    "packages/*",
+    "logger",
     "back",
-    "front"
-  ],
+    "front",
+    "common"  
+    ],
   "scripts": {
     "start": "npm --workspace=back run start",
     "clean": "node scripts/clean.js",
-    "build": "npm run build:logger && npm run prisma:generate && npm run build:back && npm run build:front",
+    "build": "npm run build:common && npm run build:logger && npm run prisma:generate && npm run build:back && npm run build:front",
     "build:logger": "npm --workspace=@sendeliver/logger run build",
     "build:back": "npm --workspace=back run build",
     "build:front": "npm --workspace=front run build",
+    "build:common": "npm --workspace=@sendeliver/common run build", 
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
     "postinstall": "npm run prisma:generate && npm run build:logger",

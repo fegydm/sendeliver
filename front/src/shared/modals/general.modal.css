@@ -1,72 +1,121 @@
 /*
- * File: front/src/components/shared/modals/general.modal.css
- * Last action: Final fix for modal positioning, z-index, and backdrop blur.
+ * File: src/shared/modals/general.modal.css
+ * Last action: Optimized for responsive centering and smooth animations.
 */
 
+/* --- Premenné pre animácie --- */
+:root {
+  --modal-transition-duration: 0.2s;
+}
+
+/* --- Pozadie (Backdrop) --- */
 .modal__backdrop {
-  position: fixed; /* Kľúčové: Zafixuje pozadie voči oknu prehliadača */
-  inset: 0; /* Roztiahne na celú obrazovku */
-  background-color: rgba(24, 38, 59, 0.6); /* Mierne tmavšie pozadie */
-  z-index: 1010; /* Musí byť nad obsahom stránky a navbarom (ktorý má 1000) */
-  
-  /* Efekt rozmazania pozadia */
+  position: fixed;
+  inset: 0; /* Moderný spôsob pre top:0, right:0, bottom:0, left:0 */
+  background-color: rgba(24, 38, 59, 0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  z-index: 1010;
+
+  /* Animácia pre plynulé zobrazenie */
+  animation: fade-in var(--modal-transition-duration) ease-out forwards;
 }
 
+/* --- Kontajner pre centrovanie --- */
 .modal__container {
-  position: fixed; /* Kľúčové: Vytrhne kontajner z toku stránky, takže nič neposúva */
-  z-index: 1020; /* Musí byť nad všetkým ostatným */
+  position: fixed;
+  inset: 0;
+  z-index: 1020;
   
-  /* Kľúčové: Požadované umiestnenie */
-  top: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-
-  width: 90vw;
-  max-width: 550px;
+  /* Kľúčové: Použitie Flexboxu na dokonalé centrovanie */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Pridáva malý padding, aby sa modál nedotýkal okrajov na mobiloch */
+  padding: 1rem;
+  overflow-y: auto; /* Umožní skrolovanie, ak je modál väčší ako obrazovka */
 }
 
+/* --- Samotný obsah modálu --- */
 .modal__content {
   background-color: var(--color-canvas, #ffffff);
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  border: 1px solid rgba(0,0,0,0.05);
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
-  position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  
+  width: 100%; /* Šírka sa prispôsobí kontajneru */
+  max-width: 550px; /* Maximálna šírka, ktorú si definoval */
+  max-height: 90vh; /* Maximálna výška, aby bol vždy viditeľný */
+  
   display: flex;
   flex-direction: column;
+
+  /* Animácia pre plynulé zobrazenie */
+  animation: scale-up var(--modal-transition-duration) ease-out forwards;
 }
 
+/* --- Hlavička --- */
 .modal__header {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem; /* 20px 24px */
   border-bottom: 1px solid var(--color-border, #e0e0e0);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0; /* Zabezpečí, že sa hlavička nezmenší */
 }
 
 .modal__title {
-  font-size: 1.25rem;
+  font-size: 1.125rem; /* 18px */
   font-weight: 600;
+  color: var(--color-text, #111827);
+}
+
+/* Tlačidlo na zatvorenie je súčasťou flex layoutu hlavičky */
+.modal__close {
+  /* Už nie je absolútne pozicované, zarovná sa samo */
+}
+
+/* --- Telo modálu --- */
+.modal__body {
+  padding: 1.5rem; /* 24px */
+  overflow-y: auto; /* Ak je obsah dlhší, bude skrolovateľný */
+  flex-grow: 1; /* Zabezpečí, že telo vyplní dostupný priestor */
 }
 
 .modal__description {
   font-size: 0.9rem;
-  color: var(--color-text-secondary);
-  margin-top: -0.75rem; /* Posunieme bližšie k nadpisu */
-  padding: 0 1.5rem;
+  color: var(--color-text-secondary, #6b7280);
+  line-height: 1.5;
+  margin-bottom: 1rem; /* Pridá medzeru pod popisom */
 }
 
-.modal__body {
-  padding: 1.5rem;
-  flex-grow: 1;
+/* --- Pätička s akciami --- */
+.modal__footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--color-border, #e0e0e0);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem; /* 12px */
+  flex-shrink: 0; /* Zabezpečí, že sa pätička nezmenší */
+  background-color: var(--color-canvas-secondary, #f9fafb);
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
 }
 
-.modal__close {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  /* ... štýly pre zatváracie tlačidlo ... */
+/* --- Keyframe animácie --- */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-up {
+  from { 
+    opacity: 0;
+    transform: scale(0.95); 
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1); 
+  }
 }

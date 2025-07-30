@@ -17,7 +17,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@common/*": ["../common/*"]
+      "@common/*": ["../common/dist/*"]
     },
     "typeRoots": [
       "../node_modules/@types",
@@ -30,8 +30,7 @@
     ]
   },
   "include": [
-    "src/**/*",
-    "../common/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "**/node_modules",
