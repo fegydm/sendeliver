@@ -3,10 +3,10 @@
 
 import { useState, FC, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/theme.context";
 import { useAuth } from "@/contexts/AuthContext";
 import { components } from "@/constants/colors/components";
-import type { DotsArray, TopRowType, BottomRowType } from "@/types/dots";
+import type { DotsArray, TopRowType, BottomRowType } from "@/types/declarations/dots";
 import NavbarLogo from "./logo.navbar";
 import NavbarName from "./name.navbar";
 import NavbarLanguage from "./language.navbar";

@@ -1,2 +1,2 @@
 // ./front/src/types/index.ts
-export * from './dots';
+export * from './declarations/dots';

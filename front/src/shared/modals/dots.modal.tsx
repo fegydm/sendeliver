@@ -3,7 +3,7 @@
 
 import React, { FC } from "react";
 import GeneralModal from "@/shared/modals/general.modal";
-import { TopRowType, BottomRowType, DotsArray } from "@/types/dots";
+import { TopRowType, BottomRowType, DotsArray } from "@/types/declarations/dots";
 import "./dots.modal.css";
 
 import colors from "@/constants/colors";

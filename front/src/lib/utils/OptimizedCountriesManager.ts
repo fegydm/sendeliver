@@ -2,8 +2,8 @@
 // Last change: Optimized version with parallel loading and better caching
 
 import type { Country } from '@/types/transport-forms.types';
-import type { Language } from '@/types/language.types';
-import { DEFAULT_LANGUAGES } from '@/types/language.types';
+import type { Language } from '@/types/domains/language.types';
+import { DEFAULT_LANGUAGES } from '@/types/domains/language.types';
 
 // Ensure we don't try fetching multiple times concurrently
 const FETCH_STATES = {

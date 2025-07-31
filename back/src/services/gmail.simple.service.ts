@@ -1,5 +1,5 @@
 // File: back/src/services/gmail.simple.service.ts
-// Last change: Added dev mode support with original email display in template
+// Last change: Fixed Transporter type by inferring it directly from the createTransport function.
 
 import nodemailer from 'nodemailer';
 
@@ -11,7 +11,7 @@ interface EmailOptions {
 }
 
 class SimpleGmailService {
-  private transporter!: nodemailer.Transporter;
+  private transporter!: ReturnType<typeof nodemailer.createTransport>;
   private isInitialized: boolean = false;
 
   constructor() {
@@ -52,7 +52,6 @@ class SimpleGmailService {
     try {
       const htmlContent = this.renderTemplate(options.template, options.context);
       
-      // 🎯 USE YOUR EXISTING EMAIL_MODE LOGIC
       const isProduction = process.env.EMAIL_MODE === 'production';
       const finalRecipient = isProduction ? options.to : (process.env.TEST_EMAIL || options.to);
       const finalSubject = isProduction ? options.subject : `[DEV] ${options.subject}`;
@@ -65,7 +64,6 @@ class SimpleGmailService {
         text: this.htmlToText(htmlContent),
       };
 
-      // Enhanced logging
       console.log('[GMAIL_SERVICE] =================================');
       console.log('[GMAIL_SERVICE] Email preparation:');
       console.log('[GMAIL_SERVICE] EMAIL_MODE:', process.env.EMAIL_MODE);
@@ -93,7 +91,6 @@ class SimpleGmailService {
 
   private renderTemplate(template: string, context: Record<string, any>): string {
     if (template === 'email-verification') {
-      // 🎯 CHECK IF THIS IS TEST MODE (dev mode with email redirect)
       const isDevMode = context.isTestMode || false;
       const originalEmail = context.originalUserEmail || '';
       
@@ -259,10 +256,8 @@ class SimpleGmailService {
   }
 }
 
-// Export singleton
 export const simpleGmailService = new SimpleGmailService();
 
-// Backward compatibility
 export const sendEmail = async (options: { to: string; subject: string; template: string; context: Record<string, any> }) => {
   await simpleGmailService.sendEmail(options);
 };

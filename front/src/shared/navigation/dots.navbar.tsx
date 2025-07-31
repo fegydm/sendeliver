@@ -2,7 +2,7 @@
 // Last action: Refactored component to use BEM class names.
 
 import { FC } from "react";
-import type { NavbarDotsProps } from "@/types/dots";
+import type { NavbarDotsProps } from "@/types/declarations/dots";
 import './dots.navbar.css';
 
 const NavbarDots: FC<NavbarDotsProps> = ({ topDots, bottomDots, onClick }) => {

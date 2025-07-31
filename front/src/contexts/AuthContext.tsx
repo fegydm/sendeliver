@@ -3,7 +3,7 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import axios from 'axios';
-import type { TopRowType } from '@/types/dots';
+import type { TopRowType } from '@/types/declarations/dots';
 import { useTabManager } from '@/hooks/useTabManager';
 import LogoutModal from '@/components/shared/modals/LogoutModal';
 

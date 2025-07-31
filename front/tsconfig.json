@@ -19,6 +19,7 @@
       "@pages/*": ["src/pages/*"],
       "@assets/*": ["src/assets/*"],
       "@styles/*": ["src/styles/*"],
+      "@utils/*": ["src/utils/*"],
       "back/*": ["../back/src/*"],
       "@common/*": ["../common/dist/*"]
     },
@@ -45,8 +46,8 @@
   "include": [
     "src/**/*",
     "src/**/*.json",
-    "src/types/env.d.ts",
-    "src/types/recharts.d.ts"
+    "src/types/declarations/env.d.ts",
+    "src/types/declarations/recharts.d.ts"
   ],
   "exclude": [
     "**/node_modules",

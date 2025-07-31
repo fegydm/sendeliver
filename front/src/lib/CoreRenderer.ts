@@ -1,7 +1,7 @@
 // File: front/src/lib/CoreRenderer.ts
 // Last change: Fixed animation stopping and frame handling
 
-import { LottieAnimation, LottieLayer } from "@/types/lottie-web";
+import { LottieAnimation, LottieLayer } from "@/types/declarations/lottie-web";
 import LayerRenderer from "@/lib/LayerRenderer";
 
 export default class CoreRenderer {

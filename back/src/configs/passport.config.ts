@@ -1,29 +1,13 @@
 // File: back/src/configs/passport.config.ts
-// Last change: Updated Passport strategy to fetch and include memberships in Express.User.
+// Last change: Applied centralized types and removed local declarations.
 
 import { PrismaClient, UserRole, UserType, OrgMembershipStatus } from '@prisma/client';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as GoogleStrategy, Profile, VerifyCallback } from 'passport-google-oauth20';
 import passport from 'passport';
 
 const prisma = new PrismaClient();
 
-// Extend the Express.User type for Passport.js to include our custom user properties.
-declare global {
-  namespace Express {
-    interface User {
-      userId: number;
-      userType: UserType;
-      primaryRole: UserRole;
-      memberships: { organizationId: number; role: UserRole }[];
-    }
-  }
-}
-
-/**
- * Configures Passport.js strategies for authentication.
- */
 export const configurePassport = () => {
-  // Google OAuth Strategy
   passport.use(
     new GoogleStrategy(
       {
@@ -31,9 +15,8 @@ export const configurePassport = () => {
         clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
         callbackURL: process.env.GOOGLE_CALLBACK_URL as string,
       },
-      async (accessToken, refreshToken, profile, done) => {
+      async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
         try {
-          // Find or create user, including their memberships.
           let user = await prisma.user.findUnique({
             where: { googleId: profile.id },
             include: {
@@ -45,18 +28,17 @@ export const configurePassport = () => {
           });
 
           if (!user) {
-            // If user doesn't exist, create a new one as an individual customer.
             user = await prisma.user.create({
               data: {
                 email: profile.emails?.[0]?.value as string,
                 googleId: profile.id,
                 displayName: profile.displayName,
                 imageUrl: profile.photos?.[0]?.value,
-                primaryRole: UserRole.individual_customer, // Default primary role
-                userType: UserType.STANDALONE, // Default user type
+                primaryRole: UserRole.individual_customer,
+                userType: UserType.STANDALONE,
               },
               include: {
-                memberships: { // Include memberships even if empty for consistency
+                memberships: {
                   where: { status: OrgMembershipStatus.ACTIVE },
                   select: { organizationId: true, role: true }
                 }
@@ -64,30 +46,28 @@ export const configurePassport = () => {
             });
           }
           
-          // Prepare user data for Passport's done callback.
           const expressUser: Express.User = {
             userId: user.id,
+            email: user.email,
             userType: user.userType,
             primaryRole: user.primaryRole,
-            memberships: user.memberships // Pass fetched memberships
+            memberships: user.memberships
           };
 
           done(null, expressUser);
         } catch (error) {
           console.error('Google OAuth error:', error);
-          done(error);
+          done(error as Error);
         }
       }
     )
   );
 
-  // Serialize user to store in session (only userId needed for session)
-  passport.serializeUser((user: Express.User, done) => {
+  passport.serializeUser((user: Express.User, done: (err: any, id?: number) => void) => {
     done(null, user.userId);
   });
 
-  // Deserialize user from session (fetch full user object from DB with memberships)
-  passport.deserializeUser(async (id: number, done) => {
+  passport.deserializeUser(async (id: number, done: (err: any, user?: Express.User | false | null) => void) => {
     try {
       const user = await prisma.user.findUnique({
         where: { id },
@@ -97,8 +77,8 @@ export const configurePassport = () => {
           displayName: true,
           primaryRole: true,
           userType: true,
-          imageUrl: true, // Also select imageUrl if needed for profile
-          memberships: { // Fetch all active memberships
+          imageUrl: true,
+          memberships: {
             where: { status: OrgMembershipStatus.ACTIVE },
             select: { organizationId: true, role: true }
           }
@@ -106,12 +86,12 @@ export const configurePassport = () => {
       });
 
       if (user) {
-        // Reconstruct Express.User object from DB data
         const expressUser: Express.User = {
           userId: user.id,
+          email: user.email,
           userType: user.userType,
           primaryRole: user.primaryRole,
-          memberships: user.memberships // Pass fetched memberships
+          memberships: user.memberships
         };
         done(null, expressUser);
       } else {

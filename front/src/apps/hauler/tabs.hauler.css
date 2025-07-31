@@ -1,257 +1,127 @@
-/* File: front/src/apps/hauler/tabs.hauler.css */
-/* Last change: Extracted only hauler-tabs component styles from original CSS */
-
-/***********************************************************
- * HAULER TABS COMPONENT - BEM Naming Convention
- * Block: hauler-tabs
- ***********************************************************/
-
-/* Main container */
-.hauler-tabs {
-  display: flex;
-  flex-direction: column;
-}
-
-.hauler-tabs--empty {
-  justify-content: center;
-  align-items: center;
-  color: var(--color-text-secondary);
-  font-style: italic;
-  padding: 50px 0;
-}
-
-/***********************************************************
- * HEADER
- ***********************************************************/
-
-.hauler-tabs__header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px var(--spacing-lg);
-  position: relative;
-}
+/*
+ * File: front/src/apps/hauler/tabs.hauler.css
+ * Last change: Final adjustments for tab colors and layout.
+*/
 
 .hauler-tabs__title {
-  color: var(--color-text);
-  font-size: 2rem;
+  color: var(--color-text-lighter, #555);
+  font-size: 1.5rem;
   font-weight: bold;
   text-align: center;
   padding: 10px;
-  text-shadow: 0 1px 3px rgba(95, 95, 95, 0.3);
-  flex: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
-
-[data-theme="dark"] .hauler-tabs__title {
-  color: var(--color-text);
-  text-shadow: 0 2px 2px rgba(122, 122, 122, 0.5);
-}
-
-.hauler-tabs__settings-btn {
-  position: absolute;
-  right: var(--spacing-lg);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/***********************************************************
- * MENU BAR
- ***********************************************************/
 
 .hauler-tabs__menu {
   display: flex;
   gap: 8px;
-  padding: 0 50px;
-  justify-content: space-between;
+  padding: 0 40px;
+  margin-top: 1rem;
 }
 
 .hauler-tabs__menu-item {
   flex: 1;
   min-width: 80px;
-  padding: 10px 0 8px;
-  border-left: 1px solid var(--hauler-primary);
-  border-top: 1px solid var(--hauler-primary);
-  border-right: 1px solid var(--hauler-primary);
+  padding: 12px 0 10px;
+  border: 1px solid var(--color-border, #dee2e6);
   border-bottom: 0;
-  border-radius: 6px 6px 0 0;
-  background-color: var(--hauler-medium);
-  color: var(--color-text);
+  border-radius: var(--border-radius, 6px) var(--border-radius, 6px) 0 0;
+  background-color: var(--tab-inactive-bg);
+  color: var(--color-text, #333);
   text-align: center;
-  transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.2s ease, background-color 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
   cursor: pointer;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
 }
 
-[data-theme="dark"] .hauler-tabs__menu-item {
-  border-left: 1px solid var(--hauler-primary-hover);
-  border-top: 1px solid var(--hauler-primary-hover);
-  border-right: 1px solid var(--hauler-primary-hover);
-  border-bottom: 0;
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
-  background-color: var(--hauler-dark);
-}
-
-/* Active tab */
 .hauler-tabs__menu-item--active {
-  background-color: var(--color-canvas);
-  color: var(--color-text);
-  transform: translateY(1px) scale(1.01);
-  border-left: 1px solid var(--hauler-primary);
-  border-top: 1px solid var(--hauler-primary);
-  border-right: 1px solid var(--hauler-primary);
-  border-bottom: 0;
-  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.12);
-  z-index: 1;
+  background-color: var(--color-canvas, #f8f9fa);
+  border-bottom: 1px solid var(--color-canvas, #f8f9fa);
+  z-index: 2;
   cursor: default;
 }
 
-[data-theme="dark"] .hauler-tabs__menu-item--active {
-  background-color: var(--color-canvas-darker);
-  border-left: 1px solid var(--hauler-primary-hover);
-  border-top: 1px solid var(--hauler-primary-hover);
-  border-right: 1px solid var(--hauler-primary-hover);
-  border-bottom: 0;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.4);
-}
-
-/* Hover state (only when not active) */
 .hauler-tabs__menu-item:not(.hauler-tabs__menu-item--active):hover {
-  transform: translateY(-2px) scale(1.02);
-  background-color: var(--hauler-light);
+  background-color: var(--tab-hover-bg);
+  color: white;
+  transform: translateY(0px);
 }
-
-[data-theme="dark"] .hauler-tabs__menu-item:not(.hauler-tabs__menu-item--active):hover {
-  background-color: var(--hauler-medium);
-}
-
-/***********************************************************
- * ICON & TITLE
- ***********************************************************/
 
 .hauler-tabs__menu-icon {
   font-size: 1.2rem;
-  transition: transform 0.3s ease;
-}
-
-.hauler-tabs__menu-item:not(.hauler-tabs__menu-item--active):hover .hauler-tabs__menu-icon {
-  transform: scale(1.1);
 }
 
 .hauler-tabs__menu-title {
   font-size: 0.9rem;
   font-weight: 600;
+  margin-top: 4px;
 }
-
-/***********************************************************
- * UNDERLINE ANIMATION
- ***********************************************************/
 
 .hauler-tabs__menu-underline {
   position: absolute;
-  bottom: 6px;
+  bottom: 0;
+  left: 15%;
   width: 70%;
-  height: 2px;
-  background: linear-gradient(to right, transparent, var(--hauler-primary), transparent);
+  height: 3px;
+  background-color: hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l));
   transform: scaleX(0);
   transform-origin: center;
   transition: transform 0.3s ease;
 }
 
-.hauler-tabs__menu-underline--active {
+.hauler-tabs__menu-item--active .hauler-tabs__menu-underline {
   transform: scaleX(1);
 }
 
-[data-theme="dark"] .hauler-tabs__menu-underline {
-  background: linear-gradient(to right, transparent, var(--hauler-primary-hover), transparent);
+.hauler-tabs__add-btn {
+  align-self: center;
+  margin-left: 8px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+  line-height: 1;
 }
 
-/* Hover shows underline */
-.hauler-tabs__menu-item:not(.hauler-tabs__menu-item--active):hover .hauler-tabs__menu-underline {
-  transform: scaleX(1);
+.hauler-tabs__content-wrapper {
+  margin: 0 40px;
+  background-color: var(--color-canvas, #f8f9fa);
+  border: 1px solid var(--color-border, #dee2e6);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius, 6px) var(--border-radius, 6px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  min-height: calc(100vh - 150px);
+  position: relative;
+  top: -1px;
+  z-index: 1;
+  padding: 1.5rem;
 }
 
-/***********************************************************
- * MODAL (Settings)
- ***********************************************************/
-
-.hauler-tabs__modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+[data-theme="dark"] .hauler-tabs__content-wrapper {
+  background-color: var(--color-canvas-darker, #212529);
+  border-color: var(--color-border-dark, #495057);
 }
 
 .hauler-tabs__modal-body {
-  background: var(--color-canvas);
-  padding: var(--spacing-lg);
-  border-radius: var(--border-radius);
-  min-width: 300px;
-  max-width: 400px;
-  position: relative;
-}
-
-[data-theme="dark"] .hauler-tabs__modal-body {
-  background: var(--color-canvas-darker);
-}
-
-.hauler-tabs__modal-body h3 {
-  margin: 0 0 var(--spacing-md) 0;
-  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .hauler-tabs__settings-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-sm);
+  gap: 0.75rem;
+  font-size: 1rem;
   cursor: pointer;
-  color: var(--color-text);
-}
-
-.hauler-tabs__settings-item input[type="checkbox"] {
-  margin: 0;
-}
-
-.hauler-tabs__settings-item input[type="checkbox"]:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .hauler-tabs__settings-divider {
   border: none;
-  border-top: 1px solid var(--color-border);
-  margin: var(--spacing-md) 0;
-}
-
-/***********************************************************
- * RESPONSIVE
- ***********************************************************/
-
-@media (max-width: 768px) {
-  .hauler-tabs__menu {
-    padding: 0 8px;
-    gap: 4px;
-  }
-  
-  .hauler-tabs__menu-item {
-    min-width: 70px;
-  }
-  
-  .hauler-tabs__menu-title {
-    font-size: 0.8rem;
-  }
-  
-  .hauler-tabs__title {
-    font-size: 1.5rem;
-  }
+  border-top: 1px solid var(--color-border, #e0e0e0);
 }

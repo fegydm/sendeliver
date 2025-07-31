@@ -1,15 +1,13 @@
-// File: src/apps/hauler/hauler.tsx
+// File: front/src/apps/hauler/hauler.tsx
 // Last change: Integrated GeneralModal with refactored PinForm
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logger } from "@sendeliver/logger";
-
 import HaulerTabs from "./tabs.hauler";
 import GeneralModal from "@/shared/modals/general.modal";
 import PinForm from "@/shared/elements/pin-form.element";
 import { Button } from "@/shared/ui/button.ui";
-
 import "./hauler.css";
 
 // This interface can be moved to a shared types file

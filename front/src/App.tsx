@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { TranslationProvider } from "@/contexts/TranslationContext";
 import { LanguagesProvider } from "@/contexts/LanguagesContext";
 import { CountriesProvider } from "@/contexts/CountriesContext";
-import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ThemeProvider } from "@/contexts/theme.context";
 
 import Navigation from "@/shared/navigation/navbar";
 import FooterPage from "@/components/shared/footers/footer-page.component";

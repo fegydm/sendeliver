@@ -1,4 +1,4 @@
-// File: front/src/components/shared/navbars/NavbarDarkmode.tsx
+// File: front/src/shared/navigation/darkmode.navbar.tsx
 // Last action: Refactored component to use BEM class names.
 
 import { FC } from "react";

@@ -2,8 +2,8 @@
 // Last change: Fixed timer issues and improved caching with hasFetched flags
 
 import type { Country } from '@/types/transport-forms.types';
-import type { Language } from '@/types/language.types';
-import { DEFAULT_LANGUAGES } from '@/types/language.types';
+import type { Language } from '@/types/domains/language.types';
+import { DEFAULT_LANGUAGES } from '@/types/domains/language.types';
 
 class CountriesManager {
   private static instance: CountriesManager;

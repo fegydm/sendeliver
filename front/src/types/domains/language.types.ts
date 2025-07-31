@@ -1,4 +1,4 @@
-// File: ./front/src/types/language.types.ts
+// File: front/src/types/domains/language.types.ts
 // Last change: Updated Language interface and DEFAULT_LANGUAGES to match geo.languages table
 
 export interface Language {
@@ -9,7 +9,6 @@ export interface Language {
   name_sk?: string;         // Name in Slovak (optional)
   native_name: string;      // Name in the language itself
   is_rtl: boolean;          // Right-to-left text direction
-  primary_country_code?: string; // Optional, already covered by cc
   created_at?: Date;        // Creation timestamp
   updated_at?: Date;        // Last update timestamp
 }

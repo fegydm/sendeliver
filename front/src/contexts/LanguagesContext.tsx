@@ -1,6 +1,6 @@
 // File: src/contexts/LanguagesContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { Language, GroupedLanguage } from '@/types/language.types';
+import type { Language, GroupedLanguage } from '@/types/domains/language.types';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const CACHE_KEY = 'languages-cache';

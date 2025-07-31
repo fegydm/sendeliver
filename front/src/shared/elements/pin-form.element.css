@@ -1,29 +1,11 @@
-/* File: src/shared/elements/pin-form.element.css */
-/* Last change: Initial styling for the generic PinForm component */
-
-.pin-form-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 100;
-}
+/*
+ * File: front/src/shared/elements/pin-form.element.css
+ * Last change: Refactored to use theme variables and removed modal styles.
+*/
 
 .pin-form {
-  position: relative;
-  background-color: #ffffff;
-  padding: 40px 32px 24px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   text-align: center;
-  width: 360px;
-  border: 1px solid #e5e7eb;
+  width: 100%;
   transition: transform 0.3s ease;
 }
 
@@ -37,44 +19,37 @@
   20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
 
-.pin-form-close-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  color: #9ca3af;
-}
-
-.pin-form-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 24px;
-}
-
 .pin-inputs {
   display: flex;
   justify-content: center;
   gap: 12px;
   margin-bottom: 16px;
+  cursor: text;
 }
 
 .pin-input {
   width: 50px;
   height: 60px;
-  border: 2px solid #d1d5db;
-  border-radius: 8px;
+  border: 2px solid var(--color-border, #d1d5db);
+  border-radius: var(--border-radius, 8px);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2rem;
   font-weight: bold;
-  color: #111827;
+  color: var(--color-text, #111827);
+  background-color: var(--color-canvas, #ffffff);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+[data-theme="dark"] .pin-input {
+  background-color: var(--color-canvas-darker, #333);
+  border-color: var(--color-border-dark, #555);
+}
+
 .pin-input-active {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  border-color: hsl(var(--hauler-h), var(--hauler-s), var(--hauler-l));
+  box-shadow: 0 0 0 3px hsla(var(--hauler-h), var(--hauler-s), var(--hauler-l), 0.3);
 }
 
 .hidden-input {
@@ -87,22 +62,8 @@
 }
 
 .error-message {
-  color: #ef4444;
+  color: var(--color-danger, #ef4444);
   font-weight: 500;
   height: 20px;
-  margin-bottom: 12px;
-}
-
-.pin-form-footer {
-  margin-top: 24px;
-}
-
-.pin-form-home-link {
-  color: #6b7280;
-  text-decoration: none;
-  font-size: 0.875rem;
-}
-
-.pin-form-home-link:hover {
-  text-decoration: underline;
+  margin-top: 8px;
 }
