@@ -1,10 +1,15 @@
 // File: front/src/contexts/theme.context.tsx
-// Last change: Added guards to prevent errors when activeRole is not yet defined.
+// Last change: Refactored to use theme.config functions for all data fetching logic.
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { ThemeSettings, HslColor } from '@/types/domains/theme.types';
-import { defaultThemeSettings } from '@/configs/theme.config';
-import { DEFAULT_ROLE_COLORS } from '@/configs/role-colors.config';
+import {
+  DEFAULT_THEME_SETTINGS,
+  getThemeMode,
+  getUserRoleColor,
+  saveUserRoleColor,
+  saveThemeMode,
+} from '@/configs/theme.config';
 import { generateCssVariables } from '@/utils/color.utils';
 
 type Role = 'hauler' | 'sender' | 'broker';
@@ -21,60 +26,74 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 interface ThemeProviderProps {
   children: ReactNode;
   activeRole?: Role;
+  userId?: string; // Add userId to props to support database logic
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, activeRole }) => {
-  const [userRoleColors, setUserRoleColors] = useState<Record<string, HslColor>>({});
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, activeRole, userId }) => {
   const [settings, setSettings] = useState<ThemeSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Effect to load and apply theme settings
   useEffect(() => {
-    const savedUserColors = localStorage.getItem('userRoleColors');
-    if (savedUserColors) {
-      try {
-        setUserRoleColors(JSON.parse(savedUserColors) as Record<string, HslColor>);
-      } catch (e) {
-        console.error("Failed to parse userRoleColors from localStorage", e);
-      }
+    if (!activeRole) {
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (isLoading || !activeRole) return;
-
-    const baseColor = userRoleColors[activeRole] || DEFAULT_ROLE_COLORS[activeRole];
     
-    if (!baseColor) return;
+    const applyTheme = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch the user's color using the centralized logic
+        const baseColor = await getUserRoleColor(activeRole, userId);
+        const mode = getThemeMode();
 
-    const currentSettings: ThemeSettings = {
-      ...defaultThemeSettings,
-      primaryColor: baseColor,
-      mode: (localStorage.getItem('themeMode') as 'light' | 'dark') || 'light',
+        const currentSettings: ThemeSettings = {
+          ...DEFAULT_THEME_SETTINGS,
+          primaryColor: baseColor,
+          mode,
+        };
+
+        setSettings(currentSettings);
+
+        // Apply CSS variables using the utility
+        const cssVariables = generateCssVariables(currentSettings);
+        const root = document.documentElement;
+        Object.entries(cssVariables).forEach(([key, value]) => {
+          root.style.setProperty(key, value);
+        });
+        root.setAttribute('data-theme', mode);
+      } catch (error) {
+        console.error('Failed to apply theme settings:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setSettings(currentSettings);
+    applyTheme();
+  }, [activeRole, userId]);
 
-    const cssVariables = generateCssVariables(currentSettings);
-    const root = document.documentElement;
-    Object.entries(cssVariables).forEach(([key, value]) => {
-      root.style.setProperty(key, value);
-    });
-    root.setAttribute('data-theme', currentSettings.mode);
+  // Use the centralized save function
+  const updateRoleColor = useCallback(async (role: Role, newColor: HslColor) => {
+    // Save the new color and then re-apply theme
+    await saveUserRoleColor(role, newColor, userId);
+    if (activeRole === role) {
+      // Re-apply theme only if the active role's color was updated
+      setSettings(prevSettings => prevSettings ? { ...prevSettings, primaryColor: newColor } : null);
+      const cssVariables = generateCssVariables({ ...settings!, primaryColor: newColor });
+      const root = document.documentElement;
+      Object.entries(cssVariables).forEach(([key, value]) => {
+        root.style.setProperty(key, value);
+      });
+    }
+  }, [activeRole, userId, settings]);
 
-  }, [activeRole, userRoleColors, isLoading]);
-
-  const updateRoleColor = useCallback((role: Role, newColor: HslColor) => {
-    const newColors = { ...userRoleColors, [role]: newColor };
-    setUserRoleColors(newColors);
-    localStorage.setItem('userRoleColors', JSON.stringify(newColors));
-  }, [userRoleColors]);
-
+  // Use the centralized save function
   const setMode = useCallback((mode: 'light' | 'dark') => {
     if (settings) {
+      saveThemeMode(mode);
       const newSettings = { ...settings, mode };
       setSettings(newSettings);
-      localStorage.setItem('themeMode', mode);
+      document.documentElement.setAttribute('data-theme', mode);
     }
   }, [settings]);
 

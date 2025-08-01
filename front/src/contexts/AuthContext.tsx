@@ -1,8 +1,8 @@
 // File: front/src/contexts/AuthContext.tsx
-// Last change: Added tab manager integration and logout modal with multi-tab handling
+// Last change: Fixed 401 Unauthorized error handling to prevent console errors.
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import type { TopRowType } from '@/types/declarations/dots';
 import { useTabManager } from '@/hooks/useTabManager';
 import LogoutModal from '@/components/shared/modals/LogoutModal';
@@ -16,7 +16,7 @@ export interface User {
   role: UserRole;
   imageUrl?: string;
   selectedRole?: TopRowType;
-  emailVerified?: boolean; // ✅ SINGLE SOURCE OF TRUTH
+  emailVerified?: boolean;
 }
 
 export interface PendingVerificationInfo {
@@ -44,7 +44,20 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10000';
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10001';
+
+// Custom error handling function for Axios responses.
+// Returns an error message, but returns null for 401 errors to signal that they are not critical.
+const handleApiError = (err: any): string | null => {
+  if (axios.isAxiosError(err) && err.response) {
+    if (err.response.status === 401) {
+      // 401 is an expected state, not a critical error.
+      return null;
+    }
+    return err.response.data?.message || `Request failed with status code ${err.response.status}`;
+  }
+  return err.message || 'An unexpected error occurred.';
+};
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -53,26 +66,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [pendingEmailVerification, setPendingEmailVerification] = useState<PendingVerificationInfo | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Tab manager integration
   const { activeTabCount, logoutAllTabs } = useTabManager();
 
-  const fetchUserProfile = useCallback(async () => {
+   const fetchUserProfile = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get<User>(`${API_BASE_URL}/api/auth/profile`, { withCredentials: true });
-      if (response.data) {
-        setUser(response.data);
-        // ✅ CONSISTENT NAMING
-        if (response.data.emailVerified) {
-          setPendingEmailVerification(null);
-          localStorage.removeItem('pendingEmailVerification');
-          console.debug('[AuthContext] User email verified, cleared pending verification');
+      
+      console.log('[AuthContext] Fetching user profile...');
+      
+      // We explicitly tell Axios not to throw an error for 401 status codes.
+      const response = await axios.get<User>(`${API_BASE_URL}/api/auth/profile`, { 
+        withCredentials: true,
+        validateStatus: (status) => {
+          console.log(`[AuthContext] Axios: Validating status code ${status}`);
+          return status === 200 || status === 401;
         }
+      });
+
+      console.log(`[AuthContext] Axios: Response received with status ${response.status}`);
+
+      if (response.status === 200) {
+        if (response.data) {
+          setUser(response.data);
+          if (response.data.emailVerified) {
+            setPendingEmailVerification(null);
+            localStorage.removeItem('pendingEmailVerification');
+            console.debug('[AuthContext] User email verified, cleared pending verification');
+          }
+        }
+      } else if (response.status === 401) {
+        console.log('[AuthContext] Axios: User is not authenticated (401), setting user to null.');
+        setUser(null);
       }
     } catch (err: any) {
-      if (err.response?.status !== 401) {
-        console.error('Auth profile fetch error:', err);
+      console.error('[AuthContext] Axios: Catch block was triggered!', err);
+      // The catch block should now only handle true errors (e.g., network issues)
+      const apiError = handleApiError(err);
+      if (apiError) {
+        setError(apiError);
+        console.error('Auth profile fetch error:', apiError);
       }
       setUser(null);
     } finally {
@@ -89,7 +122,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         { name, email, password },
         { withCredentials: true }
       );
-      // ✅ CONSISTENT NAMING
       if (response.data.user && !response.data.user.emailVerified) {
         const verification = {
           email: response.data.user.email,
@@ -100,8 +132,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.debug('[AuthContext] Registered user, set pending verification:', verification);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Registration failed.");
-      throw err;
+      const apiError = handleApiError(err);
+      if (apiError) {
+        setError(apiError);
+        console.error('Registration failed:', apiError);
+        throw new Error(apiError);
+      }
+      throw new Error("Registration failed.");
     } finally {
       setLoading(false);
     }
@@ -113,7 +150,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setError(null);
       const response = await axios.post<{ user: User }>(`${API_BASE_URL}/api/auth/login`, { email, password }, { withCredentials: true });
       if (response.data.user) {
-        // ✅ CONSISTENT NAMING
         if (!response.data.user.emailVerified) {
           setError("Váš e-mail nie je overený. Prosím, skontrolujte si schránku a overte si účet.");
           setUser(null);
@@ -124,7 +160,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setPendingEmailVerification(verification);
           localStorage.setItem('pendingEmailVerification', JSON.stringify(verification));
           console.debug('[AuthContext] Login failed: email not verified, set pending verification:', verification);
-          throw new Error("Email not verified."); 
+          throw new Error("Email not verified.");
         }
         setUser(response.data.user);
         setPendingEmailVerification(null);
@@ -132,14 +168,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.debug('[AuthContext] Login successful, cleared pending verification');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed.");
-      throw err;
+      const apiError = handleApiError(err);
+      if (apiError) {
+        setError(apiError);
+        console.error('Login failed:', apiError);
+        throw new Error(apiError);
+      }
+      throw new Error("Login failed.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Core logout function that handles the actual logout process
   const performLogout = useCallback(async (): Promise<void> => {
     try {
       await axios.post(`${API_BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
@@ -154,45 +194,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  // Force logout listener for multi-tab coordination
-  useEffect(() => {
-    const handleForceLogout = () => {
-      console.log('[AUTH_CONTEXT] Force logout triggered from another tab');
-      performLogout();
-    };
-
-    window.addEventListener('forceLogout', handleForceLogout);
-    return () => window.removeEventListener('forceLogout', handleForceLogout);
-  }, [performLogout]);
-
-  // Public logout function that handles multi-tab logic
   const logout = useCallback(async (): Promise<void> => {
     if (activeTabCount > 1) {
       setShowLogoutModal(true);
       return;
     }
-    // Single tab - direct logout
     await performLogout();
   }, [activeTabCount, performLogout]);
 
-  // Logout only current tab
   const logoutCurrentTab = useCallback(async (): Promise<void> => {
     await performLogout();
   }, [performLogout]);
 
-  // Logout all tabs
   const logoutAllTabsHandler = useCallback(async (): Promise<void> => {
-    // First logout from server
     try {
       await axios.post(`${API_BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
     } catch (err) {
       console.error('Logout request failed:', err);
     }
-
-    // Then broadcast to all tabs
     logoutAllTabs();
-
-    // Finally logout current tab
     setUser(null);
     setPendingEmailVerification(null);
     localStorage.removeItem('pendingEmailVerification');
@@ -206,10 +226,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(currentUser => currentUser ? { ...currentUser, selectedRole: role } : null);
     try {
       await axios.patch(`${API_BASE_URL}/api/auth/me/role`, { selectedRole: role }, { withCredentials: true });
-    } catch (err) {
-      console.error("Failed to update user role:", err);
+    } catch (err: any) {
+      const apiError = handleApiError(err);
+      if (apiError) {
+        console.error("Failed to update user role:", apiError);
+        setUser(previousUser);
+        throw new Error(apiError);
+      }
       setUser(previousUser);
-      throw err;
+      throw new Error("Failed to update user role.");
     }
   }, [user]);
 
@@ -219,13 +244,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(currentUser => currentUser ? { ...currentUser, imageUrl: imageUrl } : null);
     try {
       await axios.patch(`${API_BASE_URL}/api/auth/me/avatar`, { imageUrl: imageUrl }, { withCredentials: true });
-    } catch (err) {
-      console.error("Failed to update user avatar:", err);
+    } catch (err: any) {
+      const apiError = handleApiError(err);
+      if (apiError) {
+        console.error("Failed to update user avatar:", apiError);
+        setUser(previousUser);
+        throw new Error(apiError);
+      }
       setUser(previousUser);
-      throw err;
+      throw new Error("Failed to update user avatar.");
     }
   }, [user]);
-  
+
   useEffect(() => {
     fetchUserProfile();
     const storedPending = localStorage.getItem('pendingEmailVerification');
@@ -270,7 +300,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser,
     register,
     login,
-    logout, // This now handles multi-tab logic
+    logout,
     checkAuthStatus: fetchUserProfile,
     updateUserRole,
     updateUserAvatar,
@@ -280,7 +310,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   return (
     <AuthContext.Provider value={value}>
       {children}
-      <LogoutModal 
+      <LogoutModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
         activeTabCount={activeTabCount}

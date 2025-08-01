@@ -1,0 +1,39 @@
+// File: back/src/routes/index.ts
+// Last change: Adding auth routes and contact routes
+
+import { Router } from 'express';
+
+// Import tested routes + auth batch
+import aiRouter from "./ai.routes.js";
+import geoCountriesRouter from "./geo.countries.routes.js";
+import geoLanguagesRouter from "./geo.languages.routes.js";
+import geoTranslationsRouter from "./geo.translations.routes.js";
+import mapsRouter from "./maps.routes.js";
+import vehiclesRouter from "./vehicles.routes.js";
+import { publicAuthRouter, authenticatedAuthRouter } from "./auth.routes.js";
+import contactMessagesRoutes from "./contact.messages.routes.js";
+import verifyPinRouter from "./verify-pin.routes.js";
+
+const mainApiRouter = Router();
+const geoRouter = Router();
+
+// Group geo routes
+geoRouter.use("/countries", geoCountriesRouter);
+geoRouter.use("/languages", geoLanguagesRouter);
+geoRouter.use("/translations", geoTranslationsRouter);
+
+// Mount basic routes
+mainApiRouter.use("/ai", aiRouter);
+mainApiRouter.use("/geo", geoRouter);
+mainApiRouter.use("/maps", mapsRouter);
+mainApiRouter.use("/vehicles", vehiclesRouter);
+
+// Mount auth routes
+mainApiRouter.use('/auth', publicAuthRouter);
+mainApiRouter.use('/auth', authenticatedAuthRouter);
+mainApiRouter.use('/contact', contactMessagesRoutes);
+mainApiRouter.use('/verify-pin', verifyPinRouter);
+
+console.log('[DEBUG INDEX] Step 8 - Added auth and contact routes');
+
+export default mainApiRouter;
