@@ -1,12 +1,11 @@
-// File: front/src/pages/VerifyEmailPage.tsx
-// Last change: Added navbar/footer layout and proper verification logic
+// File: front/src/pages/verify-email.page.tsx
+// Last change: Replaced Axios with native Fetch API for email verification.
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
+import { useAuth } from '@/contexts/auth.context';
 
-const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10000';
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10001';
 
 interface VerificationResponse {
   success: boolean;
@@ -29,30 +28,24 @@ const VerifyEmailPage: React.FC = () => {
     const verifyEmail = async () => {
       const token = searchParams.get('token');
       
-      console.log('[VERIFY_EMAIL_PAGE] =================================');
-      console.log('[VERIFY_EMAIL_PAGE] Starting email verification');
-      console.log('[VERIFY_EMAIL_PAGE] Token:', token?.substring(0, 12) + '...');
-
       if (!token) {
-        console.log('[VERIFY_EMAIL_PAGE] ❌ No token found');
         setStatus('error');
         setMessage('Invalid verification link: No token provided.');
         return;
       }
 
       try {
-        console.log('[VERIFY_EMAIL_PAGE] 📡 Calling verification API...');
-        
-        const response = await axios.get(`${API_BASE_URL}/api/auth/verify-email-by-link`, {
-          params: { token },
-          withCredentials: true
+        const response = await fetch(`${API_BASE_URL}/api/auth/verify-email-by-link?token=${token}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // Ensure cookies are sent
         });
 
-        console.log('[VERIFY_EMAIL_PAGE] ✅ API Response:', response.data);
+        const data: VerificationResponse = await response.json().catch(() => ({ success: false, message: 'Invalid response from server.' }));
 
-        const data: VerificationResponse = response.data;
-
-        if (data.success) {
+        if (response.ok && data.success) {
           if (data.alreadyVerified) {
             setStatus('already-verified');
             setMessage('Your email is already verified.');
@@ -61,37 +54,29 @@ const VerifyEmailPage: React.FC = () => {
             setMessage('Email successfully verified! You are now logged in.');
 
             if (data.user) {
-              console.log('[VERIFY_EMAIL_PAGE] 👤 Setting user:', data.user);
               setUser(data.user);
             }
 
             setPendingEmailVerification(null);
             localStorage.removeItem('pendingEmailVerification');
 
-            // Broadcast success
+            // Broadcast success to other tabs
             const bc = new BroadcastChannel('email_verification_channel');
             bc.postMessage({ type: 'EMAIL_VERIFIED_SUCCESS', user: data.user });
             bc.close();
           }
         } else {
+          // Handle non-OK responses or unsuccessful verification from the server
           setStatus('error');
           setMessage(data.message || 'Verification failed.');
         }
 
       } catch (error) {
-        console.error('[VERIFY_EMAIL_PAGE] 💥 API Error:', error);
-        
-        if (axios.isAxiosError(error)) {
-          const errorMessage = error.response?.data?.message || 'Failed to verify email.';
-          setMessage(errorMessage);
-        } else {
-          setMessage('An unexpected error occurred.');
-        }
-        
+        // This catch block handles network errors or issues before the response is received
+        console.error('[VERIFY_EMAIL_PAGE] Network or unexpected error:', error);
+        setMessage('An unexpected error occurred. Please check your internet connection.');
         setStatus('error');
       }
-      
-      console.log('[VERIFY_EMAIL_PAGE] =================================');
     };
 
     verifyEmail();
@@ -185,7 +170,7 @@ const VerifyEmailPage: React.FC = () => {
         </h1>
 
         <p style={{
-          color: 'var(--color-text-secondary)',
+          color: 'var(--color-text-muted)', /* Changed to use theme variable */
           marginBottom: '24px',
           lineHeight: '1.5',
           fontSize: '16px'
@@ -216,14 +201,14 @@ const VerifyEmailPage: React.FC = () => {
 
         {(status === 'success' || status === 'already-verified') && (
           <div style={{
-            backgroundColor: 'rgba(76, 175, 80, 0.1)',
-            border: '1px solid rgba(76, 175, 80, 0.3)',
+            backgroundColor: 'var(--color-primary-100)', /* Changed to use theme variable */
+            border: '1px solid var(--color-primary-300)', /* Changed to use theme variable */
             borderRadius: '8px',
             padding: '16px',
             marginBottom: '20px'
           }}>
             <p style={{
-              color: '#4caf50',
+              color: 'var(--color-primary-700)', /* Changed to use theme variable */
               margin: '0',
               fontSize: '14px',
               fontWeight: '500'
@@ -237,8 +222,8 @@ const VerifyEmailPage: React.FC = () => {
           <button
             onClick={() => navigate('/')}
             style={{
-              backgroundColor: '#2196f3',
-              color: 'white',
+              backgroundColor: 'var(--color-primary-500)', /* Changed to use theme variable */
+              color: 'var(--color-text)', /* Changed to use theme variable */
               border: 'none',
               borderRadius: '8px',
               padding: '12px 24px',
@@ -247,8 +232,8 @@ const VerifyEmailPage: React.FC = () => {
               cursor: 'pointer',
               transition: 'background-color 0.2s'
             }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1976d2'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2196f3'}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-600)'} /* Changed to use theme variable */
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-500)'} /* Changed to use theme variable */
           >
             Go to Home Page
           </button>

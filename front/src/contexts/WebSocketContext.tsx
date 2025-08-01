@@ -2,7 +2,7 @@
 // Last action: Created a robust, centralized WebSocket provider for the entire app.
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from './auth.context';
 
 interface WebSocketContextType {
   lastMessage: any | null;

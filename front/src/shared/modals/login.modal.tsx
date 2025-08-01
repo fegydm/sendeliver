@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth.context";
 import GeneralModal from "@/shared/modals/general.modal";
 import { Input } from "@/shared/ui/input.ui";
 import { Button } from "@/shared/ui/button.ui";

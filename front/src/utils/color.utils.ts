@@ -70,8 +70,8 @@ export const generateCssVariables = (settings: ThemeSettings): Record<string, st
 
   // Add simplified variables for gradients based on the primary scale
   if (settings.mode === 'light') {
-    cssVars['--color-gradient-start'] = primaryScale['primary-200'];
-    cssVars['--color-gradient-end'] = primaryScale['primary-300'];
+    cssVars['--color-gradient-start'] = primaryScale['primary-800'];
+    cssVars['--color-gradient-end'] = primaryScale['primary-900'];
   } else {
     cssVars['--color-gradient-start'] = primaryScale['primary-700'];
     cssVars['--color-gradient-end'] = primaryScale['primary-800'];

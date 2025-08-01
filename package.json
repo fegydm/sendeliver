@@ -10,8 +10,8 @@
     "logger",
     "back",
     "front",
-    "common"  
-    ],
+    "common"
+  ],
   "scripts": {
     "start": "npm --workspace=back run start",
     "clean": "node scripts/clean.js",
@@ -19,7 +19,7 @@
     "build:logger": "npm --workspace=@sendeliver/logger run build",
     "build:back": "npm --workspace=back run build",
     "build:front": "npm --workspace=front run build",
-    "build:common": "npm --workspace=@sendeliver/common run build", 
+    "build:common": "npm --workspace=@sendeliver/common run build",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
     "postinstall": "npm run prisma:generate && npm run build:logger",

@@ -2,7 +2,7 @@
 // Last action: Cleaned up and verified for new auth system.
 
 import { FC } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth.context';
 import './avatar.navbar.css';
 
 interface NavbarAvatarProps {

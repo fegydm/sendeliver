@@ -2,7 +2,7 @@
 // Last change: Cleaned up, translated to English, and verified for new auth system
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth.context';
 import GeneralModal from './general.modal';
 import { Button } from '../ui/button.ui';
 import './avatar.modal.css';

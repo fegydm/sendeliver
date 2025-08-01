@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@sendeliver/logger": "file:../packages/logger",
-    "axios": "^1.9.0",
+   
     "framer-motion": "^12.9.4",
     "leaflet": "^1.9.4",
     "lottie-web": "^5.0.5",

@@ -1,16 +1,15 @@
-// File: front/src/components/shared/elements/MessageBanner.tsx
-// Last change: Fixed TypeScript error - use emailVerified instead of isEmailVerified
+// File: front/src/shared/elements/message-banner.element.tsx
+// Last change: Fixed TypeScript error for NodeJS.Timeout by using the native number type.
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth.context';
 import { useLocation } from 'react-router-dom';
-import type { User } from '@/contexts/AuthContext';
-import axios from 'axios';
-import './MessageBanner.css';
+import type { User } from '@/contexts/auth.context';
+import './message-banner.element.css';
 
 interface MessageBannerProps {}
 
-const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10000';
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10001';
 
 const MessageBanner: React.FC<MessageBannerProps> = () => {
   const { pendingEmailVerification, setPendingEmailVerification, user, setUser } = useAuth();
@@ -30,7 +29,6 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
   const isInitialSetup = useRef(true);
 
   const PENDING_VERIFICATION_KEY = 'pendingEmailVerification';
-
 
 // ADD this effect RIGHT AFTER:
   // 🎯 RESET INITIAL SETUP WHEN PENDING VERIFICATION CHANGES
@@ -58,7 +56,8 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
   useEffect(() => {
     if (!isInitialSetup.current) return;
 
-    let timer: NodeJS.Timeout | null = null;
+    // Use 'number' instead of 'NodeJS.Timeout' for compatibility with browser environments.
+    let timer: number | null = null;
     let bcInstance: BroadcastChannel | null = null;
 
     let shouldShow = false;
@@ -140,7 +139,7 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
       timer = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
-            clearInterval(timer as NodeJS.Timeout);
+            clearInterval(timer as number);
             setPendingEmailVerification(null);
             localStorage.removeItem(PENDING_VERIFICATION_KEY);
             setBannerMessage('Verification link has expired. Please log in and request a new one.');
@@ -155,7 +154,7 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
       bcInstance.onmessage = (event) => {
         if (event.data.type === 'EMAIL_VERIFIED_SUCCESS') {
           console.log('[MESSAGE_BANNER] Received verification success broadcast');
-          clearInterval(timer as NodeJS.Timeout);
+          clearInterval(timer as number);
           setPendingEmailVerification(null);
           localStorage.removeItem(PENDING_VERIFICATION_KEY);
           setBannerMessage('Email successfully verified! You are now logged in.');
@@ -195,10 +194,20 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
     setResendError(null);
     try {
       console.log('[MESSAGE_BANNER] Resending verification email to:', pendingEmailVerification.email);
-      await axios.post(`${API_BASE_URL}/api/auth/resend-verification`, { 
-        email: pendingEmailVerification.email 
+      const response = await fetch(`${API_BASE_URL}/api/auth/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: pendingEmailVerification.email }),
+        credentials: 'include',
       });
       
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to send new verification email.' }));
+        throw new Error(errorData.message);
+      }
+
       const newExpiresAt = Date.now() + (15 * 60 * 1000);
       const newVerification = { 
         email: pendingEmailVerification.email, 
@@ -214,7 +223,7 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
       setTotalTime(15 * 60);
       console.log('[MESSAGE_BANNER] Verification email resent successfully');
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to send new verification email.';
+      const errorMessage = err.message || 'Failed to send new verification email.';
       console.error('[MESSAGE_BANNER] Resend email error:', errorMessage);
       setResendError(errorMessage);
     } finally {
@@ -234,12 +243,26 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
         code: verificationCode.trim()
       });
       
-      const response = await axios.post(`${API_BASE_URL}/api/auth/verify-email-by-code`, {
-        email: pendingEmailVerification.email,
-        code: verificationCode.trim().toUpperCase()
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-email-by-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: pendingEmailVerification.email,
+          code: verificationCode.trim().toUpperCase(),
+        }),
+        credentials: 'include',
       });
 
-      console.log('[MESSAGE_BANNER] Code verification successful:', response.data);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Invalid or expired code.' }));
+        throw new Error(errorData.message);
+      }
+
+      const data = await response.json();
+
+      console.log('[MESSAGE_BANNER] Code verification successful:', data);
 
       setPendingEmailVerification(null);
       localStorage.removeItem(PENDING_VERIFICATION_KEY);
@@ -248,20 +271,19 @@ const MessageBanner: React.FC<MessageBannerProps> = () => {
       setBannerType('success');
       setVerificationCode('');
       
-      if (response.data.user) {
-        console.log('[MESSAGE_BANNER] Setting user from verification response:', response.data.user);
-        setUser(response.data.user);
+      if (data.user) {
+        console.log('[MESSAGE_BANNER] Setting user from verification response:', data.user);
+        setUser(data.user);
       }
       
       const bc = new BroadcastChannel('email_verification_channel');
-      bc.postMessage({ type: 'EMAIL_VERIFIED_SUCCESS', user: response.data.user });
+      bc.postMessage({ type: 'EMAIL_VERIFIED_SUCCESS', user: data.user });
       bc.close();
       
       setTimeout(() => setShowBanner(false), 4000);
       
     } catch (err: any) {
-      const errorData = err.response?.data;
-      const errorMessage = errorData?.message || 'Invalid or expired code.';
+      const errorMessage = err.message || 'Invalid or expired code.';
       console.error('[MESSAGE_BANNER] Code verification error:', errorMessage);
       setCodeError(errorMessage);
       setVerificationCode('');

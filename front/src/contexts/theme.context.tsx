@@ -1,8 +1,8 @@
 // File: front/src/contexts/theme.context.tsx
-// Last change: Refactored to use theme.config functions for all data fetching logic.
+// Last change: Fixed fetching logic to correctly load both primary and secondary colors.
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { ThemeSettings, HslColor } from '@/types/domains/theme.types';
+import { ThemeSettings, HslColor, ThemeMode } from '@/types/domains/theme.types';
 import {
   DEFAULT_THEME_SETTINGS,
   getThemeMode,
@@ -16,8 +16,8 @@ type Role = 'hauler' | 'sender' | 'broker';
 
 interface ThemeContextValue {
   settings: ThemeSettings | null;
-  updateRoleColor: (role: Role, newColor: HslColor) => void;
-  setMode: (mode: 'light' | 'dark') => void;
+  updateRoleColor: (role: Role, newColor: HslColor, colorType?: 'primary' | 'secondary') => void;
+  setMode: (mode: ThemeMode) => void;
   isLoading: boolean;
 }
 
@@ -26,7 +26,7 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 interface ThemeProviderProps {
   children: ReactNode;
   activeRole?: Role;
-  userId?: string; // Add userId to props to support database logic
+  userId?: string;
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, activeRole, userId }) => {
@@ -39,23 +39,23 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, activeRo
       setIsLoading(false);
       return;
     }
-    
+
     const applyTheme = async () => {
       setIsLoading(true);
       try {
-        // Fetch the user's color using the centralized logic
-        const baseColor = await getUserRoleColor(activeRole, userId);
+        const primaryColor = await getUserRoleColor(activeRole, userId, 'primary');
+        const secondaryColor = await getUserRoleColor(activeRole, userId, 'secondary');
         const mode = getThemeMode();
 
         const currentSettings: ThemeSettings = {
           ...DEFAULT_THEME_SETTINGS,
-          primaryColor: baseColor,
+          primaryColor,
+          secondaryColor,
           mode,
         };
 
         setSettings(currentSettings);
-
-        // Apply CSS variables using the utility
+        
         const cssVariables = generateCssVariables(currentSettings);
         const root = document.documentElement;
         Object.entries(cssVariables).forEach(([key, value]) => {
@@ -73,24 +73,24 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, activeRo
   }, [activeRole, userId]);
 
   // Use the centralized save function
-  const updateRoleColor = useCallback(async (role: Role, newColor: HslColor) => {
-    // Save the new color and then re-apply theme
-    await saveUserRoleColor(role, newColor, userId);
+  const updateRoleColor = useCallback(async (role: Role, newColor: HslColor, colorType: 'primary' | 'secondary' = 'primary') => {
+    await saveUserRoleColor(role, newColor, userId, colorType);
     if (activeRole === role) {
-      // Re-apply theme only if the active role's color was updated
-      setSettings(prevSettings => prevSettings ? { ...prevSettings, primaryColor: newColor } : null);
-      const cssVariables = generateCssVariables({ ...settings!, primaryColor: newColor });
-      const root = document.documentElement;
-      Object.entries(cssVariables).forEach(([key, value]) => {
-        root.style.setProperty(key, value);
-      });
+      const newSettings = settings ? { ...settings, [colorType + 'Color']: newColor } as ThemeSettings : null;
+      setSettings(newSettings);
+      if (newSettings) {
+        const cssVariables = generateCssVariables(newSettings);
+        const root = document.documentElement;
+        Object.entries(cssVariables).forEach(([key, value]) => {
+          root.style.setProperty(key, value);
+        });
+      }
     }
   }, [activeRole, userId, settings]);
 
-  // Use the centralized save function
-  const setMode = useCallback((mode: 'light' | 'dark') => {
+  const setMode = useCallback((mode: ThemeMode) => {
     if (settings) {
-      saveThemeMode(mode);
+      saveThemeMode(mode as 'light' | 'dark');
       const newSettings = { ...settings, mode };
       setSettings(newSettings);
       document.documentElement.setAttribute('data-theme', mode);

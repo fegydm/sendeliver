@@ -1,11 +1,10 @@
-// File: front/src/contexts/AuthContext.tsx
-// Last change: Fixed 401 Unauthorized error handling to prevent console errors.
+// File: front/src/contexts/auth.context.tsx
+// Last change: Fixed the console error caused by React Strict Mode and Fetch API.
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import axios, { AxiosError } from 'axios';
 import type { TopRowType } from '@/types/declarations/dots';
 import { useTabManager } from '@/hooks/useTabManager';
-import LogoutModal from '@/components/shared/modals/LogoutModal';
+import LogoutModal from '@/shared/modals/logout.modal';
 
 type UserRole = 'superadmin' | 'developer' | 'org_admin' | 'dispatcher' | 'driver' | 'individual_user';
 
@@ -46,17 +45,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10001';
 
-// Custom error handling function for Axios responses.
-// Returns an error message, but returns null for 401 errors to signal that they are not critical.
-const handleApiError = (err: any): string | null => {
-  if (axios.isAxiosError(err) && err.response) {
-    if (err.response.status === 401) {
-      // 401 is an expected state, not a critical error.
-      return null;
-    }
-    return err.response.data?.message || `Request failed with status code ${err.response.status}`;
+// Helper function to handle Fetch API responses
+const handleFetchResponse = async (response: Response): Promise<any> => {
+  if (response.status === 401) {
+    console.debug('[AuthContext] Handle Fetch Response: Status 401, returning null.');
+    return null;
   }
-  return err.message || 'An unexpected error occurred.';
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
+    throw new Error(errorData.message || `Request failed with status: ${response.status}`);
+  }
+  
+  return response.json();
 };
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -68,47 +69,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const { activeTabCount, logoutAllTabs } = useTabManager();
 
-   const fetchUserProfile = useCallback(async () => {
+  const fetchUserProfile = useCallback(async () => {
+    // 🎯 Use AbortController for cleanup
+    const controller = new AbortController();
+    const { signal } = controller;
+
     try {
       setLoading(true);
       setError(null);
       
-      console.log('[AuthContext] Fetching user profile...');
-      
-      // We explicitly tell Axios not to throw an error for 401 status codes.
-      const response = await axios.get<User>(`${API_BASE_URL}/api/auth/profile`, { 
-        withCredentials: true,
-        validateStatus: (status) => {
-          console.log(`[AuthContext] Axios: Validating status code ${status}`);
-          return status === 200 || status === 401;
-        }
+      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        signal: signal, // Attach the abort signal
       });
 
-      console.log(`[AuthContext] Axios: Response received with status ${response.status}`);
+      const data = await handleFetchResponse(response);
 
-      if (response.status === 200) {
-        if (response.data) {
-          setUser(response.data);
-          if (response.data.emailVerified) {
-            setPendingEmailVerification(null);
-            localStorage.removeItem('pendingEmailVerification');
-            console.debug('[AuthContext] User email verified, cleared pending verification');
-          }
+      if (data) {
+        setUser(data);
+        if (data.emailVerified) {
+          setPendingEmailVerification(null);
+          localStorage.removeItem('pendingEmailVerification');
+          console.debug('[AuthContext] User email verified, cleared pending verification');
         }
       } else if (response.status === 401) {
-        console.log('[AuthContext] Axios: User is not authenticated (401), setting user to null.');
+        console.debug('[AuthContext] User is not authenticated (401), setting user to null.');
         setUser(null);
       }
     } catch (err: any) {
-      console.error('[AuthContext] Axios: Catch block was triggered!', err);
-      // The catch block should now only handle true errors (e.g., network issues)
-      const apiError = handleApiError(err);
-      if (apiError) {
-        setError(apiError);
-        console.error('Auth profile fetch error:', apiError);
+      // 🎯 Catch AbortError specifically to prevent console errors
+      if (err.name === 'AbortError') {
+        console.log('[AuthContext] Fetch aborted successfully.');
+        return;
       }
+      
+      console.error('Error fetching user profile:', err);
+      setError(err.message || 'Failed to fetch user profile.');
       setUser(null);
     } finally {
+      if (signal.aborted) {
+        // Prevent setting loading state if the request was aborted.
+        return;
+      }
       setLoading(false);
     }
   }, []);
@@ -117,14 +121,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.post<{ user: User, message: string }>(
-        `${API_BASE_URL}/api/auth/register`,
-        { name, email, password },
-        { withCredentials: true }
-      );
-      if (response.data.user && !response.data.user.emailVerified) {
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+        credentials: 'include',
+      });
+      
+      const data = await handleFetchResponse(response);
+
+      if (data && !data.user.emailVerified) {
         const verification = {
-          email: response.data.user.email,
+          email: data.user.email,
           expiresAt: Date.now() + (15 * 60 * 1000)
         };
         setPendingEmailVerification(verification);
@@ -132,13 +141,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.debug('[AuthContext] Registered user, set pending verification:', verification);
       }
     } catch (err: any) {
-      const apiError = handleApiError(err);
-      if (apiError) {
-        setError(apiError);
-        console.error('Registration failed:', apiError);
-        throw new Error(apiError);
-      }
-      throw new Error("Registration failed.");
+      setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -148,13 +152,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.post<{ user: User }>(`${API_BASE_URL}/api/auth/login`, { email, password }, { withCredentials: true });
-      if (response.data.user) {
-        if (!response.data.user.emailVerified) {
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include',
+      });
+      
+      const data = await handleFetchResponse(response);
+
+      if (data && data.user) {
+        if (!data.user.emailVerified) {
           setError("Váš e-mail nie je overený. Prosím, skontrolujte si schránku a overte si účet.");
           setUser(null);
           const verification = {
-            email: response.data.user.email,
+            email: data.user.email,
             expiresAt: Date.now() + (15 * 60 * 1000)
           };
           setPendingEmailVerification(verification);
@@ -162,19 +175,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           console.debug('[AuthContext] Login failed: email not verified, set pending verification:', verification);
           throw new Error("Email not verified.");
         }
-        setUser(response.data.user);
+        setUser(data.user);
         setPendingEmailVerification(null);
         localStorage.removeItem('pendingEmailVerification');
         console.debug('[AuthContext] Login successful, cleared pending verification');
       }
     } catch (err: any) {
-      const apiError = handleApiError(err);
-      if (apiError) {
-        setError(apiError);
-        console.error('Login failed:', apiError);
-        throw new Error(apiError);
-      }
-      throw new Error("Login failed.");
+      setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -182,7 +190,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const performLogout = useCallback(async (): Promise<void> => {
     try {
-      await axios.post(`${API_BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
     } catch (err) {
       console.error('Logout request failed, continuing with client-side logout:', err);
     } finally {
@@ -208,7 +220,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logoutAllTabsHandler = useCallback(async (): Promise<void> => {
     try {
-      await axios.post(`${API_BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
     } catch (err) {
       console.error('Logout request failed:', err);
     }
@@ -225,16 +241,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const previousUser = user;
     setUser(currentUser => currentUser ? { ...currentUser, selectedRole: role } : null);
     try {
-      await axios.patch(`${API_BASE_URL}/api/auth/me/role`, { selectedRole: role }, { withCredentials: true });
-    } catch (err: any) {
-      const apiError = handleApiError(err);
-      if (apiError) {
-        console.error("Failed to update user role:", apiError);
-        setUser(previousUser);
-        throw new Error(apiError);
+      const response = await fetch(`${API_BASE_URL}/api/auth/me/role`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selectedRole: role }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update user role.');
       }
+    } catch (err: any) {
+      console.error("Failed to update user role:", err);
       setUser(previousUser);
-      throw new Error("Failed to update user role.");
+      throw err;
     }
   }, [user]);
 
@@ -243,16 +264,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const previousUser = user;
     setUser(currentUser => currentUser ? { ...currentUser, imageUrl: imageUrl } : null);
     try {
-      await axios.patch(`${API_BASE_URL}/api/auth/me/avatar`, { imageUrl: imageUrl }, { withCredentials: true });
-    } catch (err: any) {
-      const apiError = handleApiError(err);
-      if (apiError) {
-        console.error("Failed to update user avatar:", apiError);
-        setUser(previousUser);
-        throw new Error(apiError);
+      const response = await fetch(`${API_BASE_URL}/api/auth/me/avatar`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: imageUrl }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update user avatar.');
       }
+    } catch (err: any) {
+      console.error("Failed to update user avatar:", err);
       setUser(previousUser);
-      throw new Error("Failed to update user avatar.");
+      throw err;
     }
   }, [user]);
 

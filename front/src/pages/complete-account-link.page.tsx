@@ -1,9 +1,9 @@
-// File: front/src/pages/CompleteAccountLinkPage.tsx
+// File: front/src/pages/complete-account-link.page.tsx
 // New file: This page handles the final step of the account linking process.
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+
 import { Input } from '@/shared/ui/input.ui';
 import { Button } from '@/shared/ui/button.ui';
 
@@ -42,7 +42,12 @@ const CompleteAccountLinkPage = () => {
     setError(null);
 
     try {
-      await axios.post('/api/auth/complete-account-link', { token, password });
+      const response = await fetch('/api/auth/complete-account-link', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ token, password })
+});
+if (!response.ok) throw new Error('Failed to complete account link');
       
       setSuccessMessage("Password set successfully! Redirecting to your dashboard...");
 

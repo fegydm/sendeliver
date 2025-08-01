@@ -1,10 +1,10 @@
-// File: front/src/components/shared/modals/LogoutModal.tsx
+// File: front/src/shared/modals/logout.modal.tsx
 // Last change: Refactored to use GeneralModal base with custom styling
 
 import React from 'react';
-import GeneralModal from '../../../shared/modals/general.modal';
+import GeneralModal from './general.modal';
 import { Button } from '@/shared/ui/button.ui';
-import './LogoutModal.css';
+import './logout.modal.css';
 
 interface LogoutModalProps {
   isOpen: boolean;

@@ -1,9 +1,9 @@
 // File: front/src/App.tsx
-// Last change: Added ShowEmailBannerButton for cases when user dismissed the banner but still needs email verification.
+// Last change: Corrected file imports to match kebab-case naming convention and fixed component wrapping order for user-specific themes.
 
 import React, { Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { AuthProvider } from "@/contexts/auth.context";
 import { TranslationProvider } from "@/contexts/TranslationContext";
 import { LanguagesProvider } from "@/contexts/LanguagesContext";
 import { CountriesProvider } from "@/contexts/CountriesContext";
@@ -11,27 +11,41 @@ import { ThemeProvider } from "@/contexts/theme.context";
 
 import Navigation from "@/shared/navigation/navbar";
 import FooterPage from "@/components/shared/footers/footer-page.component";
-import FloatingButton from "@/components/shared/elements/floating-button.element";
-import ProtectedRoute from "@/components/shared/auth/ProtectedRoute";
-import MessageBanner from "@/components/shared/elements/MessageBanner"; // Email verification banner
-
+import FloatingButton from "@/shared/elements/floating-button.element";
+import ProtectedRoute from "@/shared/guards/protected-route.guard";
+import MessageBanner from "@/shared/elements/message-banner.element"; // Corrected import path
 
 const HomePage = lazy(() => import("@/pages/home.page"));
 const HaulerPage = lazy(() => import("@/apps/hauler/hauler"));
 const SenderPage = lazy(() => import("@/pages/sender.page"));
 const NotFoundPage = lazy(() => import("@/pages/notfound.page"));
-const GoogleAuthCallback = lazy(() => import("@/pages/GoogleAuthCallback"));
+const GoogleAuthCallback = lazy(() => import("@/pages/google-auth-callback.page")); // Corrected import path
 const CookiePolicyPage = lazy(() => import("@/pages/CookiePolicyPage"));
-const CompleteAccountLinkPage = lazy(() => import("@/pages/CompleteAccountLinkPage"));
-const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage"));
+const CompleteAccountLinkPage = lazy(() => import("@/pages/complete-account-link.page")); // Corrected import path
+const VerifyEmailPage = lazy(() => import("@/pages/verify-email.page")); // Corrected import path
 
 const AppContent: React.FC = () => {
+  const location = useLocation();
+  
+  // Logic to determine the active role based on the URL path.
+  const getActiveRole = () => {
+    if (location.pathname.includes('/hauler') || location.pathname.includes('/carrier')) {
+      return 'hauler';
+    }
+    if (location.pathname.includes('/sender') || location.pathname.includes('/client')) {
+      return 'sender';
+    }
+    // Default theme for other pages
+    return 'broker';
+  };
+  
+  const activeRole = getActiveRole();
+
   return (
-    <div>
+    <ThemeProvider activeRole={activeRole}>
       <header><Navigation /></header>
       
-      {/* Email verification components */}
-        <MessageBanner />
+      <MessageBanner />
       
       <main>
         <Suspense fallback={<div className="text-center p-12">Loading...</div>}>
@@ -66,7 +80,7 @@ const AppContent: React.FC = () => {
         />
         <div className="footer__floating"><FloatingButton /></div>
       </footer>
-    </div>
+    </ThemeProvider>
   );
 };
 
@@ -75,11 +89,9 @@ const App: React.FC = () => {
     <TranslationProvider>
       <LanguagesProvider>
         <CountriesProvider>
-          <ThemeProvider>
             <AuthProvider>
               <AppContent />
             </AuthProvider>
-          </ThemeProvider>
         </CountriesProvider>
       </LanguagesProvider>
     </TranslationProvider>

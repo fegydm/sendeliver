@@ -2,8 +2,7 @@
 // Last change: Adjusted registration flow to set pending email verification status and close modal without auto-login.
 
 import React, { useState } from "react";
-import axios from "axios";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth.context";
 import GeneralModal from "@/shared/modals/general.modal";
 import { Input } from "@/shared/ui/input.ui";
 import { Button } from "@/shared/ui/button.ui";
@@ -95,13 +94,24 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose }) => {
             vatNumber: '',
         });
       } else if (selectedRegType === 'organization') {
-        await axios.post('/api/auth/register-organization', {
-          organizationName: formData.organizationName,
-          vatNumber: formData.vatNumber,
-          adminEmail: formData.email,
-          adminPassword: formData.password,
-          adminName: formData.name 
-        });
+        const response = await fetch('/api/auth/register-organization', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    organizationName: formData.organizationName,
+    vatNumber: formData.vatNumber,
+    adminEmail: formData.email,
+    adminPassword: formData.password,
+    adminName: formData.name 
+  }),
+});
+
+if (!response.ok) {
+  const errorData = await response.json().catch(() => ({}));
+  throw new Error(errorData.message || 'Organization registration failed');
+}
         setError("Organization registered! Please check your email for verification.");
         onClose(); 
         // Reset form data after successful submission

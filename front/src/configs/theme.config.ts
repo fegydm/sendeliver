@@ -1,7 +1,7 @@
 // File: front/src/configs/theme.config.ts
-// Last change: Prepared for optional secondary color and dynamic theme settings.
+// Last change: Refactored to use unified color definitions from role-colors.config.ts.
 
-import { ThemeSettings, HslColor } from '@/types/domains/theme.types';
+import { ThemeSettings, HslColor, ThemeMode } from '@/types/domains/theme.types';
 import { DEFAULT_ROLE_COLORS } from './role-colors.config';
 
 // Default theme settings. Note: primary and secondary colors are dynamic.
@@ -17,7 +17,6 @@ export const DEFAULT_THEME_SETTINGS: Omit<ThemeSettings, 'primaryColor' | 'secon
 // Theme storage keys for localStorage
 export const THEME_STORAGE_KEYS = {
   USER_ROLE_COLORS: 'userRoleColors',
-  USER_SECONDARY_COLORS: 'userSecondaryColors', // Added key for optional secondary colors
   THEME_MODE: 'themeMode',
   // Prepared for database sync
   LAST_DB_SYNC: 'themeLastDbSync',
@@ -27,9 +26,12 @@ export const THEME_STORAGE_KEYS = {
 /**
  * Gets user color for a specific role with a fallback chain.
  *
+ * 1. Database setting (future)
+ * 2. localStorage setting (current)
+ * 3. Default config color (fallback from role-colors.config.ts)
  * @param role The user's role (e.g., 'hauler', 'sender').
  * @param userId Optional user ID for database lookup.
- * @param colorType Optional type of color ('primary' or 'secondary').
+ * @param colorType The type of color to get ('primary' or 'secondary').
  * @returns The HSL color for the specified role.
  */
 export const getUserRoleColor = async (
@@ -38,10 +40,7 @@ export const getUserRoleColor = async (
   colorType: 'primary' | 'secondary' = 'primary'
 ): Promise<HslColor> => {
 
-  // Logic for primary and secondary colors can be separated here if needed in the future
-  const storageKey = colorType === 'primary' 
-    ? THEME_STORAGE_KEYS.USER_ROLE_COLORS 
-    : THEME_STORAGE_KEYS.USER_SECONDARY_COLORS;
+  const storageKey = THEME_STORAGE_KEYS.USER_ROLE_COLORS;
 
   // TODO: Database lookup (future implementation)
   if (userId) {
@@ -57,18 +56,18 @@ export const getUserRoleColor = async (
   try {
     const savedColors = localStorage.getItem(storageKey);
     if (savedColors) {
-      const userColors = JSON.parse(savedColors) as Record<string, HslColor>;
-      if (userColors[role]) {
-        return userColors[role];
+      const userColors = JSON.parse(savedColors) as Record<string, { primary: HslColor; secondary: HslColor }>;
+      if (userColors[role] && userColors[role][colorType]) {
+        return userColors[role][colorType];
       }
     }
   } catch (error) {
-    console.warn(`Failed to parse user ${colorType} colors from localStorage:`, error);
+    console.warn(`Failed to parse user colors from localStorage:`, error);
   }
 
   // Config fallback
-  // For now, secondary has no default fallback color, this will need to be implemented later.
-  return DEFAULT_ROLE_COLORS[role];
+  // Use the unified DEFAULT_ROLE_COLORS for the fallback
+  return DEFAULT_ROLE_COLORS[role][colorType];
 };
 
 /**
@@ -77,7 +76,7 @@ export const getUserRoleColor = async (
  * @param role The user's role.
  * @param color The HSL color to save.
  * @param userId Optional user ID for database sync.
- * @param colorType Optional type of color ('primary' or 'secondary').
+ * @param colorType The type of color to save ('primary' or 'secondary').
  */
 export const saveUserRoleColor = async (
   role: keyof typeof DEFAULT_ROLE_COLORS,
@@ -85,16 +84,18 @@ export const saveUserRoleColor = async (
   userId?: string,
   colorType: 'primary' | 'secondary' = 'primary'
 ): Promise<void> => {
-
-  const storageKey = colorType === 'primary' 
-    ? THEME_STORAGE_KEYS.USER_ROLE_COLORS 
-    : THEME_STORAGE_KEYS.USER_SECONDARY_COLORS;
+  const storageKey = THEME_STORAGE_KEYS.USER_ROLE_COLORS;
   
-  // Save to localStorage (immediate)
   try {
     const savedColors = localStorage.getItem(storageKey);
-    const userColors = savedColors ? JSON.parse(savedColors) : {};
-    userColors[role] = color;
+    const userColors = savedColors ? JSON.parse(savedColors) as Record<string, { primary: HslColor; secondary: HslColor }> : {};
+    
+    // Ensure the role object exists before updating
+    if (!userColors[role]) {
+      userColors[role] = { ...DEFAULT_ROLE_COLORS[role] };
+    }
+    
+    userColors[role][colorType] = color;
     localStorage.setItem(storageKey, JSON.stringify(userColors));
   } catch (error) {
     console.error('Failed to save color to localStorage:', error);
@@ -125,10 +126,10 @@ export const saveUserRoleColor = async (
 /**
  * Gets theme mode with fallback
  */
-export const getThemeMode = (): 'light' | 'dark' => {
+export const getThemeMode = (): ThemeMode => {
   try {
     const saved = localStorage.getItem(THEME_STORAGE_KEYS.THEME_MODE);
-    return (saved as 'light' | 'dark') || 'light';
+    return (saved as ThemeMode) || 'light';
   } catch {
     return 'light';
   }
@@ -137,7 +138,7 @@ export const getThemeMode = (): 'light' | 'dark' => {
 /**
  * Saves theme mode
  */
-export const saveThemeMode = (mode: 'light' | 'dark'): void => {
+export const saveThemeMode = (mode: ThemeMode): void => {
   try {
     localStorage.setItem(THEME_STORAGE_KEYS.THEME_MODE, mode);
   } catch (error) {

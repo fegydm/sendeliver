@@ -2,7 +2,7 @@
 // Last action: Refactored to use the central WebSocketContext.
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth.context';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import './NotificationCenter.css';
 

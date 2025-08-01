@@ -2,8 +2,8 @@
 // Last action: Fixed type imports and props destructuring.
 
 import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import type { User } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth.context';
+import type { User } from '@/contexts/auth.context';
 
 interface AuthViewProps {
   viewForAuthenticated: (user: User) => React.ReactNode; 

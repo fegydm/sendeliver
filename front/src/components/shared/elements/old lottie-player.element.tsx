@@ -2,8 +2,8 @@
 // Last change: Fixed infinite loop, stabilized banner display with localStorage
 
 import React, { useState, useEffect, useCallback, useReducer } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import type { User } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth.context';
+import type { User } from '@/contexts/auth.context';
 import axios from 'axios';
 import './MessageBanner.css';
 

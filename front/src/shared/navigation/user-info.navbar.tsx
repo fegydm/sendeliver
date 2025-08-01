@@ -2,7 +2,7 @@
 // Last change: Initial creation of the user info display component.
 
 import React from 'react';
-import { User } from '@/contexts/AuthContext';
+import { User } from '@/contexts/auth.context';
 import './user-info.navbar.css';
 
 interface NavbarUserInfoProps {

@@ -4,7 +4,7 @@
 */
 
 .hauler {
-  background: linear-gradient(to bottom, var(--gradient-start), var(--gradient-end));
+  background: linear-gradient(to bottom, var(--color-gradient-start), var(--color-gradient-end));
   min-height: 100vh;
   padding: 1rem;
   box-sizing: border-box;

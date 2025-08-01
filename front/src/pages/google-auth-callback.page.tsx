@@ -1,10 +1,11 @@
-// File: front/src/pages/GoogleAuthCallback.tsx
-// Last change: Alternative approach with direct API verification
+// File: front/src/pages/google-auth-callback.page.tsx
+// Last change: Replaced Axios with native Fetch API for authentication verification.
 
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
+import { useAuth } from '@/contexts/auth.context';
+
+const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10001';
 
 const GoogleAuthCallback: React.FC = () => {
   const navigate = useNavigate();
@@ -19,29 +20,35 @@ const GoogleAuthCallback: React.FC = () => {
     const handleCallback = async () => {
       if (status === 'success') {
         try {
-          // Direct API call to verify authentication
-          const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_BASE_URL || 'http://localhost:10000';
-          const response = await axios.get(`${API_BASE_URL}/api/auth/profile`, { 
-            withCredentials: true,
-            timeout: 5000
+          // Use fetch to verify authentication
+          const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
           });
-          
-          if (response.data && response.data.id) {
-            console.log('[GoogleAuthCallback] Direct API verification successful:', response.data);
-            
-            // Update AuthContext state
-            await checkAuthStatus();
-            
-            // Navigate to dashboard
-            navigate('/dashboard', { replace: true });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.id) {
+              console.log('[GoogleAuthCallback] Direct API verification successful:', data);
+              
+              await checkAuthStatus();
+              
+              navigate('/dashboard', { replace: true });
+            } else {
+              console.error('[GoogleAuthCallback] Invalid profile response:', data);
+              navigate('/login?error=invalid_profile_response', { replace: true });
+            }
           } else {
-            console.error('[GoogleAuthCallback] Invalid profile response:', response.data);
-            navigate('/login?error=invalid_profile_response', { replace: true });
+            const errorData = await response.json().catch(() => ({ message: 'API verification failed with non-OK status' }));
+            console.error('[GoogleAuthCallback] Direct API verification failed:', errorData.message);
+            navigate('/login?error=api_verification_failed', { replace: true });
           }
-          
         } catch (apiError) {
-          console.error('[GoogleAuthCallback] Direct API verification failed:', apiError);
-          navigate('/login?error=api_verification_failed', { replace: true });
+          console.error('[GoogleAuthCallback] Network or unexpected error during API verification:', apiError);
+          navigate('/login?error=network_error', { replace: true });
         }
       } else if (error) {
         navigate(`/login?error=${error}`, { replace: true });
